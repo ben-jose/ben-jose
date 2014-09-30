@@ -1,0 +1,25 @@
+
+
+# This script deletes any file under the build directory that 
+# was not created or written by a human being.
+
+GNU_MK_DIR=./gnu_make
+GNU_AT_DIR=./gnu_autotools
+
+rm -r $GNU_MK_DIR/bin
+rm -r $GNU_MK_DIR/build
+
+rm -r $GNU_AT_DIR/autom4te.cache
+rm $GNU_AT_DIR/aclocal.m4
+rm $GNU_AT_DIR/autom4te.cache
+rm $GNU_AT_DIR/compile
+rm $GNU_AT_DIR/configure
+rm $GNU_AT_DIR/install-sh
+rm $GNU_AT_DIR/Makefile.in
+rm $GNU_AT_DIR/missing
+rm $GNU_AT_DIR/config.log
+rm $GNU_AT_DIR/config.status
+rm $GNU_AT_DIR/Makefile
+
+find . -name "*~" -type f | xargs rm
+

@@ -1,0 +1,18 @@
+
+When 
+
+clean_all_non_human_made_sh
+
+script has been run.
+
+
+
+Recreate all build files with:
+
+aclocal
+autoconf
+automake -a -c
+ 
+then follow README.to_install_with_autotools
+
+

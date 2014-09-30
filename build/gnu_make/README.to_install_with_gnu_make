@@ -1,0 +1,18 @@
+
+For a normal gnu_make install run:
+
+	make
+
+Binaries will be in
+
+	./bin
+
+TO install copy the files in './bin'
+to the desired install directories.
+
+For help run:
+
+	make help
+
+All documentation in '../../doc'.
+

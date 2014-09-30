@@ -24,15 +24,16 @@ email: joseluisquirogabeltran@gmail.com
 
 ------------------------------------------------------------
 
-Sat-solver for dimacs-cnf files.
+Sat-solver and static library for dimacs-cnf files.
 
-To build
+To build and install with autotools follow
 
-cd ./build
-make
+	./build/gnu_autotools/README.to_install_with_autotools
 
-Executable will be 
+To build with gnu_make follow
 
-./bin/ben-jose
+	./build/gnu_make/README.to_install_with_gnu_make
+
+
 
 
