@@ -1208,8 +1208,8 @@ int	solver_main(int argc, char** argv){
 
 	bool args_ok = GLB().get_args(argc, argv);
 
-	double start_tm = 0.0;
-	start_tm = run_time();
+	//double start_tm = 0.0;
+	//start_tm = run_time();
 
 	if(args_ok){
 		PRT_OUT(1, os << ".STARTING AT " << run_time() << std::endl);

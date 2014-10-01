@@ -30,7 +30,14 @@ mem trace funcs and other.
 
 --------------------------------------------------------------*/
 
+#include <iostream>
+#include <fstream>
+#include <cassert>
+#include <cxxabi.h>
+#include <sstream>
+#include <execinfo.h>
 #include <map>
+
 #include "mem.h"
 
 typedef std::map<long, std::string> dbg_ptdir_t;
@@ -66,12 +73,30 @@ dbg_print_ptdir(){
 	std::cout << "]" << std::endl;
 }
 
+bool 
+call_assert(bool vv_ck, const std::string & file, int line, std::string ck_str){
+	if(! vv_ck){
+		std::cout << "ASSERT '" << ck_str << "' FAILED" << std::endl;
+		std::cout << get_stack_trace(file, line) << std::endl;
+	}
+	assert(vv_ck);
+	return vv_ck;
+}
+
+void abort_func(long val, std::string msg){
+	std::cerr << std::endl << "ABORTING! " << msg << std::endl; 
+	std::cerr << "Type ENTER.\n";
+	getchar();
+	exit(val);
+}
+
 bool
 print_backtrace( const std::string & file, int line ){
 	std::cout << get_stack_trace(file, line) << std::endl;
 	return true;
 }
 
+/*
 std::string 
 demangle_cxx_name( const std::string &stack_string ){
 	const size_t k_max_nm_len = 4096;
@@ -100,6 +125,7 @@ demangle_cxx_name( const std::string &stack_string ){
 	// If demangling fails, returned mangled name with some parens
 	return mangled + "()";
 }
+*/
 
 // USE:        std::cout << get_stack_trace( __FILE__, __LINE__ ) << std::endl;
 

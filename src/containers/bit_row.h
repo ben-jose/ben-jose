@@ -118,8 +118,7 @@ private:
 		error_code_t err_cod = k_bit_row_01_exception;
 		DBG_THROW_CK(k_bit_row_01_exception != k_bit_row_01_exception);
 		throw err_cod;
-		std::cerr << "FATAL ERROR. Memory exhausted" << std::endl;
-		abort_func(0);
+		abort_func(0, "FATAL ERROR. Memory exhausted");
 		return (*this);
 	}
 
@@ -128,8 +127,7 @@ private:
 		error_code_t err_cod = k_bit_row_02_exception;
 		DBG_THROW_CK(k_bit_row_02_exception != k_bit_row_02_exception);
 		throw err_cod;
-		std::cerr << "FATAL ERROR. Memory exhausted" << std::endl;
-		abort_func(0);
+		abort_func(0, "FATAL ERROR. Memory exhausted");
 	}
 
 public:
@@ -462,11 +460,12 @@ public:
 		cap = 0; 
 	}
 
+	/*
 	void mem_copy_to(bit_row& r_cpy){
 		r_cpy.set_cap(sz);
 		memcpy(r_cpy.data, data, r_cpy.cap);
 		r_cpy.sz = sz;
-	}
+	}*/
 };
 
 inline

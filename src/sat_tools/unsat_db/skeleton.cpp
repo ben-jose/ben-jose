@@ -35,6 +35,7 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 #include <fcntl.h>
 #include <errno.h>
 #include <limits.h>
+#include <sstream>
 
 #include <cassert>
 #include <cstring>
@@ -51,6 +52,29 @@ mpz_class	skg_dbg_canon_save_id = 0;
 
 // '\0'
 #define END_OF_SEC	0
+
+void	write_in_str(average& the_avg, std::string& av_str){
+	av_str = "";
+	std::stringstream ss1;
+	ss1 << the_avg.avg << std::endl;
+	ss1 << the_avg.sz << std::endl;
+	ss1.flush();
+	av_str = ss1.str();
+}
+
+void	read_from_str(average& the_avg, std::string& av_str){
+	std::stringstream ss2(av_str);
+	ss2 >> the_avg.avg;
+	ss2 >> the_avg.sz;
+}
+
+std::string
+long_to_str(long val){
+	std::stringstream ss_val;
+	ss_val << val;
+	TOOLS_CK(! ss_val.str().empty());
+	return ss_val.str();
+}
 
 bool
 not_skl_path(std::string the_pth){
@@ -367,7 +391,7 @@ update_elapsed(std::string f_nam){
 
 		free(pt_str);
 
-		the_avg.read_from_str(av_str);
+		read_from_str(the_avg, av_str);
 
 		time_t now_time = time(0);
 		double dtm = difftime(now_time, last_mtime);
@@ -377,7 +401,7 @@ update_elapsed(std::string f_nam){
 	}
 
 	std::string out_str;
-	the_avg.write_in_str(out_str);
+	write_in_str(the_avg, out_str);
 
 	//std::cout << "out_str='" << out_str << "'" << std::endl;
 	//std::cout.flush();
@@ -465,7 +489,7 @@ read_elapsed(std::string f_nam, average& the_avg){
 
 		free(pt_str);
 
-		the_avg.read_from_str(av_str);
+		read_from_str(the_avg, av_str);
 	}
 
 	fl.l_type = F_UNLCK;

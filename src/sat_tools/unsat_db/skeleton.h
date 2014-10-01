@@ -45,6 +45,7 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <set>
 
 #include "config.h"
 #include "dimacs.h"
@@ -81,6 +82,12 @@ class skeleton_glb;
 //--end_of_def
 
 #define SKG_CANON_KRY_STR  "Jesus dijo: Yo Soy El Camino, La Verdad y La Vida."
+
+
+//=================================================================
+// type declarations
+
+typedef std::set<std::string> 	string_set_t;
 
 //=================================================================
 // global dbg declarations
@@ -196,6 +203,54 @@ long		canon_purge_clauses(skeleton_glb& skg, row<canon_clause*>& all_ccl, long& 
 
 void		canon_count_tots(row<canon_clause*>& all_ccls, long& tot_vars, long& tot_lits, long& tot_twolits);
 
+
+//=================================================================
+// ref_strs
+
+class ref_strs {
+public:	
+	std::string	pd_ref1_nam;
+	std::string	pd_ref2_nam;
+
+	ref_strs(){
+		init_ref_strs();
+	}
+
+	~ref_strs(){
+	}
+
+	void		init_ref_strs(){
+		pd_ref1_nam = "";
+		pd_ref2_nam = "";
+	}
+
+	bool		has_ref(){
+		bool h1 = (pd_ref1_nam != "");
+		bool h2 = (pd_ref2_nam != "");
+		bool has_r = (h1 || h2);
+		TOOLS_CK(! has_r || (h1 && h2));
+		return has_r;
+	}
+
+	std::string	vnt_nam(){
+		return pd_ref1_nam;
+	}
+
+	std::string	lck_nam(){
+		return pd_ref2_nam;
+	}
+
+	std::ostream&	print_ref_strs(std::ostream& os, bool from_pt = false){
+		os << "strs=[" << std::endl;
+		os << " '" << pd_ref1_nam << "'" << std::endl;
+		os << " '" << pd_ref2_nam << "'" << std::endl;
+		os << "]";
+	
+		os.flush();
+		return os;
+	}
+
+};
 
 //=================================================================
 // canon_clause
@@ -643,6 +698,7 @@ public:
 DEFINE_PRINT_FUNCS(canon_clause);
 DEFINE_PRINT_FUNCS(variant);
 DEFINE_PRINT_FUNCS(canon_cnf);
+DEFINE_PRINT_FUNCS(ref_strs);
 
 
 #endif		// SKELETON_H

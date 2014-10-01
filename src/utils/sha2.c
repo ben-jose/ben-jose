@@ -39,7 +39,7 @@ sha2 implementation.
 #endif
 
 #include <string.h>
-#include <stdio.h>
+/*include <stdio.h>*/
 
 #include "platform.h"
 #include "sha2.h"
@@ -338,6 +338,8 @@ void sha2( unsigned char *input,  int ilen,
 /*
  * Output = SHA-256( file contents )
  */
+
+/*
 int sha2_file( char *path, unsigned char *output, int is224 )
 {
     FILE *f;
@@ -366,6 +368,7 @@ int sha2_file( char *path, unsigned char *output, int is224 )
     fclose( f );
     return( 0 );
 }
+*/
 
 /*
  * SHA-256 HMAC context setup

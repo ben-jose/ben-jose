@@ -104,7 +104,9 @@ void sha2( unsigned char *input,  int ilen,
  * \return         0 if successful, 1 if fopen failed,
  *                 or 2 if fread failed
  */
-int sha2_file( char *path, unsigned char *output, int is224 );
+
+/*int sha2_file( char *path, unsigned char *output, int is224 );
+ */
 
 /**
  * \brief          SHA-256 HMAC context setup

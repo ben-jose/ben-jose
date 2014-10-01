@@ -614,6 +614,90 @@ dimacs_loader::parse_file(std::string& f_nam, row<long>& inst_ccls)
 	finish_parse(inst_ccls);
 }
 
+void
+dimacs_loader::lits_opps(row<long>& r_lits){
+	for(long jj = 0; jj < r_lits.size(); jj++){
+		long lit = r_lits[jj];
+		r_lits[jj] = -lit;
+	}
+}
+
+void
+dimacs_loader::calc_f_lit_equal_and(long d_lit, row<long>& and_lits,
+			row_row_long_t& rr_lits)
+{
+	DBG_PRT(42, os << "EQ_AND. d_lit=" << d_lit << " and_lits=" << and_lits);
+
+	BRAIN_CK(! and_lits.is_empty());
+	row<long>& f1 = rr_lits.inc_sz();
+
+	and_lits.copy_to(f1);
+	lits_opps(f1);
+	f1.push(d_lit);
+
+	DBG_PRT(42, os << "EQ_AND. ccl=" << f1);
+
+	long ii = 0;
+	for(ii = 0; ii < and_lits.size(); ii++){
+		row<long>& f2 = rr_lits.inc_sz();
+		long a_lit = and_lits[ii];
+
+		f2.push(a_lit);
+		f2.push(-d_lit);
+
+		DBG_PRT(42, os << "EQ_AND. ccl(" << ii << ")=" << f2);
+	}
+
+	and_lits.clear();
+}
+
+void
+print_dimacs_of(std::ostream& os, row<long>& all_lits, long num_cla, long num_var){
+
+	os << k_dimacs_header_str << std::endl;
+	os << "p cnf " << num_var << " " << num_cla << " " << std::endl;
+
+	long first = 0;
+	long neus_cou = 0;
+	long dens_cou = 0;
+
+	for(long ii = 0; ii < all_lits.size(); ii++){
+		long nio_id = all_lits[ii];
+		os << nio_id << " ";
+		if(nio_id == 0){
+			os << std::endl;
+
+			neus_cou++;
+			long num_dens = ii - first;
+			BRAIN_CK(num_dens > 0);
+			dens_cou += num_dens;
+
+			first = ii + 1;
+		}
+	}
+
+	os << std::endl;
+	os.flush();
+}
+
+void
+dimacs_loader::finish_parse(row<long>& inst_ccls)
+{
+	verif_num_ccls(ld_file_name, ld_decl_ccls, ld_parsed_ccls);
+
+	BRAIN_CK(ld_as_3cnf || (ld_nud_added_ccls == 0));
+	BRAIN_CK(ld_as_3cnf || (ld_nud_added_vars == 0));
+	BRAIN_CK(ld_as_3cnf || (ld_nud_added_lits == 0));
+	BRAIN_CK(ld_as_3cnf || (ld_nud_added_twolits == 0));
+
+	ld_num_ccls = ld_decl_ccls + ld_nud_added_ccls;
+	ld_num_vars = ld_decl_vars + ld_nud_added_vars;
+	ld_tot_lits = ld_parsed_lits + ld_nud_added_lits;
+	ld_tot_twolits = ld_parsed_twolits + ld_nud_added_twolits;
+}
+
+
+/*
 // shuffle lits
 
 void
@@ -840,87 +924,4 @@ void		shuffle_full_cnf(tak_mak& rnd_gen, long num_var, row<integer>& the_map,
 	shuffle_cnf_ccls(rnd_gen, the_map, tmp_ccls, out_ccls);
 }
 
-void
-dimacs_loader::lits_opps(row<long>& r_lits){
-	for(long jj = 0; jj < r_lits.size(); jj++){
-		long lit = r_lits[jj];
-		r_lits[jj] = -lit;
-	}
-}
-
-void
-dimacs_loader::calc_f_lit_equal_and(long d_lit, row<long>& and_lits,
-			row_row_long_t& rr_lits)
-{
-	DBG_PRT(42, os << "EQ_AND. d_lit=" << d_lit << " and_lits=" << and_lits);
-
-	BRAIN_CK(! and_lits.is_empty());
-	row<long>& f1 = rr_lits.inc_sz();
-
-	and_lits.copy_to(f1);
-	lits_opps(f1);
-	f1.push(d_lit);
-
-	DBG_PRT(42, os << "EQ_AND. ccl=" << f1);
-
-	long ii = 0;
-	for(ii = 0; ii < and_lits.size(); ii++){
-		row<long>& f2 = rr_lits.inc_sz();
-		long a_lit = and_lits[ii];
-
-		f2.push(a_lit);
-		f2.push(-d_lit);
-
-		DBG_PRT(42, os << "EQ_AND. ccl(" << ii << ")=" << f2);
-	}
-
-	and_lits.clear();
-}
-
-void
-print_dimacs_of(std::ostream& os, row<long>& all_lits, long num_cla, long num_var){
-
-	os << k_dimacs_header_str << std::endl;
-	os << "p cnf " << num_var << " " << num_cla << " " << std::endl;
-
-	long first = 0;
-	long neus_cou = 0;
-	long dens_cou = 0;
-
-	for(long ii = 0; ii < all_lits.size(); ii++){
-		long nio_id = all_lits[ii];
-		os << nio_id << " ";
-		if(nio_id == 0){
-			os << std::endl;
-
-			neus_cou++;
-			long num_dens = ii - first;
-			BRAIN_CK(num_dens > 0);
-			dens_cou += num_dens;
-
-			first = ii + 1;
-		}
-	}
-
-	os << std::endl;
-	os.flush();
-}
-
-void
-dimacs_loader::finish_parse(row<long>& inst_ccls)
-{
-	verif_num_ccls(ld_file_name, ld_decl_ccls, ld_parsed_ccls);
-
-	BRAIN_CK(ld_as_3cnf || (ld_nud_added_ccls == 0));
-	BRAIN_CK(ld_as_3cnf || (ld_nud_added_vars == 0));
-	BRAIN_CK(ld_as_3cnf || (ld_nud_added_lits == 0));
-	BRAIN_CK(ld_as_3cnf || (ld_nud_added_twolits == 0));
-
-	ld_num_ccls = ld_decl_ccls + ld_nud_added_ccls;
-	ld_num_vars = ld_decl_vars + ld_nud_added_vars;
-	ld_tot_lits = ld_parsed_lits + ld_nud_added_lits;
-	ld_tot_twolits = ld_parsed_twolits + ld_nud_added_twolits;
-}
-
-
-
+*/

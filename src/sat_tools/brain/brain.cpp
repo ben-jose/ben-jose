@@ -136,6 +136,8 @@ brain::ck_trail(){
 	BRAIN_CK(br_tot_qu_dots == 0);
 	quanton* last_choice = NULL_PT;
 	quanton* prev_qua = NULL_PT;
+	MARK_USED(prev_qua);
+	
 	long ch_idx = 0;
 	long prev_tier = INVALID_TIER;
 	for(long ii = 0; ii < the_trl.size(); ii++){
@@ -566,7 +568,7 @@ quanton::print_quanton(std::ostream& os, bool from_pt){
 		if(is_nega){ os << '/';  }
 		if(! has_charge()){ os << ")"; }
 
-		//if(dominated){ os << "DOM"; }
+		if(dominated){ os << "DOM"; }
 
 		os.flush();
 		return os;

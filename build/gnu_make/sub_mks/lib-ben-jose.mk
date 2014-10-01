@@ -8,6 +8,7 @@ SOURCES := \
 	$(SRC_BASE_DIR)/sat_tools/brain/sortor.cpp \
 	$(SRC_BASE_DIR)/sat_tools/brain/reverse.cpp \
 	$(SRC_BASE_DIR)/sat_tools/dimacs/dimacs.cpp \
+	$(SRC_BASE_DIR)/sat_tools/shuffler/shuffler.cpp \
 	$(SRC_BASE_DIR)/sat_tools/solver/support.cpp \
 	$(SRC_BASE_DIR)/sat_tools/solver/central.cpp \
 	$(SRC_BASE_DIR)/sat_tools/unsat_db/skeleton.cpp \

@@ -374,6 +374,11 @@ test_nfwt(int argc, char** argv)
 	bool del_skl = false;
 	bool ver_skl = false;
 
+	MARK_USED(exe_wlk);
+	MARK_USED(exe_sub);
+	MARK_USED(exe_sup);
+	MARK_USED(ver_skl);
+	
 	row<std::string> load_ops;
 	row<std::string> pth_ld_ops;
 	row<std::string> delete_ops;

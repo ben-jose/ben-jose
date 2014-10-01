@@ -33,14 +33,6 @@ Some usefult abstract template classes and others.
 #ifndef TOOLS_H
 #define TOOLS_H
 
-#include <cassert>
-#include <cstdio>
-#include <cstdlib>
-#include <iostream>
-#include <sstream>
-#include <set>
-#include <new>
-
 #include <gmpxx.h>
 
 #include "platform.h"
@@ -101,8 +93,6 @@ typedef char			comparison;
 
 typedef mpz_class		big_integer_t;
 typedef mpf_class		big_floating_t;
-
-typedef std::set<std::string> 	string_set_t;
 
 #define CMP_FN_T(nm_fun) comparison (*nm_fun)(obj_t const & obj1, obj_t const & obj2)
 
@@ -170,15 +160,6 @@ template <> struct ILLEGAL_USE_OF_OBJECT<true>{};
 //======================================================================
 // number funcs
 
-inline
-std::string
-long_to_str(long val){
-	std::stringstream ss_val;
-	ss_val << val;
-	TOOLS_CK(! ss_val.str().empty());
-	return ss_val.str();
-}
-
 inline 
 long
 log2(long val){
@@ -198,6 +179,12 @@ abs_long(long val){
 	}
 	TOOLS_CK(val >= 0);
 	return val;
+}
+
+inline
+long
+get_var(long lit){
+	return abs_long(lit);
 }
 
 inline 
@@ -399,15 +386,13 @@ static inline void yield(void){
 //======================================================================
 // random
 
-
+/*
 static inline
 long 
 init_random_nums(long seed = 0){
 	if(seed == 0){
 		seed = time(0);
 	}
-
-
 
 	srand(seed);
 	return seed;
@@ -428,7 +413,7 @@ gen_random_num(long min, long max){
 
 	resp = min + (rand() % diff);
 	return resp;
-}
+}*/
 
 
 //======================================================================
@@ -458,8 +443,7 @@ public:
 		error_code_t err_cod = k_tools_06_exception;
 		DBG_THROW_CK(k_tools_06_exception != k_tools_06_exception);
 		throw err_cod;
-		std::cerr << "func: 'row_data::ck_valid_pt'" << std::endl;
-		abort_func(0); 
+		abort_func(0, "func: 'row_data::ck_valid_pt'"); 
 	}
 
 	virtual void	set_cap(row_index min_cap){ 
@@ -467,8 +451,7 @@ public:
 		error_code_t err_cod = k_tools_03_exception;
 		DBG_THROW_CK(k_tools_03_exception != k_tools_03_exception);
 		throw err_cod;
-		std::cerr << "func: 'row_data::set_cap'" << std::endl;
-		abort_func(0); 
+		abort_func(0, "func: 'row_data::set_cap'"); 
 	}
 
 	virtual void	clear(bool destroy = false, bool dealloc = false, row_index from = 0){ 
@@ -478,8 +461,7 @@ public:
 		error_code_t err_cod = k_tools_04_exception;
 		DBG_THROW_CK(k_tools_04_exception != k_tools_04_exception);
 		throw err_cod;
-		std::cerr << "func: 'row_data::clear'" << std::endl;
-		abort_func(0); 
+		abort_func(0, "func: 'row_data::clear'"); 
 	}
 
 	virtual obj_t&		pos(row_index idx){ 
@@ -487,8 +469,7 @@ public:
 		error_code_t err_cod = k_tools_05_exception;
 		DBG_THROW_CK(k_tools_05_exception != k_tools_05_exception);
 		throw err_cod;
-		std::cerr << "func: 'row_data::pos'" << std::endl;
-		abort_func(0); 
+		abort_func(0, "func: 'row_data::pos'"); 
 		return *((obj_t*)NULL_PT);
 	}
 
@@ -596,6 +577,7 @@ public:
 		pos(idx2) = tmp1;
 	}
 
+	/*
 	row_index	
 	random_swap_last(){
 		TOOLS_CK(sz > 0);
@@ -605,7 +587,7 @@ public:
 			swap(idx1, idx2);
 		}
 		return idx2;
-	}
+	}*/
 
 	obj_t	swap_pop(row_index idx){
 		TOOLS_CK(is_valid_idx(idx));
@@ -1881,7 +1863,7 @@ row<obj_t>::sorted_set_reduce(row<obj_t>& set, cmp_func_t cmp_fn){
 	TOOLS_CK(is_sted);
 }
 
-
+/*
 template<class obj_t>
 long	
 row<obj_t>::shuffle(row_index from, bool init_random){
@@ -1908,7 +1890,7 @@ row<obj_t>::shuffle(row_index from, bool init_random){
 	TOOLS_CK(row<obj_t>::size() == old_sz);
 
 	return seed;
-}
+}*/
 
 template<class obj_t>
 void
@@ -2084,21 +2066,6 @@ public:
 		if(sz == 1){ sz = 0; avg = 0; return; }
 		avg = (avg * ((big_floating_t)sz / (sz - 1))) - (val / (sz - 1));
 		sz--;
-	}
-
-	void	write_in_str(std::string& av_str){
-		av_str = "";
-		std::stringstream ss1;
-		ss1 << avg << std::endl;
-		ss1 << sz << std::endl;
-		ss1.flush();
-		av_str = ss1.str();
-	}
-
-	void	read_from_str(std::string& av_str){
-		std::stringstream ss2(av_str);
-		ss2 >> avg;
-		ss2 >> sz;
 	}
 
 	std::ostream&	print_average(std::ostream& os){
@@ -2304,56 +2271,6 @@ timer::check_period(tmr_func_t tmr_fn, void* pm_fn){
 	}
 	return is_over;
 }
-
-//=================================================================
-// ref_strs
-
-class ref_strs {
-public:	
-	std::string	pd_ref1_nam;
-	std::string	pd_ref2_nam;
-
-	ref_strs(){
-		init_ref_strs();
-	}
-
-	~ref_strs(){
-	}
-
-	void		init_ref_strs(){
-		pd_ref1_nam = "";
-		pd_ref2_nam = "";
-	}
-
-	bool		has_ref(){
-		bool h1 = (pd_ref1_nam != "");
-		bool h2 = (pd_ref2_nam != "");
-		bool has_r = (h1 || h2);
-		TOOLS_CK(! has_r || (h1 && h2));
-		return has_r;
-	}
-
-	std::string	vnt_nam(){
-		return pd_ref1_nam;
-	}
-
-	std::string	lck_nam(){
-		return pd_ref2_nam;
-	}
-
-	std::ostream&	print_ref_strs(std::ostream& os, bool from_pt = false){
-		os << "strs=[" << std::endl;
-		os << " '" << pd_ref1_nam << "'" << std::endl;
-		os << " '" << pd_ref2_nam << "'" << std::endl;
-		os << "]";
-	
-		os.flush();
-		return os;
-	}
-
-};
-
-DEFINE_PRINT_FUNCS(ref_strs);
 
 
 #endif		// TOOLS_H

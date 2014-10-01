@@ -48,9 +48,6 @@ Declaration of functions to read and parse dimacs files.
 #include <sstream>
 
 #include "config.h"
-//include "sha2.h"
-//include "kry.h"
-#include "tak_mak.h"
 #include "print_macros.h"
 
 enum dimacs_exception_code { 
@@ -94,12 +91,6 @@ DECLARE_PRINT_FUNCS(dima_dims)
 void read_file(std::string f_nam, row<char>& f_data);
 void read_problem_decl(const char*& pt_in, long& num_var, long& num_ccl, long& line);
 void print_dimacs_of(std::ostream& os, row<long>& all_lits, long num_cla, long num_var);
-
-inline
-long
-get_var(long lit){
-	return abs_long(lit);
-}
 
 //=================================================================
 // dima_dims
@@ -381,6 +372,7 @@ public:
 //=================================================================
 // map funcs
 
+/*
 void		shuffle_lit_mapping(tak_mak& rnd_gen, row<integer>& to_shuff);
 void		init_lit_mapping(tak_mak& rnd_gen, row<integer>& the_map, long num_var);
 integer		map_literal(row<integer>& the_map, integer lit);
@@ -401,6 +393,8 @@ void		shuffle_full_cnf(tak_mak& rnd_gen, long num_var, row<integer>& the_map,
 
 void		shift_cnf_lits(long the_shift, row<long>& in_out_lits);
 void		join_cnf_lits(row<long>& in_out_lits1, long num_var1, row<long>& in_out_lits2);
+
+*/
 
 //=================================================================
 // print funcs

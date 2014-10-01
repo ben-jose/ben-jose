@@ -33,15 +33,8 @@ Declaration of mem trace funcs and other.
 #ifndef JLQ_MEM_H
 #define JLQ_MEM_H
 
-#include <cassert>
-#include <cstdlib>
-#include <cstring>
 #include <iostream>
-#include <fstream>
-#include <sstream>
-#include <string>
-#include <execinfo.h>
-#include <cxxabi.h>
+#include <cstdlib>
 
 #include "platform.h"
 
@@ -54,20 +47,11 @@ void	dbg_add_to_ptdir(void* pt_val);
 void	dbg_del_from_ptdir(void* pt_val);
 void	dbg_print_ptdir();
 
-bool	print_backtrace( const std::string & file, int line );
-std::string	demangle_cxx_name( const std::string &stack_string );
+void abort_func(long val, std::string msg = "<msg>");
 std::string	get_stack_trace( const std::string & file, int line );
 
-inline
 bool 
-call_assert(bool vv_ck, const std::string & file, int line, std::string ck_str){
-	if(! vv_ck){
-		std::cout << "ASSERT '" << ck_str << "' FAILED" << std::endl;
-		std::cout << get_stack_trace(file, line) << std::endl;
-	}
-	assert(vv_ck);
-	return vv_ck;
-};
+call_assert(bool vv_ck, const std::string & file, int line, std::string ck_str);
 
 #define STACK_STR get_stack_trace(__FILE__, __LINE__)
 
@@ -119,14 +103,6 @@ enum mem_exception_code {
 	k_last_mem_exception
 };
 
-inline
-void abort_func(long val, std::string msg = "<msg>"){
-	std::cerr << std::endl << "ABORTING! " << msg << std::endl; 
-	std::cerr << "Type ENTER.\n";
-	getchar();
-	exit(val);
-}
-
 //======================================================================
 // glb_mem_data
 
@@ -176,8 +152,7 @@ tpl_malloc(size_t the_size = 1){
 				error_code_t err_cod = k_mem_01_exception;
 				DBG_THROW_CK(k_mem_01_exception != k_mem_01_exception);
 				throw err_cod;
-				std::cerr << "FATAL ERROR. Memory exhausted" << std::endl;
-				abort_func(0);
+				abort_func(0, "FATAL ERROR. Memory exhausted");
 			}
 		}
 	);
@@ -187,8 +162,7 @@ tpl_malloc(size_t the_size = 1){
 		error_code_t err_cod = k_mem_02_exception;
 		DBG_THROW_CK(k_mem_02_exception != k_mem_02_exception);
 		throw err_cod;
-		std::cerr << "FATAL ERROR. Memory exhausted" << std::endl;
-		abort_func(0);
+		abort_func(0, "FATAL ERROR. Memory exhausted");
 	}
 	MEM_PT_DIR(dbg_add_to_ptdir(tmp));
 	return tmp; 
@@ -204,8 +178,7 @@ tpl_secure_realloc(obj_t* ptr, size_t old_size, size_t the_size){
 		error_code_t err_cod = k_mem_02_exception;
 		DBG_THROW_CK(k_mem_02_exception != k_mem_02_exception);
 		throw err_cod;
-		std::cerr << "FATAL ERROR. Memory exhausted." << std::endl;
-		abort_func(0);
+		abort_func(0, "FATAL ERROR. Memory exhausted.");
 	}
 	MEM_PT_DIR(dbg_add_to_ptdir(tmp));
 
@@ -238,8 +211,7 @@ tpl_realloc(obj_t* ptr, size_t old_size, size_t the_size){
 				error_code_t err_cod = k_mem_01_exception;
 				DBG_THROW_CK(k_mem_01_exception != k_mem_01_exception);
 				throw err_cod;
-				std::cerr << "FATAL ERROR. Memory exhausted." << std::endl;
-				abort_func(0);
+				abort_func(0, "FATAL ERROR. Memory exhausted.");
 			}
 		}
 	);
@@ -254,8 +226,7 @@ tpl_realloc(obj_t* ptr, size_t old_size, size_t the_size){
 		error_code_t err_cod = k_mem_02_exception;
 		DBG_THROW_CK(k_mem_02_exception != k_mem_02_exception);
 		throw err_cod;
-		std::cerr << "FATAL ERROR. Memory exhausted." << std::endl;
-		abort_func(0);
+		abort_func(0, "FATAL ERROR. Memory exhausted.");
 	}
 	MEM_PT_DIR(dbg_add_to_ptdir(tmp));
 	return tmp; 

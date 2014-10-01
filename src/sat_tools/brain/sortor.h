@@ -1003,9 +1003,6 @@ public:
 	void		stab_release_all_sorsets();
 	void		stab_save_it();
 	void		stab_recover_it();
-	bool		stab_phase_1(skeleton_glb& skg, mem_op_t mm, ref_strs& phd);
-	bool		stab_phase_2(skeleton_glb& skg, mem_op_t mm, ref_strs& phd);
-	bool		stab_phase_3(skeleton_glb& skg, mem_op_t mm, ref_strs& phd);
 
 	bool		all_flags_ccl(canon_clause& ccl, bool val);
 	bool		ck_step_sortees();
@@ -1018,7 +1015,6 @@ public:
 	canon_cnf&	stab_mutual_get_cnf(skeleton_glb& skg, std::string comment, bool sorted_cnf);
 	void		stab_mutual_choose_one(sort_glb& srg2);
 
-	bool		oper_all_stabs(skeleton_glb& skg, mem_op_t mm, ref_strs& phd);
 	bool		base_path_exists(skeleton_glb& skg);
 
 	bool		ck_all_tees_related();
