@@ -164,16 +164,6 @@ bool	dbg_print_cond_func(bool prm,
 
 //--end_of_def
 
-#define	ABORT_WITH(ex_id, msg_str) \
-	error_code_t err_cod = ex_id; \
-	DBG_PRT(DBG_ALL_LVS, os << "ABORTED !!! " << #msg_str); \
-	DBG_THROW_CK(ex_id != ex_id); \
-	throw err_cod; \
-	std::cerr << "func: 'msg_str'" << std::endl; \
-	abort_func(0); \
-
-// end_of_def
-
 #define SUPPORT_CK(prm) \
 	DBG_CK(dbg_print_cond_func((! (prm)), true, __FILE__, __LINE__, #prm)); \
 
@@ -208,24 +198,6 @@ bool	dbg_print_cond_func(bool prm,
 // typedefs and defines
 
 class brain;
-
-enum brain_exception_code { 
-	k_brain_01_exception = k_last_dimacs_exception,
-	k_brain_02_exception,
-	k_brain_03_exception,
-	k_brain_04_exception,
-	k_brain_05_exception,
-	k_brain_06_exception,
-	k_last_brain_exception
-};
-
-enum global_exception_code { 
-	k_unknown_exception = k_last_brain_exception,
-	k_log_exception,
-	k_last_global_exception
-};
-
-//#define k_last_code_exception k_last_global_exception
 
 typedef	int	location;
 
@@ -344,7 +316,7 @@ global_data&	GLB();
 void		glb_set_memout();
 long		get_free_mem_kb();
 
-typedef	void 	(global_data::*dbg_info_fn_t)();
+//typedef	void 	(global_data::*dbg_info_fn_t)();
 
 class runoptions {
 public:
@@ -412,8 +384,6 @@ public:
 	long			dbg_current_start_entry;
 	long			dbg_current_stop_entry;
 
-	row<dbg_info_fn_t>	dbg_exception_info_funcs;
-
 	long			dbg_num_laps;
 
 	bool			dbg_ic_active;
@@ -465,8 +435,6 @@ public:
 	std::string		gg_file_name;
 
 	skeleton_glb		gg_skeleton;
-
-	row<std::string>	exception_strings;
 
 	void 		init_global_data();
 	void 		finish_global_data();
@@ -535,10 +503,7 @@ public:
 		return true;
 	}
 
-	void		init_exception_strings();
 	std::string	init_log_name(std::string sufix);
-
-	void	init_dbg_exception_info_funcs();
 
 	void 	dbg_update_config_entries();
 
@@ -554,11 +519,6 @@ public:
 	
 		os << "NO DBG INFO AVAILABLE " << 
 		"(define a func for this error code)" << std::endl; 
-	}
-
-	void	dbg_call_info_func(long err_cod){
-		dbg_info_fn_t the_fn = dbg_exception_info_funcs[err_cod];
-		(this->*the_fn)();
 	}
 
 	std::string	get_curr_f_nam(){
@@ -673,7 +633,8 @@ void	read_batch_instances(std::string file_nm, row<instance_info>& f_insts);
 bool	all_results_batch_instances(std::string file_nm, satisf_val r_val);
 void	get_enter(std::ostream& os, std::string msg);
 void	do_all_instances();
-int	tests_main_(int argc, char** argv);
+int		tests_main_(int argc, char** argv);
+int		solver_main(int argc, char** argv);
 
 //=================================================================
 // implemented in brain.cpp

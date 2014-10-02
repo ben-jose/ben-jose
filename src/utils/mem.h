@@ -37,6 +37,7 @@ Declaration of mem trace funcs and other.
 #include <cstdlib>
 
 #include "platform.h"
+#include "top_exception.h"
 
 //define MEM_PT_DIR(prm)	prm
 #define MEM_PT_DIR(prm)	;
@@ -97,10 +98,15 @@ typedef t_4byte			t_dword;
 
 #define MAX_MEM_SZ		MAX_UTYPE(mem_size)
 
-enum mem_exception_code { 
-	k_mem_01_exception = 1,
-	k_mem_02_exception,
-	k_last_mem_exception
+//======================================================================
+// bit_row_exception
+
+class mem_exception : public top_exception {
+public:
+	mem_exception(char* descr = as_pt_char("undefined mem exception")){
+		ex_nm = descr;
+		ex_id = 0;
+	}
 };
 
 //======================================================================
@@ -149,20 +155,20 @@ tpl_malloc(size_t the_size = 1){
 			if(MEM_STATS.set_memout_func != NULL_PT){
 				(*MEM_STATS.set_memout_func)();
 			} else {
-				error_code_t err_cod = k_mem_01_exception;
-				DBG_THROW_CK(k_mem_01_exception != k_mem_01_exception);
-				throw err_cod;
-				abort_func(0, "FATAL ERROR. Memory exhausted");
+				char* mem_out_in_malloc = as_pt_char("Memory exhausted in tpl_malloc");
+				DBG_THROW_CK(mem_out_in_malloc != mem_out_in_malloc);
+				throw mem_exception(mem_out_in_malloc);
+				abort_func(0, mem_out_in_malloc);
 			}
 		}
 	);
 
 	obj_t*   tmp = (obj_t*)malloc(mem_sz);
 	if((tmp == NULL_PT) && (the_size != 0)){
-		error_code_t err_cod = k_mem_02_exception;
-		DBG_THROW_CK(k_mem_02_exception != k_mem_02_exception);
-		throw err_cod;
-		abort_func(0, "FATAL ERROR. Memory exhausted");
+		char* mem_out_in_malloc_2 = as_pt_char("Memory exhausted in tpl_malloc case 2");
+		DBG_THROW_CK(mem_out_in_malloc_2 != mem_out_in_malloc_2);
+		throw mem_exception(mem_out_in_malloc_2);
+		abort_func(0, mem_out_in_malloc_2);
 	}
 	MEM_PT_DIR(dbg_add_to_ptdir(tmp));
 	return tmp; 
@@ -175,10 +181,10 @@ tpl_secure_realloc(obj_t* ptr, size_t old_size, size_t the_size){
 	mem_size mem_sz = the_size * sizeof(obj_t);
 	obj_t*   tmp = (obj_t*)malloc(mem_sz);
 	if((tmp == NULL_PT) && (the_size != 0)){
-		error_code_t err_cod = k_mem_02_exception;
-		DBG_THROW_CK(k_mem_02_exception != k_mem_02_exception);
-		throw err_cod;
-		abort_func(0, "FATAL ERROR. Memory exhausted.");
+		char* mem_out_in_sec_realloc = as_pt_char("Memory exhausted in tpl_secure_realloc");
+		DBG_THROW_CK(mem_out_in_sec_realloc != mem_out_in_sec_realloc);
+		throw mem_exception(mem_out_in_sec_realloc);
+		abort_func(0, mem_out_in_sec_realloc);
 	}
 	MEM_PT_DIR(dbg_add_to_ptdir(tmp));
 
@@ -208,10 +214,10 @@ tpl_realloc(obj_t* ptr, size_t old_size, size_t the_size){
 			if(MEM_STATS.set_memout_func != NULL_PT){
 				(*MEM_STATS.set_memout_func)();
 			} else {
-				error_code_t err_cod = k_mem_01_exception;
-				DBG_THROW_CK(k_mem_01_exception != k_mem_01_exception);
-				throw err_cod;
-				abort_func(0, "FATAL ERROR. Memory exhausted.");
+				char* mem_out_in_realloc = as_pt_char("Memory exhausted in tpl_realloc");
+				DBG_THROW_CK(mem_out_in_realloc != mem_out_in_realloc);
+				throw mem_exception(mem_out_in_realloc);
+				abort_func(0, mem_out_in_realloc);
 			}
 		}
 	);
@@ -223,10 +229,10 @@ tpl_realloc(obj_t* ptr, size_t old_size, size_t the_size){
 	MEM_PT_DIR(dbg_del_from_ptdir(ptr));
 	obj_t*   tmp = (obj_t*)realloc((void*)ptr, mem_sz);
 	if((tmp == NULL_PT) && (the_size != 0)){
-		error_code_t err_cod = k_mem_02_exception;
-		DBG_THROW_CK(k_mem_02_exception != k_mem_02_exception);
-		throw err_cod;
-		abort_func(0, "FATAL ERROR. Memory exhausted.");
+		char* mem_out_in_realloc_2 = as_pt_char("Memory exhausted in tpl_realloc case 2");
+		DBG_THROW_CK(mem_out_in_realloc_2 != mem_out_in_realloc_2);
+		throw mem_exception(mem_out_in_realloc_2);
+		abort_func(0, mem_out_in_realloc_2);
 	}
 	MEM_PT_DIR(dbg_add_to_ptdir(tmp));
 	return tmp; 

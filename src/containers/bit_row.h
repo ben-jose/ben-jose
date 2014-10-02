@@ -34,6 +34,7 @@ binary rows of bits.
 #ifndef BIT_ROW_H
 #define BIT_ROW_H
 
+#include "top_exception.h"
 #include "mem.h"
 
 typedef long		bit_row_index;
@@ -56,12 +57,6 @@ typedef long		bit_row_index;
 
 #define BITS_CK(prm)	   	DBG_CK(prm)
 
-enum bit_row_exception_code { 
-	k_bit_row_01_exception = k_last_mem_exception,
-	k_bit_row_02_exception,
-	k_last_bit_row_exception
-};
-
 //======================================================================
 // bitarray
 
@@ -77,6 +72,17 @@ enum bit_row_exception_code {
 
 #define to_bytes(num_bits)	(div8(num_bits) + (mod8(num_bits) > 0))
 #define to_bits(num_bytes)	(num_bytes * k_num_bits_byte)
+
+//======================================================================
+// bit_row_exception
+
+class bit_row_exception : public top_exception {
+public:
+	bit_row_exception(char* descr = as_pt_char("undefined bit_row exception")){
+		ex_nm = descr;
+		ex_id = 0;
+	}
+};
 
 //======================================================================
 // bit_row
@@ -115,19 +121,19 @@ private:
 
 	bit_row&  operator = (bit_row& other){
 		MARK_USED(other);
-		error_code_t err_cod = k_bit_row_01_exception;
-		DBG_THROW_CK(k_bit_row_01_exception != k_bit_row_01_exception);
-		throw err_cod;
-		abort_func(0, "FATAL ERROR. Memory exhausted");
+		char* bit_row_bad_eq_op = as_pt_char("Memory exhausted during op =");
+		DBG_THROW_CK(bit_row_bad_eq_op != bit_row_bad_eq_op);
+		throw bit_row_exception(bit_row_bad_eq_op);
+		abort_func(0, bit_row_bad_eq_op);
 		return (*this);
 	}
 
 	bit_row(bit_row& other){ 
 		MARK_USED(other);
-		error_code_t err_cod = k_bit_row_02_exception;
-		DBG_THROW_CK(k_bit_row_02_exception != k_bit_row_02_exception);
-		throw err_cod;
-		abort_func(0, "FATAL ERROR. Memory exhausted");
+		char* bit_row_bad_creat = as_pt_char("Memory exhausted during creator bit_row");
+		DBG_THROW_CK(bit_row_bad_creat != bit_row_bad_creat);
+		throw bit_row_exception(bit_row_bad_creat);
+		abort_func(0, bit_row_bad_creat);
 	}
 
 public:

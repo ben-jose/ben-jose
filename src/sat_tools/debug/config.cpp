@@ -38,6 +38,20 @@ Functions to read and parse config files.
 #include "support.h"
 
 
+//======================================================================
+// parse_exception
+
+class parse_exception : public top_exception {
+public:
+	parse_exception(char* descr = as_pt_char("undefined parse exception")){
+		ex_nm = descr;
+		ex_id = 0;
+	}
+};
+
+//======================================================================
+// parse funcs
+
 std::ostringstream& parse_err_msg(std::string hd_msg, long num_line, char ch_err, std::string msg)
 {
 	GLB().reset_err_msg();
@@ -116,10 +130,10 @@ integer parse_int(const char*& pt_in, long line) {
 			parse_err_msg("PARSE ERROR. ", line, (char)(*pt_in), "");
 		MARK_USED(msg);
 
-		GLB().error_cod = k_config_02_exception;
-		DBG_THROW_CK(k_config_02_exception != k_config_02_exception);
-		throw GLB().error_cod;
-		abort_func(1);
+		char* parse_bad_int = as_pt_char("parsing exception. bad integer.");
+		DBG_THROW_CK(parse_bad_int != parse_bad_int);
+		throw parse_exception(parse_bad_int);
+		abort_func(1, parse_bad_int);
 	}
 	while(isdigit(*pt_in)){
 		val = val*10 + (*pt_in - '0');

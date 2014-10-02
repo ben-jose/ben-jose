@@ -36,30 +36,10 @@ Some usefult abstract template classes and others.
 #include <gmpxx.h>
 
 #include "platform.h"
+#include "top_exception.h"
 #include "mem.h"
 #include "bit_row.h"
 #include "print_macros.h"
-
-#ifndef BIT_ROW_H
-#define k_first_tools_exception k_last_mem_exception
-#else
-#define k_first_tools_exception k_last_bit_row_exception
-#endif
-
-enum tool_exception_code { 
-	k_tools_01_exception = k_first_tools_exception,
-	k_tools_02_exception,
-	k_tools_03_exception,
-	k_tools_04_exception,
-	k_tools_05_exception,
-	k_tools_06_exception,
-	k_tools_07_exception,
-	k_tools_08_exception,
-	k_tools_09_exception,
-	k_tools_10_exception,
-	k_tools_11_exception,
-	k_last_tool_exception
-};
 
 enum dbg_call_id { 
 	dbg_call_1 = 201,
@@ -156,6 +136,17 @@ enum	cmp_is_sub {
 template <bool> struct ILLEGAL_USE_OF_OBJECT;
 template <> struct ILLEGAL_USE_OF_OBJECT<true>{};
 #define OBJECT_COPY_ERROR ILLEGAL_USE_OF_OBJECT<false>()
+
+//======================================================================
+// bit_row_exception
+
+class row_exception : public top_exception {
+public:
+	row_exception(char* descr = as_pt_char("undefined row exception")){
+		ex_nm = descr;
+		ex_id = 0;
+	}
+};
 
 //======================================================================
 // number funcs
@@ -440,36 +431,36 @@ public:
 
 	virtual bool	ck_valid_pt(obj_t* pt_obj){ 
 		MARK_USED(pt_obj);
-		error_code_t err_cod = k_tools_06_exception;
-		DBG_THROW_CK(k_tools_06_exception != k_tools_06_exception);
-		throw err_cod;
-		abort_func(0, "func: 'row_data::ck_valid_pt'"); 
+		char* row_bad_pt = as_pt_char("invalid pointer exception row_data::ck_valid_pt");
+		DBG_THROW_CK(row_bad_pt != row_bad_pt);
+		throw row_exception(row_bad_pt);
+		abort_func(0, row_bad_pt); 
 	}
 
 	virtual void	set_cap(row_index min_cap){ 
 		MARK_USED(min_cap);
-		error_code_t err_cod = k_tools_03_exception;
-		DBG_THROW_CK(k_tools_03_exception != k_tools_03_exception);
-		throw err_cod;
-		abort_func(0, "func: 'row_data::set_cap'"); 
+		char* row_bad_call_set_cap = as_pt_char("invalid call exception row_data::set_cap");
+		DBG_THROW_CK(row_bad_call_set_cap != row_bad_call_set_cap);
+		throw row_exception(row_bad_call_set_cap);
+		abort_func(0, row_bad_call_set_cap); 
 	}
 
 	virtual void	clear(bool destroy = false, bool dealloc = false, row_index from = 0){ 
 		MARK_USED(destroy);
 		MARK_USED(dealloc);
 		MARK_USED(from);
-		error_code_t err_cod = k_tools_04_exception;
-		DBG_THROW_CK(k_tools_04_exception != k_tools_04_exception);
-		throw err_cod;
-		abort_func(0, "func: 'row_data::clear'"); 
+		char* row_bad_call_clear = as_pt_char("invalid call exception row_data::clear");
+		DBG_THROW_CK(row_bad_call_clear != row_bad_call_clear);
+		throw row_exception(row_bad_call_clear);
+		abort_func(0, row_bad_call_clear); 
 	}
 
 	virtual obj_t&		pos(row_index idx){ 
 		MARK_USED(idx);
-		error_code_t err_cod = k_tools_05_exception;
-		DBG_THROW_CK(k_tools_05_exception != k_tools_05_exception);
-		throw err_cod;
-		abort_func(0, "func: 'row_data::pos'"); 
+		char* row_bad_call_pos = as_pt_char("invalid call exception row_data::pos");
+		DBG_THROW_CK(row_bad_call_pos != row_bad_call_pos);
+		throw row_exception(row_bad_call_pos);
+		abort_func(0, row_bad_call_pos); 
 		return *((obj_t*)NULL_PT);
 	}
 

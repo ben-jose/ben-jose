@@ -53,6 +53,7 @@ file for test and debugging purposes.
 #include "tak_mak.h"
 #include "skeleton.h"
 
+#include "top_exception.h"
 
 skeleton_glb 	GSKE;
 tak_mak*	glb_test_tak_mak = NULL_PT;
@@ -63,6 +64,7 @@ void	test_sorted_ops();
 void	test_sorted_ops2();
 void	test_subsets();
 void 	test_nfwt(int argc, char** argv);
+void 	test_thrw_obj();
 
 void
 test_creat(int argc, char** argv){
@@ -1173,44 +1175,6 @@ test_num1(){
 	os << "num_vnts=" << num_vnts << std::endl;
 }
 
-int	tests_main_(int argc, char** argv){
-	MARK_USED(argc);
-	MARK_USED(argv);
-	std::ostream& os = std::cout;
-
-	MEM_CTRL(mem_size tt_mem_in_u = MEM_STATS.num_bytes_in_use;)
-	MEM_CTRL(MARK_USED(tt_mem_in_u));
-
-	//test_realpath(argc, argv);
-	//test_subsets();
-	//test_dims_to_path(argc, argv);
-	//test_sets();
-	//test_big4();
-	//test_str1();
-	//test_symlk(argc, argv);
-	//test_tm_elapsed(argc, argv);
-	//test_open_unlink(argc, argv);
-	//test_row_reduc();
-	//test_sorted_ops2();
-	//test_lk_name();
-	//test_num1();
-	test_skl();
-
-	os << "ENDING TESTS___________  MEM_STATS.num_bytes_in_use = " << MEM_STATS.num_bytes_in_use << std::endl;
-	os.flush();
-
-	DBG_CK(tt_mem_in_u == MEM_STATS.num_bytes_in_use);
-
-	//MEM_CTRL(mem_size mem_u = MEM_STATS.num_bytes_in_use;)  // not nedded. tested during
-	//SUPPORT_CK(mem_u == MEM_STATS.num_bytes_in_use); // mem.cpp MEM_STATS destruction
-
-	os << std::endl;
-	os << "End of tests" << std::endl;
-	//getchar();
-
-	return 0;
-}
-
 
 #define SOR_NUM_ASSIGS		1000
 #define SOR_MAX_VARS_ROW	5
@@ -1301,5 +1265,72 @@ void	test_sorted_ops2(){
 	}
 	os << std::endl << "ALL_OK" << std::endl;
 
+}
+
+int	tests_main_(int argc, char** argv){
+	MARK_USED(argc);
+	MARK_USED(argv);
+	std::ostream& os = std::cout;
+
+	MEM_CTRL(mem_size tt_mem_in_u = MEM_STATS.num_bytes_in_use;)
+	MEM_CTRL(MARK_USED(tt_mem_in_u));
+
+	//test_realpath(argc, argv);
+	//test_subsets();
+	//test_dims_to_path(argc, argv);
+	//test_sets();
+	//test_big4();
+	//test_str1();
+	//test_symlk(argc, argv);
+	//test_tm_elapsed(argc, argv);
+	//test_open_unlink(argc, argv);
+	//test_row_reduc();
+	//test_sorted_ops2();
+	//test_lk_name();
+	//test_num1();
+	//test_skl();  // last before ben-jose
+	
+	test_thrw_obj();
+
+	os << "ENDING TESTS___________  MEM_STATS.num_bytes_in_use = " << MEM_STATS.num_bytes_in_use << std::endl;
+	os.flush();
+
+	DBG_CK(tt_mem_in_u == MEM_STATS.num_bytes_in_use);
+
+	//MEM_CTRL(mem_size mem_u = MEM_STATS.num_bytes_in_use;)  // not nedded. tested during
+	//SUPPORT_CK(mem_u == MEM_STATS.num_bytes_in_use); // mem.cpp MEM_STATS destruction
+
+	os << std::endl;
+	os << "End of tests" << std::endl;
+	//getchar();
+
+	return 0;
+}
+
+class sub_excep : public top_exception {
+public:
+	sub_excep(){
+		ex_nm = as_pt_char("THE_SUB_EXCEP");
+		ex_id = 0;
+	}
+};
+
+void th_excep(){
+	throw top_exception();
+}
+
+void th_sub_excep(){
+	throw sub_excep();
+}
+
+void test_thrw_obj(){
+	std::ostream& os = std::cout;
+	
+	try {
+		th_sub_excep();
+	} catch (const top_exception& ex1){
+		os << "GOT THE EXCEP=" << ex1.ex_nm << std::endl;
+		//delete ex1;
+	}
 }
 

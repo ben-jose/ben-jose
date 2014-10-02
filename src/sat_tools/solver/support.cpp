@@ -33,6 +33,7 @@ Global classes and functions that support and assist the system.
 #include <limits.h>
 #include <cstring>
 
+#include "top_exception.h"
 #include "support.h"
 #include "config.h"
 #include "sortor.h"
@@ -111,6 +112,17 @@ get_free_mem_kb(){
 	}
 	return free_mem_kb;
 }
+
+//======================================================================
+// file_exception
+
+class file_exception : public top_exception {
+public:
+	file_exception(char* descr = as_pt_char("undefined file exception")){
+		ex_nm = descr;
+		ex_id = 0;
+	}
+};
 
 //============================================================
 // global_data
@@ -268,8 +280,6 @@ global_data::init_global_data(){
 
 	//gg_skeleton.init_paths();
 
-	init_dbg_exception_info_funcs();
-	init_exception_strings();
 	init_glb_nams();
 
 	set_active_out_levs();
@@ -292,47 +302,6 @@ global_data::set_active_out_levs(){
 
 }
 
-void	
-global_data::init_exception_strings(){
-	exception_strings.fill("", k_last_global_exception);
-
-	exception_strings[k_tools_01_exception] = 
-		"FATAL ERROR. Available memory exhausted.";
-	exception_strings[k_tools_02_exception] = 
-		"FATAL ERROR tools_02. Memory exhausted.";
-	exception_strings[k_tools_03_exception] = 
-		"FATAL ERROR tools_03. Internal row error.";
-	exception_strings[k_tools_04_exception] = 
-		"FATAL ERROR tools_04. Internal row error.";
-	exception_strings[k_tools_05_exception] = 
-		"FATAL ERROR tools_05. Internal row error.";
-	exception_strings[k_tools_06_exception] = 
-		"FATAL ERROR tools_06. Internal row error.";
-
-	exception_strings[k_brain_01_exception] = 
-		"EXCEPTION brain_01. Cannot open instance file.";
-
-	exception_strings[k_brain_02_exception] =
-		"EXCEPTION brain_02. Difference in number of clauses declared vs found.";
-
-	exception_strings[k_brain_03_exception] =
-		"EXCEPTION brain_03. Cannot open solver file for writing.";
-
-	exception_strings[k_brain_04_exception] =
-		"EXCEPTION brain_04. Cannot move solver file.";
-
-	exception_strings[k_brain_05_exception] =
-		"EXCEPTION brain_05. Cannot create path for solver file.";
-
-	exception_strings[k_brain_06_exception] =
-		"EXCEPTION brain_06. Cannot create path.";
-}
-
-void
-global_data::init_dbg_exception_info_funcs(){
-	dbg_exception_info_funcs.fill(&global_data::dbg_default_info, k_last_global_exception);
-}
-
 /*
 double
 global_data::mem_percent_used(){
@@ -349,11 +318,6 @@ global_data::mem_percent_used(){
 std::ostream&
 global_data::print_mem_used(std::ostream& os){
 	if(GLB().using_mem_ctrl){
-
-
-
-
-
 		os << GLB().batch_stat_mem_used;
 		/*
 		long used_mem = (long)mem_percent_used();
@@ -845,12 +809,8 @@ void	call_and_handle_exceptions(core_func_t the_func){
 	catch (long code) {
 		err_header(msg_err);
 		msg_err << GLB().error_stm.str();
-		if(GLB().exception_strings.is_valid_idx(code)){
-			msg_err << GLB().exception_strings[code];
-		}
 		std::cerr << msg_err.str() << std::endl;
 		log_message(msg_err);
-		DBG(GLB().dbg_call_info_func(code));
 		abort_func(0);
 	}
 	catch (...) {
@@ -890,10 +850,10 @@ void	read_batch_file(row<instance_info>& names){
 		GLB().reset_err_msg();
 		GLB().error_stm << "Could not open file " << GLB().batch_name << ".";
 
-		GLB().error_cod = k_brain_04_exception;
-		DBG_THROW_CK(k_brain_01_exception != k_brain_01_exception);
-		throw GLB().error_cod;
-		abort_func(1);
+		char* file_cannot_open = as_pt_char("Cannot open file exception");
+		DBG_THROW_CK(file_cannot_open != file_cannot_open);
+		throw file_exception(file_cannot_open);
+		abort_func(1, file_cannot_open);
 	}
 
 	names.set_cap(1000);
@@ -1259,57 +1219,4 @@ int	solver_main(int argc, char** argv){
 	return resp;
 }
 
-
-int	main(int argc, char** argv){
-	//int rr = tests_main_(argc, argv);
-	int rr = solver_main(argc, argv);
-	return rr;
-}
-
-/*
-
-==============================================================
-method pointers
-
-DECL example
-char (the_class::*the_method_pt)(int param1);
-
-ASSIG example
-the_method_pt = &the_class::a_method_of_the_class;
-
-CALL Example
-char cc = (an_object_of_the_class.*the_method_pt)(3);
-
-
-Note that "::*", ".*" and "->*" are actually 
-separate C++ operators.  
-
-	reason, reasoning, reasoned, reasoner
-
-		inductive, induce, induced, inducing, inducible
-
-		deductive, deduce, deduced, deducing, deducible
-
-		learn, learned, learning, learnable, learner
-
-		specify, specified, specifying, specifiable, 
-		specifier, specifies, specification
-
-	study, studying, studied, studiable, studies
-
-		analytic, analyze, analysed, analysing, analyzable
-		analyser, analysis
-
-		synthetic, synthesize, synthesized, synthesizing, 
-		synthesizer, synthesis
-
-		memorize, memorized, memorizing, memorizable, memorizer
-
-		simplify, simplified, simplifying, simplificative, 
-		simplifier, simplifies, simplification
-
-
-	specify induce deduce simplify learn analyze synthesize
-
-*/
 

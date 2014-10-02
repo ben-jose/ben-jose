@@ -50,23 +50,6 @@ Declaration of functions to read and parse dimacs files.
 #include "config.h"
 #include "print_macros.h"
 
-enum dimacs_exception_code { 
-	k_dimacs_01_exception = k_last_config_exception,
-	k_dimacs_02_exception,
-	k_dimacs_03_exception,
-	k_dimacs_04_exception,
-	k_dimacs_05_exception,
-	k_dimacs_06_exception,
-	k_dimacs_07_exception,
-	k_dimacs_08_exception,
-	k_dimacs_09_exception,
-	k_dimacs_10_exception,
-	k_dimacs_11_exception,
-	k_dimacs_12_exception,
-	k_dimacs_13_exception,
-	k_last_dimacs_exception
-};
-
 class dima_dims;
 
 #define DIMACS_DBG(prm)	DBG(prm)
