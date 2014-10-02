@@ -134,9 +134,9 @@ extern bool	dbg_bad_cycle1;
 
 bool	dbg_print_cond_func(bool prm,
 		bool is_ck = false,
-		const std::string fnam = "NO_NAME",
+		const ch_string fnam = "NO_NAME",
 		int lnum = 0,
-		const std::string prm_str = "NO_PRM",
+		const ch_string prm_str = "NO_PRM",
 		long dbg_lv = INVALID_DBG_LV);
 
 #define	DBG_PRT_COND(lev, cond, comm)	\
@@ -232,14 +232,14 @@ enum satisf_val {
 	k_error
 };
 
-extern std::string	satisf_val_nams[];
+extern ch_string	satisf_val_nams[];
 
 #define k_first_satisf_val		k_unknown_satisf
 #define k_last_satisf_val		(k_error + 1)
 
 class instance_info {
 public:
-	std::string		ist_file_path;
+	ch_string		ist_file_path;
 	satisf_val		ist_result;
 	double			ist_solve_time;
 	long			ist_num_vars;
@@ -261,7 +261,7 @@ public:
 		ist_num_laps = 0;
 	}
 
-	std::string	get_f_nam(){
+	ch_string	get_f_nam(){
 		return ist_file_path;
 	}
 
@@ -270,8 +270,8 @@ public:
 
 	std::ostream& 	print_instance_info(std::ostream& os);
 
-	void		parse_instance(std::string str_ln, long line);
-	std::string	parse_field(const char*& pt_in);
+	void		parse_instance(ch_string str_ln, long line);
+	ch_string	parse_field(const char*& pt_in);
 };
 
 inline
@@ -325,7 +325,7 @@ public:
 	bool	ro_only_save;
 	bool	ro_keep_skeleton;
 
-	std::string	ro_skeleton_root_path;
+	ch_string	ro_skeleton_root_path;
 
 	runoptions(){
 		init_runoptions();
@@ -348,8 +348,8 @@ class global_data {
 public:
 	bool			using_mem_ctrl;
 
-	std::string		help_str;
-	std::string		version_str;
+	ch_string		help_str;
+	ch_string		version_str;
 
 	bool			op_debug_clean_code;
 	bool			op_just_read;
@@ -369,7 +369,7 @@ public:
 
 	mem_size 		dbg_mem_at_start;
 
-	std::string		dbg_file_name;
+	ch_string		dbg_file_name;
 	std::ofstream		dbg_file;
 	std::ostream*		dbg_os;
 	std::ostream*		dbg_os_bak;
@@ -395,15 +395,15 @@ public:
 	std::ostringstream	error_stm;
 	long			error_cod;
 
-	std::string		input_file_nm;
-	//std::string		output_file_nm;
+	ch_string		input_file_nm;
+	//ch_string		output_file_nm;
 
 	bool			batch_log_on;
-	std::string		batch_name;
-	std::string		batch_log_name;
-	std::string		batch_end_log_name;
-	std::string		batch_end_msg_name;
-	std::string		batch_answer_name;
+	ch_string		batch_name;
+	ch_string		batch_log_name;
+	ch_string		batch_end_log_name;
+	ch_string		batch_end_msg_name;
+	ch_string		batch_answer_name;
 
 	integer			batch_num_files;
 	integer			batch_consec;
@@ -432,7 +432,7 @@ public:
 
 	row<instance_info>	batch_instances;
 
-	std::string		gg_file_name;
+	ch_string		gg_file_name;
 
 	skeleton_glb		gg_skeleton;
 
@@ -503,7 +503,7 @@ public:
 		return true;
 	}
 
-	std::string	init_log_name(std::string sufix);
+	ch_string	init_log_name(ch_string sufix);
 
 	void 	dbg_update_config_entries();
 
@@ -521,7 +521,7 @@ public:
 		"(define a func for this error code)" << std::endl; 
 	}
 
-	std::string	get_curr_f_nam(){
+	ch_string	get_curr_f_nam(){
 		if(batch_instances.is_empty()){
 			return "UKNOWN FILE NAME";
 		}
@@ -529,8 +529,8 @@ public:
 		return inst_info.get_f_nam();
 	}
 
-	std::string	get_file_name(bool& is_batch){
-		std::string f_nam = gg_file_name;
+	ch_string	get_file_name(bool& is_batch){
+		ch_string f_nam = gg_file_name;
 		is_batch = false;
 		if(batch_name.size() > 0){
 			is_batch = true;
@@ -560,7 +560,7 @@ public:
 	void	print_final_assig();
 	void	count_instance(instance_info& inst_info);
 
-	//int	walk_neuron_tree(std::string& dir_nm);
+	//int	walk_neuron_tree(ch_string& dir_nm);
 
 	std::ostream&	print_mini_stats(std::ostream& os);
 	std::ostream& 	print_stats(std::ostream& os, double current_secs = 0.0);
@@ -578,7 +578,7 @@ public:
 inline
 std::ostream& 	
 instance_info::print_headers(std::ostream& os){
-	std::string sep = RESULT_FIELD_SEP;
+	ch_string sep = RESULT_FIELD_SEP;
 	os << "file_path" << sep;
 	os << "solve_time" << sep;
 	os << "result" << sep;
@@ -592,7 +592,7 @@ instance_info::print_headers(std::ostream& os){
 inline
 std::ostream& 	
 instance_info::print_instance_info(std::ostream& os){
-	std::string sep = RESULT_FIELD_SEP;
+	ch_string sep = RESULT_FIELD_SEP;
 	os << ist_file_path << sep;
 	os << satisf_val_nams[ist_result] << sep;
 	os << ist_solve_time << sep;
@@ -620,18 +620,18 @@ std::ostream& operator << (std::ostream& os, debug_entry& dbg_ety){
 
 typedef void (*core_func_t)(void);
 
-std::string	get_log_name(std::string f_nam, std::string sufix);
+ch_string	get_log_name(ch_string f_nam, ch_string sufix);
 
 void	init_dbg_conf();
 void	err_header(std::ostringstream& msg_err);
 void	log_message(const std::ostringstream& msg_log);
 void	log_batch_info();
 void	call_and_handle_exceptions(core_func_t the_func);
-void	chomp_string(std::string& s1);
-void	read_batch_file(row<std::string*>& names);
-void	read_batch_instances(std::string file_nm, row<instance_info>& f_insts);
-bool	all_results_batch_instances(std::string file_nm, satisf_val r_val);
-void	get_enter(std::ostream& os, std::string msg);
+void	chomp_string(ch_string& s1);
+void	read_batch_file(row<ch_string*>& names);
+void	read_batch_instances(ch_string file_nm, row<instance_info>& f_insts);
+bool	all_results_batch_instances(ch_string file_nm, satisf_val r_val);
+void	get_enter(std::ostream& os, ch_string msg);
 void	do_all_instances();
 int		tests_main_(int argc, char** argv);
 int		solver_main(int argc, char** argv);

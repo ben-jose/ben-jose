@@ -89,10 +89,10 @@ DECLARE_PRINT_FUNCS(sorset)
 class binder {
 public:
 	static
-	std::string	CL_NAME;
+	char*	CL_NAME;
 
 	virtual
-	std::string&	get_cls_name(){
+	char*	get_cls_name(){
 		return binder::CL_NAME;
 	}
 
@@ -175,10 +175,10 @@ rcp_as(binder* bdr);
 class grip : public binder {
 public:
 	static
-	std::string	CL_NAME;
+	char*	CL_NAME;
 
 	virtual
-	std::string&	get_cls_name(){
+	char*	get_cls_name(){
 		return grip::CL_NAME;
 	}
 
@@ -256,7 +256,7 @@ public:
 inline
 bool
 binder::is_grip(){
-	bool is_g = (&(get_cls_name()) == &(grip::CL_NAME));
+	bool is_g = (get_cls_name() == grip::CL_NAME);
 	return is_g;
 }
 
@@ -281,7 +281,7 @@ template<class obj_t1>
 class receptor : public binder {
 public:
 	virtual
-	std::string&	get_cls_name(){
+	char*	get_cls_name(){
 		return obj_t1::CL_NAME;
 	}
 
@@ -362,10 +362,10 @@ public:
 class sortee : public binder {
 public:
 	static
-	std::string	CL_NAME;
+	char*	CL_NAME;
 
 	virtual
-	std::string&	get_cls_name(){
+	char*	get_cls_name(){
 		return sortee::CL_NAME;
 	}
 
@@ -424,7 +424,7 @@ public:
 	me_as(){
 		SORTER_CK_1(so_me != NULL_PT);
 		obj_t1& obj = *((obj_t1*)(so_me));
-		SORTER_CK_1(&(obj.get_cls_name()) == &(obj_t1::CL_NAME));
+		SORTER_CK_1(obj.get_cls_name() == obj_t1::CL_NAME);
 		return obj;
 	}
 
@@ -561,7 +561,7 @@ void_pts_row_as(row<void*>& rr1, row<obj_t1*>& rr2){
 		void* pt_gen_obj = rr1[ii];
 		obj_t1* pt_obj = (obj_t1*)pt_gen_obj;
 
-		SORTER_CK((pt_obj == NULL_PT) || (&(pt_obj->get_cls_name()) == &(obj_t1::CL_NAME)));
+		SORTER_CK((pt_obj == NULL_PT) || (pt_obj->get_cls_name() == obj_t1::CL_NAME));
 		rr2.push(pt_obj);
 	}
 }
@@ -576,10 +576,10 @@ typedef receptor<sorset> ss_srs_t;
 class sorset {
 public:
 	static
-	std::string	CL_NAME;
+	char*	CL_NAME;
 
 	virtual
-	std::string&	get_cls_name(){
+	char*	get_cls_name(){
 		return sorset::CL_NAME;
 	}
 
@@ -805,7 +805,7 @@ enum step_mutual_op_t {
 
 class sort_glb {
 public:
-	std::string	sg_name;
+	ch_string	sg_name;
 
 	bool		sg_quick_find;
 	bool		sg_dbg_always_find_filled;
@@ -995,9 +995,9 @@ public:
 	sortee&		get_sortee_of_ccl_id(long ccl_id);
 
 	void		build_cnf(skeleton_glb& skg, canon_cnf& the_cnf, row<canon_clause*>& the_ccls, 
-				std::string ph_str, bool sorted_cnf);
+				ch_string ph_str, bool sorted_cnf);
 	
-	void		step_build_cnf(skeleton_glb& skg, std::string ph_str = "", bool sorted_cnf = true);
+	void		step_build_cnf(skeleton_glb& skg, ch_string ph_str = "", bool sorted_cnf = true);
 
 	void		stab_choose_one();
 	void		stab_release_all_sorsets();
@@ -1012,7 +1012,7 @@ public:
 	void		stab_mutual_init();
 	void		stab_mutual(sort_glb& mates_srg);
 	void		stab_mutual_unique(sort_glb& mates_srg);
-	canon_cnf&	stab_mutual_get_cnf(skeleton_glb& skg, std::string comment, bool sorted_cnf);
+	canon_cnf&	stab_mutual_get_cnf(skeleton_glb& skg, ch_string comment, bool sorted_cnf);
 	void		stab_mutual_choose_one(sort_glb& srg2);
 
 	bool		base_path_exists(skeleton_glb& skg);
@@ -1071,7 +1071,7 @@ template<class obj_t1>
 obj_t1&
 rcp_as(binder* bdr){
 	SORTER_CK_1(bdr != NULL_PT);
-	SORTER_CK_1(&(bdr->get_cls_name()) == &(obj_t1::CL_NAME));
+	SORTER_CK_1(bdr->get_cls_name() == obj_t1::CL_NAME);
 
 	receptor<obj_t1>& rcp = *((receptor<obj_t1>*)(bdr));
 	SORTER_CK_1(rcp.re_me != NULL_PT);
@@ -1103,13 +1103,13 @@ inline
 sortee&
 as_sortee(binder* bdr){
 	SORTER_CK_1(bdr != NULL_PT);
-	DBG_PRT_COND(DBG_ALL_LVS, ! (&(bdr->get_cls_name()) == &(sortee::CL_NAME)) ,
+	DBG_PRT_COND(DBG_ALL_LVS, ! (bdr->get_cls_name() == sortee::CL_NAME) ,
 		os << "ABORTING_DATA " << std::endl;
 		os << "bdr->get_cls_name()=" << bdr->get_cls_name() << std::endl;
 		os << "sortee::CL_NAME=" << sortee::CL_NAME << std::endl;
 		os << "END_OF_aborting_data" << std::endl;
 	);
-	SORTER_CK_1(&(bdr->get_cls_name()) == &(sortee::CL_NAME));
+	SORTER_CK_1(bdr->get_cls_name() == sortee::CL_NAME);
 	return *((sortee*)(bdr));
 }*/
 

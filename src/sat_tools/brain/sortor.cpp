@@ -39,21 +39,21 @@ Classes and that implement a sortor.
 
 #include "brain.h"	// only needed for print_sortee
 
-std::string binder::CL_NAME = "{binder}";
-std::string grip::CL_NAME = "{grip}";
-std::string sortee::CL_NAME = "{sortee}";
-std::string sorset::CL_NAME = "{sorset}";
+char* binder::CL_NAME = as_pt_char("{binder}");
+char* grip::CL_NAME = as_pt_char("{grip}");
+char* sortee::CL_NAME = as_pt_char("{sortee}");
+char* sorset::CL_NAME = as_pt_char("{sorset}");
 
 sortee&
 as_sortee(binder* bdr){
 	SORTER_CK_1(bdr != NULL_PT);
-	DBG_PRT_COND(DBG_ALL_LVS, ! (&(bdr->get_cls_name()) == &(sortee::CL_NAME)) ,
+	DBG_PRT_COND(DBG_ALL_LVS, ! (bdr->get_cls_name() == sortee::CL_NAME) ,
 		os << "ABORTING_DATA " << std::endl;
 		os << "bdr->get_cls_name()=" << bdr->get_cls_name() << std::endl;
 		os << "sortee::CL_NAME=" << sortee::CL_NAME << std::endl;
 		os << "END_OF_aborting_data" << std::endl;
 	);
-	SORTER_CK_1(&(bdr->get_cls_name()) == &(sortee::CL_NAME));
+	SORTER_CK_1(bdr->get_cls_name() == sortee::CL_NAME);
 	return *((sortee*)(bdr));
 }
 
@@ -154,7 +154,7 @@ sortee::print_sortee(std::ostream& os, bool from_pt){
 	*/
 }
 
-std::string
+ch_string
 get_indentation(long level){
 	std::stringstream ind_ss;
 	ind_ss << "";
@@ -183,7 +183,7 @@ sorset::print_data_sorset(std::ostream& os){
 
 void
 sorset::print_tree_sorset(std::ostream& os, long level){
-	std::string ind_str = get_indentation(level);
+	ch_string ind_str = get_indentation(level);
 	os << ind_str << "{" << ss_curr_id << " ";
 	print_data_sorset(os);
 	os << std::endl;
@@ -602,7 +602,7 @@ sorset::walk_to_row_rec(bool set_consecs, long& consec,
 
 void
 sort_glb::build_cnf(skeleton_glb& skg, canon_cnf& the_cnf, row<canon_clause*>& the_ccls, 
-			std::string ph_str, bool sorted_cnf)
+			ch_string ph_str, bool sorted_cnf)
 {
 	the_cnf.clear_cnf();
 	the_cnf.cf_sorted = sorted_cnf;
@@ -687,7 +687,7 @@ sort_glb::stab_recover_it(){
 
 bool
 sort_glb::base_path_exists(skeleton_glb& skg){
-	std::string base_pth = skg.as_full_path(SKG_REF_DIR);
+	ch_string base_pth = skg.as_full_path(SKG_REF_DIR);
 
 	dima_dims dims;
 	dims = sg_cnf_dims;
@@ -1075,7 +1075,7 @@ sort_glb::stab_mutual_unique(sort_glb& srg2){
 }
 
 canon_cnf&
-sort_glb::stab_mutual_get_cnf(skeleton_glb& skg, std::string comment, bool sorted_cnf){
+sort_glb::stab_mutual_get_cnf(skeleton_glb& skg, ch_string comment, bool sorted_cnf){
 	DBG_PRT(114, os << " get_cnf=" << this << " " << comment << std::endl;
 		sg_cnf_clauses.print_row_data(os, true, "\n");
 	);

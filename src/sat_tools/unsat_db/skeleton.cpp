@@ -40,8 +40,11 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 #include <cassert>
 #include <cstring>
 
+#include "stack_trace.h"
 #include "support.h"
 #include "skeleton.h"
+
+#define NUM_BYTES_SHA2	32	// 256 bits
 
 //long canon_cnf::CF_NUM_CNFS = 0;
 mpz_class	skg_dbg_canon_find_id = 0;
@@ -53,7 +56,7 @@ mpz_class	skg_dbg_canon_save_id = 0;
 // '\0'
 #define END_OF_SEC	0
 
-void	write_in_str(average& the_avg, std::string& av_str){
+void	write_in_str(average& the_avg, ch_string& av_str){
 	av_str = "";
 	std::stringstream ss1;
 	ss1 << the_avg.avg << std::endl;
@@ -62,13 +65,13 @@ void	write_in_str(average& the_avg, std::string& av_str){
 	av_str = ss1.str();
 }
 
-void	read_from_str(average& the_avg, std::string& av_str){
+void	read_from_str(average& the_avg, ch_string& av_str){
 	std::stringstream ss2(av_str);
 	ss2 >> the_avg.avg;
 	ss2 >> the_avg.sz;
 }
 
-std::string
+ch_string
 long_to_str(long val){
 	std::stringstream ss_val;
 	ss_val << val;
@@ -77,12 +80,12 @@ long_to_str(long val){
 }
 
 bool
-not_skl_path(std::string the_pth){
+not_skl_path(ch_string the_pth){
 	return ! path_begins_with(the_pth, SKG_SKELETON_DIR);
 }
 
 mpz_class
-inc_fnum(std::string f_nam){
+inc_fnum(ch_string f_nam){
 	int fd;
 	struct flock fl;
 
@@ -121,7 +124,7 @@ inc_fnum(std::string f_nam){
 			return -4;
 		}
 
-		std::string num_str;
+		ch_string num_str;
 		char* pt_str = (char*)malloc(pos1 + 1);
 		ssize_t nr = read(fd, pt_str, pos1);
 		if(nr != pos1){
@@ -147,7 +150,7 @@ inc_fnum(std::string f_nam){
 		}
 
 		the_num++;
-		std::string num_str2 = the_num.get_str();
+		ch_string num_str2 = the_num.get_str();
 		off_t pos2 = num_str2.size();
 		ssize_t nw = write(fd, num_str2.c_str(), pos2);
 		if(nw != pos2){
@@ -170,8 +173,8 @@ inc_fnum(std::string f_nam){
 	return the_num;
 }
 
-std::string
-get_fstr(std::string f_nam){
+ch_string
+get_fstr(ch_string f_nam){
 	int fd;
 	struct flock fl;
 
@@ -196,7 +199,7 @@ get_fstr(std::string f_nam){
 		}
 	}
 
-	std::string the_val_str = "";
+	ch_string the_val_str = "";
 
 	off_t pos0 = 0;
 	off_t pos1 = lseek(fd, 0, SEEK_END);
@@ -234,7 +237,7 @@ get_fstr(std::string f_nam){
 }
 
 long
-set_fstr(std::string f_nam, std::string the_val_str){
+set_fstr(ch_string f_nam, ch_string the_val_str){
 	int fd;
 	struct flock fl;
 
@@ -305,9 +308,9 @@ print_hex_as_txt(std::ostream& os, row<uchar_t>& sha_rr){
 	return os;
 }
 
-std::string
+ch_string
 sha_txt_of_arr(uchar_t* to_sha, long to_sha_sz){
-	std::string sha_txt;
+	ch_string sha_txt;
 	row<uchar_t>	sha_rr;
 	sha_rr.fill(0, NUM_BYTES_SHA2);
 
@@ -335,7 +338,7 @@ sha_txt_of_arr(uchar_t* to_sha, long to_sha_sz){
 // elapsed funcs
 
 mpf_class
-update_elapsed(std::string f_nam){
+update_elapsed(ch_string f_nam){
 	struct stat sf1;
 	time_t last_mtime = 0;
 
@@ -387,7 +390,7 @@ update_elapsed(std::string f_nam){
 		}
 		pt_str[pos1] = 0;
 
-		std::string av_str = pt_str;
+		ch_string av_str = pt_str;
 
 		free(pt_str);
 
@@ -400,7 +403,7 @@ update_elapsed(std::string f_nam){
 		the_avg.add_val(nxt_elap);
 	}
 
-	std::string out_str;
+	ch_string out_str;
 	write_in_str(the_avg, out_str);
 
 	//std::cout << "out_str='" << out_str << "'" << std::endl;
@@ -441,7 +444,7 @@ update_elapsed(std::string f_nam){
 }
 
 long
-read_elapsed(std::string f_nam, average& the_avg){
+read_elapsed(ch_string f_nam, average& the_avg){
 	the_avg.init_average();
 
 	int fd;
@@ -485,7 +488,7 @@ read_elapsed(std::string f_nam, average& the_avg){
 		}
 		pt_str[pos1] = 0;
 
-		std::string av_str = pt_str;
+		ch_string av_str = pt_str;
 
 		free(pt_str);
 
@@ -510,12 +513,12 @@ read_elapsed(std::string f_nam, average& the_avg){
 // path funcs
 
 bool		
-path_begins_with(std::string the_pth, std::string the_beg){
+path_begins_with(ch_string the_pth, ch_string the_beg){
 	if(the_pth.size() < the_beg.size()){ 
 		return false; 
 	}
 
-	std::string pref_str = the_pth.substr(0, the_beg.size());
+	ch_string pref_str = the_pth.substr(0, the_beg.size());
 	if(pref_str != the_beg){ 
 		return false; 
 	}
@@ -523,33 +526,33 @@ path_begins_with(std::string the_pth, std::string the_beg){
 }
 
 bool
-path_ends_with(std::string& the_str, std::string& the_suf){
+path_ends_with(ch_string& the_str, ch_string& the_suf){
 	if(the_str.size() < the_suf.size()){
 		return false;
 	}
 	str_pos_t pos1 = the_str.size() - the_suf.size();
-	std::string sub_str = the_str.substr(pos1);
+	ch_string sub_str = the_str.substr(pos1);
 	if(sub_str == the_suf){
 		return true;
 	}
 	return false;
 }
 
-std::string
-path_to_absolute_path(std::string pth){
+ch_string
+path_to_absolute_path(ch_string pth){
 	char rpath[PATH_MAX];
 
 	char* rr = realpath(pth.c_str(), rpath);
 	if(rr == rpath){ 
-		std::string real_pth = rpath;
+		ch_string real_pth = rpath;
 		return real_pth;
 	}
 	return pth;
 }
 
-std::string
+ch_string
 nam_subset_resp(cmp_is_sub rr){
-	std::string rr_str = "?????";
+	ch_string rr_str = "?????";
 	switch(rr){
 		case k_lft_is_sub:
 			rr_str = "k_lft_is_sub";
@@ -564,9 +567,9 @@ nam_subset_resp(cmp_is_sub rr){
 	return rr_str;
 }
 
-std::string
+ch_string
 get_errno_str(long val_errno){
-	std::string out_str = "?ERROR?";
+	ch_string out_str = "?ERROR?";
 	switch(val_errno){
 	case EACCES:		out_str = "EACCES";		break;
 	case EBUSY:		out_str = "EBUSY";		break;
@@ -590,23 +593,23 @@ get_errno_str(long val_errno){
 	return out_str;
 }
 
-std::string
+ch_string
 path_get_running_path(){
 	char exepath[PATH_MAX] = {0};
 	readlink("/proc/self/exe", exepath, sizeof(exepath) - 1);
-	std::string the_pth = exepath;
+	ch_string the_pth = exepath;
 	return the_pth;
 }
 
-std::string
-path_get_directory(std::string the_pth){
+ch_string
+path_get_directory(ch_string the_pth){
 	long pos = (long)the_pth.rfind('/');
-	std::string the_dir = the_pth.substr(0, pos);
+	ch_string the_dir = the_pth.substr(0, pos);
 	return the_dir;
 }
 
 bool
-path_exists(std::string th_pth){
+path_exists(ch_string th_pth){
 	std::ifstream istm;
 	SKELETON_CK(not_skl_path(th_pth));
 	istm.open(th_pth.c_str(), std::ios_base::in);
@@ -614,7 +617,7 @@ path_exists(std::string th_pth){
 }
 
 bool
-path_newer_than(std::string the_pth, time_t tm1){
+path_newer_than(ch_string the_pth, time_t tm1){
 	SKELETON_CK(not_skl_path(the_pth));
 	struct stat sf1;
 
@@ -628,13 +631,13 @@ path_newer_than(std::string the_pth, time_t tm1){
 }
 
 bool
-path_is_dead_lock(std::string the_pth){
+path_is_dead_lock(ch_string the_pth){
 	SKELETON_CK(not_skl_path(the_pth));
-	std::string posfix = SKG_LOCK_NAME;
+	ch_string posfix = SKG_LOCK_NAME;
 	long idx = the_pth.size() - posfix.size();
 	if(idx < 0){ return false; }
 	
-	std::string endstr = the_pth.substr(idx);
+	ch_string endstr = the_pth.substr(idx);
 	if(endstr != posfix){ return false; }
 
 	time_t tm1 = time(NULL_PT);
@@ -652,31 +655,31 @@ path_is_dead_lock(std::string the_pth){
 }
 
 bool 
-path_touch(std::string the_pth){
+path_touch(ch_string the_pth){
 	SKELETON_CK(not_skl_path(the_pth));
 	int ok1 = utimensat(AT_FDCWD, the_pth.c_str(), NULL_PT, 0);
 	return (ok1 == 0);
 }
 
 bool
-dims_path_exists(std::string base_pth, const dima_dims& dims){
+dims_path_exists(ch_string base_pth, const dima_dims& dims){
 	SKELETON_CK(! base_pth.empty());
 
-	std::string dim_pth = cnf_dims_to_path(dims);
+	ch_string dim_pth = cnf_dims_to_path(dims);
 
 	SKELETON_CK(! dim_pth.empty());
 	SKELETON_CK(dim_pth[0] == '/');
 
-	std::string full_dim_pth = base_pth + dim_pth;
+	ch_string full_dim_pth = base_pth + dim_pth;
 
 	bool pth_ok = path_exists(full_dim_pth);
 	SKELETON_CK(! pth_ok || (full_dim_pth == path_to_absolute_path(full_dim_pth)));
 	return pth_ok;
 }
 
-std::string
+ch_string
 get_nftw_flag_str(long ff){
-	std::string out_str = "?ERROR?";
+	ch_string out_str = "?ERROR?";
 	switch(ff){
 	case FTW_F:		out_str = "FTW_F";		break;
 	case FTW_D:		out_str = "FTW_D";		break;
@@ -726,7 +729,7 @@ delete_dir_entry(const char *fpath, const struct stat *sb,
 }
 
 void
-delete_directory(std::string& dir_nm){
+delete_directory(ch_string& dir_nm){
 	long max_depth = SKG_MAX_PATH_DEPTH;
 
 	str_pos_t lst_pos = dir_nm.size() - 1;
@@ -740,9 +743,9 @@ delete_directory(std::string& dir_nm){
 }
 
 void
-path_delete(std::string full_pth, std::string up_to){
+path_delete(ch_string full_pth, ch_string up_to){
 	SKELETON_CK(not_skl_path(full_pth));
-	std::string sub_pth = full_pth;
+	ch_string sub_pth = full_pth;
 
 	if(! path_begins_with(full_pth, up_to)){
 		SKELETON_CK(false);
@@ -765,18 +768,18 @@ path_delete(std::string full_pth, std::string up_to){
 		if(resp != 0){ break; }
 	}
 
-	//std::string the_dir = full_pth.substr(0, pos);
+	//ch_string the_dir = full_pth.substr(0, pos);
 }
 
 bool
-path_create(std::string n_pth){
+path_create(ch_string n_pth){
 	SKELETON_CK(not_skl_path(n_pth));
 	DBG_PRT(77, os << "CREATING " << n_pth);
 	DBG_PRT(77, os << "HIT RETURN TO CONTINUE...");
 	DBG_COMMAND(16, getchar());
 
 	long resp = true;
-	int eos = (int)std::string::npos;
+	int eos = (int)ch_string::npos;
 	int pos1 = n_pth.find('/');
 	bool path_ok = true;
 	while((pos1 == eos) || (pos1 < (int)n_pth.size())){
@@ -784,7 +787,7 @@ path_create(std::string n_pth){
 			pos1 = (int)n_pth.size();
 		}
 
-		std::string nm_dir = n_pth.substr(0, pos1);
+		ch_string nm_dir = n_pth.substr(0, pos1);
 		if(nm_dir.size() > 0){
 			resp = mkdir(nm_dir.c_str(), 0700);
 			//path_ok = ((resp == 0) || (errno == EEXIST));
@@ -813,7 +816,7 @@ canon_print(std::ostream& os, row<char>& cnn){
 }
 
 void
-canon_sha(row<char>& cnn, std::string& sha_txt){
+canon_sha(row<char>& cnn, ch_string& sha_txt){
 	long to_sha_sz = cnn.size();
 	uchar_t* to_sha = (uchar_t*)(cnn.get_c_array());
 
@@ -831,7 +834,7 @@ canon_sha(row<char>& cnn, std::string& sha_txt){
 }
 
 bool
-canon_save(std::string& the_pth, row<char>& cnn, bool write_once){
+canon_save(ch_string& the_pth, row<char>& cnn, bool write_once){
 	// this function should never be modified because the 
 	// whole skeleton is based on shas of this function
 
@@ -863,7 +866,7 @@ canon_save(std::string& the_pth, row<char>& cnn, bool write_once){
 }
 
 bool
-canon_load(std::string& the_pth, row<char>& cnn){
+canon_load(ch_string& the_pth, row<char>& cnn){
 	SKELETON_CK(not_skl_path(the_pth));
 	bool load_ok = false;
 	try{
@@ -876,7 +879,7 @@ canon_load(std::string& the_pth, row<char>& cnn){
 }
 
 bool
-canon_equal(std::string& the_pth, row<char>& cnn){
+canon_equal(ch_string& the_pth, row<char>& cnn){
 	row<char> cnn2;
 	row<char> diff1;
 	bool cnn_eq = false;
@@ -905,8 +908,8 @@ canon_equal(std::string& the_pth, row<char>& cnn){
 	return cnn_eq;
 }
 
-std::string
-canon_header(std::string& hd_str, long ccls, long vars){
+ch_string
+canon_header(ch_string& hd_str, long ccls, long vars){
 	std::stringstream ss_header;
 	ss_header << hd_str;
 	if((vars == 0) || (ccls == 0)){
@@ -918,13 +921,13 @@ canon_header(std::string& hd_str, long ccls, long vars){
 
 void
 canon_long_append(row<char>& cnn, long nn){
-	std::string num_str = long_to_str(nn);
+	ch_string num_str = long_to_str(nn);
 	canon_string_append(cnn, num_str);
 }
 
 void
-canon_string_append(row<char>& cnn, std::string ss){
-	std::string::size_type ii = 0;
+canon_string_append(row<char>& cnn, ch_string ss){
+	ch_string::size_type ii = 0;
 	for(ii = 0; ii < ss.size(); ii++){
 		cnn.push(ss[ii]);
 	}
@@ -933,22 +936,22 @@ canon_string_append(row<char>& cnn, std::string ss){
 //============================================================
 // skeleton path funcs
 
-std::string
-canon_hash_path(const dima_dims& dims, std::string sha_str){
+ch_string
+canon_hash_path(const dima_dims& dims, ch_string sha_str){
 	SKELETON_CK(dims.dd_tot_lits >= 0);
 
-	std::string sha_pth = sha_str;
+	ch_string sha_pth = sha_str;
 	slice_str_to_path(sha_pth);
 
 	SKELETON_CK(! sha_pth.empty());
 	SKELETON_CK(sha_pth[0] == '/');
 	SKELETON_CK(*(sha_pth.rbegin()) == '/');
 
-	std::string dim_cnf_pth = cnf_dims_to_path(dims);
+	ch_string dim_cnf_pth = cnf_dims_to_path(dims);
 	SKELETON_CK(! dim_cnf_pth.empty());
 	SKELETON_CK(dim_cnf_pth[0] == '/');
 
-	std::string unique_str = dim_cnf_pth + sha_pth + "hh/";
+	ch_string unique_str = dim_cnf_pth + sha_pth + "hh/";
 
 	SKELETON_CK(! unique_str.empty());
 	SKELETON_CK(*(unique_str.begin()) == '/');
@@ -957,12 +960,12 @@ canon_hash_path(const dima_dims& dims, std::string sha_str){
 }
 
 /*
-std::string
-canon_full_path(std::string base_pth, std::string upth, std::string id_str){
+ch_string
+canon_full_path(ch_string base_pth, ch_string upth, ch_string id_str){
 	SKELETON_CK(! base_pth.empty());
 
-	std::string pth_ending = SKG_CANON_PATH_ENDING;
-	std::string full_pth = base_pth + upth + id_str + '/' + pth_ending + '/';
+	ch_string pth_ending = SKG_CANON_PATH_ENDING;
+	ch_string full_pth = base_pth + upth + id_str + '/' + pth_ending + '/';
 
 	SKELETON_CK(! full_pth.empty());
 	DBG(bool ck1 = (! path_exists(full_pth) || (full_pth == (path_to_absolute_path(full_pth) + '/'))));
@@ -971,8 +974,8 @@ canon_full_path(std::string base_pth, std::string upth, std::string id_str){
 }
 */
 
-std::string&
-slice_str_to_path(std::string& sha_txt){
+ch_string&
+slice_str_to_path(ch_string& sha_txt){
 	std::stringstream ss_path;
 
 	ss_path << '/';
@@ -994,11 +997,11 @@ slice_str_to_path(std::string& sha_txt){
 	return sha_txt;
 }
 
-std::string
+ch_string
 long_to_path(long nn, long d_per_dir){
 	std::stringstream ss_path;
 
-	std::string snum = long_to_str(nn);
+	ch_string snum = long_to_str(nn);
 
 	long ll = snum.length();
 	ss_path << "/" << ll;
@@ -1016,7 +1019,7 @@ long_to_path(long nn, long d_per_dir){
 }
 
 bool
-all_digits(std::string& the_str){
+all_digits(ch_string& the_str){
 	for(str_pos_t pp = 0; pp < the_str.size(); pp++){
 		if(! isdigit(the_str[pp])){
 			return false;
@@ -1025,7 +1028,7 @@ all_digits(std::string& the_str){
 	return true;
 }
 
-std::string
+ch_string
 cnf_dims_to_path(const dima_dims& dims){
 	long n_digs = SKG_NUM_DIGITS_IN_DIRNAM_OF_NUMBER_PATH;
 
@@ -1041,22 +1044,22 @@ cnf_dims_to_path(const dima_dims& dims){
 	SKELETON_CK(num_var >= 0);
 	SKELETON_CK(num_twolits >= 0);
 
-	std::string tl_str = long_to_str(tot_lits);
-	std::string tc_str = long_to_str(num_ccl);
-	std::string tv_str = long_to_str(num_var);
-	std::string tt_str = long_to_str(num_twolits);
+	ch_string tl_str = long_to_str(tot_lits);
+	ch_string tc_str = long_to_str(num_ccl);
+	ch_string tv_str = long_to_str(num_var);
+	ch_string tt_str = long_to_str(num_twolits);
 
-	std::string pvar = long_to_path(num_var, n_digs);
-	std::string plits = long_to_path(tot_lits, n_digs);
-	std::string ptwolits = long_to_path(num_twolits, n_digs);
+	ch_string pvar = long_to_path(num_var, n_digs);
+	ch_string plits = long_to_path(tot_lits, n_digs);
+	ch_string ptwolits = long_to_path(num_twolits, n_digs);
 
-	std::string pth = "/nv" + pvar + "/tt" + ptwolits + "/nc_" + tc_str + "/tl_" + tl_str + "/zz";  // 4
+	ch_string pth = "/nv" + pvar + "/tt" + ptwolits + "/nc_" + tc_str + "/tl_" + tl_str + "/zz";  // 4
 	return pth;
 }
 
 /*
-std::string
-canon_lock_name(const dima_dims& dims, std::string sha_str){
+ch_string
+canon_lock_name(const dima_dims& dims, ch_string sha_str){
 	long tot_lits = dims.dd_tot_lits;
 	long num_ccl = dims.dd_tot_ccls;
 	long num_var = dims.dd_tot_vars;
@@ -1067,15 +1070,15 @@ canon_lock_name(const dima_dims& dims, std::string sha_str){
 	SKELETON_CK(num_var >= 0);
 	SKELETON_CK(num_twolits >= 0);
 
-	std::string tl_str = long_to_str(tot_lits);
-	std::string tc_str = long_to_str(num_ccl);
-	std::string tv_str = long_to_str(num_var);
-	std::string tt_str = long_to_str(num_twolits);
+	ch_string tl_str = long_to_str(tot_lits);
+	ch_string tc_str = long_to_str(num_ccl);
+	ch_string tv_str = long_to_str(num_var);
+	ch_string tt_str = long_to_str(num_twolits);
 
-	std::string XX = SKG_LOCK_SEP_STR;
+	ch_string XX = SKG_LOCK_SEP_STR;
 	// SKG_LOCK_NAME
 
-	std::string the_nm = XX + tv_str + XX + tt_str + XX + tc_str + XX + tl_str + XX + sha_str + XX;
+	ch_string the_nm = XX + tv_str + XX + tt_str + XX + tc_str + XX + tl_str + XX + sha_str + XX;
 	return the_nm;
 }
 */
@@ -1272,7 +1275,7 @@ skeleton_glb::print_paths(std::ostream& os){
 }
 
 void
-skeleton_glb::report_err(std::string pth, std::string err_pth){
+skeleton_glb::report_err(ch_string pth, ch_string err_pth){
 	DBG_PRT(91, os << "REPORTING " << err_pth << " " << pth);
 
 	if(err_pth.empty() || pth.empty()){
@@ -1286,7 +1289,7 @@ skeleton_glb::report_err(std::string pth, std::string err_pth){
 	}
 	SKELETON_CK(ref_exists(err_pth));
 
-	std::string err_count_file = err_pth + '/' + SKG_ERR_COUNT_NAME;
+	ch_string err_count_file = err_pth + '/' + SKG_ERR_COUNT_NAME;
 	mpz_class num_err = inc_fnum(as_full_path(err_count_file));
 	if(num_err < 0){
 		DBG_PRT(DBG_ALL_LVS, 
@@ -1297,7 +1300,7 @@ skeleton_glb::report_err(std::string pth, std::string err_pth){
 		SKELETON_CK(false);
 		return;
 	}
-	std::string err_lk_nam = err_pth + "/err" + num_err.get_str() + ".skl";
+	ch_string err_lk_nam = err_pth + "/err" + num_err.get_str() + ".skl";
 
 	ref_write(pth, err_lk_nam);
 
@@ -1311,7 +1314,7 @@ skeleton_glb::report_err(std::string pth, std::string err_pth){
 
 void
 skeleton_glb::init_paths(){
-	std::string r_pth = path_get_running_path();
+	ch_string r_pth = path_get_running_path();
 	kg_running_path = path_get_directory(r_pth);
 	SKELETON_CK(path_exists(kg_running_path));
 
@@ -1320,7 +1323,7 @@ skeleton_glb::init_paths(){
 	if(kg_root_path.size() == 0){
 		kg_root_path = kg_running_path;
 		if(! kg_keep_skeleton){
-			std::string skl_pth = kg_root_path + SKG_SKELETON_DIR;
+			ch_string skl_pth = kg_root_path + SKG_SKELETON_DIR;
 			delete_directory(skl_pth);
 			BRAIN_CK((std::cout << "DELETING SKELETON" << std::endl) && true);
 			DBG_PRT(93, os << "DELETING SKELETON. Type return ...");
@@ -1482,15 +1485,15 @@ canon_cnf::release_all_clauses(skeleton_glb& skg, bool free_mem){
 }
 
 void
-canon_cnf::add_comment_chars_to(skeleton_glb& skg, row<char>& cnn, std::string sv_ref_pth){
+canon_cnf::add_comment_chars_to(skeleton_glb& skg, row<char>& cnn, ch_string sv_ref_pth){
 	cnn.clear();
 
-	std::string l2 = sv_ref_pth + "\n";
+	ch_string l2 = sv_ref_pth + "\n";
 
-	std::string pth1 = cf_phdat.pd_ref1_nam + "\n";
-	std::string pth2 = cf_phdat.pd_ref2_nam + "\n";
+	ch_string pth1 = cf_phdat.pd_ref1_nam + "\n";
+	ch_string pth2 = cf_phdat.pd_ref2_nam + "\n";
 
-	std::string l3 = skg.kg_instance_file_nam + "\n";
+	ch_string l3 = skg.kg_instance_file_nam + "\n";
 
 	canon_string_append(cnn, "PHASE=\n");
 	canon_string_append(cnn, cf_phase_str);
@@ -1512,9 +1515,9 @@ canon_cnf::add_clauses_as_chars_to(row<canon_clause*>& all_ccl, row<char>& cnn){
 		return;
 	}
 
-	std::string cn_hd_str = SKG_CANON_HEADER_STR;
+	ch_string cn_hd_str = SKG_CANON_HEADER_STR;
 
-	std::string hh_str = canon_header(cn_hd_str, all_ccl.size(), cf_dims.dd_tot_vars);
+	ch_string hh_str = canon_header(cn_hd_str, all_ccl.size(), cf_dims.dd_tot_vars);
 	canon_string_append(cnn, hh_str);
 
 	DBG_PRT(70, os << "add_clauses_as_chars=" << std::endl; all_ccl.print_row_data(os, true, "\n"));
@@ -1530,7 +1533,7 @@ canon_cnf::add_clauses_as_chars_to(row<canon_clause*>& all_ccl, row<char>& cnn){
 }
 
 void
-string_replace_char(std::string& src_str, char orig, char repl){
+string_replace_char(ch_string& src_str, char orig, char repl){
 	if(orig == repl){
 		return;
 	}
@@ -1558,15 +1561,15 @@ canon_cnf::init_skl_paths(skeleton_glb& skg){
 
 	//cf_lock_nm = canon_lock_name(dims2, cf_sha_str);
 
-	std::string upth = canon_hash_path(dims3, cf_sha_str);
-	std::string id_str = get_id_str();
+	ch_string upth = canon_hash_path(dims3, cf_sha_str);
+	ch_string id_str = get_id_str();
 
 	cf_unique_path = upth + id_str + '/' + SKG_CANON_PATH_ENDING + '/';
 
 	DBG_PRT(75, print_attrs_canon_cnf(os));
 }
 
-std::string
+ch_string
 canon_cnf::get_id_str(){
 	row<long> lits;
 	get_extreme_lits(lits);
@@ -1616,31 +1619,31 @@ canon_cnf::get_extreme_lits(row<long>& lits){
 	SKELETON_CK(lits.size() == 20);
 }
 
-std::string
+ch_string
 canon_cnf::get_all_variant_dir_name(){
-	std::string core_dir = cf_phdat.vnt_nam();
+	ch_string core_dir = cf_phdat.vnt_nam();
 
 	SKELETON_CK(! core_dir.empty());
 	SKELETON_CK(*(core_dir.begin()) == '/');
 	SKELETON_CK(*(core_dir.rbegin()) == '/');
 
-	std::string vnt_dir = core_dir;
+	ch_string vnt_dir = core_dir;
 	SKELETON_CK(*(vnt_dir.rbegin()) == '/');
 
 	return vnt_dir;
 }
 
-std::string
+ch_string
 canon_cnf::get_variant_dir_name(long num_vnt){
 	SKELETON_CK(num_vnt >= 0);
-	std::string num_str = long_to_str(num_vnt);
-	std::string vnt_dir = get_all_variant_dir_name() + num_str;
+	ch_string num_str = long_to_str(num_vnt);
+	ch_string vnt_dir = get_all_variant_dir_name() + num_str;
 	return vnt_dir;
 }
 
-std::string
+ch_string
 canon_cnf::get_num_variants_name(){
-	std::string num_vnt_name = get_all_variant_dir_name() + SKG_NUM_VNT_NAME;
+	ch_string num_vnt_name = get_all_variant_dir_name() + SKG_NUM_VNT_NAME;
 	return num_vnt_name;
 }
 
@@ -1660,7 +1663,7 @@ canon_cnf::print_canon_cnf(std::ostream& os, bool from_pt){
 }
 
 void
-canon_cnf::calc_sha_in(std::string& sha_str){
+canon_cnf::calc_sha_in(ch_string& sha_str){
 	SKELETON_CK(sha_str.empty());
 
 	row<char>& cnn = cf_chars;
@@ -1773,12 +1776,12 @@ canon_cnf::fill_with(skeleton_glb& skg, row<long>& all_lits, long num_cla, long 
 	init_skl_paths(skg);
 }
 
-std::string
+ch_string
 canon_cnf::calc_loader_sha_str(dimacs_loader& the_loader){
 	uchar_t* arr_to_sha = (uchar_t*)(the_loader.ld_content.get_c_array());
 	long arr_to_sha_sz = the_loader.ld_content.get_c_array_sz() - 1;
 	
-	std::string the_sha = sha_txt_of_arr(arr_to_sha, arr_to_sha_sz);
+	ch_string the_sha = sha_txt_of_arr(arr_to_sha, arr_to_sha_sz);
 
 	DBG_PRT(94, os << "calc_loader_sha str " << std::endl << the_loader.ld_file_name << std::endl;
 		os << " CONTENT=" << std::endl;
@@ -1794,7 +1797,7 @@ canon_cnf::calc_loader_sha_str(dimacs_loader& the_loader){
 }
 
 bool
-canon_cnf::load_from(skeleton_glb& skg, std::string& f_nam){
+canon_cnf::load_from(skeleton_glb& skg, ch_string& f_nam){
 	SKELETON_CK(not_skl_path(f_nam));
 	row<long>& all_lits = skg.kg_tmp_lits;
 
@@ -1858,7 +1861,7 @@ canon_cnf::load_from(skeleton_glb& skg, std::string& f_nam){
 
 	DBG_PRT(94, os << "BEFORE_SHA=" << std::endl; canon_print(os, cf_chars); os << "EMPTY=" << cf_chars.is_empty());
 
-	DBG(std::string ck_sha_str);
+	DBG(ch_string ck_sha_str);
 	DBG(calc_sha_in(ck_sha_str));
 	DBG_PRT_COND(DBG_ALL_LVS, ! (cf_sha_str == ck_sha_str),
 		os << "ABORTING_DATA " << std::endl;
@@ -1971,21 +1974,21 @@ canon_cnf::i_am_sub_of(canon_cnf& the_cnf, bool& are_eq){
 }
 
 bool
-canon_cnf::i_super_of_vnt(skeleton_glb& skg, std::string& vpth){
+canon_cnf::i_super_of_vnt(skeleton_glb& skg, ch_string& vpth){
 	SKELETON_CK(cf_clauses.is_sorted(cmp_clauses));
 
 	canon_cnf& the_cnf = skg.kg_tmp_cnf;
 	SKELETON_CK(this != &(the_cnf));
 
 	bool all_ok = false;
-	std::string the_ref = skg.ref_vnt_name(vpth, SKG_DIFF_NAME);
+	ch_string the_ref = skg.ref_vnt_name(vpth, SKG_DIFF_NAME);
 
 	if(! skg.ref_exists(the_ref)){
 		skg.report_err(the_ref, skg.kg_missing_path);
 		return false;
 	}
 
-	std::string the_pth = skg.as_full_path(the_ref);
+	ch_string the_pth = skg.as_full_path(the_ref);
 	all_ok = the_cnf.load_from(skg, the_pth);
 	if(! all_ok){
 		skg.report_err(the_ref, skg.kg_corrupted_path);
@@ -1999,21 +2002,21 @@ canon_cnf::i_super_of_vnt(skeleton_glb& skg, std::string& vpth){
 }
 
 bool
-canon_cnf::i_sub_of_vnt(skeleton_glb& skg, std::string& vpth, bool& are_eq){
+canon_cnf::i_sub_of_vnt(skeleton_glb& skg, ch_string& vpth, bool& are_eq){
 	SKELETON_CK(cf_clauses.is_sorted(cmp_clauses));
 	//SKELETON_CK(cf_filled_clauses.is_sorted(cmp_clauses));
 
 	canon_cnf& the_cnf = skg.kg_tmp_cnf;
 	SKELETON_CK(this != &(the_cnf));
 
-	std::string the_ref = skg.ref_vnt_name(vpth, SKG_DIFF_NAME);
+	ch_string the_ref = skg.ref_vnt_name(vpth, SKG_DIFF_NAME);
 
 	if(! skg.ref_exists(the_ref)){
 		skg.report_err(the_ref, skg.kg_missing_path);
 		return false;
 	}
 
-	std::string the_pth = skg.as_full_path(the_ref);
+	ch_string the_pth = skg.as_full_path(the_ref);
 	bool all_ok = the_cnf.load_from(skg, the_pth);
 	if(! all_ok){
 		skg.report_err(the_ref, skg.kg_corrupted_path);
@@ -2026,7 +2029,7 @@ canon_cnf::i_sub_of_vnt(skeleton_glb& skg, std::string& vpth, bool& are_eq){
 }
 
 bool
-skeleton_glb::find_path(std::string pth_to_find){
+skeleton_glb::find_path(ch_string pth_to_find){
 	if(! kg_find_cnn_pth){
 		DBG_PRT(109, os << "NOT finding 1 pth=" << pth_to_find);
 		return false;
@@ -2072,8 +2075,8 @@ skeleton_glb::find_path(std::string pth_to_find){
 
 mpz_class
 canon_cnf::get_num_variants(skeleton_glb& skg){
-	std::string f_nm = skg.as_full_path(get_num_variants_name());
-	std::string num_str1 = get_fstr(f_nm);
+	ch_string f_nm = skg.as_full_path(get_num_variants_name());
+	ch_string num_str1 = get_fstr(f_nm);
 	mpz_class num_vnts;
 	num_vnts = num_str1;
 	if(num_vnts < 0){
@@ -2093,8 +2096,8 @@ canon_cnf::set_num_variants(skeleton_glb& skg, mpz_class num_vnts){
 	if(num_vnts > SKG_MAX_NUM_VARIANT){
 		num_vnts = 0;
 	}
-	std::string f_nm = skg.as_full_path(get_num_variants_name());
-	std::string val_str = num_vnts.get_str();
+	ch_string f_nm = skg.as_full_path(get_num_variants_name());
+	ch_string val_str = num_vnts.get_str();
 	long wr_ok = set_fstr(f_nm, val_str);
 	if(wr_ok != 0){
 		unlink(f_nm.c_str());
@@ -2102,7 +2105,7 @@ canon_cnf::set_num_variants(skeleton_glb& skg, mpz_class num_vnts){
 }
 
 bool
-canon_cnf::all_nxt_vnt(skeleton_glb& skg, row<variant>& all_next, row<std::string>& all_del){
+canon_cnf::all_nxt_vnt(skeleton_glb& skg, row<variant>& all_next, row<ch_string>& all_del){
 	bool num_i_sub = 0;
 	long num_eq = 0;
 	average avg_szs;
@@ -2114,7 +2117,7 @@ canon_cnf::all_nxt_vnt(skeleton_glb& skg, row<variant>& all_next, row<std::strin
 
 	mpz_class num_vnts = get_num_variants(skg);
 	for(long aa = 0; aa < num_vnts; aa++){
-		std::string vpth = get_variant_path(skg, aa);
+		ch_string vpth = get_variant_path(skg, aa);
 		if(vpth == ""){
 			continue;
 		}
@@ -2133,7 +2136,7 @@ canon_cnf::all_nxt_vnt(skeleton_glb& skg, row<variant>& all_next, row<std::strin
 		if(num_i_sub == 0){
 			SKELETON_CK(num_eq == 0);
 			
-			std::string elp_nm = skg.ref_vnt_name(vpth, SKG_ELAPSED_NAME);
+			ch_string elp_nm = skg.ref_vnt_name(vpth, SKG_ELAPSED_NAME);
 			long rd_ok = read_elapsed(skg.as_full_path(elp_nm), val_elap);
 			if(rd_ok == 0){
 				avg_szs.add_val(val_elap.sz);
@@ -2147,11 +2150,11 @@ canon_cnf::all_nxt_vnt(skeleton_glb& skg, row<variant>& all_next, row<std::strin
 			the_vnt.vn_real_path = vpth;
 			the_vnt.vn_elap = val_elap;
 		} else {
-			std::string vdir = get_variant_dir_name(aa);
+			ch_string vdir = get_variant_dir_name(aa);
 			skg.ref_remove(vdir);
 			DBG_PRT(107, os << "UNLINKING=" << vdir << " num_vnts=" << num_vnts);
 
-			std::string& the_del_pth = all_del.inc_sz();
+			ch_string& the_del_pth = all_del.inc_sz();
 			the_del_pth = vpth;
 		}
 	}
@@ -2174,14 +2177,14 @@ canon_cnf::all_nxt_vnt(skeleton_glb& skg, row<variant>& all_next, row<std::strin
 		SKELETON_CK(all_next.is_valid_idx(del_idx));
 		variant& the_vnt = all_next[del_idx];
 
-		DBG(std::string vpth = get_variant_path(skg, del_idx));
+		DBG(ch_string vpth = get_variant_path(skg, del_idx));
 		SKELETON_CK(vpth == the_vnt.vn_real_path);
 
-		std::string vdir = get_variant_dir_name(del_idx);
+		ch_string vdir = get_variant_dir_name(del_idx);
 		skg.ref_remove(vdir);
 		DBG_PRT(107, os << "UNLINKING CHOSEN=" << vdir << " num_vnts=" << num_vnts);
 
-		std::string& the_del_pth = all_del.inc_sz();
+		ch_string& the_del_pth = all_del.inc_sz();
 		the_del_pth = the_vnt.vn_real_path;
 
 		all_next.swapop(del_idx);
@@ -2194,7 +2197,7 @@ canon_cnf::all_nxt_vnt(skeleton_glb& skg, row<variant>& all_next, row<std::strin
 
 	if(nxt_sz < num_vnts){
 		for(long bb = nxt_sz; bb < num_vnts; bb++){
-			std::string vdir = get_variant_dir_name(bb);
+			ch_string vdir = get_variant_dir_name(bb);
 			skg.ref_remove(vdir);
 		}
 	}
@@ -2214,14 +2217,14 @@ canon_cnf::first_vnt_i_super_of(skeleton_glb& skg){
 
 	mpz_class num_vnts = get_num_variants(skg);
 	for(long aa = 0; aa < num_vnts; aa++){
-		std::string vpth = get_variant_path(skg, aa, skg.in_verif());
+		ch_string vpth = get_variant_path(skg, aa, skg.in_verif());
 		if(vpth == ""){
 			break;
 		}
 		bool supe1 = i_super_of_vnt(skg, vpth);
 		if(supe1){
 			fst_vnt = aa;
-			std::string elp_nm = skg.ref_vnt_name(vpth, SKG_ELAPSED_NAME);
+			ch_string elp_nm = skg.ref_vnt_name(vpth, SKG_ELAPSED_NAME);
 			update_elapsed(skg.as_full_path(elp_nm));
 			break;
 		}
@@ -2258,12 +2261,12 @@ choose_variant(row<variant>& all_vnt, mpf_class& avg_szs, bool in_dbg){
 	return ch_idx;
 }
 
-std::string
+ch_string
 canon_cnf::get_variant_path(skeleton_glb& skg, long num_vnt, bool skip_report){
 	SKELETON_CK(skg.ref_exists(get_all_variant_dir_name()));
 
-	std::string vdir = get_variant_dir_name(num_vnt);
-	std::string vpth = skg.ref_read(vdir);
+	ch_string vdir = get_variant_dir_name(num_vnt);
+	ch_string vpth = skg.ref_read(vdir);
 
 	SKELETON_CK(! path_begins_with(vpth, get_all_variant_dir_name()));
 
@@ -2289,17 +2292,17 @@ canon_cnf::get_variant_path(skeleton_glb& skg, long num_vnt, bool skip_report){
 }
 
 void
-canon_cnf::update_parent_variants(skeleton_glb& skg, std::string sv_dir){
+canon_cnf::update_parent_variants(skeleton_glb& skg, ch_string sv_dir){
 	SKELETON_CK(has_phase_path());
 
 	DBG(string_set_t all_lnks);
 
 	row<variant>& all_next = skg.kg_tmp_all_nxt_vnts;
-	row<std::string>& all_del = skg.kg_tmp_all_del_paths;
+	row<ch_string>& all_del = skg.kg_tmp_all_del_paths;
 
 	bool has_eq = all_nxt_vnt(skg, all_next, all_del);
 
-	std::string vnt_dir = get_all_variant_dir_name();
+	ch_string vnt_dir = get_all_variant_dir_name();
 	if(! skg.ref_in_skl(vnt_dir)){
 		SKELETON_CK(false);
 		return; 
@@ -2310,8 +2313,8 @@ canon_cnf::update_parent_variants(skeleton_glb& skg, std::string sv_dir){
 	long aa = 0;
 	for(aa = 0; aa < all_next.size(); aa++){
 		variant& the_vnt = all_next[aa];
-		std::string vnt_pth = get_variant_dir_name(aa);
-		std::string lnk_pth = the_vnt.vn_real_path;
+		ch_string vnt_pth = get_variant_dir_name(aa);
+		ch_string lnk_pth = the_vnt.vn_real_path;
 
 		SKELETON_CK(skg.ref_in_skl(vnt_pth));
 		SKELETON_CK(skg.ref_in_skl(lnk_pth));
@@ -2328,7 +2331,7 @@ canon_cnf::update_parent_variants(skeleton_glb& skg, std::string sv_dir){
 
 	SKELETON_CK(aa == all_next.size());
 
-	std::string lst_pth = get_variant_dir_name(aa);
+	ch_string lst_pth = get_variant_dir_name(aa);
 
 	SKELETON_CK(skg.ref_in_skl(lst_pth));
 	SKELETON_CK(skg.ref_in_skl(sv_dir));
@@ -2354,7 +2357,7 @@ canon_cnf::update_parent_variants(skeleton_glb& skg, std::string sv_dir){
 	set_num_variants(skg, nm_vnts);
 
 	for(aa = 0; aa < all_del.size(); aa++){
-		std::string& the_del_pth = all_del[aa];
+		ch_string& the_del_pth = all_del[aa];
 		path_delete(skg.as_full_path(the_del_pth), skg.kg_root_path);
 		DBG_PRT(107, os << "deleted=" << the_del_pth);
 	}
@@ -2369,7 +2372,7 @@ canon_cnf::ck_vnts(skeleton_glb& skg){
 	mpz_class num_vnts = get_num_variants(skg);
 	long aa = 0;
 	for(aa = 0; aa < num_vnts; aa++){
-		std::string vpth = get_variant_path(skg, aa);
+		ch_string vpth = get_variant_path(skg, aa);
 		DBG_PRT_COND(DBG_ALL_LVS, ! (vpth != ""),
 			os << "ABORTING_DATA case1" << std::endl;
 			os << " num_vnts=" << num_vnts << std::endl;
@@ -2381,7 +2384,7 @@ canon_cnf::ck_vnts(skeleton_glb& skg){
 	}
 	if(aa == num_vnts){
 		for(; aa < SKG_MAX_NUM_VARIANT; aa++){
-			std::string vpth = get_variant_path(skg, aa, true);
+			ch_string vpth = get_variant_path(skg, aa, true);
 			DBG_PRT_COND(DBG_ALL_LVS, ! (vpth == ""),
 				os << "ABORTING_DATA case2" << std::endl;
 				os << " num_vnts=" << num_vnts << std::endl;
@@ -2419,15 +2422,15 @@ canon_count_tots(row<canon_clause*>& all_ccls, long& tot_vars, long& tot_lits, l
 }
 
 bool
-skeleton_glb::ref_create(std::string a_ref, dbg_call_id dbg_id){
-	std::string f_pth = as_full_path(a_ref);
+skeleton_glb::ref_create(ch_string a_ref, dbg_call_id dbg_id){
+	ch_string f_pth = as_full_path(a_ref);
 	DBG_PRT(74, os << "ref_create '" << a_ref << "' call_id=" << dbg_id);
 	return path_create(f_pth);
 }
 
 bool
-canon_cnf::save_cnf(skeleton_glb& skg, std::string sv_pth){
-	std::string sv_dir = path_get_directory(sv_pth) + '/';
+canon_cnf::save_cnf(skeleton_glb& skg, ch_string sv_pth){
+	ch_string sv_dir = path_get_directory(sv_pth) + '/';
 	
 	if(! skg.ref_in_skl(sv_dir)){
 		return false;
@@ -2462,7 +2465,7 @@ canon_cnf::save_cnf(skeleton_glb& skg, std::string sv_pth){
 	}
 
 	DBG(
-		std::string sha_verif;
+		ch_string sha_verif;
 		canon_sha(cf_chars, sha_verif);
 	);
 	SKELETON_CK(sha_verif == cf_sha_str);
@@ -2473,10 +2476,10 @@ canon_cnf::save_cnf(skeleton_glb& skg, std::string sv_pth){
 		skg.ref_create(sv_dir, dbg_call_1);
 	}
 
-	std::string pth1 = cf_phdat.pd_ref1_nam;
-	std::string pth2 = cf_phdat.pd_ref2_nam;
+	ch_string pth1 = cf_phdat.pd_ref1_nam;
+	ch_string pth2 = cf_phdat.pd_ref2_nam;
 
-	std::string sv_name = skg.as_full_path(sv_pth);
+	ch_string sv_name = skg.as_full_path(sv_pth);
 	bool existed = false;
 	bool sv_ok = canon_save(sv_name, cf_chars);
 	if(! sv_ok){
@@ -2521,10 +2524,10 @@ canon_cnf::save_cnf(skeleton_glb& skg, std::string sv_pth){
 		SKELETON_CK((pth1 == "") || skg.find_path(skg.as_full_path(pth1)));
 		SKELETON_CK((pth2 == "") || skg.find_path(skg.as_full_path(pth2)));
 
-		std::string comm_name = skg.as_full_path(skg.ref_vnt_name(sv_dir, SKG_COMMENT_NAME));
+		ch_string comm_name = skg.as_full_path(skg.ref_vnt_name(sv_dir, SKG_COMMENT_NAME));
 		canon_save(comm_name, cf_comment_chars);
 
-		std::string elp_nm = skg.as_full_path(skg.ref_vnt_name(sv_dir, SKG_ELAPSED_NAME));
+		ch_string elp_nm = skg.as_full_path(skg.ref_vnt_name(sv_dir, SKG_ELAPSED_NAME));
 		update_elapsed(elp_nm);
 
 		update_parent_variants(skg, sv_dir);
@@ -2553,7 +2556,7 @@ canon_cnf::save_cnf(skeleton_glb& skg, std::string sv_pth){
 }
 
 int
-skeleton_glb::get_write_lock(std::string lk_dir){
+skeleton_glb::get_write_lock(ch_string lk_dir){
 	if(! ref_in_skl(lk_dir)){
 		SKELETON_CK(false);		
 		return -1;
@@ -2563,8 +2566,8 @@ skeleton_glb::get_write_lock(std::string lk_dir){
 		ref_create(lk_dir, dbg_call_5);
 	}
 
-	std::string lk_nm = lk_dir + SKG_LOCK_NAME;
-	std::string full_nm = as_full_path(lk_nm);
+	ch_string lk_nm = lk_dir + SKG_LOCK_NAME;
+	ch_string full_nm = as_full_path(lk_nm);
 
 	DBG_PRT(72, os << "GETTING LOCK '" << full_nm << "'");
 
@@ -2579,18 +2582,18 @@ skeleton_glb::get_write_lock(std::string lk_dir){
 }
 
 void
-skeleton_glb::drop_write_lock(std::string lk_dir, int fd_lock){
+skeleton_glb::drop_write_lock(ch_string lk_dir, int fd_lock){
 	close(fd_lock);
 
-	std::string lk_nm = lk_dir + SKG_LOCK_NAME;
+	ch_string lk_nm = lk_dir + SKG_LOCK_NAME;
 	ref_remove(lk_nm);
 }
 
 void
-skeleton_glb::ref_write(std::string val_ref, std::string nam_ref){
+skeleton_glb::ref_write(ch_string val_ref, ch_string nam_ref){
 	//DBG_PRT(74, os << "WRITING nam_ref=" << nam_ref << "'");
 
-	std::string f_nm = as_full_path(nam_ref);
+	ch_string f_nm = as_full_path(nam_ref);
 	long wr_ok = set_fstr(f_nm, val_ref);
 	if(wr_ok != 0){
 		unlink(f_nm.c_str());
@@ -2598,23 +2601,23 @@ skeleton_glb::ref_write(std::string val_ref, std::string nam_ref){
 	
 }
 
-std::string
-skeleton_glb::ref_read(std::string nam_ref){
-	std::string f_nm = as_full_path(nam_ref);
-	std::string val_ref = get_fstr(f_nm);
+ch_string
+skeleton_glb::ref_read(ch_string nam_ref){
+	ch_string f_nm = as_full_path(nam_ref);
+	ch_string val_ref = get_fstr(f_nm);
 	if(! ref_in_skl(val_ref)){
 		return "";
 	}
 	return val_ref;
 }
 
-std::string
-skeleton_glb::ref_vnt_name(std::string vpth, std::string sub_nm){
+ch_string
+skeleton_glb::ref_vnt_name(ch_string vpth, ch_string sub_nm){
 	SKELETON_CK(! vpth.empty());
 	SKELETON_CK(*(vpth.begin()) == '/');
 	SKELETON_CK(*(vpth.rbegin()) == '/');
 
-	DBG(std::string vfull = as_full_path(vpth));
+	DBG(ch_string vfull = as_full_path(vpth));
 	DBG(bool ck1 = (! ref_exists(vpth) || (vfull == (path_to_absolute_path(vfull) + '/'))));
 	DBG_PRT_COND(DBG_ALL_LVS, ! ck1,
 		os << "ABORTING_DATA " << std::endl;
@@ -2625,7 +2628,7 @@ skeleton_glb::ref_vnt_name(std::string vpth, std::string sub_nm){
 	);
 	SKELETON_CK(ck1);
 
-	std::string ref_name = vpth + sub_nm;
+	ch_string ref_name = vpth + sub_nm;
 
 	return ref_name;
 }

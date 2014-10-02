@@ -48,11 +48,11 @@ Declaration of functions to read and parse config files.
 //=================================================================
 // parser funcs
 
-std::ostringstream& parse_err_msg(std::string hd_msg, long num_line, char ch_err, std::string msg);
+std::ostringstream& parse_err_msg(ch_string hd_msg, long num_line, char ch_err, ch_string msg);
 
 void skip_whitespace(const char*& pt_in, long& line);
 void skip_line(const char*& pt_in, long& line);
-std::string read_text_line(const char*& pt_in, long& line);
+ch_string read_text_line(const char*& pt_in, long& line);
 integer parse_int(const char*& pt_in, long line);
 
 
@@ -67,8 +67,8 @@ class config_reader {
 
 	~config_reader(){}
 
-	void 	parse_debug_line(row<long>& dbg_line, std::string& str_ln);
-	void	add_config_line(std::string& str_ln);
+	void 	parse_debug_line(row<long>& dbg_line, ch_string& str_ln);
+	void	add_config_line(ch_string& str_ln);
 	void	read_config(const char* f_name);
 };
 

@@ -35,6 +35,7 @@ funcs that implement reverse func.
 #include <cstring>
 
 
+#include "stack_trace.h"
 #include "support.h"
 #include "dimacs.h"
 #include "brain.h"
@@ -344,7 +345,8 @@ brain::reverse(){
 		}
 
 		if(! br_charge_trail.has_motives()){
-			abort_func(-1, brn.br_file_name);
+			ch_string ab_mm = brn.br_file_name;
+			abort_func(-1, ab_mm.c_str());
 			break;
 		}
 		
@@ -1414,7 +1416,7 @@ memap::map_prepare_mem_oper(mem_op_t mm, brain& brn){
 
 	/*if(do_quick_finds){
 		calc_dims(brain& brn, dima_dims& dims)
-		std::string base_pth = skg.as_full_path(SKG_REF_DIR);
+		ch_string base_pth = skg.as_full_path(SKG_REF_DIR);
 		bool dim_exis = dims_path_exists(base_pth, dims0);
 		if(! dim_exis){	return false; }
 	}*/
@@ -1469,7 +1471,7 @@ memap::map_prepare_mem_oper(mem_op_t mm, brain& brn){
 	canon_cnf& cnf1 = neus_srg.stab_mutual_get_cnf(skg, PHASE_1_COMMENT, false);
 
 	BRAIN_CK(! cnf1.cf_phdat.has_ref());
-	/*std::string sv_guide_pth1 = cnf1.get_ref_path() + SKG_GUIDE_NAME;
+	/*ch_string sv_guide_pth1 = cnf1.get_ref_path() + SKG_GUIDE_NAME;
 	cnf1.save_cnf(skg, sv_guide_pth1);*/
 
 	ref_strs phd;
@@ -1481,8 +1483,8 @@ memap::map_prepare_mem_oper(mem_op_t mm, brain& brn){
 	dbg_shas.push(cnf1.cf_sha_str + "\n");
 
 	if(do_quick_finds){
-		std::string find_ref = phd.pd_ref1_nam;
-		std::string pth1 = skg.as_full_path(find_ref);
+		ch_string find_ref = phd.pd_ref1_nam;
+		ch_string pth1 = skg.as_full_path(find_ref);
 		bool found1 = skg.find_path(pth1);
 		if(! found1){ return false; }
 		else { GLB().batch_stat_equ_hits.add_val(1); }
@@ -1711,7 +1713,7 @@ memap::map_oper(mem_op_t mm, brain& brn){
 
 		oper_ok = (fst_idx != INVALID_NATURAL);
 		if(oper_ok){
-			std::string fst_vpth = tmp_diff_cnf.get_variant_path(skg, fst_idx, skg.in_verif());
+			ch_string fst_vpth = tmp_diff_cnf.get_variant_path(skg, fst_idx, skg.in_verif());
 			DBG_PRT(115, os << "found cnf=" << std::endl << tmp_diff_cnf << "FOUND CNF" << std::endl
 				<< "SHAS=" << std::endl << tmp_diff_cnf.cf_dbg_shas << std::endl
 				<< "fst_vpth='" << fst_vpth << "'" << std::endl
@@ -1735,13 +1737,13 @@ memap::map_oper(mem_op_t mm, brain& brn){
 		BRAIN_CK(mm == mo_save);
 		BRAIN_CK(! skg.kg_save_canon || phd.has_ref());
 
-		std::string lk_dir = phd.lck_nam();
+		ch_string lk_dir = phd.lck_nam();
 		int fd_lk = skg.get_write_lock(lk_dir);
 
 		if(fd_lk != -1){
-			std::string sv_pth1 = tmp_tauto_cnf.get_cnf_path() + SKG_CANON_NAME;
-			std::string sv_pth2 = tmp_tauto_cnf.get_cnf_path() + SKG_DIFF_NAME;
-			std::string sv_pth3 = tmp_tauto_cnf.get_cnf_path() + SKG_GUIDE_NAME;
+			ch_string sv_pth1 = tmp_tauto_cnf.get_cnf_path() + SKG_CANON_NAME;
+			ch_string sv_pth2 = tmp_tauto_cnf.get_cnf_path() + SKG_DIFF_NAME;
+			ch_string sv_pth3 = tmp_tauto_cnf.get_cnf_path() + SKG_GUIDE_NAME;
 
 			tmp_tauto_cnf.save_cnf(skg, sv_pth1);
 			oper_ok = tmp_diff_cnf.save_cnf(skg, sv_pth2);
@@ -1751,15 +1753,15 @@ memap::map_oper(mem_op_t mm, brain& brn){
 			
 			skg.drop_write_lock(lk_dir, fd_lk);
 
-			std::string pth1 = phd.pd_ref1_nam;
-			std::string pth2 = phd.pd_ref2_nam;
+			ch_string pth1 = phd.pd_ref1_nam;
+			ch_string pth2 = phd.pd_ref2_nam;
 
 			BRAIN_CK((pth1 == "") || skg.find_path(skg.as_full_path(pth1)));
 			BRAIN_CK((pth2 == "") || skg.find_path(skg.as_full_path(pth2)));
 
 			DBG_CHECK_SAVED(
 				if(oper_ok){
-					std::string sv1_name = skg.as_full_path(sv_pth1);
+					ch_string sv1_name = skg.as_full_path(sv_pth1);
 					dbg_run_satex_on(brn, sv1_name);
 				}
 			);			

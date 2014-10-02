@@ -38,6 +38,7 @@ Some usefult abstract template classes and others.
 #include "platform.h"
 #include "top_exception.h"
 #include "mem.h"
+#include "ch_string.h"
 #include "bit_row.h"
 #include "print_macros.h"
 
@@ -970,11 +971,11 @@ public:
 		}
 	}
 	
-	std::string	as_hex_str(){
+	ch_string	as_hex_str(){
 		row<char> hex_txt;
 		as_hex_txt(hex_txt);
 		hex_txt.push(0);
-		std::string out_str = hex_txt.get_c_array();
+		ch_string out_str = hex_txt.get_c_array();
 		return out_str;
 	}
 
@@ -1552,8 +1553,8 @@ std::ostream&	operator << (std::ostream& os, heap<obj_t>& he){
 // set comparison
 
 inline
-std::string	subset_cmp_str(cmp_is_sub val){
-	std::string str = "k_invalid !!!";
+ch_string	subset_cmp_str(cmp_is_sub val){
+	ch_string str = "k_invalid !!!";
 	switch(val){
 	case k_lft_is_sub:
 		str = "k_lft_is_sub"; break;
@@ -2028,7 +2029,7 @@ template <class obj_t> static inline bool operator >= (const obj_t& x, const obj
 //=================================================================
 // row based types
 
-typedef row<std::string>	row_str_t;
+typedef row<ch_string>	row_str_t;
 
 //=================================================================
 // average
@@ -2079,9 +2080,9 @@ class avg_stat : private average {
 public:
 	big_floating_t	vs_tot_val;
 	big_floating_t	vs_max_val;
-	std::string	vs_nam;
+	ch_string	vs_nam;
 
-	avg_stat(std::string nam = "avg?") {
+	avg_stat(ch_string nam = "avg?") {
 		vs_tot_val = 0.0;
 		vs_max_val = 0.0;
 		vs_nam = nam;

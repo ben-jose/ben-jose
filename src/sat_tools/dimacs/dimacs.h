@@ -58,10 +58,10 @@ class dima_dims;
 
 #define MAX_DIMACS_HEADER_SZ 4096
 
-typedef std::string::size_type str_pos_t;
+typedef ch_string::size_type str_pos_t;
 typedef unsigned char		uchar_t;
 
-extern std::string	k_dimacs_header_str;
+extern ch_string	k_dimacs_header_str;
 
 //=================================================================
 // print funtion declarations
@@ -71,7 +71,7 @@ DECLARE_PRINT_FUNCS(dima_dims)
 //=================================================================
 // funtion declarations
 
-void read_file(std::string f_nam, row<char>& f_data);
+void read_file(ch_string f_nam, row<char>& f_data);
 void read_problem_decl(const char*& pt_in, long& num_var, long& num_ccl, long& line);
 void print_dimacs_of(std::ostream& os, row<long>& all_lits, long num_cla, long num_var);
 
@@ -267,7 +267,7 @@ public:
 	typedef std::istream::char_type ld_char_t;
 	typedef std::istream::pos_type ld_pos_t;
 
-	std::string		ld_file_name;
+	ch_string		ld_file_name;
 
 	bool			ld_as_3cnf;
 
@@ -323,7 +323,7 @@ public:
 	void	parse_header();
 	bool	parse_clause(row<integer>& lits);
 
-	void	verif_num_ccls(std::string& f_nam, long num_decl_ccls, long num_read_ccls);
+	void	verif_num_ccls(ch_string& f_nam, long num_decl_ccls, long num_read_ccls);
 
 	bool	fix_lits(row_long_t& lits, bool& add_it);
 
@@ -346,7 +346,7 @@ public:
 			row_row_long_t& rr_lits);
 
 	void	parse_all_ccls(row<long>& inst_ccls);
-	void	parse_file(std::string& f_nam, row<long>& inst_ccls);
+	void	parse_file(ch_string& f_nam, row<long>& inst_ccls);
 	void	parse_from_ccls(long num_in_ccls, long num_in_vars, long num_in_lits, 
 				row_long_t& input_ccls, row_long_t& inst_ccls);
 	void	finish_parse(row<long>& inst_ccls);

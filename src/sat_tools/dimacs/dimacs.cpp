@@ -47,19 +47,19 @@ Functions to read and parse dimacs files.
 #define END_OF_SEC	0
 
 
-std::string	k_dimacs_header_str =
+ch_string	k_dimacs_header_str =
 		"c (C) 2010. QUIROGA BELTRAN, Jose Luis. Bogota - Colombia.\n"
 		"c Date of birth: December 28 of 1970.\n"
 		"c Place of birth: Bogota - Colombia - Southamerica.\n"
 		"c Id (cedula): 79523732 de Bogota.\n";
 
 
-std::ostringstream& dimacs_err_msg(long num_line, char ch_err, std::string msg){
+std::ostringstream& dimacs_err_msg(long num_line, char ch_err, ch_string msg){
 	return parse_err_msg("DIMACS ERROR. ", num_line, ch_err, msg);
 }
 
 void
-read_file(std::string f_nam, row<char>& f_data){
+read_file(ch_string f_nam, row<char>& f_data){
 	const char* ff_nn = f_nam.c_str();
 	std::ifstream istm;
 	istm.open(ff_nn, std::ios::binary);
@@ -415,7 +415,7 @@ dimacs_loader::init_dimacs_loader(){
 }
 
 void
-dimacs_loader::verif_num_ccls(std::string& f_nam, long num_decl_ccls, long num_read_ccls){
+dimacs_loader::verif_num_ccls(ch_string& f_nam, long num_decl_ccls, long num_read_ccls){
 	if(num_read_ccls != num_decl_ccls){
 		std::ostringstream& msg_err = dimacs_err_msg(-1, -1,
 			"Wrong number of clauses. ");
@@ -452,7 +452,7 @@ dimacs_loader::parse_header(){
 	long& num_ccl = ld_decl_ccls;
 	long& num_var = ld_decl_vars;
 
-	std::string& f_nam = ld_file_name;
+	ch_string& f_nam = ld_file_name;
 
 	ld_num_line = 1;
 	const char*& pt_in = ld_cursor;
@@ -604,7 +604,7 @@ dimacs_loader::parse_all_ccls(row<long>& inst_ccls)
 }
 
 void
-dimacs_loader::parse_file(std::string& f_nam, row<long>& inst_ccls)
+dimacs_loader::parse_file(ch_string& f_nam, row<long>& inst_ccls)
 {
 	ld_file_name = f_nam;
 

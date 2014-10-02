@@ -48,15 +48,12 @@ void	dbg_add_to_ptdir(void* pt_val);
 void	dbg_del_from_ptdir(void* pt_val);
 void	dbg_print_ptdir();
 
-void abort_func(long val, std::string msg = "<msg>");
-std::string	get_stack_trace( const std::string & file, int line );
+void abort_func(long val, const char* msg = as_pt_char("<msg>"));
 
 bool 
-call_assert(bool vv_ck, const std::string & file, int line, std::string ck_str);
+call_assert(bool vv_ck, const char* file, int line, const char* ck_str);
 
-#define STACK_STR get_stack_trace(__FILE__, __LINE__)
-
-#define glb_assert(vv) call_assert(vv, __FILE__, __LINE__, #vv)
+#define glb_assert(vv) call_assert(vv, as_pt_char(__FILE__), __LINE__, as_pt_char(#vv))
 
 #define NULL_PT		NULL
 

@@ -34,6 +34,7 @@ Classes and that implement the neural network.
 #include <cxxabi.h>	// trace stack 
 #include <cstring>
 
+#include "stack_trace.h"
 #include "support.h"
 #include "sortor.h"
 #include "brain.h"
@@ -56,8 +57,8 @@ DEFINE_NI_FLAG_ALL_FUNCS(note5);
 //============================================================
 // static vars
 
-std::string 	quanton::CL_NAME = "{quanton}";
-std::string 	neuron::CL_NAME = "{neuron}";
+char*	quanton::CL_NAME = as_pt_char("{quanton}");
+char*	neuron::CL_NAME = as_pt_char("{neuron}");
 
 //============================================================
 // random generator
@@ -69,7 +70,7 @@ long gen_random_num(long min, long max);
 //============================================================
 // Some code for debug purposes
 
-std::string	dbg_name(std::string pref, long seq, std::string suf){
+ch_string	dbg_name(ch_string pref, long seq, ch_string suf){
 	std::ostringstream stm1;
 	long ancho = 3;
 	char ch_cero = '0';
@@ -77,14 +78,14 @@ std::string	dbg_name(std::string pref, long seq, std::string suf){
 	stm1.width(ancho);
 	stm1.fill(ch_cero);
 	stm1 << seq << suf;
-	std::string nm = stm1.str();
+	ch_string nm = stm1.str();
 	return nm;
 }
 
 //============================================================
 // aux funcs
 
-std::string	
+ch_string	
 trinary_to_str(charge_t obj){
 	if(obj == cg_positive){
 		return "pos";
@@ -112,7 +113,8 @@ has_neu(row<neuron*>& rr_neus, neuron* neu){
 bool	
 quanton::ck_charge(brain& brn){
 	if((qlevel() == ROOT_LEVEL) && (get_source() != NULL)){
-		abort_func(-1, brn.br_file_name);
+		ch_string ab_mm = "case0." + brn.br_file_name;
+		abort_func(-1, ab_mm.c_str());
 	}
 	BRAIN_CK_0(	(is_pos()) || 
 			(! has_charge()) || 
@@ -138,25 +140,29 @@ brain::ck_trail(){
 	quanton* prev_qua = NULL_PT;
 	MARK_USED(prev_qua);
 	
+	ch_string ab_mm;	
 	long ch_idx = 0;
 	long prev_tier = INVALID_TIER;
 	for(long ii = 0; ii < the_trl.size(); ii++){
 		quanton* qua = the_trl[ii];
 
 		if(qua == NULL_PT){
-			abort_func(-1, "NULL qua !!." + br_file_name);
+			ab_mm = "NULL qua !!." + br_file_name;
+			abort_func(-1, ab_mm.c_str());
 		}
 		
 		if((prev_tier != INVALID_TIER) && (prev_tier > qua->qu_tier)){
 			os << "qua= " << qua << std::endl;
 			print_trail(os);
-			abort_func(-1, "case0." + br_file_name);
+			ab_mm = "case0." + br_file_name;
+			abort_func(-1, ab_mm.c_str());
 		}
 		prev_tier = qua->qu_tier;
 
 		if((qua->qlevel() == ROOT_LEVEL) && (qua->get_source() != NULL)){
 			print_trail(os);
-			abort_func(-1, "case1." + br_file_name);
+			ab_mm = "case1." + br_file_name;
+			abort_func(-1, ab_mm.c_str());
 		}
 
 		if((qua->qu_source == NULL) && (qua->qlevel() != ROOT_LEVEL)){
@@ -164,11 +170,13 @@ brain::ck_trail(){
 		}
 		if(qua->get_charge() == cg_neutral){
 			print_trail(os);
-			abort_func(-1, "case2." + br_file_name);
+			ab_mm = "case2." + br_file_name;
+			abort_func(-1, ab_mm.c_str());
 		}
 		if(qua->has_note0()){
 			print_trail(os);
-			abort_func(-1, "case3." + br_file_name);
+			ab_mm = "case3." + br_file_name;
+			abort_func(-1, ab_mm.c_str());
 		}
 		qua->ck_charge(brn);
 
@@ -195,7 +203,8 @@ brain::ck_trail(){
 			BRAIN_CK_0(cls->qlevel() == qua->qlevel());
 			if((cls != last_choice) && (cls->qlevel() != 0)){
 				print_trail(os);
-				abort_func(-1, "case5." + br_file_name);
+				ab_mm = "case5." + br_file_name;
+				abort_func(-1, ab_mm.c_str());
 			}
 		}
 		prev_qua = qua;
@@ -206,7 +215,8 @@ brain::ck_trail(){
 		os << "num_null_src=" << num_null_src << std::endl;
 		os << "lv=" << level() << std::endl;
 		print_trail(os);
-		abort_func(-1, "case6." + br_file_name);
+		ab_mm = "case6." + br_file_name;
+		abort_func(-1, ab_mm.c_str());
 	}
 	return true;
 }
@@ -274,7 +284,7 @@ brain::print_trail(std::ostream& os, bool no_src_only){
 }
 
 std::ostream& 
-brain::print_all_quantons(std::ostream& os, long ln_sz, std::string ln_fd){
+brain::print_all_quantons(std::ostream& os, long ln_sz, ch_string ln_fd){
 	BRAIN_CK_0(br_choices.size() == br_positons.size());
 	long num_null_src = 0;
 	for(long ii = 0; ii < br_choices.size(); ii++){
@@ -283,8 +293,8 @@ brain::print_all_quantons(std::ostream& os, long ln_sz, std::string ln_fd){
 		}
 
 		quanton* qua = br_choices[ii];
-		std::string pre = " ";
-		std::string suf = " ";
+		ch_string pre = " ";
+		ch_string suf = " ";
 		charge_t chg = qua->get_charge();
 		if(chg == cg_negative){
 			pre = "[";
@@ -1391,11 +1401,11 @@ brain::print_brain(std::ostream& os){
 }
 
 void
-brain::set_file_name_in_ic(std::string f_nam){
+brain::set_file_name_in_ic(ch_string f_nam){
 	if(f_nam.empty()){
 		return;
 	}
-	std::string nam = br_file_name;
+	ch_string nam = br_file_name;
 
 	long nm_sz = nam.size();
 	for(long ii = 0; ii < nm_sz; ii++){
@@ -1407,7 +1417,7 @@ brain::set_file_name_in_ic(std::string f_nam){
 }
 
 void
-brain::config_brain(std::string f_nam){
+brain::config_brain(ch_string f_nam){
 	if(! f_nam.empty()){
 		br_file_name = f_nam;
 	}
@@ -1427,7 +1437,7 @@ brain::config_brain(std::string f_nam){
 }
 
 void system_exec(std::ostringstream& strstm){
-	std::string comm = strstm.str();
+	ch_string comm = strstm.str();
 	const char* comm_cstr = comm.c_str();
 	//std::cout << comm_cstr << std::endl;
 	system(comm_cstr);
@@ -1439,7 +1449,7 @@ brain::load_it(){
 
 	br_start_load_tm = run_time();
 
-	std::string f_nam = inst_info.get_f_nam();
+	ch_string f_nam = inst_info.get_f_nam();
 
 	// dimacs loading
 
@@ -1583,7 +1593,7 @@ brain::load_instance(long num_neu, long num_var, row_long_t& load_ccls){
 	double ld_tm = (end_load_tm - br_start_load_tm);
 	GLB().batch_stat_load_tm.add_val(ld_tm);
 
-	std::string f_nam = inst_info.get_f_nam();
+	ch_string f_nam = inst_info.get_f_nam();
 	PRT_OUT(1,
 	os << std::endl;
 	os << "***********************************************";
@@ -1661,8 +1671,8 @@ brain::check_sat_assig(){
 void 
 brain::dbg_prt_all_cho(){
 	bool is_batch = false;
-	std::string f_nam = GLB().get_file_name(is_batch);
-	std::string cho_nam = f_nam + "_chosen.log";
+	ch_string f_nam = GLB().get_file_name(is_batch);
+	ch_string cho_nam = f_nam + "_chosen.log";
 
 	const char* log_nm = cho_nam.c_str();
 	std::ofstream log_stm;
@@ -1726,7 +1736,7 @@ brain::solve_it(){
 
 	inst_info.ist_solve_time = run_time();
 
-	std::string f_nam = inst_info.get_f_nam();
+	ch_string f_nam = inst_info.get_f_nam();
 
 	config_brain(f_nam.c_str());
 	br_choice_spin = cg_negative;
@@ -1826,7 +1836,7 @@ notekeeper::set_motive_notes(row<quanton*>& rr_qua, long from, long until){
 			(qua.*dk_set_note_fn)(brn);
 
 			BRAIN_CK(dk_note_layer != INVALID_LEVEL)
-			DBG(std::string dbg_msg = "");
+			DBG(ch_string dbg_msg = "");
 			long q_lv = qua.qlevel();
 
 			add_motive(qua, q_lv);
@@ -3174,13 +3184,13 @@ brain::retract_choice(){
 }
 
 bool
-dbg_run_satex_on(brain& brn, std::string f_nam){
+dbg_run_satex_on(brain& brn, ch_string f_nam){
 	if(path_exists(f_nam)){
 		std::ostringstream o_str;
 		o_str << "satex -s " << f_nam;
 
 		system_exec(o_str);
-		std::string lg_nm = get_log_name(f_nam, LOG_NM_RESULTS);
+		ch_string lg_nm = get_log_name(f_nam, LOG_NM_RESULTS);
 
 		BRAIN_CK(path_exists(lg_nm));
 		bool is_no_sat = all_results_batch_instances(lg_nm, k_no_satisf);
@@ -3227,7 +3237,7 @@ memap::map_ck_simple_no_satisf(mem_op_t mm, brain& brn){
 	//DBG_PRT(106, os << "MAP NEURONS=" << std::endl; dbg_print_ccls_neus(os, dbg_cnf.cf_clauses));
 	//DBG_PRT(106, os << "tot_ccls=" << dbg_cnf.cf_dims.dd_tot_ccls);
 
-	std::string dbg_cnf_nm = skg.kg_running_path + "/DBG_CNF_CK_SAVE.yos";
+	ch_string dbg_cnf_nm = skg.kg_running_path + "/DBG_CNF_CK_SAVE.yos";
 	canon_save(dbg_cnf_nm, dbg_cnf.cf_chars, false);
 
 	BRAIN_CK(dbg_cnf.cf_dims.dd_tot_ccls == dbg_cnf.cf_clauses.size());
@@ -3315,7 +3325,7 @@ memap::dbg_ck_used_simple_no_satisf(mem_op_t mm, brain& brn){
 	//	<< "<<<<<<<<<<" << std::endl << dbg_cnf.cf_sha_str << " sv_id" << skg_dbg_canon_save_id
 	//);
 
-	std::string dbg_cnf_nm = skg.kg_running_path + "/DBG_CNF_CK_USED.yos";
+	ch_string dbg_cnf_nm = skg.kg_running_path + "/DBG_CNF_CK_USED.yos";
 	canon_save(dbg_cnf_nm, dbg_cnf.cf_chars, false);
 
 	DBG_CHECK_SAVED(dbg_run_satex_on(brn, dbg_cnf_nm));

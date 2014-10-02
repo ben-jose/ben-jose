@@ -185,7 +185,7 @@ void	elim_until_dominated(brain& brn, quanton& qua);
 void	find_max_level_and_tier(row<quanton*>& tmp_mots, long& max_lev, long& max_tier);
 
 void	dbg_prepare_used_dbg_ccl(row_quanton_t& rr_qua, canon_clause& dbg_ccl);
-bool	dbg_run_satex_on(brain& brn, std::string f_nam);
+bool	dbg_run_satex_on(brain& brn, ch_string f_nam);
 void	dbg_print_ccls_neus(std::ostream& os, row<canon_clause*>& dbg_ccls);
 
 void	split_tees(sort_glb& srg, row<sortee*>& sorted_tees, row<sortee*>& sub_tees, 
@@ -358,10 +358,10 @@ DECLARE_NI_FLAG_ALL_FUNCS(note5);
 class quanton {
 	public:
 	static
-	std::string		CL_NAME;
+	char*	CL_NAME;
 
 	virtual
-	std::string&	get_cls_name(){
+	char*	get_cls_name(){
 		return quanton::CL_NAME;
 	}
 
@@ -621,10 +621,10 @@ class quanton {
 class neuron {
 	public:
 	static
-	std::string	CL_NAME;
+	char*	CL_NAME;
 
 	virtual
-	std::string&	get_cls_name(){
+	char*	get_cls_name(){
 		return neuron::CL_NAME;
 	}
 
@@ -1769,8 +1769,8 @@ class brain {
 	k_row<leveldat>		br_data_levels;
 
 	// config attributes
-	std::string		br_file_name;
-	std::string		br_file_name_in_ic;
+	ch_string		br_file_name;
+	ch_string		br_file_name_in_ic;
 
 	// state attributes
 	ticket			br_current_ticket;
@@ -2057,8 +2057,8 @@ class brain {
 		return (br_conflict_found != NULL_PT);
 	}
 
-	void	set_file_name_in_ic(std::string f_nam = "");
-	void	config_brain(std::string f_nam = "");
+	void	set_file_name_in_ic(ch_string f_nam = "");
+	void	config_brain(ch_string f_nam = "");
 	void	init_loading(long num_qua, long num_neu);
 	void	init_uncharged();
 
@@ -2194,7 +2194,7 @@ class brain {
 	bool	ck_trail();
 	void	print_trail(std::ostream& os, bool no_src_only = false);
 
-	std::ostream& 	print_all_quantons(std::ostream& os, long ln_sz, std::string ln_fd);
+	std::ostream& 	print_all_quantons(std::ostream& os, long ln_sz, ch_string ln_fd);
 
 	bool	brn_compute_binary(row<neuron*>& neus);
 	bool	brn_compute_dots(row<neuron*>& neus);
@@ -2562,7 +2562,7 @@ DEFINE_PRINT_FUNCS(leveldat)
 // other funcs
 
 
-std::string	dbg_name(std::string pref, long seq, std::string suf);
+ch_string	dbg_name(ch_string pref, long seq, ch_string suf);
 void	system_exec(std::ostringstream& strstm);
 
 //=============================================================================

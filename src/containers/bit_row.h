@@ -414,29 +414,12 @@ public:
 		std::ostream& os, 
 		bool with_lims = true,
 
-		std::string sep = " ", 
+		char* sep = as_pt_char(" "), 
 		bit_row_index low = INVALID_IDX, 
 		bit_row_index hi = INVALID_IDX,
 		bit_row_index grp_sz = -1,
-		std::string grp_sep = "\n"
-		)
-	{
-		bit_row_index num_elem = 1;
-		if(with_lims){ os << "["; }
-		for(bit_row_index ii = 0; ii < sz; ii++){
-			if(ii == low){ os << ">"; }
-			os << pos(ii);
-			if(ii == hi){ os << "<"; }
-			os << sep;
-			if((grp_sz > 1) && ((num_elem % grp_sz) == 0)){
-				os << grp_sep;
-			}
-			num_elem++;
-		}
-		if(with_lims){ os << "] "; }
-		os.flush();
-		return os;
-	}
+		char* grp_sep = as_pt_char("\n")
+		);
 
 	bool	equal_to(bit_row& rw2, bit_row_index first_ii = 0, bit_row_index last_ii = -1){
 		if((last_ii < 0) || (last_ii > sz)){
@@ -517,7 +500,7 @@ rot_rgt_idx(bit_row_index pos, bit_row_index row_sz, long num_rot){
 
 inline 
 std::ostream&	operator << (std::ostream& os, bit_row& rr){
-	rr.print_bit_row(os, true, " ");
+	rr.print_bit_row(os, true, as_pt_char(" "));
 	return os;
 }
 

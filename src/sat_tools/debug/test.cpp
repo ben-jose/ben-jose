@@ -47,6 +47,7 @@ file for test and debugging purposes.
 #include "unistd.h"
 #include "limits.h"
 
+#include "ch_string.h"
 #include "support.h"
 
 #include "brain.h"
@@ -74,7 +75,7 @@ test_creat(int argc, char** argv){
 		return;
 	}
 
-	std::string pth = argv[1];
+	ch_string pth = argv[1];
 
 	os << "pth=" << pth << std::endl;
 	bool pth_ok = path_create(pth);
@@ -83,10 +84,10 @@ test_creat(int argc, char** argv){
 }
 
 void
-find_nth_dir(long nn, std::string& pth, std::string& sub_pth){
+find_nth_dir(long nn, ch_string& pth, ch_string& sub_pth){
 	std::ostream& os = std::cout;
-	typedef std::string::size_type pos_t;
-	//pos_t pp = std::string::npos;
+	typedef ch_string::size_type pos_t;
+	//pos_t pp = ch_string::npos;
 	pos_t pp = 0;
 	pos_t pth_sz = pth.size();
 	for(long ii = 0; ii < nn; ii++){
@@ -109,7 +110,8 @@ void	test_long_to_pth(int argc, char** argv){
 	os << "arg1=" << argv[1] << std::endl;
 	long nn = atol(argv[1]);
 	os << "L1=" << nn << std::endl;
-	std::string pth = long_to_path(nn, 3);
+	//ch_string pth = long_to_path(nn, 3);
+	ch_string pth = long_to_path(nn, 3);
 	os << "pth=" << pth << std::endl;
 }
 
@@ -127,7 +129,7 @@ void	test_dims_to_path(int argc, char** argv){
 	long nv = atol(argv[3]);
 	long tt = 0;
 
-	std::string pth = "";
+	ch_string pth = "";
 
 	dima_dims dims;
 	dims.dd_tot_lits = tl;
@@ -151,8 +153,8 @@ void
 test_sha_pth(){
 	std::ostream& os = std::cout;
 
-	std::string str_cont = "HOLA_MUNDO";
-	std::string sha_txt;
+	ch_string str_cont = "HOLA_MUNDO";
+	ch_string sha_txt;
 	row<char> cnn;
 	canon_string_append(cnn, str_cont);
 	canon_sha(cnn, sha_txt);
@@ -162,7 +164,7 @@ test_sha_pth(){
 	os << "sz=" << sha_txt.size() << std::endl;
 }
 
-std::set<std::string> selected_leafs;
+std::set<ch_string> selected_leafs;
 
 // man 2 open
 // man 2 gethostname
@@ -313,7 +315,7 @@ recalc_cnf(canon_cnf& the_cnf){
 }
 
 void
-gen_cnf_skls(tak_mak& gg, canon_cnf& the_cnf, long num_skls, row<std::string>& pths){
+gen_cnf_skls(tak_mak& gg, canon_cnf& the_cnf, long num_skls, row<ch_string>& pths){
 	std::ostream& os = std::cout;
 
 	pths.push(the_cnf.get_canon_name());
@@ -381,14 +383,14 @@ test_nfwt(int argc, char** argv)
 	MARK_USED(exe_sup);
 	MARK_USED(ver_skl);
 	
-	row<std::string> load_ops;
-	row<std::string> pth_ld_ops;
-	row<std::string> delete_ops;
+	row<ch_string> load_ops;
+	row<ch_string> pth_ld_ops;
+	row<ch_string> delete_ops;
 
 	GSKE.kg_root_path = TEST_ROOT_PATH;
 
 	for(long ii = 1; ii < argc; ii++){
-		std::string the_arg = argv[ii];
+		ch_string the_arg = argv[ii];
 		if(strcmp(argv[ii], "-sub") == 0){
 			exe_sub = true;
 		} else if(strcmp(argv[ii], "-sup") == 0){
@@ -405,21 +407,21 @@ test_nfwt(int argc, char** argv)
 			int kk_idx = ii + 1;
 			ii++;
 
-			std::string& str_1 = delete_ops.inc_sz();
+			ch_string& str_1 = delete_ops.inc_sz();
 			str_1 = argv[kk_idx];
 
 		} else if((strcmp(argv[ii], "-l") == 0) && ((ii + 1) < argc)){
 			int kk_idx = ii + 1;
 			ii++;
 
-			std::string& str_1 = load_ops.inc_sz();
+			ch_string& str_1 = load_ops.inc_sz();
 			str_1 = argv[kk_idx];
 
 		} else if((strcmp(argv[ii], "-L") == 0) && ((ii + 1) < argc)){
 			int kk_idx = ii + 1;
 			ii++;
 
-			std::string& str_1 = pth_ld_ops.inc_sz();
+			ch_string& str_1 = pth_ld_ops.inc_sz();
 			str_1 = argv[kk_idx];
 
 		} else if((strcmp(argv[ii], "-r") == 0) && ((ii + 1) < argc)){
@@ -435,7 +437,7 @@ test_nfwt(int argc, char** argv)
 	GSKE.print_paths(os);
 
 	if(del_skl){
-		std::string GSKE_ROOT = GSKE.kg_root_path + SKG_SKELETON_DIR;
+		ch_string GSKE_ROOT = GSKE.kg_root_path + SKG_SKELETON_DIR;
 		os << "WARNING !!! deleting '" << GSKE_ROOT << "'" << std::endl;
 		delete_directory(GSKE_ROOT);
 	}
@@ -445,10 +447,10 @@ test_nfwt(int argc, char** argv)
 	}
 
 	while(! load_ops.is_empty()){
-		std::string& to_load = load_ops.last();
+		ch_string& to_load = load_ops.last();
 
-		std::string rel_pth = SKG_CNF_DIR + to_load;
-		std::string full_pth = GSKE.as_full_path(rel_pth);
+		ch_string rel_pth = SKG_CNF_DIR + to_load;
+		ch_string full_pth = GSKE.as_full_path(rel_pth);
 		os << "to_load='" << full_pth << "'" << std::endl;
 
 		bool all_ok = the_cnf.load_from(GSKE, full_pth);
@@ -462,9 +464,9 @@ test_nfwt(int argc, char** argv)
 		load_ops.dec_sz();
 	}
 	while(! pth_ld_ops.is_empty()){
-		std::string& to_load = pth_ld_ops.last();
+		ch_string& to_load = pth_ld_ops.last();
 
-		std::string full_pth = to_load;
+		ch_string full_pth = to_load;
 		os << "to_load='" << full_pth << "'" << std::endl;
 
 		bool all_ok = the_cnf.load_from(GSKE, full_pth);
@@ -478,7 +480,7 @@ test_nfwt(int argc, char** argv)
 		pth_ld_ops.dec_sz();
 	}
 	while(! delete_ops.is_empty()){
-		std::string& to_del = delete_ops.last();
+		ch_string& to_del = delete_ops.last();
 		os << "to_del='" << to_del << "'" << std::endl;
 		delete_ops.dec_sz();
 	}
@@ -495,8 +497,8 @@ test_realpath(int argc, char** argv)
 		os << "Faltan agrs !!" << std::endl;
 	}
 
-	std::string pth = argv[1];
-	std::string r_pth = path_to_absolute_path(pth);
+	ch_string pth = argv[1];
+	ch_string r_pth = path_to_absolute_path(pth);
 
 	os << "r_pth='" << r_pth << "'" << std::endl;
 }
@@ -578,7 +580,7 @@ test_subsets(){
 	GSKE.init_paths();
 	GSKE.print_paths(os);
 
-	std::string GSKE_ROOT = GSKE.kg_root_path + SKG_SKELETON_DIR;
+	ch_string GSKE_ROOT = GSKE.kg_root_path + SKG_SKELETON_DIR;
 	os << "WARNING !!! deleting '" << GSKE_ROOT << "'" << std::endl;
 	delete_directory(GSKE_ROOT);
 	//GLB().dbg_lev[80] = true;
@@ -667,7 +669,7 @@ void	test_big_num(){
 	//mpz_setbit(a.get_mpz_t(), 112);
 	std::cout << "a is " << a << "\n";
 
-	std::string s1 = a.get_str(2);
+	ch_string s1 = a.get_str(2);
 	std::cout << "s1 is " << s1 << std::endl;
 
 	//long cm1 = mpz_cmp(nu1.get_mpz_t(), nu2.get_mpz_t());
@@ -692,13 +694,13 @@ void	test_big2(){
 	d = mpz_class(v1);
 	std::cout << "d is " << d << "\n";
 
-	std::string s_d;
+	ch_string s_d;
 	d.set_str(s_d, 2);
 	std::cout << "s_d is " << d << "\n";
 
-	//std::string s_v1 = mpz_get_str(NULL, 2, v1);
+	//ch_string s_v1 = mpz_get_str(NULL, 2, v1);
 	//std::cout << "s_v1 is " << s_v1 << "\n";
-	std::string s2_d = mpz_get_str(NULL, 2, d.get_mpz_t());
+	ch_string s2_d = mpz_get_str(NULL, 2, d.get_mpz_t());
 	std::cout << "s2_d is " << s2_d << "\n";
 	//v2 = d.get_mpz_t();
 
@@ -768,8 +770,8 @@ void	test_big4(){
 void	test_str1(){
 	std::ostream& os = std::cout;
 
-	std::string ss1;
-	std::string ss2;
+	ch_string ss1;
+	ch_string ss2;
 	ss1 = "jose";
 	ss2 = " pedro pablo \n";
 	ss1 += ss2;
@@ -784,8 +786,8 @@ void	test_symlk(int argc, char** argv){
 		return;
 	}
 
-	std::string pth1 = argv[1];
-	std::string pth2 = argv[2];
+	ch_string pth1 = argv[1];
+	ch_string pth2 = argv[2];
 
 	symlink(pth1.c_str(), pth2.c_str());
 }
@@ -797,8 +799,8 @@ void	test_tm_elapsed(int argc, char** argv){
 		os << "Faltan agrs !!" << std::endl;
 	}
 
-	std::string oper = argv[1];
-	std::string pth = argv[2];
+	ch_string oper = argv[1];
+	ch_string pth = argv[2];
 	
 	long rd_ok = -1;
 	mpf_class n_avg;
@@ -827,13 +829,13 @@ void	test_open_unlink(int argc, char** argv){
 		os << "Faltan agrs !!" << std::endl;
 	}
 
-	std::string the_pth = argv[1];
-	std::string oper = argv[2];
-	std::string full_pth = path_to_absolute_path(the_pth);
+	ch_string the_pth = argv[1];
+	ch_string oper = argv[2];
+	ch_string full_pth = path_to_absolute_path(the_pth);
 
 	if(oper == "d"){
-		std::string top_pth = TEST_ROOT_PATH; 
-		std::string full_pth = path_to_absolute_path(the_pth);
+		ch_string top_pth = TEST_ROOT_PATH; 
+		ch_string full_pth = path_to_absolute_path(the_pth);
 
 		os << "DELETING " << full_pth << " ..." << std::endl;
 		path_delete(full_pth, top_pth);
@@ -864,7 +866,7 @@ void	test_open_unlink(int argc, char** argv){
 			}
 			file_content[file_sz] = 0;
 
-			std::string fdat = file_content;
+			ch_string fdat = file_content;
 			tpl_free<char>(file_content, file_sz + 1);
 
 			os << fdat << std::endl;
@@ -891,8 +893,8 @@ load_entry(const char *fpath, const struct stat *sb, int tflag, struct FTW *ftwb
 	case FTW_DP:
 		break;
 	default:{
-			std::string full_pth = fpath;
-			std::string cnn_nm = SKG_CANON_NAME;
+			ch_string full_pth = fpath;
+			ch_string cnn_nm = SKG_CANON_NAME;
 			if(path_ends_with(full_pth, cnn_nm)){
 				canon_cnf the_cnf;
 
@@ -917,7 +919,7 @@ load_entry(const char *fpath, const struct stat *sb, int tflag, struct FTW *ftwb
 }
 
 void
-load_all_in_dir(std::string& dir_nm){
+load_all_in_dir(ch_string& dir_nm){
 	long max_depth = SKG_MAX_PATH_DEPTH;
 	nftw(dir_nm.c_str(), load_entry, max_depth, FTW_DEPTH);
 }
@@ -937,16 +939,16 @@ update_elap_entry(const char *fpath, const struct stat *sb, int tflag, struct FT
 	case FTW_DP:
 		break;
 	default:{
-			std::string pth_str = fpath;
-			std::string cnn_nm = SKG_CANON_NAME;
+			ch_string pth_str = fpath;
+			ch_string cnn_nm = SKG_CANON_NAME;
 			if(path_ends_with(pth_str, cnn_nm)){
 				tak_mak& gg = *glb_test_tak_mak;
 				long upd_it = gg.gen_rand_int32_ie(0, 2);
 				if(upd_it > 0){
-					std::string full_pth = path_get_directory(pth_str) + '/';
+					ch_string full_pth = path_get_directory(pth_str) + '/';
 					//DBG_PRT(108, os << "full_pth in update= " << full_pth);
 
-					std::string elp_nm = full_pth + SKG_ELAPSED_NAME;
+					ch_string elp_nm = full_pth + SKG_ELAPSED_NAME;
 					update_elapsed(elp_nm);
 
 					//DBG_PRT(108, os << "UPDATING " << elp_nm);
@@ -959,7 +961,7 @@ update_elap_entry(const char *fpath, const struct stat *sb, int tflag, struct FT
 }
 
 void
-update_rnd_elap_in_dir(tak_mak& gg, std::string& dir_nm){
+update_rnd_elap_in_dir(tak_mak& gg, ch_string& dir_nm){
 	long num_rr = gg.gen_rand_int32_ie(0, 10);
 
 	long max_depth = SKG_MAX_PATH_DEPTH;
@@ -979,7 +981,7 @@ gen_phases(tak_mak& gg, ref_strs& the_ph){
 	//BRAIN_CK(num_pha < 4);
 	BRAIN_CK(num_pha < 3);
 
-	std::string rr_pth = SKG_REF_DIR;
+	ch_string rr_pth = SKG_REF_DIR;
 
 	if(num_pha >= 1){
 		the_ph.pd_ref1_nam = rr_pth + "/test_ref1/";
@@ -1002,7 +1004,7 @@ test_skl(){
 
 	GSKE.kg_root_path = TEST_ROOT_PATH;
 
-	std::string GSKE_ROOT = GSKE.kg_root_path + SKG_SKELETON_DIR;
+	ch_string GSKE_ROOT = GSKE.kg_root_path + SKG_SKELETON_DIR;
 	os << "WARNING !!! deleting '" << GSKE_ROOT << "'" << std::endl;
 	delete_directory(GSKE_ROOT);
 
@@ -1045,10 +1047,10 @@ test_skl(){
 	long max_num_ccls_cnf = 200;
 	long max_num_vars_cnf = 50;
 
-	std::string rr_pth = SKG_REF_DIR;
-	std::string r1_pth = rr_pth + "/test_ref1/";
-	std::string r2_pth = rr_pth + "/test_ref2/";
-	std::string r3_pth = rr_pth + "/test_ref3/";
+	ch_string rr_pth = SKG_REF_DIR;
+	ch_string r1_pth = rr_pth + "/test_ref1/";
+	ch_string r2_pth = rr_pth + "/test_ref2/";
+	ch_string r3_pth = rr_pth + "/test_ref3/";
 
 	GSKE.ref_create(r1_pth, dbg_call_1);
 	GSKE.ref_create(r2_pth, dbg_call_2);
@@ -1056,7 +1058,7 @@ test_skl(){
 
 	//GSKE.report_err("a_missing_path", GSKE.kg_missing_path);
 
-	std::string skl_nt_pth = GSKE.as_full_path(SKG_CNF_DIR);
+	ch_string skl_nt_pth = GSKE.as_full_path(SKG_CNF_DIR);
 
 	os << "1. SAVING TEST ..."  << std::endl;
 
@@ -1065,7 +1067,7 @@ test_skl(){
 		gen_phases(rnd_gen, the_cnf.cf_phdat);
 		gen_ccls_cnf(rnd_gen, the_cnf, max_ccl_sz, max_num_ccls_cnf, max_num_vars_cnf);
 
-		std::string cnn_name = the_cnf.get_cnf_path() + SKG_DIFF_NAME;
+		ch_string cnn_name = the_cnf.get_cnf_path() + SKG_DIFF_NAME;
 		if(! GSKE.ref_exists(cnn_name)){
 			os << "num_test=" << aa << std::endl;
 			the_cnf.save_cnf(GSKE, cnn_name);
@@ -1115,18 +1117,18 @@ test_lk_name(){
 	std::ostream& os = std::cout;
 	MARK_USED(os);
 
-	std::string str1 = "CADENA DE PRUEBA";
+	ch_string str1 = "CADENA DE PRUEBA";
 	uchar_t* arr_to_sha = (uchar_t*)(str1.c_str());
 	long arr_to_sha_sz = str1.size();
 	
-	std::string the_sha = sha_txt_of_arr(arr_to_sha, arr_to_sha_sz);
+	ch_string the_sha = sha_txt_of_arr(arr_to_sha, arr_to_sha_sz);
 
 	dima_dims dim0;
 	dim0.dd_tot_lits = 245;
 	dim0.dd_tot_ccls = 25;
 	dim0.dd_tot_vars = 70;
 	dim0.dd_tot_twolits = 18;
-	//std::string lk_nm = canon_lock_name(dim0, the_sha);
+	//ch_string lk_nm = canon_lock_name(dim0, the_sha);
 
 	//os << "lk_nm=" << lk_nm << std::endl;
 	//os << "sz_lk_nm=" << lk_nm.size() << std::endl;

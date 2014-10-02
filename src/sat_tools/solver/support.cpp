@@ -34,6 +34,7 @@ Global classes and functions that support and assist the system.
 #include <cstring>
 
 #include "top_exception.h"
+#include "stack_trace.h"
 #include "support.h"
 #include "config.h"
 #include "sortor.h"
@@ -42,7 +43,7 @@ Global classes and functions that support and assist the system.
 
 bool	dbg_bad_cycle1 = false;		// dbg_print_cond_func
 
-std::string	satisf_val_nams[k_last_satisf_val];
+ch_string	satisf_val_nams[k_last_satisf_val];
 
 void	init_glb_nams(){
 	init_nams(satisf_val_nams, k_first_satisf_val, k_last_satisf_val);
@@ -61,7 +62,7 @@ void	glb_set_memout(){
 }
 
 long
-find_first_digit(std::string& the_str, bool dig = true){
+find_first_digit(ch_string& the_str, bool dig = true){
 	unsigned long aa = 0;
 	if(dig){
 		for(	aa = 0; 
@@ -83,10 +84,10 @@ get_free_mem_kb(){
 
 	long free_mem_kb = 0;
 	
-	std::string str_mem_free ("MemFree:");
+	ch_string str_mem_free ("MemFree:");
 	long str_mem_free_ln = str_mem_free.size();
 	
-	std::string str_ln;
+	ch_string str_ln;
 
 	std::ifstream proc_meminfo;
 	proc_meminfo.open("/proc/meminfo");
@@ -98,7 +99,7 @@ get_free_mem_kb(){
 			
 			if(str_ln.compare(0, str_mem_free_ln, str_mem_free) == 0){
 				long pos = find_first_digit(str_ln);
-				std::string str_val = str_ln.substr(pos);
+				ch_string str_val = str_ln.substr(pos);
 				pos = find_first_digit(str_val, false);
 				str_val = str_val.substr(0, pos);
 				
@@ -422,7 +423,7 @@ global_data::print_final_assig(){
 	}
 
 	instance_info& inst_info = get_curr_inst();
-	std::string f_nam = inst_info.get_f_nam();
+	ch_string f_nam = inst_info.get_f_nam();
 
 	const char* f_nm = GLB().batch_answer_name.c_str();
 	std::ofstream log_stm;
@@ -521,7 +522,7 @@ global_data::count_instance(instance_info& inst_info){
 std::ostream&
 global_data::print_mini_stats(std::ostream& os){
 	instance_info& inst_info = get_curr_inst();
-	std::string f_nam = inst_info.get_f_nam();
+	ch_string f_nam = inst_info.get_f_nam();
 
 	os << CARRIAGE_RETURN;
 	os << "'" << f_nam << "'";
@@ -543,7 +544,7 @@ global_data::print_stats(std::ostream& os, double current_secs){
 	}
 
 	instance_info& inst_info = get_curr_inst();
-	std::string f_nam = inst_info.get_f_nam();
+	ch_string f_nam = inst_info.get_f_nam();
 
 	os << std::endl;
 	os << "file_name: '" << f_nam << "'" << std::endl;
@@ -561,8 +562,8 @@ global_data::print_stats(std::ostream& os, double current_secs){
 //============================================================
 // global functions
 
-bool	dbg_print_cond_func(bool prm, bool is_ck, const std::string fnam, int lnum,
-		const std::string prm_str, long dbg_lv)
+bool	dbg_print_cond_func(bool prm, bool is_ck, const ch_string fnam, int lnum,
+		const ch_string prm_str, long dbg_lv)
 {
 	DBG_CK(! dbg_bad_cycle1);
 	dbg_bad_cycle1 = true;
@@ -680,7 +681,7 @@ void	log_batch_info(){
 }
 
 void
-read_batch_instances(std::string file_nm, row<instance_info>& f_insts){
+read_batch_instances(ch_string file_nm, row<instance_info>& f_insts){
 	std::ostream& os = std::cout;
 
 	std::ifstream in_stm;
@@ -691,7 +692,7 @@ read_batch_instances(std::string file_nm, row<instance_info>& f_insts){
 		return;
 	}
 
-	std::string str_ln;
+	ch_string str_ln;
 	long num_ln = 0;
 
 	f_insts.clear();
@@ -710,12 +711,12 @@ read_batch_instances(std::string file_nm, row<instance_info>& f_insts){
 	in_stm.close();
 }
 
-std::string 
+ch_string 
 instance_info::parse_field(const char*& pt_in){
 	char sep = RESULT_FIELD_SEP_CHAR;
 	char eol = '\n';
 
-	std::string the_field = "";
+	ch_string the_field = "";
 	const char* pt_0 = pt_in;
 
 	while(*pt_in != 0){
@@ -739,7 +740,7 @@ instance_info::parse_field(const char*& pt_in){
 }
 
 satisf_val
-as_satisf(std::string str_ln){
+as_satisf(ch_string str_ln){
 	satisf_val the_val = k_unknown_satisf;
 	if(str_ln == satisf_val_nams[k_unknown_satisf]){
 		the_val = k_unknown_satisf;
@@ -758,14 +759,14 @@ as_satisf(std::string str_ln){
 }
 
 void
-instance_info::parse_instance(std::string str_ln, long line){
+instance_info::parse_instance(ch_string str_ln, long line){
 	init_instance_info();
 
 	DBG_PRT(30, os << "LINE inst=" << str_ln);
 
 	const char* pt_in = str_ln.c_str();
 	ist_file_path = parse_field(pt_in);
-	std::string r_fi = parse_field(pt_in);
+	ch_string r_fi = parse_field(pt_in);
 	ist_result = as_satisf(r_fi);
 
 	DBG_PRT(30, os << "read inst=" << *this);
@@ -785,7 +786,7 @@ instance_info::parse_instance(std::string str_ln, long line){
 }
 
 bool
-all_results_batch_instances(std::string file_nm, satisf_val r_val){
+all_results_batch_instances(ch_string file_nm, satisf_val r_val){
 	row<instance_info> f_insts;
 	read_batch_instances(file_nm, f_insts);
 	bool all_ok = true;
@@ -830,7 +831,7 @@ void	call_and_handle_exceptions(core_func_t the_func){
 	GLB().reset_global();
 }
 
-void	chomp_string(std::string& s1){
+void	chomp_string(ch_string& s1){
 	long ii = s1.length() - 1;
 	//while((ii > 0) && ! isalnum(s1[ii])){
 	while((ii > 0) && ! isprint(s1[ii])){
@@ -860,7 +861,7 @@ void	read_batch_file(row<instance_info>& names){
 	names.clear();
 	bool adding = true;
 
-	std::string my_str;
+	ch_string my_str;
 
 	while(in_stm.good()){
 		std::getline(in_stm, my_str);
@@ -901,7 +902,7 @@ void	print_periodic_totals(void* pm, double curr_tm){
 	PRT_OUT(0, GLB().print_totals(os, curr_tm));
 }
 
-void	get_enter(std::ostream& os, std::string msg){
+void	get_enter(std::ostream& os, ch_string msg){
 	os << "PRESS ENTER to continue. " << msg << std::endl;
 	getchar();
 }
@@ -936,17 +937,17 @@ void	init_dbg_conf(){
 	*/
 }
 
-std::string
-get_log_name(std::string f_nam, std::string sufix){
-	std::string lg_nm = f_nam + "_" + sufix;
+ch_string
+get_log_name(ch_string f_nam, ch_string sufix){
+	ch_string lg_nm = f_nam + "_" + sufix;
 	return lg_nm;
 }
 
-std::string
-global_data::init_log_name(std::string sufix){
+ch_string
+global_data::init_log_name(ch_string sufix){
 	bool is_batch = false;
-	std::string f_nam = GLB().get_file_name(is_batch);
-	std::string log_nm = get_log_name(f_nam, sufix);
+	ch_string f_nam = GLB().get_file_name(is_batch);
+	ch_string log_nm = get_log_name(f_nam, sufix);
 
 	/*
 	std::ostringstream log_ss;
@@ -963,7 +964,7 @@ void	do_all_instances(){
 	GLB().batch_prt_totals_timer.init_timer(PRINT_TOTALS_PERIOD);
 
 	bool is_batch = false;
-	std::string f_nam = GLB().get_file_name(is_batch);
+	ch_string f_nam = GLB().get_file_name(is_batch);
 
 	GLB().batch_log_name = GLB().init_log_name(LOG_NM_ERROR);
 	GLB().batch_end_log_name = GLB().init_log_name(LOG_NM_RESULTS);
@@ -985,7 +986,7 @@ void	do_all_instances(){
 
 	for(long ii = 0; ii < GLB().batch_num_files; ii++){
 		GLB().batch_consec = ii + 1;
-		std::string inst_nam = all_insts[ii].ist_file_path;
+		ch_string inst_nam = all_insts[ii].ist_file_path;
 		//GLB().file_name = all_insts[ii].ist_file_path;
 
 		std::ifstream i_ff;
@@ -1062,7 +1063,7 @@ global_data::get_args(int argc, char** argv)
 	gg_skeleton.init_paths();
 
 	for(long ii = 1; ii < argc; ii++){
-		std::string the_arg = argv[ii];
+		ch_string the_arg = argv[ii];
 		if(the_arg == "-h"){
 			prt_help = true;
 		} else if(the_arg == "-v"){

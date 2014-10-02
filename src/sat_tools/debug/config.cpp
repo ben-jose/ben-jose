@@ -52,7 +52,7 @@ public:
 //======================================================================
 // parse funcs
 
-std::ostringstream& parse_err_msg(std::string hd_msg, long num_line, char ch_err, std::string msg)
+std::ostringstream& parse_err_msg(ch_string hd_msg, long num_line, char ch_err, ch_string msg)
 {
 	GLB().reset_err_msg();
 	std::ostringstream& err_msg = GLB().error_stm;
@@ -90,9 +90,9 @@ void skip_line(const char*& pt_in, long& line){
 	}
 }
 
-std::string 
+ch_string 
 read_text_line(const char*& pt_in, long& line){
-	std::string the_ln = "";
+	ch_string the_ln = "";
 	const char* pt_0 = pt_in;
 	bool all_prt = true;
 
@@ -143,7 +143,7 @@ integer parse_int(const char*& pt_in, long line) {
 }
 
 void
-config_reader::parse_debug_line(row<long>& dbg_line, std::string& str_ln){
+config_reader::parse_debug_line(row<long>& dbg_line, ch_string& str_ln){
 	const char* pt_in = str_ln.c_str();
 
 	dbg_line.clear();
@@ -164,7 +164,7 @@ config_reader::parse_debug_line(row<long>& dbg_line, std::string& str_ln){
 }
 
 void	
-config_reader::add_config_line(std::string& str_ln){
+config_reader::add_config_line(ch_string& str_ln){
 	std::ostream& os = std::cout;
 	MARK_USED(os);
 	row<long>& dbg_ln = GLB().dbg_config_line;
@@ -215,7 +215,7 @@ config_reader::read_config(const char* file_nm){
 		return;
 	}
 
-	std::string str_ln;
+	ch_string str_ln;
 
 	while(! in_stm.eof()){
 		std::getline(in_stm, str_ln);

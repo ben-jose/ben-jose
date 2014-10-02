@@ -50,7 +50,6 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 #include "config.h"
 #include "dimacs.h"
 #include "sha2.h"
-#include "kry.h"
 #include "tak_mak.h"
 #include "print_macros.h"
 
@@ -87,7 +86,7 @@ class skeleton_glb;
 //=================================================================
 // type declarations
 
-typedef std::set<std::string> 	string_set_t;
+typedef std::set<ch_string> 	string_set_t;
 
 //=================================================================
 // global dbg declarations
@@ -132,7 +131,7 @@ extern mpz_class	skg_dbg_canon_save_id;
 std::ostream&
 print_hex_as_txt(std::ostream& os, row<uchar_t>& sha_rr);
 
-std::string
+ch_string
 sha_txt_of_arr(uchar_t* to_sha, long to_sha_sz);
 
 void
@@ -145,60 +144,60 @@ DECLARE_PRINT_FUNCS(canon_cnf)
 //=================================================================
 // path funcs
 
-bool		not_skl_path(std::string pth);
+bool		not_skl_path(ch_string pth);
 
-std::string	nam_subset_resp(cmp_is_sub rr);
-std::string	get_errno_str(long val_errno);
-void		string_replace_char(std::string& src_str, char orig, char repl);
+ch_string	nam_subset_resp(cmp_is_sub rr);
+ch_string	get_errno_str(long val_errno);
+void		string_replace_char(ch_string& src_str, char orig, char repl);
 
-std::string	path_get_running_path();
+ch_string	path_get_running_path();
 
-bool		path_exists(std::string the_pth);
-bool		path_newer_than(std::string the_pth, time_t tm1);
-bool 		path_touch(std::string the_pth);
-bool		path_is_dead_lock(std::string the_pth);
-void		path_delete(std::string full_pth, std::string up_to);
-bool		path_create(std::string n_pth);
+bool		path_exists(ch_string the_pth);
+bool		path_newer_than(ch_string the_pth, time_t tm1);
+bool 		path_touch(ch_string the_pth);
+bool		path_is_dead_lock(ch_string the_pth);
+void		path_delete(ch_string full_pth, ch_string up_to);
+bool		path_create(ch_string n_pth);
 
-std::string	path_get_directory(std::string the_pth);
-std::string	path_to_absolute_path(std::string pth);
-bool		path_begins_with(std::string the_pth, std::string the_beg);
-bool		path_ends_with(std::string& the_str, std::string& the_suf);
+ch_string	path_get_directory(ch_string the_pth);
+ch_string	path_to_absolute_path(ch_string pth);
+bool		path_begins_with(ch_string the_pth, ch_string the_beg);
+bool		path_ends_with(ch_string& the_str, ch_string& the_suf);
 
 // fnum = concurrent safe consec counter kept in file f_nam
 
-mpz_class	inc_fnum(std::string f_nam);	// neg on err o the num after inc. 
+mpz_class	inc_fnum(ch_string f_nam);	// neg on err o the num after inc. 
 
-std::string	get_fstr(std::string f_nam);
-long		set_fstr(std::string f_nam, std::string the_val_str);
+ch_string	get_fstr(ch_string f_nam);
+long		set_fstr(ch_string f_nam, ch_string the_val_str);
 
-mpf_class	update_elapsed(std::string f_nam);	// update avg elapsed modification time of f_nam
-long		read_elapsed(std::string f_nam, average& the_avg);	// read avg elapsed modification time of f_nam
+mpf_class	update_elapsed(ch_string f_nam);	// update avg elapsed modification time of f_nam
+long		read_elapsed(ch_string f_nam, average& the_avg);	// read avg elapsed modification time of f_nam
 
-bool 		dims_path_exists(std::string base_pth, const dima_dims& dims);
+bool 		dims_path_exists(ch_string base_pth, const dima_dims& dims);
 int		delete_dir_entry(const char *fpath, const struct stat *sb, int tflag, struct FTW *ftwbuf);
-void		delete_directory(std::string& dir_nm);
+void		delete_directory(ch_string& dir_nm);
 
-std::string&	slice_str_to_path(std::string& sha_txt);
-std::string	long_to_path(long nn, long d_per_dir);
-bool		all_digits(std::string& the_str);
-std::string	cnf_dims_to_path(const dima_dims& dims);
+ch_string&	slice_str_to_path(ch_string& sha_txt);
+ch_string	long_to_path(long nn, long d_per_dir);
+bool		all_digits(ch_string& the_str);
+ch_string	cnf_dims_to_path(const dima_dims& dims);
 
-void		delete_sha_skeleton(std::string& sha_pth);
+void		delete_sha_skeleton(ch_string& sha_pth);
 
-bool		canon_save(std::string& the_pth, row<char>& cnn, bool write_once = true);
-bool		canon_load(std::string& the_pth, row<char>& cnn);
-bool		canon_equal(std::string& the_pth, row<char>& cnn);
+bool		canon_save(ch_string& the_pth, row<char>& cnn, bool write_once = true);
+bool		canon_load(ch_string& the_pth, row<char>& cnn);
+bool		canon_equal(ch_string& the_pth, row<char>& cnn);
 
-std::string	canon_hash_path(const dima_dims& dims, std::string sha_str);
-//std::string	canon_lock_name(const dima_dims& dims, std::string sha_str);
+ch_string	canon_hash_path(const dima_dims& dims, ch_string sha_str);
+//ch_string	canon_lock_name(const dima_dims& dims, ch_string sha_str);
 
 void		canon_print(std::ostream& os, row<char>& cnn);
-void		canon_sha(row<char>& cnn, std::string& sha_txt);
+void		canon_sha(row<char>& cnn, ch_string& sha_txt);
 
-std::string	canon_header(std::string& hd_str, long ccls, long vars);
+ch_string	canon_header(ch_string& hd_str, long ccls, long vars);
 void		canon_long_append(row<char>& cnn, long nn);
-void		canon_string_append(row<char>& cnn, std::string ss);
+void		canon_string_append(row<char>& cnn, ch_string ss);
 long		canon_purge_clauses(skeleton_glb& skg, row<canon_clause*>& all_ccl, long& tot_lits, long& tot_twolits);
 
 void		canon_count_tots(row<canon_clause*>& all_ccls, long& tot_vars, long& tot_lits, long& tot_twolits);
@@ -209,8 +208,8 @@ void		canon_count_tots(row<canon_clause*>& all_ccls, long& tot_vars, long& tot_l
 
 class ref_strs {
 public:	
-	std::string	pd_ref1_nam;
-	std::string	pd_ref2_nam;
+	ch_string	pd_ref1_nam;
+	ch_string	pd_ref2_nam;
 
 	ref_strs(){
 		init_ref_strs();
@@ -232,11 +231,11 @@ public:
 		return has_r;
 	}
 
-	std::string	vnt_nam(){
+	ch_string	vnt_nam(){
 		return pd_ref1_nam;
 	}
 
-	std::string	lck_nam(){
+	ch_string	lck_nam(){
 		return pd_ref2_nam;
 	}
 
@@ -288,7 +287,7 @@ public:
 	me_as(){
 		DIMACS_H_CK(cc_me != NULL_PT);
 		obj_t1& obj = *((obj_t1*)(cc_me));
-		DIMACS_H_CK(&(obj.get_cls_name()) == &(obj_t1::CL_NAME));
+		DIMACS_H_CK(obj.get_cls_name() == obj_t1::CL_NAME);
 		return obj;
 	}
 
@@ -375,7 +374,7 @@ ccl_row_as(row<canon_clause*>& rr1, row<obj_t1*>& rr2, bool only_spotted = false
 
 class variant {
 public:
-	std::string	vn_real_path;
+	ch_string	vn_real_path;
 	average		vn_elap;
 
 	variant(){
@@ -412,14 +411,14 @@ public:
 
 	row<canon_clause*>	cf_clauses;
 
-	std::string		cf_sha_str;
+	ch_string		cf_sha_str;
 
 	row<char>		cf_chars;
 	row<char>		cf_comment_chars;
 
-	std::string		cf_phase_str;
+	ch_string		cf_phase_str;
 
-	std::string		cf_unique_path;
+	ch_string		cf_unique_path;
 
 	long			cf_num_purged;
 
@@ -467,7 +466,7 @@ public:
 
 	void	clear_all_spots();
 
-	bool	ck_full_dir(std::string sv_dir){
+	bool	ck_full_dir(ch_string sv_dir){
 		DIMACS_H_CK(! sv_dir.empty());
 		DIMACS_H_CK(*(sv_dir.begin()) == '/');
 		DIMACS_H_CK(*(sv_dir.rbegin()) == '/');
@@ -498,10 +497,10 @@ public:
 
 	canon_clause&	add_clause(skeleton_glb& skg);
 
-	std::string	get_id_str();
+	ch_string	get_id_str();
 	void		get_extreme_lits(row<long>& lits);
 
-	std::string	get_num_variants_name();
+	ch_string	get_num_variants_name();
 
 	void	release_all_clauses(skeleton_glb& skg, bool free_mem = false);
 
@@ -511,45 +510,45 @@ public:
 		return cf_phdat.has_ref();
 	}
 
-	std::string	get_all_variant_dir_name();
-	std::string	get_variant_dir_name(long num_vnt);
-	std::string	get_variant_path(skeleton_glb& skg, long num_vnt, bool skip_report = false);
+	ch_string	get_all_variant_dir_name();
+	ch_string	get_variant_dir_name(long num_vnt);
+	ch_string	get_variant_path(skeleton_glb& skg, long num_vnt, bool skip_report = false);
 
 	bool	i_am_sub_of(canon_cnf& the_cnf, bool& are_eq);
 	bool	i_am_super_of(canon_cnf& the_cnf, bool& are_eq);
-	bool	i_sub_of_vnt(skeleton_glb& skg, std::string& vpth, bool& are_eq);
-	bool	i_super_of_vnt(skeleton_glb& skg, std::string& vpth);
+	bool	i_sub_of_vnt(skeleton_glb& skg, ch_string& vpth, bool& are_eq);
+	bool	i_super_of_vnt(skeleton_glb& skg, ch_string& vpth);
 
 	mpz_class	get_num_variants(skeleton_glb& skg);
 	void		set_num_variants(skeleton_glb& skg, mpz_class num_vnts);
 
-	bool	all_nxt_vnt(skeleton_glb& skg, row<variant>& all_next, row<std::string>& all_del);
+	bool	all_nxt_vnt(skeleton_glb& skg, row<variant>& all_next, row<ch_string>& all_del);
 	long	first_vnt_i_super_of(skeleton_glb& skg);
 	bool	ck_vnts(skeleton_glb& skg);
 
-	std::string	get_cnf_path(){
-		std::string cnf_pth = SKG_CNF_DIR + cf_unique_path;
+	ch_string	get_cnf_path(){
+		ch_string cnf_pth = SKG_CNF_DIR + cf_unique_path;
 		return cnf_pth;
 	}
 
-	std::string	get_ref_path(){
-		std::string ref_pth = SKG_REF_DIR + cf_unique_path;
+	ch_string	get_ref_path(){
+		ch_string ref_pth = SKG_REF_DIR + cf_unique_path;
 		return ref_pth;
 	}
 
-	std::string	get_lck_path(){
-		std::string ref_pth = SKG_LCK_DIR + cf_unique_path;
+	ch_string	get_lck_path(){
+		ch_string ref_pth = SKG_LCK_DIR + cf_unique_path;
 		return ref_pth;
 	}
 
-	bool	save_cnf(skeleton_glb& skg, std::string pth);
-	void	update_parent_variants(skeleton_glb& skg, std::string sv_dir);
+	bool	save_cnf(skeleton_glb& skg, ch_string pth);
+	void	update_parent_variants(skeleton_glb& skg, ch_string sv_dir);
 
-	void	add_comment_chars_to(skeleton_glb& skg, row<char>& cnn, std::string sv_ref_pth);
+	void	add_comment_chars_to(skeleton_glb& skg, row<char>& cnn, ch_string sv_ref_pth);
 	void	add_clauses_as_chars_to(row<canon_clause*>& all_ccl, row<char>& cnn);
 
 	void	load_lits(skeleton_glb& skg, row_long_t& all_lits, long& tot_lits, long& tot_twolits);
-	void	calc_sha_in(std::string& sha_str);
+	void	calc_sha_in(ch_string& sha_str);
 
 	long	purge_clauses(skeleton_glb& skg);
 	bool	ck_all_sup_leaf(row_str_t& all_pth);
@@ -561,8 +560,8 @@ public:
 	void	init_skl_paths(skeleton_glb& skg);
 
 	void		fill_with(skeleton_glb& skg, row<long>& all_lits, long num_cla, long num_var);
-	std::string	calc_loader_sha_str(dimacs_loader& the_loader);
-	bool		load_from(skeleton_glb& skg, std::string& f_nam);
+	ch_string	calc_loader_sha_str(dimacs_loader& the_loader);
+	bool		load_from(skeleton_glb& skg, ch_string& f_nam);
 
 	//void		get_first_full(long& idx_all_pos, long& idx_all_neg);
 
@@ -600,19 +599,19 @@ public:
 
 	string_set_t		kg_cnf_paths_found;
 
-	std::string		kg_root_path;
-	std::string		kg_running_path;
+	ch_string		kg_root_path;
+	ch_string		kg_running_path;
 
-	std::string		kg_instance_file_nam;
+	ch_string		kg_instance_file_nam;
 
-	std::string		kg_collisions_path;
-	std::string		kg_missing_path;
-	std::string		kg_corrupted_path;
-	std::string		kg_overlaped_path;
-	std::string		kg_dead_path;
-	std::string		kg_broken_path;
+	ch_string		kg_collisions_path;
+	ch_string		kg_missing_path;
+	ch_string		kg_corrupted_path;
+	ch_string		kg_overlaped_path;
+	ch_string		kg_dead_path;
+	ch_string		kg_broken_path;
 
-	std::string		kg_verify_path;
+	ch_string		kg_verify_path;
 	time_t			kg_verify_mtime;
 
 	bool			kg_last_cnn_eq;
@@ -620,7 +619,7 @@ public:
 	row<long>		kg_tmp_lits;
 	canon_cnf		kg_tmp_cnf;
 	row<variant> 		kg_tmp_all_nxt_vnts;
-	row<std::string> 	kg_tmp_all_del_paths;
+	row<ch_string> 	kg_tmp_all_del_paths;
 
 	skeleton_glb(){
 		init_skeleton_glb();
@@ -629,7 +628,7 @@ public:
 	~skeleton_glb(){
 	}
 
-	std::string	as_full_path(std::string sklroute){
+	ch_string	as_full_path(ch_string sklroute){
 		DIMACS_H_CK(kg_root_path != "");
 		DIMACS_H_CK(path_begins_with(sklroute, SKG_SKELETON_DIR));
 		return kg_root_path + sklroute;
@@ -645,48 +644,48 @@ public:
 
 	void	init_skeleton_glb();
 	void	init_paths();
-	void	report_err(std::string pth, std::string err_pth);
+	void	report_err(ch_string pth, ch_string err_pth);
 
-	bool	find_path(std::string the_pth);
+	bool	find_path(ch_string the_pth);
 
-	bool	in_skl(std::string a_dir){
-		std::string skl_pth = as_full_path(SKG_SKELETON_DIR);
+	bool	in_skl(ch_string a_dir){
+		ch_string skl_pth = as_full_path(SKG_SKELETON_DIR);
 		return path_begins_with(a_dir, skl_pth);
 	}
 
-	bool	ref_in_skl(std::string a_ref){
+	bool	ref_in_skl(ch_string a_ref){
 		return path_begins_with(a_ref, SKG_SKELETON_DIR);
 	}
 
-	bool	ref_exists(std::string a_ref){
-		std::string f_pth = as_full_path(a_ref);
+	bool	ref_exists(ch_string a_ref){
+		ch_string f_pth = as_full_path(a_ref);
 		return path_exists(f_pth);
 	}
 
-	bool	ref_create(std::string a_ref, dbg_call_id dbg_id);
+	bool	ref_create(ch_string a_ref, dbg_call_id dbg_id);
 
-	bool	ref_find(std::string a_ref){
-		std::string f_pth = as_full_path(a_ref);
+	bool	ref_find(ch_string a_ref){
+		ch_string f_pth = as_full_path(a_ref);
 		return find_path(f_pth);
 	}
 
-	bool	ref_touch(std::string a_ref){
-		std::string f_pth = as_full_path(a_ref);
+	bool	ref_touch(ch_string a_ref){
+		ch_string f_pth = as_full_path(a_ref);
 		return path_touch(f_pth);
 	}
 
-	void	ref_remove(std::string a_ref){
-		std::string f_pth = as_full_path(a_ref);
+	void	ref_remove(ch_string a_ref){
+		ch_string f_pth = as_full_path(a_ref);
 		unlink(f_pth.c_str());
 	}
 
-	void	ref_write(std::string nam_ref, std::string val_ref);
-	std::string	ref_read(std::string nam_ref);
+	void	ref_write(ch_string nam_ref, ch_string val_ref);
+	ch_string	ref_read(ch_string nam_ref);
 
-	std::string	ref_vnt_name(std::string vpth, std::string sub_nm);
+	ch_string	ref_vnt_name(ch_string vpth, ch_string sub_nm);
 
-	int		get_write_lock(std::string lk_dir);
-	void		drop_write_lock(std::string lk_dir, int fd_lock);
+	int		get_write_lock(ch_string lk_dir);
+	void	drop_write_lock(ch_string lk_dir, int fd_lock);
 
 	std::ostream&	print_paths(std::ostream& os);
 };

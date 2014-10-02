@@ -68,8 +68,8 @@ brain::dbg_ic_print(row<quanton*>& the_trail){
 	std::ofstream ff;
 	GLB().dbg_ic_seq++;
 
-	std::string f_suf = DBG_SUFI_DOT;
-	std::string f_nam = dbg_name(DBG_PREF_IC, GLB().dbg_ic_seq, f_suf);
+	ch_string f_suf = DBG_SUFI_DOT;
+	ch_string f_nam = dbg_name(DBG_PREF_IC, GLB().dbg_ic_seq, f_suf);
 
 	ff.open(f_nam.c_str());
 	dbg_ic_prt_dotty_file(ff, the_trail, DBG_IC_SUBGRAPHS);
@@ -82,8 +82,8 @@ brain::dbg_ic_print(row<quanton*>& the_trail){
 		std::ostringstream o_str;
 		o_str << "echo dot -Tjpg -o ";
 
-		std::string jpg_suf = ".jpg";
-		std::string nm_jpg = dbg_name(DBG_PREF_IC, GLB().dbg_ic_seq, jpg_suf);
+		ch_string jpg_suf = ".jpg";
+		ch_string nm_jpg = dbg_name(DBG_PREF_IC, GLB().dbg_ic_seq, jpg_suf);
 
 		o_str << nm_jpg << " " << f_nam;
 
@@ -242,7 +242,7 @@ brain::dbg_ic_prt_dotty_file(std::ostream& os, row<quanton*>& the_trail, long st
 				qua1->print_ic_label(os);
 
 				//char* mark = "";
-				std::string mark = "";
+				ch_string mark = "";
 
 				os << "[label=\"" << mark;
 				os << neu->ne_index;

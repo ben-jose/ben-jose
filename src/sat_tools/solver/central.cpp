@@ -74,7 +74,7 @@ do_cnf_file()
 		<< GLB().batch_consec << " of " 
 		<< GLB().batch_num_files);
 
-	std::string f_nam = the_ans.get_f_nam();
+	ch_string f_nam = the_ans.get_f_nam();
 	SUPPORT_CK(f_nam.size() > 0);
 	DBG_PRT(0, os << "FILE=" << f_nam << std::endl);
 
