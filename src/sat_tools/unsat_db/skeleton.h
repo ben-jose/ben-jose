@@ -128,8 +128,8 @@ extern mpz_class	skg_dbg_canon_save_id;
 //=================================================================
 // funtion declarations
 
-bj_ostream&
-print_hex_as_txt(bj_ostream& os, row<uchar_t>& sha_rr);
+ch_string
+print_hex_as_txt(row<uchar_t>& sha_rr);
 
 ch_string
 sha_txt_of_arr(uchar_t* to_sha, long to_sha_sz);

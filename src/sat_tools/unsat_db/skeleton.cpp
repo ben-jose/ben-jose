@@ -73,7 +73,7 @@ void	read_from_str(average& the_avg, ch_string& av_str){
 
 ch_string
 long_to_str(long val){
-	std::stringstream ss_val;
+	bj_ostr_stream ss_val;
 	ss_val << val;
 	TOOLS_CK(! ss_val.str().empty());
 	return ss_val.str();
@@ -295,8 +295,11 @@ set_fstr(ch_string f_nam, ch_string the_val_str){
 	return 0;
 }
 
-bj_ostream&
-print_hex_as_txt(bj_ostream& os, row<uchar_t>& sha_rr){
+ch_string
+print_hex_as_txt(row<uchar_t>& sha_rr){
+	SKELETON_CK(sha_rr.size() == NUM_BYTES_SHA2);
+	bj_ostr_stream os;
+	
 	std::ios_base::fmtflags old_fls = os.flags();
 	os.flags(std::ios::hex);
 	for(int ii = 0; ii < sha_rr.size(); ii++){
@@ -305,12 +308,13 @@ print_hex_as_txt(bj_ostream& os, row<uchar_t>& sha_rr){
 		os << (int)(sha_rr[ii]);
 	}
 	os.flags(old_fls);
-	return os;
+	
+	ch_string sha_txt = os.str();
+	return sha_txt;
 }
 
 ch_string
 sha_txt_of_arr(uchar_t* to_sha, long to_sha_sz){
-	ch_string sha_txt;
 	row<uchar_t>	sha_rr;
 	sha_rr.fill(0, NUM_BYTES_SHA2);
 
@@ -322,15 +326,10 @@ sha_txt_of_arr(uchar_t* to_sha, long to_sha_sz){
 	sha2(to_sha, to_sha_sz, sha_arr, 0);
 	SKELETON_CK(ck_arr1 == to_sha);
 
-	SKELETON_CK(sha_rr.size() == NUM_BYTES_SHA2);
-	std::stringstream ss_sha;
-	print_hex_as_txt(ss_sha, sha_rr);
+	ch_string sha_txt = print_hex_as_txt(sha_rr);
 
-	sha_txt = ss_sha.str();
 	SKELETON_CK((uchar_t*)(sha_rr.get_c_array()) == sha_arr);
-
 	SKELETON_CK(sha_txt == sha_rr.as_hex_str());
-
 	return sha_txt;
 }
 
@@ -406,8 +405,8 @@ update_elapsed(ch_string f_nam){
 	ch_string out_str;
 	write_in_str(the_avg, out_str);
 
-	//std::cout << "out_str='" << out_str << "'" << bj_eol;
-	//std::cout.flush();
+	//bj_out << "out_str='" << out_str << "'" << bj_eol;
+	//bj_out.flush();
 
 	pos0 = lseek(fd, 0, SEEK_SET);
 	if(pos0 != 0){
@@ -910,7 +909,7 @@ canon_equal(ch_string& the_pth, row<char>& cnn){
 
 ch_string
 canon_header(ch_string& hd_str, long ccls, long vars){
-	std::stringstream ss_header;
+	bj_ostr_stream ss_header;
 	ss_header << hd_str;
 	if((vars == 0) || (ccls == 0)){
 		ss_header << EMPTY_CNF_COMMENT << bj_eol;
@@ -976,7 +975,7 @@ canon_full_path(ch_string base_pth, ch_string upth, ch_string id_str){
 
 ch_string&
 slice_str_to_path(ch_string& sha_txt){
-	std::stringstream ss_path;
+	bj_ostr_stream ss_path;
 
 	ss_path << '/';
 
@@ -999,7 +998,7 @@ slice_str_to_path(ch_string& sha_txt){
 
 ch_string
 long_to_path(long nn, long d_per_dir){
-	std::stringstream ss_path;
+	bj_ostr_stream ss_path;
 
 	ch_string snum = long_to_str(nn);
 
@@ -1325,7 +1324,7 @@ skeleton_glb::init_paths(){
 		if(! kg_keep_skeleton){
 			ch_string skl_pth = kg_root_path + SKG_SKELETON_DIR;
 			delete_directory(skl_pth);
-			BRAIN_CK((std::cout << "DELETING SKELETON" << bj_eol) && true);
+			BRAIN_CK((bj_out << "DELETING SKELETON" << bj_eol) && true);
 			DBG_PRT(93, os << "DELETING SKELETON. Type return ...");
 			DBG_COMMAND(93, getchar());
 		}

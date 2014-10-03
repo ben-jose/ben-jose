@@ -45,7 +45,7 @@ funcs that implement top level funcs.
 
 void
 print_op_cnf(){
-	//bj_ostream& os = std::cout;
+	//bj_ostream& os = bj_out;
 }
 
 void

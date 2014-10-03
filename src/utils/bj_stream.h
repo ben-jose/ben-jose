@@ -37,8 +37,12 @@ Wrapper for ostream class.
 #include <iostream>
 
 #define bj_eol std::endl
+#define bj_out std::cout
+#define bj_err std::cerr
 
 typedef std::ostream bj_ostream;
+
+typedef std::ostringstream bj_ostr_stream;
 
 #endif // BJ_STREAM_H
 

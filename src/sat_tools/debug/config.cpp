@@ -52,10 +52,10 @@ public:
 //======================================================================
 // parse funcs
 
-std::ostringstream& parse_err_msg(ch_string hd_msg, long num_line, char ch_err, ch_string msg)
+bj_ostr_stream& parse_err_msg(ch_string hd_msg, long num_line, char ch_err, ch_string msg)
 {
 	GLB().reset_err_msg();
-	std::ostringstream& err_msg = GLB().error_stm;
+	bj_ostr_stream& err_msg = GLB().error_stm;
 
 	err_msg << hd_msg;
 	if(num_line >= 0){
@@ -126,7 +126,7 @@ integer parse_int(const char*& pt_in, long line) {
 	else if(*pt_in == '+'){ pt_in++; }
 
 	if( ! isdigit(*pt_in)){
-		std::ostringstream& msg = 
+		bj_ostr_stream& msg = 
 			parse_err_msg("PARSE ERROR. ", line, (char)(*pt_in), "");
 		MARK_USED(msg);
 
@@ -165,7 +165,7 @@ config_reader::parse_debug_line(row<long>& dbg_line, ch_string& str_ln){
 
 void	
 config_reader::add_config_line(ch_string& str_ln){
-	bj_ostream& os = std::cout;
+	bj_ostream& os = bj_out;
 	MARK_USED(os);
 	row<long>& dbg_ln = GLB().dbg_config_line;
 	parse_debug_line(dbg_ln, str_ln);
@@ -192,13 +192,13 @@ config_reader::add_config_line(ch_string& str_ln){
 
 /*void
 mini_test(){
-	bj_ostream& os = std::cout;
+	bj_ostream& os = bj_out;
 	os << "isalnum('/') " << isalnum('/') << bj_eol;
 }*/
 
 void
 config_reader::read_config(const char* file_nm){
-	bj_ostream& os = std::cout;
+	bj_ostream& os = bj_out;
 	CONFIG_CK(file_nm != NULL_PT);
 
 	SUPPORT_CK(GLB().dbg_start_dbg_entries.is_empty());

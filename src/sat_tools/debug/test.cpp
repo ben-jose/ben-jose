@@ -68,7 +68,7 @@ void 	test_thrw_obj();
 
 void
 test_creat(int argc, char** argv){
-	bj_ostream& os = std::cout;
+	bj_ostream& os = bj_out;
 	if(argc < 2){
 		os << "Faltan args" << bj_eol;
 		return;
@@ -84,7 +84,7 @@ test_creat(int argc, char** argv){
 
 void
 find_nth_dir(long nn, ch_string& pth, ch_string& sub_pth){
-	bj_ostream& os = std::cout;
+	bj_ostream& os = bj_out;
 	typedef ch_string::size_type pos_t;
 	//pos_t pp = ch_string::npos;
 	pos_t pp = 0;
@@ -101,7 +101,7 @@ find_nth_dir(long nn, ch_string& pth, ch_string& sub_pth){
 }
 
 void	test_long_to_pth(int argc, char** argv){
-	bj_ostream& os = std::cout;
+	bj_ostream& os = bj_out;
 	if(argc < 2){
 		os << "Faltan args" << bj_eol;
 		return;
@@ -115,7 +115,7 @@ void	test_long_to_pth(int argc, char** argv){
 }
 
 void	test_dims_to_path(int argc, char** argv){
-	bj_ostream& os = std::cout;
+	bj_ostream& os = bj_out;
 
 	GLB().dbg_lev[96] = true;
 
@@ -150,7 +150,7 @@ struct ltstr {
 
 void
 test_sha_pth(){
-	bj_ostream& os = std::cout;
+	bj_ostream& os = bj_out;
 
 	ch_string str_cont = "HOLA_MUNDO";
 	ch_string sha_txt;
@@ -184,7 +184,7 @@ void
 gen_clause(tak_mak& gg, row_long_t& the_ccl,
 		long max_ccl_sz, long num_vars_cnf)
 {
-	//bj_ostream& os = std::cout;
+	//bj_ostream& os = bj_out;
 
 	unsigned long ccl_sz = gg.gen_rand_int32_ie(2, max_ccl_sz);
 	long num_neg = gg.gen_rand_int32_ie(1, ccl_sz);
@@ -246,7 +246,7 @@ void
 gen_ccls_cnf(tak_mak& gg, canon_cnf& the_cnf, long max_ccl_sz,
 		long max_num_ccls_cnf, long max_num_vars_cnf)
 {
-	//bj_ostream& os = std::cout;
+	//bj_ostream& os = bj_out;
 
 	row<canon_clause*>& all_ccl = the_cnf.cf_clauses;
 	BRAIN_CK(all_ccl.is_empty());
@@ -315,7 +315,7 @@ recalc_cnf(canon_cnf& the_cnf){
 
 void
 gen_cnf_skls(tak_mak& gg, canon_cnf& the_cnf, long num_skls, row<ch_string>& pths){
-	bj_ostream& os = std::cout;
+	bj_ostream& os = bj_out;
 
 	pths.push(the_cnf.get_canon_name());
 
@@ -349,7 +349,7 @@ gen_cnf_skls(tak_mak& gg, canon_cnf& the_cnf, long num_skls, row<ch_string>& pth
 void
 test_nfwt(int argc, char** argv)
 {
-	bj_ostream& os = std::cout;
+	bj_ostream& os = bj_out;
 	MARK_USED(os);
 
 	GLB().dbg_lev[2] = true;
@@ -489,7 +489,7 @@ test_nfwt(int argc, char** argv)
 void
 test_realpath(int argc, char** argv)
 {
-	bj_ostream& os = std::cout;
+	bj_ostream& os = bj_out;
 
 	/* Verify argv[1] is supplied */
 	if(argc < 2){
@@ -506,7 +506,7 @@ test_realpath(int argc, char** argv)
 
 void
 gen_sub_cnf(tak_mak& gg, canon_cnf& src_cnf, canon_cnf& dst_cnf){
-	//bj_ostream& os = std::cout;
+	//bj_ostream& os = bj_out;
 
 	dst_cnf.release_and_init(GSKE, true);
 
@@ -532,7 +532,7 @@ gen_sub_cnf(tak_mak& gg, canon_cnf& src_cnf, canon_cnf& dst_cnf){
 
 bool
 test_pair_subsets(tak_mak& rnd_gen, long n_iter){
-	bj_ostream& os = std::cout;
+	bj_ostream& os = bj_out;
 	MARK_USED(os);
 
 	canon_cnf the_cnf;
@@ -569,7 +569,7 @@ test_pair_subsets(tak_mak& rnd_gen, long n_iter){
 
 void
 test_subsets(){
-	bj_ostream& os = std::cout;
+	bj_ostream& os = bj_out;
 
 	MARK_USED(os);
 
@@ -636,7 +636,7 @@ bj_ostream&	operator << (bj_ostream& os, const cvals1& x){
 
 void test_sets(){
 
-	bj_ostream& os = std::cout;
+	bj_ostream& os = bj_out;
 
 	std::set<cvals1> varset;
 
@@ -666,10 +666,10 @@ void	test_big_num(){
 	mpz_setbit(a.get_mpz_t(), 12);
 	mpz_setbit(a.get_mpz_t(), 17);
 	//mpz_setbit(a.get_mpz_t(), 112);
-	std::cout << "a is " << a << "\n";
+	bj_out << "a is " << a << "\n";
 
 	ch_string s1 = a.get_str(2);
-	std::cout << "s1 is " << s1 << bj_eol;
+	bj_out << "s1 is " << s1 << bj_eol;
 
 	//long cm1 = mpz_cmp(nu1.get_mpz_t(), nu2.get_mpz_t());
 
@@ -688,19 +688,19 @@ void	test_big2(){
 	mpz_setbit(v1, 6);
 
 	//std::ios_base::showbase = 2;
-	std::cout << "v1 is " << v1 << "\n";
+	bj_out << "v1 is " << v1 << "\n";
 
 	d = mpz_class(v1);
-	std::cout << "d is " << d << "\n";
+	bj_out << "d is " << d << "\n";
 
 	ch_string s_d;
 	d.set_str(s_d, 2);
-	std::cout << "s_d is " << d << "\n";
+	bj_out << "s_d is " << d << "\n";
 
 	//ch_string s_v1 = mpz_get_str(NULL, 2, v1);
-	//std::cout << "s_v1 is " << s_v1 << "\n";
+	//bj_out << "s_v1 is " << s_v1 << "\n";
 	ch_string s2_d = mpz_get_str(NULL, 2, d.get_mpz_t());
-	std::cout << "s2_d is " << s2_d << "\n";
+	bj_out << "s2_d is " << s2_d << "\n";
 	//v2 = d.get_mpz_t();
 
 	mpz_clear(v1);
@@ -710,8 +710,8 @@ void	test_big2(){
 	a = 1234;
 	b = "-5678";
 	c = a+b;
-	std::cout << "sum is " << c << "\n";
-	std::cout << "absolute value is " << abs(c) << "\n";
+	bj_out << "sum is " << c << "\n";
+	bj_out << "absolute value is " << abs(c) << "\n";
 
 	mpq_class a2, b2, c2, d2, e2, f2;
 
@@ -723,16 +723,16 @@ void	test_big2(){
 	e2 = c2 * d2;
 	f2 = c2 + d2;
 	//d2 = a2 % b2;
-	std::cout << a2 << " div " << b2 << " is " << c2 << "\n";
-	std::cout << b2 << " div " << a2 << " is " << d2 << "\n";
-	std::cout << c2 << " mul " << d2 << " is " << e2 << "\n";
-	std::cout << c2 << " + " << d2 << " = " << f2 << "\n";
-	//std::cout << a2 << " mod " << b2 << " is " << d2 << "\n";
+	bj_out << a2 << " div " << b2 << " is " << c2 << "\n";
+	bj_out << b2 << " div " << a2 << " is " << d2 << "\n";
+	bj_out << c2 << " mul " << d2 << " is " << e2 << "\n";
+	bj_out << c2 << " + " << d2 << " = " << f2 << "\n";
+	//bj_out << a2 << " mod " << b2 << " is " << d2 << "\n";
 	*/
 }
 
 void	test_big3(){
-	bj_ostream& os = std::cout;
+	bj_ostream& os = bj_out;
 
 	mpz_class p1, p2;
 	p1 = 0;
@@ -746,7 +746,7 @@ void	test_big3(){
 }
 
 void	test_big4(){
-	bj_ostream& os = std::cout;
+	bj_ostream& os = bj_out;
 
 	big_integer_t p1, p2, p3;
 
@@ -767,7 +767,7 @@ void	test_big4(){
 }
 
 void	test_str1(){
-	bj_ostream& os = std::cout;
+	bj_ostream& os = bj_out;
 
 	ch_string ss1;
 	ch_string ss2;
@@ -778,7 +778,7 @@ void	test_str1(){
 }
 
 void	test_symlk(int argc, char** argv){
-	bj_ostream& os = std::cout;
+	bj_ostream& os = bj_out;
 
 	if(argc < 3){
 		os << "Faltan agrs !!" << bj_eol;
@@ -792,7 +792,7 @@ void	test_symlk(int argc, char** argv){
 }
 
 void	test_tm_elapsed(int argc, char** argv){
-	bj_ostream& os = std::cout;
+	bj_ostream& os = bj_out;
 	
 	if(argc < 3){
 		os << "Faltan agrs !!" << bj_eol;
@@ -822,7 +822,7 @@ void	test_tm_elapsed(int argc, char** argv){
 }
 
 void	test_open_unlink(int argc, char** argv){
-	bj_ostream& os = std::cout;
+	bj_ostream& os = bj_out;
 	
 	if(argc < 2){
 		os << "Faltan agrs !!" << bj_eol;
@@ -881,7 +881,7 @@ void	test_open_unlink(int argc, char** argv){
 
 int
 load_entry(const char *fpath, const struct stat *sb, int tflag, struct FTW *ftwbuf){
-	//bj_ostream& os = std::cout;
+	//bj_ostream& os = bj_out;
 
 	MARK_USED(sb);
 	MARK_USED(ftwbuf);
@@ -925,7 +925,7 @@ load_all_in_dir(ch_string& dir_nm){
 
 int
 update_elap_entry(const char *fpath, const struct stat *sb, int tflag, struct FTW *ftwbuf){
-	//bj_ostream& os = std::cout;
+	//bj_ostream& os = bj_out;
 
 	MARK_USED(sb);
 	MARK_USED(ftwbuf);
@@ -998,7 +998,7 @@ test_skl(){
 	GLB().dbg_lev[2] = true;
 	//GLB().dbg_lev[95] = true;
 
-	bj_ostream& os = std::cout;
+	bj_ostream& os = bj_out;
 	MARK_USED(os);
 
 	GSKE.kg_root_path = TEST_ROOT_PATH;
@@ -1113,7 +1113,7 @@ test_skl(){
 
 void
 test_lk_name(){
-	bj_ostream& os = std::cout;
+	bj_ostream& os = bj_out;
 	MARK_USED(os);
 
 	ch_string str1 = "CADENA DE PRUEBA";
@@ -1137,7 +1137,7 @@ test_lk_name(){
 
 void
 test_row_reduc(){
-	bj_ostream& os = std::cout;
+	bj_ostream& os = bj_out;
 	MARK_USED(os);
 
 	row<long> rr1;
@@ -1164,7 +1164,7 @@ test_row_reduc(){
 
 void
 test_num1(){
-	bj_ostream& os = std::cout;
+	bj_ostream& os = bj_out;
 	MARK_USED(os);
 
 	mpz_class num_vnts;
@@ -1182,7 +1182,7 @@ test_num1(){
 #define SOR_MAX_VARS_TEST	5
 
 void	test_sorted_ops2(){
-	bj_ostream& os = std::cout;
+	bj_ostream& os = bj_out;
 	os << "test_sorted_ops2" << bj_eol;
 
 	unsigned long init_val = 10;
@@ -1268,10 +1268,52 @@ void	test_sorted_ops2(){
 
 }
 
+bj_ostr_stream&
+print_hex_as_txt_2(bj_ostr_stream& os, row<uchar_t>& sha_rr){
+	std::ios_base::fmtflags old_fls = os.flags();
+	os.flags(std::ios::hex);
+	for(int ii = 0; ii < sha_rr.size(); ii++){
+		os.width(2);
+		os.fill('0');
+		os << (int)(sha_rr[ii]);
+	}
+	os.flags(old_fls);
+	return os;
+}
+
+void pru_hex_as_txt(){
+	row<uchar_t> sha_rr;
+	tak_mak gg;
+	gg.init_with_long((long)run_time());
+	int max_num = 100;
+	
+	for(int aa = 0; aa < max_num; aa++){
+		sha_rr.clear();
+		for(int bb = 0; bb < 32; bb++){
+			uchar_t vv = (uchar_t)gg.gen_rand_int32_ie(0, 256);
+			sha_rr << vv;
+		}
+		BRAIN_CK(sha_rr.size() == 32);
+	
+		bj_ostr_stream oss;
+		print_hex_as_txt_2(oss, sha_rr);
+		ch_string val1 = oss.str();
+		
+		ch_string val2 = print_hex_as_txt(sha_rr);
+				
+		if(! (val1 == val2)){
+			abort_func(1, "NOT EQUAL");
+		}
+		
+		bj_out << val1 << bj_eol;
+		bj_out << val2 << bj_eol;
+	}
+}
+
 int	tests_main_(int argc, char** argv){
 	MARK_USED(argc);
 	MARK_USED(argv);
-	bj_ostream& os = std::cout;
+	bj_ostream& os = bj_out;
 
 	MEM_CTRL(mem_size tt_mem_in_u = MEM_STATS.num_bytes_in_use;)
 	MEM_CTRL(MARK_USED(tt_mem_in_u));
@@ -1291,8 +1333,9 @@ int	tests_main_(int argc, char** argv){
 	//test_num1();
 	//test_skl();  // last before ben-jose
 	
-	test_thrw_obj();
-
+	//test_thrw_obj();
+	pru_hex_as_txt();
+	
 	os << "ENDING TESTS___________  MEM_STATS.num_bytes_in_use = " << MEM_STATS.num_bytes_in_use << bj_eol;
 	os.flush();
 
@@ -1325,7 +1368,7 @@ void th_sub_excep(){
 }
 
 void test_thrw_obj(){
-	bj_ostream& os = std::cout;
+	bj_ostream& os = bj_out;
 	
 	try {
 		th_sub_excep();
@@ -1334,4 +1377,5 @@ void test_thrw_obj(){
 		//delete ex1;
 	}
 }
+
 

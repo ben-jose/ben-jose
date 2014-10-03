@@ -54,7 +54,7 @@ ch_string	k_dimacs_header_str =
 		"c Id (cedula): 79523732 de Bogota.\n";
 
 
-std::ostringstream& dimacs_err_msg(long num_line, char ch_err, ch_string msg){
+bj_ostr_stream& dimacs_err_msg(long num_line, char ch_err, ch_string msg){
 	return parse_err_msg("DIMACS ERROR. ", num_line, ch_err, msg);
 }
 
@@ -64,10 +64,10 @@ read_file(ch_string f_nam, row<char>& f_data){
 	std::ifstream istm;
 	istm.open(ff_nn, std::ios::binary);
 	if(! istm.good() || ! istm.is_open()){
-		std::ostringstream& msg = dimacs_err_msg(0, -1, "Could not open file ");
+		bj_ostr_stream& msg = dimacs_err_msg(0, -1, "Could not open file ");
 		msg << "'" << f_nam << "'.";
 
-		DBG_THROW(std::cout << msg.str() << bj_eol);
+		DBG_THROW(bj_out << msg.str() << bj_eol);
 
 		char* dimacs_cannot_open = as_pt_char("Cannot open file dimacs exception");
 		DBG_THROW_CK(dimacs_cannot_open != dimacs_cannot_open);
@@ -81,7 +81,7 @@ read_file(ch_string f_nam, row<char>& f_data){
 	istm.seekg (0, std::ios::beg);
 
 	if(file_sz < 0){
-		std::ostringstream& msg = dimacs_err_msg(0, -1,
+		bj_ostr_stream& msg = dimacs_err_msg(0, -1,
 			"Could not compute file size. ");
 		msg << "'" << f_nam << "'.";
 
@@ -99,7 +99,7 @@ read_file(ch_string f_nam, row<char>& f_data){
 	if(num_read != file_sz){
 		tpl_free<char>(file_content, file_sz + 1);
 
-		std::ostringstream& msg = dimacs_err_msg(0, -1,
+		bj_ostr_stream& msg = dimacs_err_msg(0, -1,
 			"Could not read full file into memory. ");
 		msg << "'" << f_nam << "'.";
 
@@ -121,7 +121,7 @@ read_file(ch_string f_nam, row<char>& f_data){
 
 void skip_cnf_decl(const char*& pt_in, long line){
 	if(*pt_in == 0){
-		std::ostringstream& msg =
+		bj_ostr_stream& msg =
 			dimacs_err_msg(line, -1, "Expecting 'cnf' declaration line.");
 		MARK_USED(msg);
 
@@ -134,7 +134,7 @@ void skip_cnf_decl(const char*& pt_in, long line){
 	const char* cnf_str = "cnf";
 	const int cnf_str_sz = 3;
 	if(memcmp(pt_in, cnf_str, cnf_str_sz) != 0){
-		std::ostringstream& msg =
+		bj_ostr_stream& msg =
 			dimacs_err_msg(line, -1, "Expecting 'cnf' declaration line.");
 		MARK_USED(msg);
 
@@ -417,7 +417,7 @@ dimacs_loader::init_dimacs_loader(){
 void
 dimacs_loader::verif_num_ccls(ch_string& f_nam, long num_decl_ccls, long num_read_ccls){
 	if(num_read_ccls != num_decl_ccls){
-		std::ostringstream& msg_err = dimacs_err_msg(-1, -1,
+		bj_ostr_stream& msg_err = dimacs_err_msg(-1, -1,
 			"Wrong number of clauses. ");
 		msg_err << "Declared " << num_decl_ccls << " clauses and found ";
 		msg_err << num_read_ccls << " in file " << f_nam;
@@ -464,11 +464,11 @@ dimacs_loader::parse_header(){
 	for(;;){
 		skip_whitespace(pt_in, ld_num_line);
 		if(*pt_in == 0){
-			std::ostringstream& msg = dimacs_err_msg(ld_num_line, -1,
+			bj_ostr_stream& msg = dimacs_err_msg(ld_num_line, -1,
 				"File without 'cnf' declaration. ");
 			msg << "'" << f_nam << "'.";
 
-			DBG_THROW(std::cout << msg);
+			DBG_THROW(bj_out << msg);
 
 			char* dimacs_no_cnf_decl = as_pt_char("No cnf declr dimacs exception");
 			DBG_THROW_CK(dimacs_no_cnf_decl != dimacs_no_cnf_decl);
@@ -481,7 +481,7 @@ dimacs_loader::parse_header(){
 			read_problem_decl(pt_in, num_var, num_ccl, ld_num_line);
 			break;
 		} else {
-			std::ostringstream& msg = dimacs_err_msg(ld_num_line, -1,
+			bj_ostr_stream& msg = dimacs_err_msg(ld_num_line, -1,
 				"Invalid file format. It not a DIMACS file. ");
 			msg << "'" << f_nam << "'.";
 
@@ -494,7 +494,7 @@ dimacs_loader::parse_header(){
 	}
 
 	if(num_var == 0){
-		std::ostringstream& msg = dimacs_err_msg(ld_num_line, -1,
+		bj_ostr_stream& msg = dimacs_err_msg(ld_num_line, -1,
 			"Invalid 'cnf' declaration. Declared 0 variables. ");
 		msg << "'" << f_nam << "'.";
 
@@ -505,7 +505,7 @@ dimacs_loader::parse_header(){
 	}
 
 	if(num_ccl == 0){
-		std::ostringstream& msg = dimacs_err_msg(ld_num_line, -1,
+		bj_ostr_stream& msg = dimacs_err_msg(ld_num_line, -1,
 			"Invalid 'cnf' declaration. Declared 0 clauses. ");
 		msg << "'" << f_nam << "'.";
 
@@ -540,7 +540,7 @@ dimacs_loader::parse_clause(row<integer>& lits){
 		parsed_lit = parse_int(pt_in, ld_num_line);
 		if(parsed_lit == 0){ break; }
 		if(get_var(parsed_lit) > ld_decl_vars){
-			std::ostringstream& msg =
+			bj_ostr_stream& msg =
 				dimacs_err_msg(ld_num_line, -1, "Invalid literal ");
 			msg << "'" << parsed_lit << "'.";
 			msg << "Declared " << ld_decl_vars << " literals.";
@@ -554,7 +554,7 @@ dimacs_loader::parse_clause(row<integer>& lits){
 		lits.push(parsed_lit);
 		/*
 		if(lits.size() > MAX_CLAUSE_SZ){
-			std::ostringstream& msg =
+			bj_ostr_stream& msg =
 				dimacs_err_msg(ld_num_line, -1, "Clause too long. ");
 			msg << "Max allowed size is " << MAX_CLAUSE_SZ << " literals.";
 

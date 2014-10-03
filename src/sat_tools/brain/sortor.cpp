@@ -156,7 +156,7 @@ sortee::print_sortee(bj_ostream& os, bool from_pt){
 
 ch_string
 get_indentation(long level){
-	std::stringstream ind_ss;
+	bj_ostr_stream ind_ss;
 	ind_ss << "";
 	for(long aa = 0; aa < level; aa++){
 		ind_ss << "   ";

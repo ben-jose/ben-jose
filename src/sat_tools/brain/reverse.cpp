@@ -39,6 +39,7 @@ funcs that implement reverse func.
 #include "support.h"
 #include "dimacs.h"
 #include "brain.h"
+#include "dbg_run_satex.h"
 
 bool
 memap::map_find(brain& brn){

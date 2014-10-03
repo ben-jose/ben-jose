@@ -40,7 +40,7 @@ stack_trace funcs.
 
 bool
 print_backtrace( const ch_string & file, int line ){
-	std::cout << get_stack_trace(file, line) << bj_eol;
+	bj_out << get_stack_trace(file, line) << bj_eol;
 	return true;
 }
 
@@ -75,11 +75,11 @@ demangle_cxx_name( const ch_string &stack_string ){
 }
 */
 
-// USE:        std::cout << get_stack_trace( __FILE__, __LINE__ ) << bj_eol;
+// USE:        bj_out << get_stack_trace( __FILE__, __LINE__ ) << bj_eol;
 
 ch_string 
 get_stack_trace( const ch_string & file, int line ){
-	std::stringstream result;
+	bj_ostr_stream result;
 	result << "Call Stack from " << file << ":" << line << "\n";
 	const size_t k_max_depth = 100;
 	void *stack_addrs[k_max_depth];

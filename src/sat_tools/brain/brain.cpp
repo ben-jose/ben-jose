@@ -38,6 +38,9 @@ Classes and that implement the neural network.
 #include "support.h"
 #include "sortor.h"
 #include "brain.h"
+#include "dbg_run_satex.h"
+#include "dbg_prt_brn.h"
+#include "dbg_ic.h"
 
 DEFINE_NI_FLAG_FUNCS(qu_flags, note0, br_qu_tot_note0, true);
 DEFINE_NI_FLAG_FUNCS(qu_flags, note1, br_qu_tot_note1, true);
@@ -66,21 +69,6 @@ char*	neuron::CL_NAME = as_pt_char("{neuron}");
 long gen_random_num(long min, long max);
 
 // search dbg_ic to config it
-
-//============================================================
-// Some code for debug purposes
-
-ch_string	dbg_name(ch_string pref, long seq, ch_string suf){
-	std::ostringstream stm1;
-	long ancho = 3;
-	char ch_cero = '0';
-	stm1 << DBG_DIR << pref;
-	stm1.width(ancho);
-	stm1.fill(ch_cero);
-	stm1 << seq << suf;
-	ch_string nm = stm1.str();
-	return nm;
-}
 
 //============================================================
 // aux funcs
@@ -1423,24 +1411,7 @@ brain::config_brain(ch_string f_nam){
 	}
 	set_file_name_in_ic(f_nam);
 
-	if(GLB().dbg_ic_active){
-		std::ostringstream o_str;
-		o_str << "rm " << DBG_DIR << "*.dot";
-		system_exec(o_str);
-	}
-
-	if(GLB().dbg_ic_gen_jpg){
-		std::ostringstream o_str;
-		o_str << "rm " << DBG_DIR << "all_dot_to_jpg.bat";
-		system_exec(o_str);
-	}
-}
-
-void system_exec(std::ostringstream& strstm){
-	ch_string comm = strstm.str();
-	const char* comm_cstr = comm.c_str();
-	//std::cout << comm_cstr << bj_eol;
-	system(comm_cstr);
+	dbg_reset_ic_files();
 }
 
 void
@@ -1647,8 +1618,7 @@ brain::check_sat_assig(){
 	fill_with_origs(neus);
 
 	if(! brn_compute_binary(neus)){
-		std::cerr << "FATAL ERROR 001. Wrong is_sat answer !" << bj_eol;
-		abort_func(1);
+		abort_func(1, "FATAL ERROR 001. Wrong is_sat answer !");
 	}
 
 	//row<long>& the_chosen = GLB().final_chosen_ids;
@@ -1658,36 +1628,13 @@ brain::check_sat_assig(){
 	br_charge_trail.get_all_ordered_motives(the_assig);
 
 	if(! brn_compute_dots_of(neus, the_assig)){
-		std::cerr << "FATAL ERROR 002. Wrong is_sat answer !" << bj_eol;
-		abort_func(1);
+		abort_func(1, "FATAL ERROR 002. Wrong is_sat answer !");
 	}
 
 	DBG_PRT(4, os << "CHECKED_ASSIG=" << the_assig << bj_eol);
 
 	//print_satifying(cho_nm);
 
-}
-
-void 
-brain::dbg_prt_all_cho(){
-	bool is_batch = false;
-	ch_string f_nam = GLB().get_file_name(is_batch);
-	ch_string cho_nam = f_nam + "_chosen.log";
-
-	const char* log_nm = cho_nam.c_str();
-	std::ofstream log_stm;
-	//log_stm.open(log_nm, std::ios::app);
-	log_stm.open(log_nm, std::ios::binary);
-	if(! log_stm.good() || ! log_stm.is_open()){
-		std::cerr << "Could not open file " << log_nm << ".";
-		return;
-	}
-
-	//dbg_get_all_chosen(br_dbg_all_chosen);
-
-	log_stm << br_dbg_all_chosen;
-	log_stm << bj_eol; 
-	log_stm.close();
 }
 
 void 
@@ -1751,7 +1698,7 @@ brain::solve_it(){
 	BRAIN_CK(recoil() == (inst_info.ist_num_laps + 1));
 
 	DBG(
-		DBG_PRT(116, dbg_prt_all_cho());
+		DBG_PRT(116, dbg_prt_all_cho(*this));
 		DBG_PRT(32, os << "BRAIN=" << bj_eol;
 			print_brain(os); 
 		);
@@ -1770,15 +1717,15 @@ brain::solve_it(){
 
 		br_final_msg << " " << recoil();
 
-		std::cout << br_final_msg.str() << bj_eol; 
-		std::cout.flush();
+		bj_out << br_final_msg.str() << bj_eol; 
+		bj_out.flush();
 
 		//br_final_msg << " " << stats.num_start_syn;
 		//br_final_msg << " " << solve_time();
-		//std::cout << "recoils= " << recoil() << bj_eol; 
-		//std::cout << "num_batch_file= " << stats.batch_consec << bj_eol; 
-		//std::cout << bj_eol;
-		//std::cout << ".";
+		//bj_out << "recoils= " << recoil() << bj_eol; 
+		//bj_out << "num_batch_file= " << stats.batch_consec << bj_eol; 
+		//bj_out << bj_eol;
+		//bj_out << ".";
 
 		if(GLB().dbg_ic_active){
 			row<quanton*>& the_trl = br_tmp_trail;
@@ -3181,34 +3128,6 @@ brain::retract_choice(){
 	BRAIN_CK(! has_psignals());
 	send_psignal(opp, NULL, tier() + 1);
 	BRAIN_CK(has_psignals());
-}
-
-bool
-dbg_run_satex_on(brain& brn, ch_string f_nam){
-	if(path_exists(f_nam)){
-		std::ostringstream o_str;
-		o_str << "satex -s " << f_nam;
-
-		system_exec(o_str);
-		ch_string lg_nm = get_log_name(f_nam, LOG_NM_RESULTS);
-
-		BRAIN_CK(path_exists(lg_nm));
-		bool is_no_sat = all_results_batch_instances(lg_nm, k_no_satisf);
-		MARK_USED(is_no_sat);
-
-		DBG_PRT_COND(DBG_ALL_LVS, ! is_no_sat ,
-			os << "ABORTING_DATA " << bj_eol;
-			//os << "mmap_before_tk=" << ma_before_retract_tk << bj_eol;
-			//os << "mmap_after_tks=" << ma_after_retract_tks << bj_eol;
-			os << " brn_tk=" << brn.br_current_ticket << bj_eol;
-			os << "	LV=" << brn.level() << bj_eol;
-			os << " f_nam=" << f_nam << bj_eol;
-			os << " save_consec=" << skg_dbg_canon_save_id << bj_eol;
-			os << "END_OF_aborting_data" << bj_eol;
-		);
-		BRAIN_CK(is_no_sat);
-	}
-	return true;
 }
 
 bool

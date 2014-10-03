@@ -391,7 +391,7 @@ public:
 	bool			dbg_ic_after;
 	bool			dbg_ic_gen_jpg;
 
-	std::ostringstream	error_stm;
+	bj_ostr_stream	error_stm;
 	long			error_cod;
 
 	ch_string		input_file_nm;
@@ -442,12 +442,12 @@ public:
 		init_global_data();
 		MEM_CTRL(dbg_mem_at_start = MEM_STATS.num_bytes_in_use;)
 
-		//bj_ostream& os = std::cout;
+		//bj_ostream& os = bj_out;
 		//os << "creating 'global data' num_bytes_in_use = " << MEM_STATS.num_bytes_in_use << bj_eol;
 	}
 
 	~global_data(){
-		//bj_ostream& os = std::cout;
+		//bj_ostream& os = bj_out;
 		//os << "destroying 'global data' num_bytes_in_use = " << MEM_STATS.num_bytes_in_use << bj_eol;
 
 		MEM_CK(dbg_mem_at_start == MEM_STATS.num_bytes_in_use);
@@ -510,7 +510,7 @@ public:
 		if(dbg_os != NULL_PT){
 			return *dbg_os;
 		}
-		return std::cout;
+		return bj_out;
 	}
 
 	void	dbg_default_info(){
@@ -542,7 +542,7 @@ public:
 		if(out_os != NULL_PT){
 			return *out_os;
 		}
-		return std::cout;
+		return bj_out;
 	}
 
 
@@ -622,8 +622,8 @@ typedef void (*core_func_t)(void);
 ch_string	get_log_name(ch_string f_nam, ch_string sufix);
 
 void	init_dbg_conf();
-void	err_header(std::ostringstream& msg_err);
-void	log_message(const std::ostringstream& msg_log);
+void	err_header(bj_ostr_stream& msg_err);
+void	log_message(const bj_ostr_stream& msg_log);
 void	log_batch_info();
 void	call_and_handle_exceptions(core_func_t the_func);
 void	chomp_string(ch_string& s1);

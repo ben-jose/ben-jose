@@ -39,6 +39,7 @@ funcs for inference graph printing
 
 #include "support.h"
 #include "brain.h"
+#include "dbg_run_satex.h"
 
 #define DBG_IC_RANKS		1
 #define DBG_IC_SUBGRAPHS	2
@@ -51,6 +52,20 @@ funcs for inference graph printing
 #define DBG_SUFI_NEU ".myl"
 
 // IC GRAPH PRT_FUNCS
+
+//ch_string	dbg_name(ch_string pref, long seq, ch_string suf);
+
+ch_string	dbg_name(ch_string pref, long seq, ch_string suf){
+	bj_ostr_stream stm1;
+	long ancho = 3;
+	char ch_cero = '0';
+	stm1 << DBG_DIR << pref;
+	stm1.width(ancho);
+	stm1.fill(ch_cero);
+	stm1 << seq << suf;
+	ch_string nm = stm1.str();
+	return nm;
+}
 
 void
 brain::dbg_ic_print(row<quanton*>& the_trail){
@@ -78,7 +93,7 @@ brain::dbg_ic_print(row<quanton*>& the_trail){
 		//long ancho = 3;
 		//char ch_cero = '0';
 
-		std::ostringstream o_str;
+		bj_ostr_stream o_str;
 		o_str << "echo dot -Tjpg -o ";
 
 		ch_string jpg_suf = ".jpg";
@@ -100,7 +115,8 @@ brain::dbg_ic_print(row<quanton*>& the_trail){
 
 		o_str << " >> " << DBG_DIR << "all_dot_to_jpg.bat";
 
-		system_exec(o_str);
+		ch_string comm = o_str.str();
+		system_exec(comm);
 	}
 
 	if(recoil() == 1){
@@ -257,6 +273,23 @@ brain::dbg_ic_prt_dotty_file(bj_ostream& os, row<quanton*>& the_trail, long styl
 	os << "}" << bj_eol;
 
 	return os;
+}
+
+
+void	dbg_reset_ic_files(){
+	ch_string rm_str = "rm ";
+	ch_string dd_str = DBG_DIR;
+	if(GLB().dbg_ic_active){
+		ch_string tg_str = "*.dot";
+		ch_string o_str = rm_str + dd_str + tg_str;
+		system_exec(o_str);
+	}
+
+	if(GLB().dbg_ic_gen_jpg){
+		ch_string tg_str = "all_dot_to_jpg.bat";
+		ch_string o_str = rm_str + dd_str + tg_str;
+		system_exec(o_str);
+	}
 }
 
 

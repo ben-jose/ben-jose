@@ -184,11 +184,10 @@ void	elim_until_dominated(brain& brn, quanton& qua);
 void	find_max_level_and_tier(row<quanton*>& tmp_mots, long& max_lev, long& max_tier);
 
 void	dbg_prepare_used_dbg_ccl(row_quanton_t& rr_qua, canon_clause& dbg_ccl);
-bool	dbg_run_satex_on(brain& brn, ch_string f_nam);
 void	dbg_print_ccls_neus(bj_ostream& os, row<canon_clause*>& dbg_ccls);
 
 void	split_tees(sort_glb& srg, row<sortee*>& sorted_tees, row<sortee*>& sub_tees, 
-		row<canon_clause*>& ccls_in, row<canon_clause*>& ccls_not_in);
+			row<canon_clause*>& ccls_in, row<canon_clause*>& ccls_not_in);
 
 //=============================================================================
 // ticket
@@ -1882,7 +1881,7 @@ class brain {
 
 	// final message
 
-	std::ostringstream	br_final_msg;
+	bj_ostr_stream	br_final_msg;
 
 	// methods
 
@@ -2235,8 +2234,6 @@ class brain {
 	}
 
 	void		dbg_add_to_used(neuron& neu);
-	//void		dbg_get_all_chosen(row<quanton*>& all_cho);
-	void		dbg_prt_all_cho();
 
 	void		print_active_blocks(bj_ostream& os);
 
@@ -2558,24 +2555,9 @@ DEFINE_PRINT_FUNCS(memap)
 DEFINE_PRINT_FUNCS(leveldat)
 
 //=============================================================================
-// other funcs
-
-
-ch_string	dbg_name(ch_string pref, long seq, ch_string suf);
-void	system_exec(std::ostringstream& strstm);
-
-//=============================================================================
 // central.cpp funcs
 
-bj_ostream&	test_open_out(std::ofstream& os);
-void		test_cnf_join();
-void		test_cnf_as_ttnf(bool smpfy_it);
-void		test_cnf_shuffle();
-void		test_simplify_cnf();
-
-
 void		call_solve_instance();
-void		print_dimacs_of(bj_ostream& os, row<long>& all_lits, long num_cla, long num_var);
 
 
 #endif		// BRAIN_H

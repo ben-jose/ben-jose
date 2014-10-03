@@ -477,8 +477,7 @@ public:
 	row_data(): sz(0), cap(0) {}
 
 	/*virtual	~row_data(){
-		std::cerr << "func: 'row_data::~row_data'" << bj_eol;
-		abort_func(0); 
+		abort_func(0, "func: 'row_data::~row_data'"); 
 	}*/
 
 	// Size operations:

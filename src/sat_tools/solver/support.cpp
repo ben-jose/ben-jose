@@ -80,7 +80,7 @@ find_first_digit(ch_string& the_str, bool dig = true){
 
 long
 get_free_mem_kb(){
-	//bj_ostream& os = std::cout;
+	//bj_ostream& os = bj_out;
 
 	long free_mem_kb = 0;
 	
@@ -134,8 +134,8 @@ global_data*	GLB_DATA_PT = &the_glb_data;
 global_data&
 GLB(){
 	if(GLB_DATA_PT == NULL_PT){
-		std::cout << STACK_STR << bj_eol;
-		std::cout << "GLB_DATA_PT is NULL !!!!" << bj_eol;
+		bj_out << STACK_STR << bj_eol;
+		bj_out << "GLB_DATA_PT is NULL !!!!" << bj_eol;
 		abort_func(0);
 	}
 	return *GLB_DATA_PT;
@@ -143,7 +143,7 @@ GLB(){
 
 void
 global_data::dbg_update_config_entries(){
-	bj_ostream& os = std::cout;
+	bj_ostream& os = bj_out;
 	MARK_USED(os);
 
 	consecutive_t curr_round = get_curr_lap();
@@ -175,7 +175,7 @@ global_data::dbg_update_config_entries(){
 
 void
 global_data::init_global_data(){
-	//bj_ostream& os = std::cout;
+	//bj_ostream& os = bj_out;
 	//os << "starting 'init_global data'  MEM_STATS.num_bytes_in_use = " << MEM_STATS.num_bytes_in_use << bj_eol;
 
 	using_mem_ctrl = false;
@@ -207,7 +207,7 @@ global_data::init_global_data(){
 
 	pt_brain = NULL_PT;
 
-	out_os = &(std::cout);
+	out_os = &(bj_out);
 	long ii = 0;
 	long num_out_levs = OUT_NUM_LEVS;
 	out_lev.set_cap(num_out_levs);
@@ -216,7 +216,7 @@ global_data::init_global_data(){
 	}
 
 	dbg_file_name = "";
-	dbg_os = &(std::cout);
+	dbg_os = &(bj_out);
 	dbg_os_bak = NULL_PT;
 
 	long num_dbg_levs = DBG_NUM_LEVS;
@@ -603,7 +603,7 @@ bool	dbg_print_cond_func(bool prm, bool is_ck, const ch_string fnam, int lnum,
 	return resp;
 }
 
-void	err_header(std::ostringstream& msg_err){
+void	err_header(bj_ostr_stream& msg_err){
 	msg_err.clear();
 	//msg_err = "";
 	msg_err.flush();
@@ -613,7 +613,7 @@ void	err_header(std::ostringstream& msg_err){
 	//msg_err << bj_eol;
 }
 
-void	log_message(const std::ostringstream& msg_log){
+void	log_message(const bj_ostr_stream& msg_log){
 
 	if(! GLB().batch_log_on){
 		return;
@@ -641,7 +641,7 @@ void	log_batch_info(){
 		return;
 	}
 
-	std::ostringstream msg_log;
+	bj_ostr_stream msg_log;
 
 	const char* log_nm = GLB().batch_end_log_name.c_str();
 	std::ofstream log_stm;
@@ -650,7 +650,7 @@ void	log_batch_info(){
 		GLB().reset_err_msg();
 		GLB().error_stm << "Could not open file " << log_nm << ".";
 		msg_log << GLB().error_stm.str();
-		std::cerr << msg_log.str() << bj_eol;
+		bj_err << msg_log.str() << bj_eol;
 		log_message(msg_log);
 		return;
 	}
@@ -670,7 +670,7 @@ void	log_batch_info(){
 		GLB().reset_err_msg();
 		GLB().error_stm << "Could not open file " << msg_nm << ".";
 		msg_log << GLB().error_stm.str();
-		std::cerr << msg_log.str() << bj_eol;
+		bj_err << msg_log.str() << bj_eol;
 		log_message(msg_log);
 		return;
 	}
@@ -682,7 +682,7 @@ void	log_batch_info(){
 
 void
 read_batch_instances(ch_string file_nm, row<instance_info>& f_insts){
-	bj_ostream& os = std::cout;
+	bj_ostream& os = bj_out;
 
 	std::ifstream in_stm;
 
@@ -802,7 +802,7 @@ all_results_batch_instances(ch_string file_nm, satisf_val r_val){
 
 void	call_and_handle_exceptions(core_func_t the_func){
 
-	std::ostringstream msg_err;
+	bj_ostr_stream msg_err;
 	try{
 		(*the_func)();
 		DBG_PRT(6, os << "AFTER THE_FUNC in call_and_handle_exceptions");
@@ -810,19 +810,19 @@ void	call_and_handle_exceptions(core_func_t the_func){
 	catch (long code) {
 		err_header(msg_err);
 		msg_err << GLB().error_stm.str();
-		std::cerr << msg_err.str() << bj_eol;
+		bj_err << msg_err.str() << bj_eol;
 		log_message(msg_err);
 		abort_func(0);
 	}
 	catch (...) {
-		std::cout << "INTERNAL ERROR !!! (call_and_handle_exceptions)" << bj_eol;
-		std::cout << STACK_STR << bj_eol;
-		std::cout.flush();
+		bj_out << "INTERNAL ERROR !!! (call_and_handle_exceptions)" << bj_eol;
+		bj_out << STACK_STR << bj_eol;
+		bj_out.flush();
 		abort_func(0);		
 		
 		//err_header(msg_err);
 		//msg_err << "Unknown type exception in  ";
-		//std::cerr << msg_err.str() << bj_eol;
+		//bj_err << msg_err.str() << bj_eol;
 		//log_message(msg_err);
 	}
 
@@ -886,7 +886,7 @@ void	read_batch_file(row<instance_info>& names){
 	PRT_OUT(0, os << CARRIAGE_RETURN << names.size());
 
 	if(in_stm.bad()){
-		std::cerr << in_stm.rdstate() << bj_eol;
+		bj_err << in_stm.rdstate() << bj_eol;
 	}
 
 	in_stm.close();
@@ -950,7 +950,7 @@ global_data::init_log_name(ch_string sufix){
 	ch_string log_nm = get_log_name(f_nam, sufix);
 
 	/*
-	std::ostringstream log_ss;
+	bj_ostr_stream log_ss;
 	log_ss << f_nam << "_";
 	log_ss << sufix;
 	log_nm = log_ss.str();
@@ -1052,7 +1052,7 @@ global_data::set_input_name(){
 bool
 global_data::get_args(int argc, char** argv)
 {
-	bj_ostream& os = std::cout;
+	bj_ostream& os = bj_out;
 	MARK_USED(os);
 
 	bool prt_help = false;
@@ -1141,16 +1141,16 @@ global_data::get_args(int argc, char** argv)
 
 int	solver_main(int argc, char** argv){
 	DBG_CHECK_SAVED(
-		std::cout << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-		std::cout << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-		std::cout << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-		std::cout << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
+		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
+		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
+		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
+		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
 	);
-	DBG(std::cout << "FULL_DEBUG is defined" << bj_eol);
-	BRAIN_CK((std::cout << "doing CKs (plain CKs)" << bj_eol) && true);
-	BRAIN_CK_0((std::cout << "doing CK_0s" << bj_eol) && true);
-	BRAIN_CK_1((std::cout << "doing CK_1s" << bj_eol) && true);
-	BRAIN_CK_2((std::cout << "doing CK_2s" << bj_eol) && true);
+	DBG(bj_out << "FULL_DEBUG is defined" << bj_eol);
+	BRAIN_CK((bj_out << "doing CKs (plain CKs)" << bj_eol) && true);
+	BRAIN_CK_0((bj_out << "doing CK_0s" << bj_eol) && true);
+	BRAIN_CK_1((bj_out << "doing CK_1s" << bj_eol) && true);
+	BRAIN_CK_2((bj_out << "doing CK_2s" << bj_eol) && true);
 
 	SUPPORT_CK(sizeof(t_1byte) == 1);
 	SUPPORT_CK(sizeof(long) == sizeof(void*));
@@ -1205,16 +1205,16 @@ int	solver_main(int argc, char** argv){
 		DO_FINAL_GETCHAR;
 	}
 
-	DBG(std::cout << "FULL_DEBUG is defined" << bj_eol);
-	BRAIN_CK((std::cout << "doing CKs (plain CKs)" << bj_eol) && true);
-	BRAIN_CK_0((std::cout << "doing CK_0s" << bj_eol) && true);
-	BRAIN_CK_1((std::cout << "doing CK_1s" << bj_eol) && true);
-	BRAIN_CK_2((std::cout << "doing CK_2s" << bj_eol) && true);
+	DBG(bj_out << "FULL_DEBUG is defined" << bj_eol);
+	BRAIN_CK((bj_out << "doing CKs (plain CKs)" << bj_eol) && true);
+	BRAIN_CK_0((bj_out << "doing CK_0s" << bj_eol) && true);
+	BRAIN_CK_1((bj_out << "doing CK_1s" << bj_eol) && true);
+	BRAIN_CK_2((bj_out << "doing CK_2s" << bj_eol) && true);
 	DBG_CHECK_SAVED(
-		std::cout << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-		std::cout << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-		std::cout << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-		std::cout << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
+		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
+		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
+		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
+		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
 	);
 
 	return resp;
