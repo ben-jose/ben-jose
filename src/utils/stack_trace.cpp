@@ -30,17 +30,17 @@ stack_trace funcs.
 
 --------------------------------------------------------------*/
 
-#include <iostream>
 #include <sstream>
 #include <execinfo.h>
 #include <cstdlib>
 
+#include "bj_stream.h"
 #include "ch_string.h"
 #include "stack_trace.h"
 
 bool
 print_backtrace( const ch_string & file, int line ){
-	std::cout << get_stack_trace(file, line) << std::endl;
+	std::cout << get_stack_trace(file, line) << bj_eol;
 	return true;
 }
 
@@ -75,7 +75,7 @@ demangle_cxx_name( const ch_string &stack_string ){
 }
 */
 
-// USE:        std::cout << get_stack_trace( __FILE__, __LINE__ ) << std::endl;
+// USE:        std::cout << get_stack_trace( __FILE__, __LINE__ ) << bj_eol;
 
 ch_string 
 get_stack_trace( const ch_string & file, int line ){

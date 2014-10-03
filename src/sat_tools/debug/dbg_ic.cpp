@@ -30,7 +30,6 @@ funcs for inference graph printing
 
 --------------------------------------------------------------*/
 
-//include <iostream>
 #include <fstream>
 #include <sstream>
 
@@ -59,9 +58,9 @@ brain::dbg_ic_print(row<quanton*>& the_trail){
 		return;
 	}
 	DBG_PRT(30, os << "**IC_PRT**");
-	DBG_PRT(31, os << "THE BRAIN=" << std::endl;
+	DBG_PRT(31, os << "THE BRAIN=" << bj_eol;
 		print_brain(os);
-		os << "Type ENTER to print the IC: " << std::endl;
+		os << "Type ENTER to print the IC: " << bj_eol;
 		DO_GETCHAR;
 	);
 
@@ -114,46 +113,46 @@ brain::dbg_ic_print(row<quanton*>& the_trail){
 	}
 }
 
-std::ostream& 	
-brain::dbg_ic_prt_dotty_label(std::ostream& os){
+bj_ostream& 	
+brain::dbg_ic_prt_dotty_label(bj_ostream& os){
 	//stats.print_info(os, this, 0.0, true, true);
-	os << "\\n \\" << std::endl;
+	os << "\\n \\" << bj_eol;
 	//os << "i#n " << stats.num_start_neu << " ";
 	//os << "#n " << stats.num_neurons << " ";
-	os << "\\n \\" << std::endl;
+	os << "\\n \\" << bj_eol;
 	os << br_final_msg << " ";
 	os << "recoil " << recoil() << "  ";	
 	//os << "excited_level " << br_excited_level << "  ";
-	os << "\\n \\" << std::endl;
+	os << "\\n \\" << bj_eol;
 	os << "Quantons: ";
 	print_all_quantons(os, 10, "\\n\\\n");
-	os << "\\n \\" << std::endl;
+	os << "\\n \\" << bj_eol;
 
 	os << "Reasons learned: ";
-	os << "\\n \\" << std::endl;
+	os << "\\n \\" << bj_eol;
 	//br_reasons.print_row_data(os, true, "\\n\\\n");
 	return os;
 }
 
-std::ostream& 	
-brain::dbg_ic_prt_dotty_file(std::ostream& os, row<quanton*>& the_trail, long style){
+bj_ostream& 	
+brain::dbg_ic_prt_dotty_file(bj_ostream& os, row<quanton*>& the_trail, long style){
 	long ii;
 	row<quanton*> nodes;
 
-	os << "digraph \"ic_graph\" {" << std::endl;
-	//os << "node [style=filled,fontsize=20];" << std::endl;
-	os << "node [fontsize=20];" << std::endl;
-	os << "edge [style=bold];" << std::endl;
-	os << "graph [fontsize=20];" << std::endl;
-	os << "compound=true" << std::endl;
+	os << "digraph \"ic_graph\" {" << bj_eol;
+	//os << "node [style=filled,fontsize=20];" << bj_eol;
+	os << "node [fontsize=20];" << bj_eol;
+	os << "edge [style=bold];" << bj_eol;
+	os << "graph [fontsize=20];" << bj_eol;
+	os << "compound=true" << bj_eol;
 
-	os << "subgraph cluster0 {" << std::endl;
-	os << "\"" << br_file_name_in_ic << "\" [shape=box];" << std::endl;
-	os << std::endl << std::endl;
+	os << "subgraph cluster0 {" << bj_eol;
+	os << "\"" << br_file_name_in_ic << "\" [shape=box];" << bj_eol;
+	os << bj_eol << bj_eol;
 	os << "label = \"";
 	dbg_ic_prt_dotty_label(os);
-	os << "\";" << std::endl;
-	os << "}" << std::endl << std::endl;
+	os << "\";" << bj_eol;
+	os << "}" << bj_eol << bj_eol;
 
 	for(ii = 0; ii < the_trail.size(); ii++){
 		quanton* qua = the_trail[ii];
@@ -170,7 +169,7 @@ brain::dbg_ic_prt_dotty_file(std::ostream& os, row<quanton*>& the_trail, long st
 		qua->qu_dbg_ic_trail_idx = ii;
 		inv->qu_dbg_ic_trail_idx = ii;
 	}
-	os << std::endl << std::endl;
+	os << bj_eol << bj_eol;
 
 	long clus = 1;
 	long q_lv_old = -1;
@@ -187,9 +186,9 @@ brain::dbg_ic_prt_dotty_file(std::ostream& os, row<quanton*>& the_trail, long st
 
 		if((style == DBG_IC_SUBGRAPHS) && (q_lv_old != q_lv)){
 			if(q_lv_old != -1){
-				os << "} " << std::endl;
+				os << "} " << bj_eol;
 			}
-			os << "subgraph cluster" << clus << " { " << std::endl;
+			os << "subgraph cluster" << clus << " { " << bj_eol;
 			clus++;
 		}
 
@@ -211,7 +210,7 @@ brain::dbg_ic_prt_dotty_file(std::ostream& os, row<quanton*>& the_trail, long st
 		} else if(! has_src){
 			os << " [shape=\"diamond\"]";
 		} 
-		os << ";" << std::endl;
+		os << ";" << bj_eol;
 
 		if(qua1->qu_charge == cg_negative){ 
 			quanton* inv = qua1->qu_inverse;
@@ -220,7 +219,7 @@ brain::dbg_ic_prt_dotty_file(std::ostream& os, row<quanton*>& the_trail, long st
 			os << " -> ";
 			qua1->print_ic_label(os);
 			os << " [color=\"red\"]";
-			os << ";" << std::endl;
+			os << ";" << bj_eol;
 		}
 
 		neuron* neu = qua1->qu_source;
@@ -247,15 +246,15 @@ brain::dbg_ic_prt_dotty_file(std::ostream& os, row<quanton*>& the_trail, long st
 				os << "[label=\"" << mark;
 				os << neu->ne_index;
 				os << mark << "\"]";
-				os << ";" << std::endl;
+				os << ";" << bj_eol;
 			}
 		}		
 	}
 	if((style == DBG_IC_SUBGRAPHS) && (q_lv_old != -1)){
-		os << "} " << std::endl;
+		os << "} " << bj_eol;
 	}
 
-	os << "}" << std::endl;
+	os << "}" << bj_eol;
 
 	return os;
 }

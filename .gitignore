@@ -1,2 +1,4 @@
 **/.directory
 .directory
+build/gnu_make/build
+build/gnu_make/bin

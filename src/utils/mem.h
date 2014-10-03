@@ -33,10 +33,10 @@ Declaration of mem trace funcs and other.
 #ifndef JLQ_MEM_H
 #define JLQ_MEM_H
 
-#include <iostream>
 #include <cstdlib>
 
 #include "platform.h"
+#include "bj_stream.h"
 #include "top_exception.h"
 
 //define MEM_PT_DIR(prm)	prm

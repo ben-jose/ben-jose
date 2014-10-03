@@ -67,7 +67,7 @@ read_file(ch_string f_nam, row<char>& f_data){
 		std::ostringstream& msg = dimacs_err_msg(0, -1, "Could not open file ");
 		msg << "'" << f_nam << "'.";
 
-		DBG_THROW(std::cout << msg.str() << std::endl);
+		DBG_THROW(std::cout << msg.str() << bj_eol);
 
 		char* dimacs_cannot_open = as_pt_char("Cannot open file dimacs exception");
 		DBG_THROW_CK(dimacs_cannot_open != dimacs_cannot_open);
@@ -185,7 +185,7 @@ dimacs_loader::fix_lits(row<long>& lits, bool& add_it)
 			DBG_PRT(7, os << "lit_already_in_clause." <<
 				" lits=" << lits <<
 				" nid=" << nid <<
-				" tmp_nids=" << tmp_dens << std::endl
+				" tmp_nids=" << tmp_dens << bj_eol
 			);
 			ld_fixes[fx_lit_already_in_clause]++;
 			continue;
@@ -196,7 +196,7 @@ dimacs_loader::fix_lits(row<long>& lits, bool& add_it)
 		DBG_PRT(7, os << "clause_has_both_lit." <<
 			" lits=" << lits <<
 			" nid=" << nid <<
-			" tmp_nids=" << tmp_dens << std::endl
+			" tmp_nids=" << tmp_dens << bj_eol
 		);
 		ld_fixes[fx_clause_has_both_lit]++;
 		satisfied = true;
@@ -222,7 +222,7 @@ dimacs_loader::fix_lits(row<long>& lits, bool& add_it)
 	if((tmp_dens.size() == 1) && !satisfied){
 		DBG_PRT(7, os << "clause_has_one_lit." <<
 			" lits=" << lits <<
-			" tmp_lits=" << tmp_dens << std::endl
+			" tmp_lits=" << tmp_dens << bj_eol
 		);
 		ld_fixes[fx_clause_has_one_lit]++;
 
@@ -652,10 +652,10 @@ dimacs_loader::calc_f_lit_equal_and(long d_lit, row<long>& and_lits,
 }
 
 void
-print_dimacs_of(std::ostream& os, row<long>& all_lits, long num_cla, long num_var){
+print_dimacs_of(bj_ostream& os, row<long>& all_lits, long num_cla, long num_var){
 
-	os << k_dimacs_header_str << std::endl;
-	os << "p cnf " << num_var << " " << num_cla << " " << std::endl;
+	os << k_dimacs_header_str << bj_eol;
+	os << "p cnf " << num_var << " " << num_cla << " " << bj_eol;
 
 	long first = 0;
 	long neus_cou = 0;
@@ -665,7 +665,7 @@ print_dimacs_of(std::ostream& os, row<long>& all_lits, long num_cla, long num_va
 		long nio_id = all_lits[ii];
 		os << nio_id << " ";
 		if(nio_id == 0){
-			os << std::endl;
+			os << bj_eol;
 
 			neus_cou++;
 			long num_dens = ii - first;
@@ -676,7 +676,7 @@ print_dimacs_of(std::ostream& os, row<long>& all_lits, long num_cla, long num_va
 		}
 	}
 
-	os << std::endl;
+	os << bj_eol;
 	os.flush();
 }
 

@@ -39,22 +39,22 @@ macros to declare and define print operators.
 // printing declarations
 
 #define DECLARE_PRINT_FUNCS(obj_t) \
-std::ostream& operator << (std::ostream& os, obj_t& obj1); \
-std::ostream& operator << (std::ostream& os, obj_t* obj1); \
+bj_ostream& operator << (bj_ostream& os, obj_t& obj1); \
+bj_ostream& operator << (bj_ostream& os, obj_t* obj1); \
 \
 
 // end_of_define
 
 #define DEFINE_PRINT_FUNCS(obj_t) \
 inline \
-std::ostream& operator << (std::ostream& os, obj_t& obj1){ \
+bj_ostream& operator << (bj_ostream& os, obj_t& obj1){ \
 	obj1.print_##obj_t(os); \
 	os.flush(); \
 	return os; \
 } \
 \
 inline \
-std::ostream& operator << (std::ostream& os, obj_t* obj1){ \
+bj_ostream& operator << (bj_ostream& os, obj_t* obj1){ \
 	if(obj1 == NULL_PT){ \
 		os << "NULL_" << #obj_t; \
 	} else { \

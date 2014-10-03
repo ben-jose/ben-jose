@@ -48,17 +48,17 @@ sortee&
 as_sortee(binder* bdr){
 	SORTER_CK_1(bdr != NULL_PT);
 	DBG_PRT_COND(DBG_ALL_LVS, ! (bdr->get_cls_name() == sortee::CL_NAME) ,
-		os << "ABORTING_DATA " << std::endl;
-		os << "bdr->get_cls_name()=" << bdr->get_cls_name() << std::endl;
-		os << "sortee::CL_NAME=" << sortee::CL_NAME << std::endl;
-		os << "END_OF_aborting_data" << std::endl;
+		os << "ABORTING_DATA " << bj_eol;
+		os << "bdr->get_cls_name()=" << bdr->get_cls_name() << bj_eol;
+		os << "sortee::CL_NAME=" << sortee::CL_NAME << bj_eol;
+		os << "END_OF_aborting_data" << bj_eol;
 	);
 	SORTER_CK_1(bdr->get_cls_name() == sortee::CL_NAME);
 	return *((sortee*)(bdr));
 }
 
-std::ostream&
-sort_glb::print_sort_glb(std::ostream& os, bool from_pt){
+bj_ostream&
+sort_glb::print_sort_glb(bj_ostream& os, bool from_pt){
 	MARK_USED(from_pt);
 	if(from_pt){
 		os << " SRG=" << ((void*)this) 
@@ -71,7 +71,7 @@ sort_glb::print_sort_glb(std::ostream& os, bool from_pt){
 		<< " sg_dbg_last_id=" << sg_dbg_last_id;
 		);
 
-		os << std::endl;
+		os << bj_eol;
 		os.flush();
 		return os;
 	}
@@ -83,16 +83,16 @@ sort_glb::print_sort_glb(std::ostream& os, bool from_pt){
 		sorset& hd = get_head_ss();
 		hd.walk_to_row(sg_prt_srts, false);
 
-		os << sg_prt_srts << std::endl;
+		os << sg_prt_srts << bj_eol;
 	} else {
-		os << "EMPTY SORTSETS in sort_glb" << std::endl;
+		os << "EMPTY SORTSETS in sort_glb" << bj_eol;
 	}
 	os.flush();
 	return os;
 }
 
-std::ostream&
-sortee::print_sortee(std::ostream& os, bool from_pt){
+bj_ostream&
+sortee::print_sortee(bj_ostream& os, bool from_pt){
 	MARK_USED(from_pt);
 
 	os << "(" << so_dbg_extern_id << ")";
@@ -147,7 +147,7 @@ sortee::print_sortee(std::ostream& os, bool from_pt){
 	//os << so_id_trail << ".";
 	os << "}";
 
-	os << std::endl;
+	os << bj_eol;
 
 	os.flush();
 	return os;
@@ -165,7 +165,7 @@ get_indentation(long level){
 }
 
 void
-sorset::print_data_sorset(std::ostream& os){
+sorset::print_data_sorset(bj_ostream& os){
 	os << "(";
 	os << "pt=(" << (void*)this << "), ";
 	os << ")";
@@ -182,11 +182,11 @@ sorset::print_data_sorset(std::ostream& os){
 }
 
 void
-sorset::print_tree_sorset(std::ostream& os, long level){
+sorset::print_tree_sorset(bj_ostream& os, long level){
 	ch_string ind_str = get_indentation(level);
 	os << ind_str << "{" << ss_curr_id << " ";
 	print_data_sorset(os);
-	os << std::endl;
+	os << bj_eol;
 
 	level++;
 
@@ -199,11 +199,11 @@ sorset::print_tree_sorset(std::ostream& os, long level){
 	}
 
 	os << ind_str << "}";
-	os << std::endl;
+	os << bj_eol;
 }
 
-std::ostream&
-sorset::print_sorset(std::ostream& os, bool from_pt){
+bj_ostream&
+sorset::print_sorset(bj_ostream& os, bool from_pt){
 	MARK_USED(from_pt);
 
 	if(from_pt){
@@ -321,10 +321,10 @@ sortee::sort_from(sort_glb& srg, sort_id_t curr_id, void* id_src){
 
 	SORTER_CK(curr_id > 0);
 	DBG_PRT_COND(DBG_ALL_LVS, ! (curr_id >= srg.sg_dbg_last_id) ,
-		os << "ABORTING_DATA " << std::endl;
-		os << "curr_id=" << curr_id << std::endl;
-		os << "srg.sg_dbg_last_id=" << srg.sg_dbg_last_id << std::endl;
-		os << "END_OF_aborting_data" << std::endl;
+		os << "ABORTING_DATA " << bj_eol;
+		os << "curr_id=" << curr_id << bj_eol;
+		os << "srg.sg_dbg_last_id=" << srg.sg_dbg_last_id << bj_eol;
+		os << "END_OF_aborting_data" << bj_eol;
 	);
 	SORTER_CK(curr_id >= srg.sg_dbg_last_id);
 	DBG(
@@ -496,10 +496,10 @@ sorset::is_ss_virgin(bool ck_items){
 	bool is_vir = (c1 && c2 && c3 && c4 && c5 && c6 && c7);
 
 	DBG_PRT_COND(DBG_ALL_LVS, ! is_vir,
-		os << "ABORTING_DATA " << std::endl;
+		os << "ABORTING_DATA " << bj_eol;
 		os << "  c1=" << c1 << "  c2=" << c2 << "  c3=" << c3 << "  c4=" << c4;
 		os << "  c5=" << c5 << "  c6=" << c6 << "  c7=" << c7;
-		os << "END_OF_aborting_data" << std::endl;
+		os << "END_OF_aborting_data" << bj_eol;
 	);
 	return is_vir;
 }
@@ -589,7 +589,7 @@ sorset::walk_to_row_rec(bool set_consecs, long& consec,
 
 		if(set_consecs){
 			if(! has_diff && (consec != srt.so_walk_consec)){
-				DBG_SORTOR_PRT(30, os << "first diff=" << std::endl
+				DBG_SORTOR_PRT(30, os << "first diff=" << bj_eol
 					<< srt << " NEW_consec=" << consec);
 				has_diff = true;
 			}
@@ -850,7 +850,7 @@ sorset::step_mutual_stabilize_rec(sort_glb& srg1, sort_glb& srg2)
 
 		if(set_tee_consecs){
 			if(! has_diff && (tee_consec != srt.so_tee_consec)){
-				DBG_SORTOR_PRT(30, os << "first diff=" << std::endl
+				DBG_SORTOR_PRT(30, os << "first diff=" << bj_eol
 					<< srt << " NEW_consec=" << tee_consec);
 				has_diff = true;
 			}
@@ -1071,12 +1071,12 @@ sort_glb::stab_mutual_unique(sort_glb& srg2){
 	SORTER_CK(! srg1.sg_step_has_diff);
 	SORTER_CK(! srg2.sg_step_has_diff);
 
-	DBG_PRT(62, os << " UNIQUE cnf=" << std::endl; sg_cnf_clauses.print_row_data(os, true, "\n"););
+	DBG_PRT(62, os << " UNIQUE cnf=" << bj_eol; sg_cnf_clauses.print_row_data(os, true, "\n"););
 }
 
 canon_cnf&
 sort_glb::stab_mutual_get_cnf(skeleton_glb& skg, ch_string comment, bool sorted_cnf){
-	DBG_PRT(114, os << " get_cnf=" << this << " " << comment << std::endl;
+	DBG_PRT(114, os << " get_cnf=" << this << " " << comment << bj_eol;
 		sg_cnf_clauses.print_row_data(os, true, "\n");
 	);
 
@@ -1101,7 +1101,7 @@ void
 sort_glb::step_quas(sort_glb& mates_srg){
 	step_mutual_stabilize(mates_srg, sm_with_quas);
 
-	DBG_PRT(62, os << " STEP_QUAS cnf=" << std::endl; mates_srg.sg_cnf_clauses.print_row_data(os, true, "\n"););
+	DBG_PRT(62, os << " STEP_QUAS cnf=" << bj_eol; mates_srg.sg_cnf_clauses.print_row_data(os, true, "\n"););
 }
 
 void

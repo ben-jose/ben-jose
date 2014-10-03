@@ -231,7 +231,7 @@ template<class obj_t> static inline obj_t max(obj_t x, obj_t y) { return (x > y)
 
 WIN32_COD(
 inline
-std::ostream& operator << (std::ostream& os, __int64 ii ){
+bj_ostream& operator << (bj_ostream& os, __int64 ii ){
 	char buf[30];
 	sprintf(buf,"%I64d", ii );
 	os << buf;
@@ -423,7 +423,7 @@ protected:
 	row_index cap;
 
 public:
-	typedef std::ostream& (*print_func_t)(std::ostream& os, obj_t& obj);
+	typedef bj_ostream& (*print_func_t)(bj_ostream& os, obj_t& obj);
 	typedef comparison (*cmp_func_t)(obj_t const & obj1, obj_t const & obj2);
 
 	row_index	get_cap(){
@@ -477,7 +477,7 @@ public:
 	row_data(): sz(0), cap(0) {}
 
 	/*virtual	~row_data(){
-		std::cerr << "func: 'row_data::~row_data'" << std::endl;
+		std::cerr << "func: 'row_data::~row_data'" << bj_eol;
 		abort_func(0); 
 	}*/
 
@@ -698,8 +698,8 @@ public:
 
 	// io funcs
 
-	std::ostream&	print_row_data(
-		std::ostream& os, 
+	bj_ostream&	print_row_data(
+		bj_ostream& os, 
 		bool with_lims = true,
 		const char* sep = " ", 
 		row_index low = INVALID_IDX, 
@@ -831,14 +831,14 @@ public:
 
 template<class obj_t>
 inline
-std::ostream&	operator << (std::ostream& os, row_data<obj_t>& rr){
+bj_ostream&	operator << (bj_ostream& os, row_data<obj_t>& rr){
 	rr.print_row_data(os, true, " ");
 	return os;
 }
 
 template<class obj_t>
 inline
-std::ostream&	operator << (std::ostream& os, row_data<obj_t>* rr){
+bj_ostream&	operator << (bj_ostream& os, row_data<obj_t>* rr){
 	if(rr == NULL_PT){
 		os << "NULL_ROW";
 	} else {
@@ -1528,7 +1528,7 @@ public:
 
 	bool		dbg_is_heap_ok(row_index idx = 0);
 
-	std::ostream&	print_heap(std::ostream& os, row_index idx);
+	bj_ostream&	print_heap(bj_ostream& os, row_index idx);
 
 	void		hsort(){
 		row_index orig_sz = SZ_ATTRIB;
@@ -1544,7 +1544,7 @@ public:
 
 template<class obj_t>
 inline
-std::ostream&	operator << (std::ostream& os, heap<obj_t>& he){
+bj_ostream&	operator << (bj_ostream& os, heap<obj_t>& he){
 	return he.print_heap(os, 0);
 }
 
@@ -1979,8 +1979,8 @@ heap<obj_t>::remove(row_index idx){
 };
 
 template<class obj_t>
-std::ostream&
-heap<obj_t>::print_heap(std::ostream& os, row_index idx){
+bj_ostream&
+heap<obj_t>::print_heap(bj_ostream& os, row_index idx){
 	row_index lin = 1;
 	for(row_index ii = 0; ii < SZ_ATTRIB; ii++){
 		if(ii == lin){
@@ -2060,7 +2060,7 @@ public:
 		sz--;
 	}
 
-	std::ostream&	print_average(std::ostream& os){
+	bj_ostream&	print_average(bj_ostream& os){
 		os << "avg:" << avg << " sz:" << sz << " ";
 		os.flush();
 		return os;
@@ -2069,7 +2069,7 @@ public:
 };
 
 inline
-std::ostream& operator << (std::ostream& os, average& obj){
+bj_ostream& operator << (bj_ostream& os, average& obj){
 	return obj.print_average(os);
 }
 
@@ -2099,13 +2099,13 @@ public:
 		average::remove_val(val);
 	}
 
-	std::ostream&	print_avg_stat(std::ostream& os);
+	bj_ostream&	print_avg_stat(bj_ostream& os);
 
 };
 
 inline
-std::ostream&
-avg_stat::print_avg_stat(std::ostream& os){
+bj_ostream&
+avg_stat::print_avg_stat(bj_ostream& os){
 	big_floating_t avg_perc = 0.0;
 	if(vs_max_val > 0.0){
 		avg_perc = ((avg / vs_max_val) * 100.0);
@@ -2119,13 +2119,13 @@ avg_stat::print_avg_stat(std::ostream& os){
 	os << " max=" << vs_max_val;
 	os << " avg=" << avg;
 	os << " %avg=" << avg_perc;
-	os << std::endl;
+	os << bj_eol;
 	os.flush();
 	return os;
 }
 
 inline
-std::ostream& operator << (std::ostream& os, avg_stat& obj){
+bj_ostream& operator << (bj_ostream& os, avg_stat& obj){
 	return obj.print_avg_stat(os);
 }
 

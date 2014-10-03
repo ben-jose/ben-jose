@@ -33,7 +33,6 @@ Declaration of functions to read and parse config files.
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include <iostream>
 #include <fstream>
 #include <sstream>
 

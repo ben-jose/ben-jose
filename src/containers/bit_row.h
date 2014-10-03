@@ -109,7 +109,7 @@ rot_lft_idx(bit_row_index pos, bit_row_index row_sz, long num_rot);
 bit_row_index 
 rot_rgt_idx(bit_row_index pos, bit_row_index row_sz, long num_rot);
 
-std::ostream&	operator << (std::ostream& os, bit_row& rr);
+bj_ostream&	operator << (bj_ostream& os, bit_row& rr);
 bit_row&	operator << (bit_row& rr, const bool elem);
 bit_row&	operator >> (bit_row& rr, bool& elem);
 bit_row&	operator << (bit_row& rr1, bit_row& rr2);
@@ -410,8 +410,8 @@ public:
 
 	// io funcs
 
-	std::ostream&	print_bit_row(
-		std::ostream& os, 
+	bj_ostream&	print_bit_row(
+		bj_ostream& os, 
 		bool with_lims = true,
 
 		char* sep = as_pt_char(" "), 
@@ -499,7 +499,7 @@ rot_rgt_idx(bit_row_index pos, bit_row_index row_sz, long num_rot){
 }
 
 inline 
-std::ostream&	operator << (std::ostream& os, bit_row& rr){
+bj_ostream&	operator << (bj_ostream& os, bit_row& rr){
 	rr.print_bit_row(os, true, as_pt_char(" "));
 	return os;
 }

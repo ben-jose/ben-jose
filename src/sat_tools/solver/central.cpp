@@ -45,7 +45,7 @@ funcs that implement top level funcs.
 
 void
 print_op_cnf(){
-	//std::ostream& os = std::cout;
+	//bj_ostream& os = std::cout;
 }
 
 void
@@ -76,15 +76,15 @@ do_cnf_file()
 
 	ch_string f_nam = the_ans.get_f_nam();
 	SUPPORT_CK(f_nam.size() > 0);
-	DBG_PRT(0, os << "FILE=" << f_nam << std::endl);
+	DBG_PRT(0, os << "FILE=" << f_nam << bj_eol);
 
 	call_and_handle_exceptions(call_solve_instance);
 
 	DBG_PRT(0, os << "FINISHING. batch_count="
 		<< GLB().batch_consec << " of " 
-		<< GLB().batch_num_files << std::endl;
+		<< GLB().batch_num_files << bj_eol;
 		the_ans.print_headers(os);
-		os << std::endl << the_ans;
+		os << bj_eol << the_ans;
 	);
 }
 

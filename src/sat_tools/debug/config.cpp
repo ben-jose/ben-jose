@@ -165,12 +165,12 @@ config_reader::parse_debug_line(row<long>& dbg_line, ch_string& str_ln){
 
 void	
 config_reader::add_config_line(ch_string& str_ln){
-	std::ostream& os = std::cout;
+	bj_ostream& os = std::cout;
 	MARK_USED(os);
 	row<long>& dbg_ln = GLB().dbg_config_line;
 	parse_debug_line(dbg_ln, str_ln);
 
-	//os << "Entendi:<<" << dbg_ln << ">>" << std::endl;
+	//os << "Entendi:<<" << dbg_ln << ">>" << bj_eol;
 
 	if(! dbg_ln.is_empty()){
 		debug_entry& start_dbg = GLB().dbg_start_dbg_entries.inc_sz();
@@ -192,13 +192,13 @@ config_reader::add_config_line(ch_string& str_ln){
 
 /*void
 mini_test(){
-	std::ostream& os = std::cout;
-	os << "isalnum('/') " << isalnum('/') << std::endl;
+	bj_ostream& os = std::cout;
+	os << "isalnum('/') " << isalnum('/') << bj_eol;
 }*/
 
 void
 config_reader::read_config(const char* file_nm){
-	std::ostream& os = std::cout;
+	bj_ostream& os = std::cout;
 	CONFIG_CK(file_nm != NULL_PT);
 
 	SUPPORT_CK(GLB().dbg_start_dbg_entries.is_empty());
@@ -211,7 +211,7 @@ config_reader::read_config(const char* file_nm){
 
 	in_stm.open(file_nm, std::ios::binary);
 	if(!in_stm.good() || !in_stm.is_open()){
-		os << "NO " << file_nm << " FILE FOUND." << std::endl;
+		os << "NO " << file_nm << " FILE FOUND." << bj_eol;
 		return;
 	}
 
@@ -220,7 +220,7 @@ config_reader::read_config(const char* file_nm){
 	while(! in_stm.eof()){
 		std::getline(in_stm, str_ln);
 		
-		//os << "Lei:<<" << str_ln << ">>" << std::endl;
+		//os << "Lei:<<" << str_ln << ">>" << bj_eol;
 		add_config_line(str_ln);
 	}
 	in_stm.close();
@@ -230,8 +230,8 @@ config_reader::read_config(const char* file_nm){
 	GLB().dbg_start_dbg_entries.mix_sort(cmp_dbg_entries);
 	GLB().dbg_stop_dbg_entries.mix_sort(cmp_dbg_entries);
 
-	//os << "start_dbgs=" << GLB().dbg_start_dbg_entries << std::endl;
-	//os << "stop_dbgs=" << GLB().dbg_stop_dbg_entries << std::endl;
+	//os << "start_dbgs=" << GLB().dbg_start_dbg_entries << bj_eol;
+	//os << "stop_dbgs=" << GLB().dbg_stop_dbg_entries << bj_eol;
 }
 
 

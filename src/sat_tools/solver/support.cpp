@@ -80,7 +80,7 @@ find_first_digit(ch_string& the_str, bool dig = true){
 
 long
 get_free_mem_kb(){
-	//std::ostream& os = std::cout;
+	//bj_ostream& os = std::cout;
 
 	long free_mem_kb = 0;
 	
@@ -95,7 +95,7 @@ get_free_mem_kb(){
 		while(! proc_meminfo.eof()){
 			std::getline(proc_meminfo, str_ln);
 			
-			//os << "Lei:<<" << str_ln << ">>" << std::endl;
+			//os << "Lei:<<" << str_ln << ">>" << bj_eol;
 			
 			if(str_ln.compare(0, str_mem_free_ln, str_mem_free) == 0){
 				long pos = find_first_digit(str_ln);
@@ -105,7 +105,7 @@ get_free_mem_kb(){
 				
 				free_mem_kb = atol(str_val.c_str());
 				
-				//os << "FOUND IT = >" << str_val << "<" << std::endl;
+				//os << "FOUND IT = >" << str_val << "<" << bj_eol;
 				break;
 			}
 		}
@@ -134,8 +134,8 @@ global_data*	GLB_DATA_PT = &the_glb_data;
 global_data&
 GLB(){
 	if(GLB_DATA_PT == NULL_PT){
-		std::cout << STACK_STR << std::endl;
-		std::cout << "GLB_DATA_PT is NULL !!!!" << std::endl;
+		std::cout << STACK_STR << bj_eol;
+		std::cout << "GLB_DATA_PT is NULL !!!!" << bj_eol;
 		abort_func(0);
 	}
 	return *GLB_DATA_PT;
@@ -143,7 +143,7 @@ GLB(){
 
 void
 global_data::dbg_update_config_entries(){
-	std::ostream& os = std::cout;
+	bj_ostream& os = std::cout;
 	MARK_USED(os);
 
 	consecutive_t curr_round = get_curr_lap();
@@ -175,8 +175,8 @@ global_data::dbg_update_config_entries(){
 
 void
 global_data::init_global_data(){
-	//std::ostream& os = std::cout;
-	//os << "starting 'init_global data'  MEM_STATS.num_bytes_in_use = " << MEM_STATS.num_bytes_in_use << std::endl;
+	//bj_ostream& os = std::cout;
+	//os << "starting 'init_global data'  MEM_STATS.num_bytes_in_use = " << MEM_STATS.num_bytes_in_use << bj_eol;
 
 	using_mem_ctrl = false;
 
@@ -285,7 +285,7 @@ global_data::init_global_data(){
 
 	set_active_out_levs();
 
-	//os << "ending 'init_global data'  MEM_STATS.num_bytes_in_use = " << MEM_STATS.num_bytes_in_use << std::endl;
+	//os << "ending 'init_global data'  MEM_STATS.num_bytes_in_use = " << MEM_STATS.num_bytes_in_use << bj_eol;
 }
 
 void
@@ -316,8 +316,8 @@ global_data::mem_percent_used(){
 }
 */
 
-std::ostream&
-global_data::print_mem_used(std::ostream& os){
+bj_ostream&
+global_data::print_mem_used(bj_ostream& os){
 	if(GLB().using_mem_ctrl){
 		os << GLB().batch_stat_mem_used;
 		/*
@@ -329,10 +329,10 @@ global_data::print_mem_used(std::ostream& os){
 	return os;
 }
 
-std::ostream&
-global_data::print_totals(std::ostream& os, double curr_tm){
+bj_ostream&
+global_data::print_totals(bj_ostream& os, double curr_tm){
 
-	os << std::endl;
+	os << bj_eol;
 	if(in_valid_inst()){
 		instance_info& inst_info = get_curr_inst();
 		os << "CURR_LAPS=" << inst_info.ist_num_laps << " ";
@@ -352,7 +352,7 @@ global_data::print_totals(std::ostream& os, double curr_tm){
 		os << "SECS=" << full_tm << " ";
 	}
 
-	os << std::endl;
+	os << bj_eol;
 	os << batch_stat_solve_tm;
 	if(GLB().using_mem_ctrl){
 		os << batch_stat_mem_used;
@@ -362,13 +362,13 @@ global_data::print_totals(std::ostream& os, double curr_tm){
 		os << batch_stat_laps;
 	);
 
-	os << std::endl;
+	os << bj_eol;
 	return os;
 }
 
-std::ostream&
-global_data::print_final_totals(std::ostream& os){
-	os << std::endl;
+bj_ostream&
+global_data::print_final_totals(bj_ostream& os){
+	os << bj_eol;
 	//os << std::fixed;
 	//os.precision(2);
 
@@ -386,13 +386,13 @@ global_data::print_final_totals(std::ostream& os){
 
 	/*
 	os << "AVERAGE SOLVE TIME = " <<
-		GLB().batch_avg_solve_time.avg << std::endl;
+		GLB().batch_avg_solve_time.avg << bj_eol;
 	os << "TOTAL SOLVE TIME = " << 
-		GLB().batch_total_solve_time << std::endl;
+		GLB().batch_total_solve_time << bj_eol;
 	*/
 
 	double tot_tm = GLB().batch_end_time - GLB().batch_start_time;
-	os << "TOTAL TIME = " << tot_tm << std::endl;
+	os << "TOTAL TIME = " << tot_tm << bj_eol;
 	return os;
 }
 
@@ -429,12 +429,12 @@ global_data::print_final_assig(){
 	std::ofstream log_stm;
 	log_stm.open(f_nm, std::ios::app);
 	if(log_stm.good() && log_stm.is_open()){
-		log_stm << "c ====================" << std::endl;
-		log_stm << "c " << f_nam << std::endl;
+		log_stm << "c ====================" << bj_eol;
+		log_stm << "c " << f_nam << bj_eol;
 		final_chosen_ids.print_row_data(log_stm, false, " ", -1, -1, false, 20);
-		log_stm << " 0" << std::endl;
+		log_stm << " 0" << bj_eol;
 		final_assig.print_row_data(log_stm, false, " ", -1, -1, false, 20);
-		log_stm << " 0" << std::endl;
+		log_stm << " 0" << bj_eol;
 	}
 	log_stm.close();
 }
@@ -477,15 +477,15 @@ global_data::count_instance(instance_info& inst_info){
 		*/
 	}
 
-	DBG_PRT(4, os << "FINAL_CHOSEN=" << final_chosen_ids << std::endl
-		<< "FINAL_ASSIG=" << final_assig << std::endl 
-		<< std::endl);
+	DBG_PRT(4, os << "FINAL_CHOSEN=" << final_chosen_ids << bj_eol
+		<< "FINAL_ASSIG=" << final_assig << bj_eol 
+		<< bj_eol);
 
 	if(out_os != NULL_PT){
 		PRT_OUT(1, print_stats(*out_os));
 	}
 
-	PRT_OUT(1, os << "FINISHING" << std::endl);
+	PRT_OUT(1, os << "FINISHING" << bj_eol);
 
 	inst_info.ist_solve_time = full_tm;
 
@@ -509,7 +509,7 @@ global_data::count_instance(instance_info& inst_info){
 		batch_num_error++;
 	}
 
-	PRT_OUT(1, os << inst_info << std::endl);
+	PRT_OUT(1, os << inst_info << bj_eol);
 
 	print_batch_consec();
 
@@ -519,8 +519,8 @@ global_data::count_instance(instance_info& inst_info){
 //============================================================
 // stats
 
-std::ostream&
-global_data::print_mini_stats(std::ostream& os){
+bj_ostream&
+global_data::print_mini_stats(bj_ostream& os){
 	instance_info& inst_info = get_curr_inst();
 	ch_string f_nam = inst_info.get_f_nam();
 
@@ -530,8 +530,8 @@ global_data::print_mini_stats(std::ostream& os){
 	return os; 
 }
 
-std::ostream&
-global_data::print_stats(std::ostream& os, double current_secs){
+bj_ostream&
+global_data::print_stats(bj_ostream& os, double current_secs){
 	DBG_COMMAND(35, return os);
 
 	DBG_COMMAND(36,
@@ -546,13 +546,13 @@ global_data::print_stats(std::ostream& os, double current_secs){
 	instance_info& inst_info = get_curr_inst();
 	ch_string f_nam = inst_info.get_f_nam();
 
-	os << std::endl;
-	os << "file_name: '" << f_nam << "'" << std::endl;
+	os << bj_eol;
+	os << "file_name: '" << f_nam << "'" << bj_eol;
 	
 	DBG( dbg_print_cond_func(true, false, "NO_NAME", 0, "true", INVALID_DBG_LV) );
 
 	print_totals(os, current_secs);
-	os << std::endl << std::endl;
+	os << bj_eol << bj_eol;
 
 	os.flush();
 
@@ -570,7 +570,7 @@ bool	dbg_print_cond_func(bool prm, bool is_ck, const ch_string fnam, int lnum,
 
 	bool resp = true;
 	if(prm){
-		std::ostream& os = *(GLB().dbg_os);
+		bj_ostream& os = *(GLB().dbg_os);
 		if(dbg_lv != INVALID_DBG_LV){
 			if(dbg_lv == DBG_ALL_LVS){
 				os << "ckALL.";
@@ -593,7 +593,7 @@ bool	dbg_print_cond_func(bool prm, bool is_ck, const ch_string fnam, int lnum,
 			os << GLB().get_curr_f_nam();
 			os << ")";
 			os << " in " << fnam << " at " << lnum;
-			os << std::endl;
+			os << bj_eol;
 		}
 		os.flush();
 		resp = (! is_ck);
@@ -610,7 +610,7 @@ void	err_header(std::ostringstream& msg_err){
 	msg_err << "file(" << GLB().batch_consec << "/"
 		<< GLB().batch_num_files << ")='"
 		<< GLB().get_curr_f_nam() << "'";
-	//msg_err << std::endl;
+	//msg_err << bj_eol;
 }
 
 void	log_message(const std::ostringstream& msg_log){
@@ -627,7 +627,7 @@ void	log_message(const std::ostringstream& msg_log){
 	std::ofstream log_stm;
 	log_stm.open(log_nm, std::ios::app);
 	if(log_stm.good() && log_stm.is_open()){
-		log_stm << msg_log.str() << std::endl; 
+		log_stm << msg_log.str() << bj_eol; 
 		log_stm.close();
 	}
 }
@@ -650,13 +650,13 @@ void	log_batch_info(){
 		GLB().reset_err_msg();
 		GLB().error_stm << "Could not open file " << log_nm << ".";
 		msg_log << GLB().error_stm.str();
-		std::cerr << msg_log.str() << std::endl;
+		std::cerr << msg_log.str() << bj_eol;
 		log_message(msg_log);
 		return;
 	}
 
 	GLB().batch_instances.print_row_data(log_stm, false, "\n");
-	log_stm << std::endl; 
+	log_stm << bj_eol; 
 	log_stm.close();
 
 	if(GLB().batch_end_msg_name.size() == 0){
@@ -670,7 +670,7 @@ void	log_batch_info(){
 		GLB().reset_err_msg();
 		GLB().error_stm << "Could not open file " << msg_nm << ".";
 		msg_log << GLB().error_stm.str();
-		std::cerr << msg_log.str() << std::endl;
+		std::cerr << msg_log.str() << bj_eol;
 		log_message(msg_log);
 		return;
 	}
@@ -682,13 +682,13 @@ void	log_batch_info(){
 
 void
 read_batch_instances(ch_string file_nm, row<instance_info>& f_insts){
-	std::ostream& os = std::cout;
+	bj_ostream& os = std::cout;
 
 	std::ifstream in_stm;
 
 	in_stm.open(file_nm.c_str(), std::ios::binary);
 	if(! in_stm.good() || ! in_stm.is_open()){
-		os << "NO " << file_nm << " FILE FOUND." << std::endl;
+		os << "NO " << file_nm << " FILE FOUND." << bj_eol;
 		return;
 	}
 
@@ -704,7 +704,7 @@ read_batch_instances(ch_string file_nm, row<instance_info>& f_insts){
 		if(! str_ln.empty()){
 			instance_info& n_inst = f_insts.inc_sz();
 		
-			//os << "Lei:<<" << str_ln << ">>" << std::endl;
+			//os << "Lei:<<" << str_ln << ">>" << bj_eol;
 			n_inst.parse_instance(str_ln, num_ln);
 		}
 	}
@@ -810,19 +810,19 @@ void	call_and_handle_exceptions(core_func_t the_func){
 	catch (long code) {
 		err_header(msg_err);
 		msg_err << GLB().error_stm.str();
-		std::cerr << msg_err.str() << std::endl;
+		std::cerr << msg_err.str() << bj_eol;
 		log_message(msg_err);
 		abort_func(0);
 	}
 	catch (...) {
-		std::cout << "INTERNAL ERROR !!! (call_and_handle_exceptions)" << std::endl;
-		std::cout << STACK_STR << std::endl;
+		std::cout << "INTERNAL ERROR !!! (call_and_handle_exceptions)" << bj_eol;
+		std::cout << STACK_STR << bj_eol;
 		std::cout.flush();
 		abort_func(0);		
 		
 		//err_header(msg_err);
 		//msg_err << "Unknown type exception in  ";
-		//std::cerr << msg_err.str() << std::endl;
+		//std::cerr << msg_err.str() << bj_eol;
 		//log_message(msg_err);
 	}
 
@@ -842,7 +842,7 @@ void	chomp_string(ch_string& s1){
 
 void	read_batch_file(row<instance_info>& names){
 	PRT_OUT(0, os << "Loading batch file '" 
-		<< GLB().batch_name << std::endl); 
+		<< GLB().batch_name << bj_eol); 
 
 	std::ifstream in_stm;
 	in_stm.open(GLB().batch_name.c_str());
@@ -886,14 +886,14 @@ void	read_batch_file(row<instance_info>& names){
 	PRT_OUT(0, os << CARRIAGE_RETURN << names.size());
 
 	if(in_stm.bad()){
-		std::cerr << in_stm.rdstate() << std::endl;
+		std::cerr << in_stm.rdstate() << bj_eol;
 	}
 
 	in_stm.close();
 	PRT_OUT(0, 
-		os << std::endl
-		<< "Read " << names.size() << " file names." << std::endl
-		<< "Processing:" << std::endl
+		os << bj_eol
+		<< "Read " << names.size() << " file names." << bj_eol
+		<< "Processing:" << bj_eol
 	);
 }
 
@@ -902,8 +902,8 @@ void	print_periodic_totals(void* pm, double curr_tm){
 	PRT_OUT(0, GLB().print_totals(os, curr_tm));
 }
 
-void	get_enter(std::ostream& os, ch_string msg){
-	os << "PRESS ENTER to continue. " << msg << std::endl;
+void	get_enter(bj_ostream& os, ch_string msg){
+	os << "PRESS ENTER to continue. " << msg << bj_eol;
 	getchar();
 }
 
@@ -915,20 +915,20 @@ void	init_dbg_conf(){
 	GLB().dbg_current_stop_entry = 0;
 	GLB().dbg_update_config_entries();
 
-	//DBG_PRT(-1, os << "start_dbgs=" << GLB().dbg_start_dbg_entries << std::endl); 
-	//DBG_PRT(-1, os << "stop_dbgs=" << GLB().dbg_stop_dbg_entries << std::endl); 
-	//DBG_PRT(-1, os << "dbg_lev=" << GLB().dbg_lev << std::endl); 
+	//DBG_PRT(-1, os << "start_dbgs=" << GLB().dbg_start_dbg_entries << bj_eol); 
+	//DBG_PRT(-1, os << "stop_dbgs=" << GLB().dbg_stop_dbg_entries << bj_eol); 
+	//DBG_PRT(-1, os << "dbg_lev=" << GLB().dbg_lev << bj_eol); 
 
-	DBG_COMMAND(37, os << "PRINT_FULL_INFO" << std::endl; 
+	DBG_COMMAND(37, os << "PRINT_FULL_INFO" << bj_eol; 
 		GLB().dbg_skip_print_info = true);
 
-	DBG_COMMAND(38, os << "SET IC ACTIVE" << std::endl; 
+	DBG_COMMAND(38, os << "SET IC ACTIVE" << bj_eol; 
 		GLB().dbg_ic_active = true);
 
-	DBG_COMMAND(39, os << "SET IC AFTER" << std::endl; 
+	DBG_COMMAND(39, os << "SET IC AFTER" << bj_eol; 
 		GLB().dbg_ic_after = true);
 
-	DBG_COMMAND(40, os << "SET IC GEN JPG" << std::endl; 
+	DBG_COMMAND(40, os << "SET IC GEN JPG" << bj_eol; 
 		GLB().dbg_ic_gen_jpg = true);
 
 	/*
@@ -1003,11 +1003,11 @@ void	do_all_instances(){
 			DBG_PRT(6, os << "AFTER do_cnf_file");
 
 			DBG_PRT_COND(DBG_ALL_LVS, ! (mem_in_u == MEM_STATS.num_bytes_in_use) ,
-				os << "ABORTING_DATA " << std::endl;
-				os << "mem_in_u=" << mem_in_u << std::endl;
-				os << "MEM_STATS.num_bytes_in_use=" << MEM_STATS.num_bytes_in_use << std::endl;
+				os << "ABORTING_DATA " << bj_eol;
+				os << "mem_in_u=" << mem_in_u << bj_eol;
+				os << "MEM_STATS.num_bytes_in_use=" << MEM_STATS.num_bytes_in_use << bj_eol;
 				dbg_print_ptdir();
-				os << "END_OF_aborting_data" << std::endl;
+				os << "END_OF_aborting_data" << bj_eol;
 			);
 			SUPPORT_CK(mem_in_u == MEM_STATS.num_bytes_in_use);
 			MEM_CTRL(dbg_keeping_ptdir = false);
@@ -1052,7 +1052,7 @@ global_data::set_input_name(){
 bool
 global_data::get_args(int argc, char** argv)
 {
-	std::ostream& os = std::cout;
+	bj_ostream& os = std::cout;
 	MARK_USED(os);
 
 	bool prt_help = false;
@@ -1111,16 +1111,16 @@ global_data::get_args(int argc, char** argv)
 	}
 
 	if(prt_help){
-		os << argv[0] << " " << help_str << std::endl;
+		os << argv[0] << " " << help_str << bj_eol;
 		return false;
 	}
 	if(prt_version){
-		os << argv[0] << " " << version_str << std::endl;
+		os << argv[0] << " " << version_str << bj_eol;
 		return false;
 	}
 	if(prt_headers){
 		instance_info::print_headers(os);
-		os << std::endl;
+		os << bj_eol;
 		return false;
 	}
 	if(prt_paths){
@@ -1128,8 +1128,8 @@ global_data::get_args(int argc, char** argv)
 		return false;
 	}
 	if(input_file_nm.size() == 0){
-		os << argv[0] << " " << help_str << std::endl;
-		os << argv[0] << " " << version_str << std::endl;
+		os << argv[0] << " " << help_str << bj_eol;
+		os << argv[0] << " " << version_str << bj_eol;
 		return false;
 	}
 
@@ -1141,16 +1141,16 @@ global_data::get_args(int argc, char** argv)
 
 int	solver_main(int argc, char** argv){
 	DBG_CHECK_SAVED(
-		std::cout << "CAREFUL RUNNING SATEX !!!!!" << std::endl;
-		std::cout << "CAREFUL RUNNING SATEX !!!!!" << std::endl;
-		std::cout << "CAREFUL RUNNING SATEX !!!!!" << std::endl;
-		std::cout << "CAREFUL RUNNING SATEX !!!!!" << std::endl;
+		std::cout << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
+		std::cout << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
+		std::cout << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
+		std::cout << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
 	);
-	DBG(std::cout << "FULL_DEBUG is defined" << std::endl);
-	BRAIN_CK((std::cout << "doing CKs (plain CKs)" << std::endl) && true);
-	BRAIN_CK_0((std::cout << "doing CK_0s" << std::endl) && true);
-	BRAIN_CK_1((std::cout << "doing CK_1s" << std::endl) && true);
-	BRAIN_CK_2((std::cout << "doing CK_2s" << std::endl) && true);
+	DBG(std::cout << "FULL_DEBUG is defined" << bj_eol);
+	BRAIN_CK((std::cout << "doing CKs (plain CKs)" << bj_eol) && true);
+	BRAIN_CK_0((std::cout << "doing CK_0s" << bj_eol) && true);
+	BRAIN_CK_1((std::cout << "doing CK_1s" << bj_eol) && true);
+	BRAIN_CK_2((std::cout << "doing CK_2s" << bj_eol) && true);
 
 	SUPPORT_CK(sizeof(t_1byte) == 1);
 	SUPPORT_CK(sizeof(long) == sizeof(void*));
@@ -1173,19 +1173,19 @@ int	solver_main(int argc, char** argv){
 	//start_tm = run_time();
 
 	if(args_ok){
-		PRT_OUT(1, os << ".STARTING AT " << run_time() << std::endl);
+		PRT_OUT(1, os << ".STARTING AT " << run_time() << bj_eol);
 
 		double tot_mem = (double)(MEM_STATS.num_bytes_available);
 		GLB().batch_stat_mem_used.vs_max_val = tot_mem;
 
 		PRT_OUT(0, os << "Starting with "
 			<< MEM_STATS.num_bytes_available << " bytes available" 
-			<< std::endl); 
+			<< bj_eol); 
 		DBG(PRT_OUT(1, os << "DEBUG_BRAIN activated" 
-			<< std::endl));
+			<< bj_eol));
 		call_and_handle_exceptions(do_all_instances);
 
-		PRT_OUT(1, os << ".ENDING AT " << run_time() << std::endl);
+		PRT_OUT(1, os << ".ENDING AT " << run_time() << bj_eol);
 	}
 
 	GLB().dbg_start_dbg_entries.clear(true, true);
@@ -1205,16 +1205,16 @@ int	solver_main(int argc, char** argv){
 		DO_FINAL_GETCHAR;
 	}
 
-	DBG(std::cout << "FULL_DEBUG is defined" << std::endl);
-	BRAIN_CK((std::cout << "doing CKs (plain CKs)" << std::endl) && true);
-	BRAIN_CK_0((std::cout << "doing CK_0s" << std::endl) && true);
-	BRAIN_CK_1((std::cout << "doing CK_1s" << std::endl) && true);
-	BRAIN_CK_2((std::cout << "doing CK_2s" << std::endl) && true);
+	DBG(std::cout << "FULL_DEBUG is defined" << bj_eol);
+	BRAIN_CK((std::cout << "doing CKs (plain CKs)" << bj_eol) && true);
+	BRAIN_CK_0((std::cout << "doing CK_0s" << bj_eol) && true);
+	BRAIN_CK_1((std::cout << "doing CK_1s" << bj_eol) && true);
+	BRAIN_CK_2((std::cout << "doing CK_2s" << bj_eol) && true);
 	DBG_CHECK_SAVED(
-		std::cout << "CAREFUL RUNNING SATEX !!!!!" << std::endl;
-		std::cout << "CAREFUL RUNNING SATEX !!!!!" << std::endl;
-		std::cout << "CAREFUL RUNNING SATEX !!!!!" << std::endl;
-		std::cout << "CAREFUL RUNNING SATEX !!!!!" << std::endl;
+		std::cout << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
+		std::cout << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
+		std::cout << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
+		std::cout << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
 	);
 
 	return resp;

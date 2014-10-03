@@ -43,11 +43,11 @@ Declaration of functions to read and parse dimacs files.
 #include <ftw.h>
 */
 
-#include <iostream>
 #include <fstream>
 #include <sstream>
 
 #include "config.h"
+#include "bj_stream.h"
 #include "print_macros.h"
 
 class dima_dims;
@@ -73,7 +73,7 @@ DECLARE_PRINT_FUNCS(dima_dims)
 
 void read_file(ch_string f_nam, row<char>& f_data);
 void read_problem_decl(const char*& pt_in, long& num_var, long& num_ccl, long& line);
-void print_dimacs_of(std::ostream& os, row<long>& all_lits, long num_cla, long num_var);
+void print_dimacs_of(bj_ostream& os, row<long>& all_lits, long num_cla, long num_var);
 
 //=================================================================
 // dima_dims
@@ -109,7 +109,7 @@ public:
 		return vv;
 	}
 
-	std::ostream&	print_dima_dims(std::ostream& os, bool from_pt = false){
+	bj_ostream&	print_dima_dims(bj_ostream& os, bool from_pt = false){
 		os << "dd=[";
 		os << " tc=" << dd_tot_ccls;
 		os << " tv=" << dd_tot_vars;

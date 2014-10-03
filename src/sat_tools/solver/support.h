@@ -59,7 +59,6 @@ Declaration of classes that support and assist the system.
 // includes
 
 #include <limits>
-#include <iostream>
 #include <fstream>
 #include <sstream>
 #include <set>
@@ -101,7 +100,7 @@ extern bool	dbg_bad_cycle1;
 		if(DBG_COND(GLB().out_lev, lev, \
 				(GLB().out_os != NULL_PT))) \
 		{ \
-			std::ostream& os = *(GLB().out_os); \
+			bj_ostream& os = *(GLB().out_os); \
 			comm; \
 			os.flush(); \
 		} \
@@ -144,9 +143,9 @@ bool	dbg_print_cond_func(bool prm,
 		dbg_print_cond_func(DBG_COND(GLB().dbg_lev, lev, cond), \
 			false, "NO_NAME", 0, #cond, lev); \
 		if(DBG_COND(GLB().dbg_lev, lev, cond)){ \
-			std::ostream& os = *(GLB().dbg_os); \
+			bj_ostream& os = *(GLB().dbg_os); \
 			comm; \
-			os << std::endl; \
+			os << bj_eol; \
 			os.flush(); \
 		} \
 	) \
@@ -157,7 +156,7 @@ bool	dbg_print_cond_func(bool prm,
 
 #define	DBG_COMMAND(lev, comm) \
 		if(DBG_COND(GLB().dbg_lev, lev, true)){ \
-			std::ostream& os = *(GLB().dbg_os); \
+			bj_ostream& os = *(GLB().dbg_os); \
 			DBG(comm); \
 			os.flush(); \
 		} \
@@ -266,16 +265,16 @@ public:
 	}
 
 	static
-	std::ostream& 	print_headers(std::ostream& os);
+	bj_ostream& 	print_headers(bj_ostream& os);
 
-	std::ostream& 	print_instance_info(std::ostream& os);
+	bj_ostream& 	print_instance_info(bj_ostream& os);
 
 	void		parse_instance(ch_string str_ln, long line);
 	ch_string	parse_field(const char*& pt_in);
 };
 
 inline
-std::ostream& operator << (std::ostream& os, instance_info& obj){
+bj_ostream& operator << (bj_ostream& os, instance_info& obj){
 	return obj.print_instance_info(os);
 }
 
@@ -295,7 +294,7 @@ class debug_entry {
 	~debug_entry(){
 	}
 
-	std::ostream& 	print_debug_entry(std::ostream& os);
+	bj_ostream& 	print_debug_entry(bj_ostream& os);
 
 };
 
@@ -364,15 +363,15 @@ public:
 
 	brain*			pt_brain;
 
-	std::ostream*		out_os;
+	bj_ostream*		out_os;
 	row<bool>		out_lev;
 
 	mem_size 		dbg_mem_at_start;
 
 	ch_string		dbg_file_name;
 	std::ofstream		dbg_file;
-	std::ostream*		dbg_os;
-	std::ostream*		dbg_os_bak;
+	bj_ostream*		dbg_os;
+	bj_ostream*		dbg_os_bak;
 	row<bool>		dbg_lev;
 
 	bool			dbg_skip_print_info;
@@ -443,13 +442,13 @@ public:
 		init_global_data();
 		MEM_CTRL(dbg_mem_at_start = MEM_STATS.num_bytes_in_use;)
 
-		//std::ostream& os = std::cout;
-		//os << "creating 'global data' num_bytes_in_use = " << MEM_STATS.num_bytes_in_use << std::endl;
+		//bj_ostream& os = std::cout;
+		//os << "creating 'global data' num_bytes_in_use = " << MEM_STATS.num_bytes_in_use << bj_eol;
 	}
 
 	~global_data(){
-		//std::ostream& os = std::cout;
-		//os << "destroying 'global data' num_bytes_in_use = " << MEM_STATS.num_bytes_in_use << std::endl;
+		//bj_ostream& os = std::cout;
+		//os << "destroying 'global data' num_bytes_in_use = " << MEM_STATS.num_bytes_in_use << bj_eol;
 
 		MEM_CK(dbg_mem_at_start == MEM_STATS.num_bytes_in_use);
 		finish_global_data();
@@ -507,7 +506,7 @@ public:
 
 	void 	dbg_update_config_entries();
 
-	std::ostream& 	get_dbg_os(){
+	bj_ostream& 	get_dbg_os(){
 		if(dbg_os != NULL_PT){
 			return *dbg_os;
 		}
@@ -515,10 +514,10 @@ public:
 	}
 
 	void	dbg_default_info(){
-		std::ostream& os = *(dbg_os);
+		bj_ostream& os = *(dbg_os);
 	
 		os << "NO DBG INFO AVAILABLE " << 
-		"(define a func for this error code)" << std::endl; 
+		"(define a func for this error code)" << bj_eol; 
 	}
 
 	ch_string	get_curr_f_nam(){
@@ -539,7 +538,7 @@ public:
 		return f_nam;
 	}
 
-	std::ostream&	get_os(){
+	bj_ostream&	get_os(){
 		if(out_os != NULL_PT){
 			return *out_os;
 		}
@@ -562,12 +561,12 @@ public:
 
 	//int	walk_neuron_tree(ch_string& dir_nm);
 
-	std::ostream&	print_mini_stats(std::ostream& os);
-	std::ostream& 	print_stats(std::ostream& os, double current_secs = 0.0);
+	bj_ostream&	print_mini_stats(bj_ostream& os);
+	bj_ostream& 	print_stats(bj_ostream& os, double current_secs = 0.0);
 
-	std::ostream&	print_mem_used(std::ostream& os);
-	std::ostream&	print_totals(std::ostream& os, double curr_tm = 0.0);
-	std::ostream&	print_final_totals(std::ostream& os);
+	bj_ostream&	print_mem_used(bj_ostream& os);
+	bj_ostream&	print_totals(bj_ostream& os, double curr_tm = 0.0);
+	bj_ostream&	print_final_totals(bj_ostream& os);
 	void		print_batch_consec();
 
 };
@@ -576,8 +575,8 @@ public:
 // FUNCTION
 
 inline
-std::ostream& 	
-instance_info::print_headers(std::ostream& os){
+bj_ostream& 	
+instance_info::print_headers(bj_ostream& os){
 	ch_string sep = RESULT_FIELD_SEP;
 	os << "file_path" << sep;
 	os << "solve_time" << sep;
@@ -590,8 +589,8 @@ instance_info::print_headers(std::ostream& os){
 }
 
 inline
-std::ostream& 	
-instance_info::print_instance_info(std::ostream& os){
+bj_ostream& 	
+instance_info::print_instance_info(bj_ostream& os){
 	ch_string sep = RESULT_FIELD_SEP;
 	os << ist_file_path << sep;
 	os << satisf_val_nams[ist_result] << sep;
@@ -604,14 +603,14 @@ instance_info::print_instance_info(std::ostream& os){
 }
 
 inline
-std::ostream& 	
-debug_entry::print_debug_entry(std::ostream& os){
+bj_ostream& 	
+debug_entry::print_debug_entry(bj_ostream& os){
 	os << "dbg(p=" << dbg_round << ", i=" << dbg_id << ")";
 	return os;
 }
 
 inline
-std::ostream& operator << (std::ostream& os, debug_entry& dbg_ety){
+bj_ostream& operator << (bj_ostream& os, debug_entry& dbg_ety){
 	return dbg_ety.print_debug_entry(os);
 }
 
@@ -631,7 +630,7 @@ void	chomp_string(ch_string& s1);
 void	read_batch_file(row<ch_string*>& names);
 void	read_batch_instances(ch_string file_nm, row<instance_info>& f_insts);
 bool	all_results_batch_instances(ch_string file_nm, satisf_val r_val);
-void	get_enter(std::ostream& os, ch_string msg);
+void	get_enter(bj_ostream& os, ch_string msg);
 void	do_all_instances();
 int		tests_main_(int argc, char** argv);
 int		solver_main(int argc, char** argv);

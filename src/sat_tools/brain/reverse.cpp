@@ -163,19 +163,19 @@ brain::reverse(){
 	BRAIN_CK(all_notes0 == 0);
 	BRAIN_CK(br_semi_monos.is_empty());
 
-	DBG_PRT(110, os << "BEFORE_REVERSE " << br_current_ticket << std::endl; 
+	DBG_PRT(110, os << "BEFORE_REVERSE " << br_current_ticket << bj_eol; 
 		print_trail(os);
 		os << " trl_lv" << trail_level()
 		<< " brn_lv" << level()
 	);
 	DBG_PRT(24,
-		os << "BEFORE_REVERSE" << std::endl;
+		os << "BEFORE_REVERSE" << bj_eol;
 		print_trail(os);
-		os << "brn_tk=" << br_current_ticket << std::endl;
-		os << "learned=" << std::endl;
+		os << "brn_tk=" << br_current_ticket << bj_eol;
+		os << "learned=" << bj_eol;
 		data_level().ld_learned.print_row_data(os, true, "\n");
-		os << "cfl=" << br_conflict_found << std::endl;
-		//os << "pulsate. BEFORE conflit treatment. Type ENTER to continue..." << std::endl;
+		os << "cfl=" << br_conflict_found << bj_eol;
+		//os << "pulsate. BEFORE conflit treatment. Type ENTER to continue..." << bj_eol;
 		//DO_GETCHAR
 	);
 	DBG_PRT(14, print_trail(os));
@@ -296,10 +296,10 @@ brain::reverse(){
 					BRAIN_CK(lv_map0.dbg_ck_used_simple_no_satisf(mo_save, brn));
 					BRAIN_CK(lv_map0.map_ck_simple_no_satisf(mo_save, brn));
 
-					DBG_PRT(112, os << "SAVING MAP" << std::endl;
+					DBG_PRT(112, os << "SAVING MAP" << bj_eol;
 						brn.print_trail(os);
 						os << " up_dom=" << (void*)(brn.get_last_upper_map())
-						<< " save_map=" << (void*)(&(lv_map0)) << std::endl
+						<< " save_map=" << (void*)(&(lv_map0)) << bj_eol
 						<< " br_maps_active=" << brn.br_maps_active
 					);
 					DBG_PRT(112, os << "HIT RETURN TO CONTINUE...");
@@ -310,7 +310,7 @@ brain::reverse(){
 						brn.br_num_memo++;
 					}
 
-					DBG_PRT(54, os << "writing LV=" << level() << std::endl;
+					DBG_PRT(54, os << "writing LV=" << level() << bj_eol;
 						os << data_level()
 					);
 				}
@@ -373,11 +373,11 @@ brain::reverse(){
 			DBG(had_n3 = true);
 			while(! qua.in_qu_dominated(brn)){
 				DBG_PRT(112, os << "NOT dom (case 1) qua=" << &qua << " up_dom=" << get_last_upper_map());
-				DBG_PRT(54, os << "NOT dom (case 1) qua=" << &qua << std::endl;
+				DBG_PRT(54, os << "NOT dom (case 1) qua=" << &qua << bj_eol;
 					print_trail(os);
 
 					os << " up_dom=" << get_last_upper_map() 
-					<< " qu_curr_map=" << qua.qu_curr_map << std::endl
+					<< " qu_curr_map=" << qua.qu_curr_map << bj_eol
 					<< " br_maps_active=" << br_maps_active
 				);
 				deactivate_last_map();
@@ -399,10 +399,10 @@ brain::reverse(){
 			DBG(had_n0 = true);
 			while(! qua.in_qu_dominated(brn)){
 				DBG_PRT(112, os << "NOT dom (case 2) qua=" << &qua << " up_dom=" << get_last_upper_map());
-				DBG_PRT(54, os << "NOT dom (case 2) qua=" << &qua << std::endl;
+				DBG_PRT(54, os << "NOT dom (case 2) qua=" << &qua << bj_eol;
 					print_trail(os);
 					os << " up_dom=" << get_last_upper_map() 
-					<< " qu_curr_map=" << qua.qu_curr_map << std::endl
+					<< " qu_curr_map=" << qua.qu_curr_map << bj_eol
 					<< " br_maps_active=" << br_maps_active
 				);
 				deactivate_last_map();
@@ -555,19 +555,19 @@ brain::reverse(){
 
 	BRAIN_CK((level() == ROOT_LEVEL) || lv_has_learned());
 
-	DBG_PRT(111, os << "AFTER_REVERSE" << std::endl; 
+	DBG_PRT(111, os << "AFTER_REVERSE" << bj_eol; 
 		print_trail(os);
-		//os << " br_maps_active=" << br_maps_active << std::endl;
-		os << "brn_tk=" << br_current_ticket << std::endl;
-		os << "lv_map=" << data_level().ld_map0 << std::endl;
-		os << "learned=" << std::endl;
+		//os << " br_maps_active=" << br_maps_active << bj_eol;
+		os << "brn_tk=" << br_current_ticket << bj_eol;
+		os << "lv_map=" << data_level().ld_map0 << bj_eol;
+		os << "learned=" << bj_eol;
 		data_level().ld_learned.print_row_data(os, true, "\n");
-		os << "dct=" << std::endl;
+		os << "dct=" << bj_eol;
 		os << dct;
-		os << "AFTER_REVERSE. Type ENTER to continue..." << std::endl;
+		os << "AFTER_REVERSE. Type ENTER to continue..." << bj_eol;
 		DO_GETCHAR
 	);
-	DBG_PRT(110, os << "AFTER_REVERSE " << br_current_ticket << std::endl;
+	DBG_PRT(110, os << "AFTER_REVERSE " << br_current_ticket << bj_eol;
 		print_trail(os);
 		os << " trl_lv" << trail_level()
 		<< " brn_lv" << level()
@@ -1015,13 +1015,13 @@ memap::ck_guide_idx(coloring& guide_col, dbg_call_id dbg_id){
 	MARK_USED(qua_sz);
 
 	DBG_PRT_COND(DBG_ALL_LVS, ! ((qua_sz * 2) == guide_col.co_quas.size()) ,
-		os << "ABORTING_DATA " << std::endl;
-		os << " dbg_id=" << dbg_id << std::endl;
-		os << " qua_sz=" << qua_sz << std::endl;
-		os << " guide_sz=" << guide_col.co_quas.size() << std::endl;
-		os << " guide=" << guide_col << std::endl;
-		os << " map=" << *this << std::endl;
-		os << "END_OF_aborting_data" << std::endl;
+		os << "ABORTING_DATA " << bj_eol;
+		os << " dbg_id=" << dbg_id << bj_eol;
+		os << " qua_sz=" << qua_sz << bj_eol;
+		os << " guide_sz=" << guide_col.co_quas.size() << bj_eol;
+		os << " guide=" << guide_col << bj_eol;
+		os << " map=" << *this << bj_eol;
+		os << "END_OF_aborting_data" << bj_eol;
 	);
 	BRAIN_CK((qua_sz * 2) == guide_col.co_quas.size());
 	return true;
@@ -1097,7 +1097,7 @@ memap::ck_map_guides(dbg_call_id dbg_id){
 void
 memap::map_replace_with(brain& brn, memap& mpp, dbg_call_id call_id){
 
-	DBG_PRT(113, os << "before_replace call_id=" << call_id << " tk=" << brn.br_current_ticket << std::endl; 
+	DBG_PRT(113, os << "before_replace call_id=" << call_id << " tk=" << brn.br_current_ticket << bj_eol; 
 		//os << " mpp" << mpp
 	);
 	BRAIN_CK(mpp.ck_map_guides(dbg_call_1));
@@ -1135,7 +1135,7 @@ memap::map_replace_with(brain& brn, memap& mpp, dbg_call_id call_id){
 
 	mpp.reset_memap(brn);
 	BRAIN_CK(mpp.is_ma_virgin());
-	DBG_PRT(113, os << "AFTER_REPLACE call_id=" << call_id << " tk=" << brn.br_current_ticket << std::endl; 
+	DBG_PRT(113, os << "AFTER_REPLACE call_id=" << call_id << " tk=" << brn.br_current_ticket << bj_eol; 
 		//os << " the_mpp" << *this
 	);
 	BRAIN_CK(ck_map_guides(dbg_call_2));
@@ -1310,10 +1310,10 @@ memap::map_ck_contained_in(brain& brn, coloring& colr, dbg_call_id dbg_id){
 	row<neuron*>& all_neus = colr.co_neus;
 
 	DBG_PRT_COND(DBG_ALL_LVS, ! (ma_szs_dotted.is_valid_idx(szs_idx)) ,
-		os << "ABORTING_DATA " << std::endl;
-		os << " dbg_id=" << dbg_id << std::endl;
-		os << " szs_idx=" << szs_idx << std::endl;
-		os << " ma_szs_dotted=" << ma_szs_dotted << std::endl;
+		os << "ABORTING_DATA " << bj_eol;
+		os << " dbg_id=" << dbg_id << bj_eol;
+		os << " szs_idx=" << szs_idx << bj_eol;
+		os << " ma_szs_dotted=" << ma_szs_dotted << bj_eol;
 	);
 	BRAIN_CK(ma_szs_dotted.is_valid_idx(szs_idx));
 	BRAIN_CK(brn.br_tot_ne_spots == 0);
@@ -1382,16 +1382,16 @@ dbg_find_diff_tauto_vs_simple_neus(brain& brn, row<neuron*>& not_in_tauto, row<n
 }
 
 bool
-dbg_prt_diff_tauto_vs_simple_neus(std::ostream& os, brain& brn){
+dbg_prt_diff_tauto_vs_simple_neus(bj_ostream& os, brain& brn){
 	row<neuron*> not_in_tauto;
 	row<neuron*> not_in_simple;
 
 	dbg_find_diff_tauto_vs_simple_neus(brn, not_in_tauto, not_in_simple);
 
-	os << "not_in_tauto=" << std::endl;
-	os << not_in_tauto << std::endl;
-	os << "not_in_simple=" << std::endl;
-	os << not_in_simple << std::endl;
+	os << "not_in_tauto=" << bj_eol;
+	os << not_in_tauto << bj_eol;
+	os << "not_in_simple=" << bj_eol;
+	os << not_in_simple << bj_eol;
 
 	return true;
 }
@@ -1530,17 +1530,17 @@ memap::map_prepare_mem_oper(mem_op_t mm, brain& brn){
 	DBG_PRT_COND(115, (skg_dbg_canon_save_id == 21), 
 		sort_glb& dbg_ne_srg1 = brn.br_tauto_neus_srg;
 		sort_glb& dbg_qu_srg1 = brn.br_tauto_quas_srg;
-		os << " QUAS_STEP_SORTEES (after step)=" << std::endl;
+		os << " QUAS_STEP_SORTEES (after step)=" << bj_eol;
 		for(long aa = 0; aa < dbg_qu_srg1.sg_step_sortees.size(); aa++){
-			os << *(dbg_qu_srg1.sg_step_sortees[aa]) << std::endl;
+			os << *(dbg_qu_srg1.sg_step_sortees[aa]) << bj_eol;
 		}
-		os << " NEUS_STEP_SORTEES (after step)=" << std::endl;
+		os << " NEUS_STEP_SORTEES (after step)=" << bj_eol;
 		for(long aa = 0; aa < dbg_ne_srg1.sg_step_sortees.size(); aa++){
-			os << *(dbg_ne_srg1.sg_step_sortees[aa]) << std::endl;
+			os << *(dbg_ne_srg1.sg_step_sortees[aa]) << bj_eol;
 		}
-		os << " tauto=" << std::endl << tauto_cnf << std::endl 
-		<< "<<<< sha=" << std::endl << tauto_cnf.cf_sha_str << " sv_id" << skg_dbg_canon_save_id << std::endl;
-		os << "phd=" << phd << std::endl << " dbg_shas=" << dbg_shas << std::endl;
+		os << " tauto=" << bj_eol << tauto_cnf << bj_eol 
+		<< "<<<< sha=" << bj_eol << tauto_cnf.cf_sha_str << " sv_id" << skg_dbg_canon_save_id << bj_eol;
+		os << "phd=" << phd << bj_eol << " dbg_shas=" << dbg_shas << bj_eol;
 		dbg_prt_diff_tauto_vs_simple_neus(os, brn);
 	);
 	*/
@@ -1588,11 +1588,11 @@ memap::map_prepare_mem_oper(mem_op_t mm, brain& brn){
 
 	DBG_PRT_COND(100, (mm == mo_save), map_dbg_print(os, mm, brn));
 	DBG_PRT_COND(100, (mm == mo_save), 
-		os << "GUIDE=" << std::endl;
+		os << "GUIDE=" << bj_eol;
 		tmp_guide_ccls.print_row_data(os, true, "\n");
-		os << "TAUTO=" << std::endl;
+		os << "TAUTO=" << bj_eol;
 		ccls_tauto_cnf.print_row_data(os, true, "\n");
-		os << "DIFF=" << std::endl;
+		os << "DIFF=" << bj_eol;
 		ccls_diff_cnf.print_row_data(os, true, "\n");
 	);
 
@@ -1623,40 +1623,40 @@ memap::map_prepare_mem_oper(mem_op_t mm, brain& brn){
 }
 
 void
-memap::map_dbg_print(std::ostream& os, mem_op_t mm, brain& brn){
+memap::map_dbg_print(bj_ostream& os, mem_op_t mm, brain& brn){
 	canon_cnf& tmp_tauto_cnf = brn.br_tmp_wrt_tauto_cnf;
 	canon_cnf& tmp_diff_cnf = brn.br_tmp_wrt_diff_cnf;
 	canon_cnf& tmp_guide_cnf = brn.br_tmp_wrt_guide_cnf;
 
-	//os << STACK_STR << std::endl;
-	os << "DBG_PRT=" << std::endl;
-	os << this << std::endl;
-	os << "brn_tk=" << brn.br_current_ticket << std::endl;
+	//os << STACK_STR << bj_eol;
+	os << "DBG_PRT=" << bj_eol;
+	os << this << bj_eol;
+	os << "brn_tk=" << brn.br_current_ticket << bj_eol;
 	if(mm == mo_save){ os << "SAVE "; }
 	if(mm == mo_find){ os << "FIND "; }
 
-	//os << "CERO FILLED___________________________________________ " << std::endl;
+	//os << "CERO FILLED___________________________________________ " << bj_eol;
 	sort_glb& tauto_srg = brn.br_tauto_neus_srg;
-	os << " sg_dbg_cnf_tot_onelit=" << tauto_srg.sg_dbg_cnf_tot_onelit << std::endl;
+	os << " sg_dbg_cnf_tot_onelit=" << tauto_srg.sg_dbg_cnf_tot_onelit << bj_eol;
 
-	os << " TATUTO_STEP_SORTEES (after step)=" << std::endl;
+	os << " TATUTO_STEP_SORTEES (after step)=" << bj_eol;
 	for(long aa = 0; aa < tauto_srg.sg_step_sortees.size(); aa++){
-		os << *(tauto_srg.sg_step_sortees[aa]) << std::endl;
+		os << *(tauto_srg.sg_step_sortees[aa]) << bj_eol;
 	}
 
-	os << " TAUTO_CNF=" << std::endl;
-	os << tmp_tauto_cnf << std::endl;
-	os << " DIFF_CNF=" << std::endl;
-	os << tmp_diff_cnf << std::endl;
-	os << " GUIDE_CNF=" << std::endl;
-	os << tmp_guide_cnf << std::endl;
+	os << " TAUTO_CNF=" << bj_eol;
+	os << tmp_tauto_cnf << bj_eol;
+	os << " DIFF_CNF=" << bj_eol;
+	os << tmp_diff_cnf << bj_eol;
+	os << " GUIDE_CNF=" << bj_eol;
+	os << tmp_guide_cnf << bj_eol;
 
-	os << std::endl;
+	os << bj_eol;
 	os << " RECOIL_LV=" << brn.br_dbg_last_recoil_lv;
 
-	os << std::endl;
-	os << brn.get_my_inst().get_f_nam() << std::endl;
-	os << "=========================================================" << std::endl;
+	os << bj_eol;
+	os << brn.get_my_inst().get_f_nam() << bj_eol;
+	os << "=========================================================" << bj_eol;
 }
 
 bool
@@ -1698,13 +1698,13 @@ memap::map_oper(mem_op_t mm, brain& brn){
 		///////  start of debug of NO DEBUG
 
 		if(GLB().op_debug_clean_code && (skg_dbg_canon_find_id == 10)){
-			std::ostream& os = GLB().get_dbg_os();
+			bj_ostream& os = GLB().get_dbg_os();
 
-			os << "TRYING to find cnf=" << std::endl << tmp_diff_cnf << std::endl
-				<< "SHAS=" << std::endl << tmp_diff_cnf.cf_dbg_shas << std::endl
-				//<< "fst_vpth='" << fst_vpth << "'" << std::endl
-				<< "fst_idx= " << fst_idx << std::endl
-				<< "find_id= " << skg_dbg_canon_find_id << std::endl;
+			os << "TRYING to find cnf=" << bj_eol << tmp_diff_cnf << bj_eol
+				<< "SHAS=" << bj_eol << tmp_diff_cnf.cf_dbg_shas << bj_eol
+				//<< "fst_vpth='" << fst_vpth << "'" << bj_eol
+				<< "fst_idx= " << fst_idx << bj_eol
+				<< "find_id= " << skg_dbg_canon_find_id << bj_eol;
 
 			GLB().print_stats(os);
 		}
@@ -1714,9 +1714,9 @@ memap::map_oper(mem_op_t mm, brain& brn){
 		oper_ok = (fst_idx != INVALID_NATURAL);
 		if(oper_ok){
 			ch_string fst_vpth = tmp_diff_cnf.get_variant_path(skg, fst_idx, skg.in_verif());
-			DBG_PRT(115, os << "found cnf=" << std::endl << tmp_diff_cnf << "FOUND CNF" << std::endl
-				<< "SHAS=" << std::endl << tmp_diff_cnf.cf_dbg_shas << std::endl
-				<< "fst_vpth='" << fst_vpth << "'" << std::endl
+			DBG_PRT(115, os << "found cnf=" << bj_eol << tmp_diff_cnf << "FOUND CNF" << bj_eol
+				<< "SHAS=" << bj_eol << tmp_diff_cnf.cf_dbg_shas << bj_eol
+				<< "fst_vpth='" << fst_vpth << "'" << bj_eol
 				<< "find_id= " << skg_dbg_canon_find_id);
 			DBG_COMMAND(115, getchar());
 

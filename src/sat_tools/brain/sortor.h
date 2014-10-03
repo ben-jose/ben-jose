@@ -486,7 +486,7 @@ public:
 		so_ccl.cc_clear(false);
 	}
 	
-	std::ostream&	print_sortee(std::ostream& os, bool from_pt = false);
+	bj_ostream&	print_sortee(bj_ostream& os, bool from_pt = false);
 };
 
 template<class obj_t1>
@@ -751,9 +751,9 @@ public:
 
 	void		walk_to_srs_row_rec(long& consec, row<sorset*>& sorted);
 
-	void		print_data_sorset(std::ostream& os);
-	void		print_tree_sorset(std::ostream& os, long level);
-	std::ostream&	print_sorset(std::ostream& os, bool from_pt = false);
+	void		print_data_sorset(bj_ostream& os);
+	void		print_tree_sorset(bj_ostream& os, long level);
+	bj_ostream&	print_sorset(bj_ostream& os, bool from_pt = false);
 
 };
 
@@ -1052,7 +1052,7 @@ public:
 		return ck1;
 	}
 
-	std::ostream&	print_sort_glb(std::ostream& os, bool from_pt = false);
+	bj_ostream&	print_sort_glb(bj_ostream& os, bool from_pt = false);
 
 	template<class obj_t1>
 	bool		sort_to_row_and_all_consec(row<obj_t1*>& sorted, bool& all_consec){
@@ -1104,10 +1104,10 @@ sortee&
 as_sortee(binder* bdr){
 	SORTER_CK_1(bdr != NULL_PT);
 	DBG_PRT_COND(DBG_ALL_LVS, ! (bdr->get_cls_name() == sortee::CL_NAME) ,
-		os << "ABORTING_DATA " << std::endl;
-		os << "bdr->get_cls_name()=" << bdr->get_cls_name() << std::endl;
-		os << "sortee::CL_NAME=" << sortee::CL_NAME << std::endl;
-		os << "END_OF_aborting_data" << std::endl;
+		os << "ABORTING_DATA " << bj_eol;
+		os << "bdr->get_cls_name()=" << bdr->get_cls_name() << bj_eol;
+		os << "sortee::CL_NAME=" << sortee::CL_NAME << bj_eol;
+		os << "END_OF_aborting_data" << bj_eol;
 	);
 	SORTER_CK_1(bdr->get_cls_name() == sortee::CL_NAME);
 	return *((sortee*)(bdr));

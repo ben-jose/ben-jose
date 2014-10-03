@@ -39,7 +39,6 @@ file for test and debugging purposes.
 #include <map>
 #include <iterator>
 
-#include <iostream>
 #include <gmpxx.h>
 
 //     g++ t1.cpp -lgmpxx -lgmp -o tt.exe
@@ -69,15 +68,15 @@ void 	test_thrw_obj();
 
 void
 test_creat(int argc, char** argv){
-	std::ostream& os = std::cout;
+	bj_ostream& os = std::cout;
 	if(argc < 2){
-		os << "Faltan args" << std::endl;
+		os << "Faltan args" << bj_eol;
 		return;
 	}
 
 	ch_string pth = argv[1];
 
-	os << "pth=" << pth << std::endl;
+	os << "pth=" << pth << bj_eol;
 	bool pth_ok = path_create(pth);
 	MARK_USED(pth_ok);
 	BRAIN_CK(pth_ok);
@@ -85,7 +84,7 @@ test_creat(int argc, char** argv){
 
 void
 find_nth_dir(long nn, ch_string& pth, ch_string& sub_pth){
-	std::ostream& os = std::cout;
+	bj_ostream& os = std::cout;
 	typedef ch_string::size_type pos_t;
 	//pos_t pp = ch_string::npos;
 	pos_t pp = 0;
@@ -98,30 +97,30 @@ find_nth_dir(long nn, ch_string& pth, ch_string& sub_pth){
 		pp = pth.find('/', pp + 1);
 	}
 	sub_pth = pth.substr(0, pp);
-	os << "SUB=" << sub_pth << std::endl;
+	os << "SUB=" << sub_pth << bj_eol;
 }
 
 void	test_long_to_pth(int argc, char** argv){
-	std::ostream& os = std::cout;
+	bj_ostream& os = std::cout;
 	if(argc < 2){
-		os << "Faltan args" << std::endl;
+		os << "Faltan args" << bj_eol;
 		return;
 	}
-	os << "arg1=" << argv[1] << std::endl;
+	os << "arg1=" << argv[1] << bj_eol;
 	long nn = atol(argv[1]);
-	os << "L1=" << nn << std::endl;
+	os << "L1=" << nn << bj_eol;
 	//ch_string pth = long_to_path(nn, 3);
 	ch_string pth = long_to_path(nn, 3);
-	os << "pth=" << pth << std::endl;
+	os << "pth=" << pth << bj_eol;
 }
 
 void	test_dims_to_path(int argc, char** argv){
-	std::ostream& os = std::cout;
+	bj_ostream& os = std::cout;
 
 	GLB().dbg_lev[96] = true;
 
 	if(argc < 4){
-		os << "Faltan args" << std::endl;
+		os << "Faltan args" << bj_eol;
 		return;
 	}
 	long tl = atol(argv[1]);
@@ -139,8 +138,8 @@ void	test_dims_to_path(int argc, char** argv){
 
 	pth = cnf_dims_to_path(dims);
 
-	os << " tl=" << tl << " nc=" << nc << " nv=" << nv << " tt=" << tt << std::endl;
-	os << " pth='" << pth << "'" << std::endl;
+	os << " tl=" << tl << " nc=" << nc << " nv=" << nv << " tt=" << tt << bj_eol;
+	os << " pth='" << pth << "'" << bj_eol;
 }
 
 struct ltstr {
@@ -151,7 +150,7 @@ struct ltstr {
 
 void
 test_sha_pth(){
-	std::ostream& os = std::cout;
+	bj_ostream& os = std::cout;
 
 	ch_string str_cont = "HOLA_MUNDO";
 	ch_string sha_txt;
@@ -160,8 +159,8 @@ test_sha_pth(){
 	canon_sha(cnn, sha_txt);
 	slice_str_to_path(sha_txt);
 
-	os << "'" << sha_txt << "'" << std::endl;
-	os << "sz=" << sha_txt.size() << std::endl;
+	os << "'" << sha_txt << "'" << bj_eol;
+	os << "sz=" << sha_txt.size() << bj_eol;
 }
 
 std::set<ch_string> selected_leafs;
@@ -185,7 +184,7 @@ void
 gen_clause(tak_mak& gg, row_long_t& the_ccl,
 		long max_ccl_sz, long num_vars_cnf)
 {
-	//std::ostream& os = std::cout;
+	//bj_ostream& os = std::cout;
 
 	unsigned long ccl_sz = gg.gen_rand_int32_ie(2, max_ccl_sz);
 	long num_neg = gg.gen_rand_int32_ie(1, ccl_sz);
@@ -196,8 +195,8 @@ gen_clause(tak_mak& gg, row_long_t& the_ccl,
 	typedef std::set<long>			set_long_t;
 	typedef set_long_t::iterator		set_long_iter_t;
 
-	//os << "ccl_sz=" << ccl_sz << std::endl;
-	//os << "num_vars_cnf=" << num_vars_cnf << std::endl;
+	//os << "ccl_sz=" << ccl_sz << bj_eol;
+	//os << "num_vars_cnf=" << num_vars_cnf << bj_eol;
 
 	std::set<long> varset;
 	for(unsigned long aa = 0; aa < ccl_sz; aa++){	
@@ -218,7 +217,7 @@ gen_clause(tak_mak& gg, row_long_t& the_ccl,
 		the_ccl.push(vv);
 	}
 
-	//os << "start_sorting=" << the_ccl << std::endl;
+	//os << "start_sorting=" << the_ccl << bj_eol;
 
 	the_ccl.mix_sort(cmp_canon_ids);
 	BRAIN_CK(the_ccl.is_sorted(cmp_canon_ids));
@@ -247,7 +246,7 @@ void
 gen_ccls_cnf(tak_mak& gg, canon_cnf& the_cnf, long max_ccl_sz,
 		long max_num_ccls_cnf, long max_num_vars_cnf)
 {
-	//std::ostream& os = std::cout;
+	//bj_ostream& os = std::cout;
 
 	row<canon_clause*>& all_ccl = the_cnf.cf_clauses;
 	BRAIN_CK(all_ccl.is_empty());
@@ -255,8 +254,8 @@ gen_ccls_cnf(tak_mak& gg, canon_cnf& the_cnf, long max_ccl_sz,
 	long cnf_sz = gg.gen_rand_int32_ie(1, max_num_ccls_cnf);
 	long num_vars = gg.gen_rand_int32_ie(2, max_num_vars_cnf);
 
-	//os << "cnf_sz=" << cnf_sz << std::endl;
-	//os << "num_vars=" << num_vars << std::endl;
+	//os << "cnf_sz=" << cnf_sz << bj_eol;
+	//os << "num_vars=" << num_vars << bj_eol;
 
 	long tot_lits = 0;
 	long tot_twolits = 0;
@@ -316,7 +315,7 @@ recalc_cnf(canon_cnf& the_cnf){
 
 void
 gen_cnf_skls(tak_mak& gg, canon_cnf& the_cnf, long num_skls, row<ch_string>& pths){
-	std::ostream& os = std::cout;
+	bj_ostream& os = std::cout;
 
 	pths.push(the_cnf.get_canon_name());
 
@@ -338,7 +337,7 @@ gen_cnf_skls(tak_mak& gg, canon_cnf& the_cnf, long num_skls, row<ch_string>& pth
 		}
 		recalc_cnf(the_cnf);
 
-		os << the_cnf.cf_phdat << " has_ph=" << the_cnf.has_phase_path() << std::endl;
+		os << the_cnf.cf_phdat << " has_ph=" << the_cnf.has_phase_path() << bj_eol;
 
 		pths.push(the_cnf.get_canon_name());
 		//the_cnf.print_canon_cnf(os);
@@ -350,7 +349,7 @@ gen_cnf_skls(tak_mak& gg, canon_cnf& the_cnf, long num_skls, row<ch_string>& pth
 void
 test_nfwt(int argc, char** argv)
 {
-	std::ostream& os = std::cout;
+	bj_ostream& os = std::cout;
 	MARK_USED(os);
 
 	GLB().dbg_lev[2] = true;
@@ -438,7 +437,7 @@ test_nfwt(int argc, char** argv)
 
 	if(del_skl){
 		ch_string GSKE_ROOT = GSKE.kg_root_path + SKG_SKELETON_DIR;
-		os << "WARNING !!! deleting '" << GSKE_ROOT << "'" << std::endl;
+		os << "WARNING !!! deleting '" << GSKE_ROOT << "'" << bj_eol;
 		delete_directory(GSKE_ROOT);
 	}
 
@@ -451,15 +450,15 @@ test_nfwt(int argc, char** argv)
 
 		ch_string rel_pth = SKG_CNF_DIR + to_load;
 		ch_string full_pth = GSKE.as_full_path(rel_pth);
-		os << "to_load='" << full_pth << "'" << std::endl;
+		os << "to_load='" << full_pth << "'" << bj_eol;
 
 		bool all_ok = the_cnf.load_from(GSKE, full_pth);
 		if(all_ok){
 			the_cnf.print_canon_cnf(os);
 		} else {
-			os << "LOAD OF " << full_pth << " FAILED !!" << std::endl;
+			os << "LOAD OF " << full_pth << " FAILED !!" << bj_eol;
 		}
-		os << std::endl;
+		os << bj_eol;
 
 		load_ops.dec_sz();
 	}
@@ -467,21 +466,21 @@ test_nfwt(int argc, char** argv)
 		ch_string& to_load = pth_ld_ops.last();
 
 		ch_string full_pth = to_load;
-		os << "to_load='" << full_pth << "'" << std::endl;
+		os << "to_load='" << full_pth << "'" << bj_eol;
 
 		bool all_ok = the_cnf.load_from(GSKE, full_pth);
 		if(all_ok){
 			the_cnf.print_canon_cnf(os);
 		} else {
-			os << "LOAD OF " << full_pth << " FAILED !!" << std::endl;
+			os << "LOAD OF " << full_pth << " FAILED !!" << bj_eol;
 		}
-		os << std::endl;
+		os << bj_eol;
 
 		pth_ld_ops.dec_sz();
 	}
 	while(! delete_ops.is_empty()){
 		ch_string& to_del = delete_ops.last();
-		os << "to_del='" << to_del << "'" << std::endl;
+		os << "to_del='" << to_del << "'" << bj_eol;
 		delete_ops.dec_sz();
 	}
 
@@ -490,24 +489,24 @@ test_nfwt(int argc, char** argv)
 void
 test_realpath(int argc, char** argv)
 {
-	std::ostream& os = std::cout;
+	bj_ostream& os = std::cout;
 
 	/* Verify argv[1] is supplied */
 	if(argc < 2){
-		os << "Faltan agrs !!" << std::endl;
+		os << "Faltan agrs !!" << bj_eol;
 	}
 
 	ch_string pth = argv[1];
 	ch_string r_pth = path_to_absolute_path(pth);
 
-	os << "r_pth='" << r_pth << "'" << std::endl;
+	os << "r_pth='" << r_pth << "'" << bj_eol;
 }
 
 // ===============================================
 
 void
 gen_sub_cnf(tak_mak& gg, canon_cnf& src_cnf, canon_cnf& dst_cnf){
-	//std::ostream& os = std::cout;
+	//bj_ostream& os = std::cout;
 
 	dst_cnf.release_and_init(GSKE, true);
 
@@ -533,7 +532,7 @@ gen_sub_cnf(tak_mak& gg, canon_cnf& src_cnf, canon_cnf& dst_cnf){
 
 bool
 test_pair_subsets(tak_mak& rnd_gen, long n_iter){
-	std::ostream& os = std::cout;
+	bj_ostream& os = std::cout;
 	MARK_USED(os);
 
 	canon_cnf the_cnf;
@@ -570,7 +569,7 @@ test_pair_subsets(tak_mak& rnd_gen, long n_iter){
 
 void
 test_subsets(){
-	std::ostream& os = std::cout;
+	bj_ostream& os = std::cout;
 
 	MARK_USED(os);
 
@@ -581,7 +580,7 @@ test_subsets(){
 	GSKE.print_paths(os);
 
 	ch_string GSKE_ROOT = GSKE.kg_root_path + SKG_SKELETON_DIR;
-	os << "WARNING !!! deleting '" << GSKE_ROOT << "'" << std::endl;
+	os << "WARNING !!! deleting '" << GSKE_ROOT << "'" << bj_eol;
 	delete_directory(GSKE_ROOT);
 	//GLB().dbg_lev[80] = true;
 
@@ -595,11 +594,11 @@ test_subsets(){
 		os << aa << " ";
 		os.flush();
 	}
-	os << std::endl;
+	os << bj_eol;
 
 	GSKE.clear_all();
 
-	os << "2. FINISHING ..."  << std::endl;
+	os << "2. FINISHING ..."  << bj_eol;
 	os.flush();
 }
 
@@ -630,31 +629,31 @@ public:
 
 bool operator < (const cvals1& x, const cvals1& y) { return x.val1 < y.val1; }
 
-std::ostream&	operator << (std::ostream& os, const cvals1& x){
-	os << "vals=" << x.val1 << "," << x.val2 << std::endl;
+bj_ostream&	operator << (bj_ostream& os, const cvals1& x){
+	os << "vals=" << x.val1 << "," << x.val2 << bj_eol;
 	return os;
 }
 
 void test_sets(){
 
-	std::ostream& os = std::cout;
+	bj_ostream& os = std::cout;
 
 	std::set<cvals1> varset;
 
-	os << "num_vals_free=" << num_vals_free << std::endl;
+	os << "num_vals_free=" << num_vals_free << bj_eol;
 	for(unsigned long aa = 0; aa < 10; aa++){
 		cvals1 vv(aa, aa+5);
 		varset.insert(vv);
 	}
-	os << "num_vals_free=" << num_vals_free << std::endl;
+	os << "num_vals_free=" << num_vals_free << bj_eol;
 
 	copy(varset.begin(), varset.end(),
-			std::ostream_iterator<cvals1>(os, "\n"));
+	std::ostream_iterator<cvals1>(os, "\n"));
 	os.flush();
 
-	os << "num_vals_free=" << num_vals_free << std::endl;
+	os << "num_vals_free=" << num_vals_free << bj_eol;
 	varset.clear();
-	os << "num_vals_free=" << num_vals_free << std::endl;
+	os << "num_vals_free=" << num_vals_free << bj_eol;
 }
 
 // ========================
@@ -670,7 +669,7 @@ void	test_big_num(){
 	std::cout << "a is " << a << "\n";
 
 	ch_string s1 = a.get_str(2);
-	std::cout << "s1 is " << s1 << std::endl;
+	std::cout << "s1 is " << s1 << bj_eol;
 
 	//long cm1 = mpz_cmp(nu1.get_mpz_t(), nu2.get_mpz_t());
 
@@ -733,13 +732,13 @@ void	test_big2(){
 }
 
 void	test_big3(){
-	std::ostream& os = std::cout;
+	bj_ostream& os = std::cout;
 
 	mpz_class p1, p2;
 	p1 = 0;
 	p2 = 500;
 	for(long aa = 0; aa < 100; aa++){
-		os << "p1=" << p1 << " p2=" << p2 << std::endl;
+		os << "p1=" << p1 << " p2=" << p2 << bj_eol;
 		mpz_nextprime(p1.get_mpz_t(), p2.get_mpz_t());
 		p2 = p1;
 	}
@@ -747,7 +746,7 @@ void	test_big3(){
 }
 
 void	test_big4(){
-	std::ostream& os = std::cout;
+	bj_ostream& os = std::cout;
 
 	big_integer_t p1, p2, p3;
 
@@ -756,33 +755,33 @@ void	test_big4(){
 	p3 = "123412351346163457";
 
 	if(p1 != p3){
-		os << "numbers diff" << std::endl;
+		os << "numbers diff" << bj_eol;
 	}
 	if(p1 <= p2){
 
 
-		os << "p1 <= p2 :" << p1 << " <= " << p2 << std::endl;
+		os << "p1 <= p2 :" << p1 << " <= " << p2 << bj_eol;
 	} else {
-		os << "p1 > p2 :" << p1 << " > " << p2 << std::endl;
+		os << "p1 > p2 :" << p1 << " > " << p2 << bj_eol;
 	}
 }
 
 void	test_str1(){
-	std::ostream& os = std::cout;
+	bj_ostream& os = std::cout;
 
 	ch_string ss1;
 	ch_string ss2;
 	ss1 = "jose";
 	ss2 = " pedro pablo \n";
 	ss1 += ss2;
-	os << ss1 << std::endl;
+	os << ss1 << bj_eol;
 }
 
 void	test_symlk(int argc, char** argv){
-	std::ostream& os = std::cout;
+	bj_ostream& os = std::cout;
 
 	if(argc < 3){
-		os << "Faltan agrs !!" << std::endl;
+		os << "Faltan agrs !!" << bj_eol;
 		return;
 	}
 
@@ -793,10 +792,10 @@ void	test_symlk(int argc, char** argv){
 }
 
 void	test_tm_elapsed(int argc, char** argv){
-	std::ostream& os = std::cout;
+	bj_ostream& os = std::cout;
 	
 	if(argc < 3){
-		os << "Faltan agrs !!" << std::endl;
+		os << "Faltan agrs !!" << bj_eol;
 	}
 
 	ch_string oper = argv[1];
@@ -813,20 +812,20 @@ void	test_tm_elapsed(int argc, char** argv){
 	}
 
 	if((n_avg < 0) || (rd_ok < 0)){
-		os << "ERROR !!!!" << std::endl;
-		os << "ERROR !!!!" << std::endl;
-		os << "ERROR !!!!" << std::endl;
-		os << "ERROR !!!!" << std::endl;
+		os << "ERROR !!!!" << bj_eol;
+		os << "ERROR !!!!" << bj_eol;
+		os << "ERROR !!!!" << bj_eol;
+		os << "ERROR !!!!" << bj_eol;
 	}
 
-	os << "n_avg='" << n_avg << "'" << std::endl;
+	os << "n_avg='" << n_avg << "'" << bj_eol;
 }
 
 void	test_open_unlink(int argc, char** argv){
-	std::ostream& os = std::cout;
+	bj_ostream& os = std::cout;
 	
 	if(argc < 2){
-		os << "Faltan agrs !!" << std::endl;
+		os << "Faltan agrs !!" << bj_eol;
 	}
 
 	ch_string the_pth = argv[1];
@@ -837,13 +836,13 @@ void	test_open_unlink(int argc, char** argv){
 		ch_string top_pth = TEST_ROOT_PATH; 
 		ch_string full_pth = path_to_absolute_path(the_pth);
 
-		os << "DELETING " << full_pth << " ..." << std::endl;
+		os << "DELETING " << full_pth << " ..." << bj_eol;
 		path_delete(full_pth, top_pth);
 	} else {
 		std::ifstream istm;
 		istm.open(the_pth.c_str(), std::ios::binary);
 		if(istm.good() && istm.is_open()){
-			os << "File " << the_pth << " OK. Type ENTER ..." << std::endl;
+			os << "File " << the_pth << " OK. Type ENTER ..." << bj_eol;
 			getchar();
 
 			istm.seekg (0, std::ios::end);
@@ -851,7 +850,7 @@ void	test_open_unlink(int argc, char** argv){
 			istm.seekg (0, std::ios::beg);
 
 			if(file_sz < 0){
-				os << "ERROR 1" << std::endl;
+				os << "ERROR 1" << bj_eol;
 				abort_func(1);
 			}
 
@@ -861,7 +860,7 @@ void	test_open_unlink(int argc, char** argv){
 			istm.read(file_content, file_sz);
 			long num_read = istm.gcount();
 			if(num_read != file_sz){
-				os << "ERROR 2" << std::endl;
+				os << "ERROR 2" << bj_eol;
 				abort_func(1);
 			}
 			file_content[file_sz] = 0;
@@ -869,11 +868,11 @@ void	test_open_unlink(int argc, char** argv){
 			ch_string fdat = file_content;
 			tpl_free<char>(file_content, file_sz + 1);
 
-			os << fdat << std::endl;
+			os << fdat << bj_eol;
 
 			istm.close();
 		} else {
-			os << "Could NOT open file " << the_pth << std::endl;
+			os << "Could NOT open file " << the_pth << bj_eol;
 		}
 	}
 }
@@ -882,7 +881,7 @@ void	test_open_unlink(int argc, char** argv){
 
 int
 load_entry(const char *fpath, const struct stat *sb, int tflag, struct FTW *ftwbuf){
-	//std::ostream& os = std::cout;
+	//bj_ostream& os = std::cout;
 
 	MARK_USED(sb);
 	MARK_USED(ftwbuf);
@@ -909,7 +908,7 @@ load_entry(const char *fpath, const struct stat *sb, int tflag, struct FTW *ftwb
 				} else {
 					DBG_PRT(108, os << os << "LOAD OF " << full_pth << " FAILED !!");
 				}
-				//os << std::endl;
+				//os << bj_eol;
 				the_cnf.release_and_init(GSKE, true);
 			}
 		}
@@ -926,7 +925,7 @@ load_all_in_dir(ch_string& dir_nm){
 
 int
 update_elap_entry(const char *fpath, const struct stat *sb, int tflag, struct FTW *ftwbuf){
-	//std::ostream& os = std::cout;
+	//bj_ostream& os = std::cout;
 
 	MARK_USED(sb);
 	MARK_USED(ftwbuf);
@@ -999,13 +998,13 @@ test_skl(){
 	GLB().dbg_lev[2] = true;
 	//GLB().dbg_lev[95] = true;
 
-	std::ostream& os = std::cout;
+	bj_ostream& os = std::cout;
 	MARK_USED(os);
 
 	GSKE.kg_root_path = TEST_ROOT_PATH;
 
 	ch_string GSKE_ROOT = GSKE.kg_root_path + SKG_SKELETON_DIR;
-	os << "WARNING !!! deleting '" << GSKE_ROOT << "'" << std::endl;
+	os << "WARNING !!! deleting '" << GSKE_ROOT << "'" << bj_eol;
 	delete_directory(GSKE_ROOT);
 
 	GSKE.init_paths();
@@ -1015,7 +1014,7 @@ test_skl(){
 	GSKE.kg_verifying = false;
 	GSKE.kg_only_save = false;
 
-	os << "Type RETURN ..." << std::endl;
+	os << "Type RETURN ..." << bj_eol;
 	getchar();
 
 	GSKE.kg_save_canon = true;
@@ -1060,7 +1059,7 @@ test_skl(){
 
 	ch_string skl_nt_pth = GSKE.as_full_path(SKG_CNF_DIR);
 
-	os << "1. SAVING TEST ..."  << std::endl;
+	os << "1. SAVING TEST ..."  << bj_eol;
 
 	for(long aa = 0; aa < NUM_CNFS; aa++){
 		the_cnf.release_and_init(GSKE, true);
@@ -1069,7 +1068,7 @@ test_skl(){
 
 		ch_string cnn_name = the_cnf.get_cnf_path() + SKG_DIFF_NAME;
 		if(! GSKE.ref_exists(cnn_name)){
-			os << "num_test=" << aa << std::endl;
+			os << "num_test=" << aa << bj_eol;
 			the_cnf.save_cnf(GSKE, cnn_name);
 
 			long f_idx = the_cnf.first_vnt_i_super_of(GSKE);
@@ -1078,8 +1077,8 @@ test_skl(){
 
 		} else {
 			DBG_PRT(108, 
-				os << std::endl;
-				os << std::endl;
+				os << bj_eol;
+				os << bj_eol;
 				os << "!!! SKIPED num_test=" << aa;
 			);
 		}
@@ -1089,7 +1088,7 @@ test_skl(){
 		update_rnd_elap_in_dir(rnd_gen2, skl_nt_pth);
 	}
 
-	os << "3. LOADING TEST ..."  << std::endl;
+	os << "3. LOADING TEST ..."  << bj_eol;
 
 	bool fnd1 = GSKE.find_path(GSKE.as_full_path(rr_pth + "/test_ref1/"));
 	bool fnd2 = GSKE.find_path(GSKE.as_full_path(rr_pth + "/test_ref2/"));
@@ -1108,13 +1107,13 @@ test_skl(){
 	the_cnf.release_and_init(GSKE, true);
 	GSKE.clear_all();
 
-	os << "4. FINISHING ..."  << std::endl;
+	os << "4. FINISHING ..."  << bj_eol;
 	os.flush();
 }
 
 void
 test_lk_name(){
-	std::ostream& os = std::cout;
+	bj_ostream& os = std::cout;
 	MARK_USED(os);
 
 	ch_string str1 = "CADENA DE PRUEBA";
@@ -1130,15 +1129,15 @@ test_lk_name(){
 	dim0.dd_tot_twolits = 18;
 	//ch_string lk_nm = canon_lock_name(dim0, the_sha);
 
-	//os << "lk_nm=" << lk_nm << std::endl;
-	//os << "sz_lk_nm=" << lk_nm.size() << std::endl;
+	//os << "lk_nm=" << lk_nm << bj_eol;
+	//os << "sz_lk_nm=" << lk_nm.size() << bj_eol;
 }
 
 //=================================
 
 void
 test_row_reduc(){
-	std::ostream& os = std::cout;
+	bj_ostream& os = std::cout;
 	MARK_USED(os);
 
 	row<long> rr1;
@@ -1152,29 +1151,29 @@ test_row_reduc(){
 	rr1.mix_sort(cmp_long);
 	rr2.mix_sort(cmp_long);
 
-	os << "rr1=" << rr1 << std::endl;
-	os << "rr2=" << rr2 << std::endl;
+	os << "rr1=" << rr1 << bj_eol;
+	os << "rr2=" << rr2 << bj_eol;
 
 	rr1.sorted_set_reduce(rr2, cmp_long);
 
-	os << "AFTER" << std::endl;
-	os << "rr1=" << rr1 << std::endl;
-	os << "rr2=" << rr2 << std::endl;
+	os << "AFTER" << bj_eol;
+	os << "rr1=" << rr1 << bj_eol;
+	os << "rr2=" << rr2 << bj_eol;
 
 }
 
 void
 test_num1(){
-	std::ostream& os = std::cout;
+	bj_ostream& os = std::cout;
 	MARK_USED(os);
 
 	mpz_class num_vnts;
 
 	num_vnts = "-1";
-	os << "num_vnts=" << num_vnts << std::endl;
+	os << "num_vnts=" << num_vnts << bj_eol;
 
 	num_vnts = "987654321";
-	os << "num_vnts=" << num_vnts << std::endl;
+	os << "num_vnts=" << num_vnts << bj_eol;
 }
 
 
@@ -1183,8 +1182,8 @@ test_num1(){
 #define SOR_MAX_VARS_TEST	5
 
 void	test_sorted_ops2(){
-	std::ostream& os = std::cout;
-	os << "test_sorted_ops2" << std::endl;
+	bj_ostream& os = std::cout;
+	os << "test_sorted_ops2" << bj_eol;
 
 	unsigned long init_val = 10;
 	tak_mak gg(init_val);
@@ -1225,21 +1224,21 @@ void	test_sorted_ops2(){
 
 		orig_rr.copy_to(diff_rr);
 
-		//os << "BEFORE" << std::endl;
-		//os << "rr1=" << rr1 << std::endl;
-		//os << "rr2=" << rr2 << std::endl;
-		//os << "to_adh=" << to_adh << std::endl;
-		//os << "to_red=" << to_red << std::endl;
+		//os << "BEFORE" << bj_eol;
+		//os << "rr1=" << rr1 << bj_eol;
+		//os << "rr2=" << rr2 << bj_eol;
+		//os << "to_adh=" << to_adh << bj_eol;
+		//os << "to_red=" << to_red << bj_eol;
 
 		diff_rr.sorted_set_reduce(to_red, cmp_canon_ids);
 
 		bool eq_sh = diff_rr.equal_to(tmp_rr);
 		if(! eq_sh){
-			os << "FAILED=" << std::endl;
-			os << "orig_rr=" << orig_rr << std::endl;
-			os << "to_red=" << to_red << std::endl;
-			os << "diff_rr=" << diff_rr << std::endl;
-			os << "tmp_rr=" << tmp_rr << std::endl;
+			os << "FAILED=" << bj_eol;
+			os << "orig_rr=" << orig_rr << bj_eol;
+			os << "to_red=" << to_red << bj_eol;
+			os << "diff_rr=" << diff_rr << bj_eol;
+			os << "tmp_rr=" << tmp_rr << bj_eol;
 		}
 		SUPPORT_CK(eq_sh);
 
@@ -1255,24 +1254,24 @@ void	test_sorted_ops2(){
 		diff_rr.sorted_set_shared(shrd_rr, to_red, cmp_canon_ids);
 		SUPPORT_CK(shrd_rr.is_empty());
 		
-		//os << "AFTER" << std::endl;
-		//os << "rr1=" << rr1 << std::endl;
-		//os << "rr2=" << rr2 << std::endl;
+		//os << "AFTER" << bj_eol;
+		//os << "rr1=" << rr1 << bj_eol;
+		//os << "rr2=" << rr2 << bj_eol;
 		//getchar();
 		
 
 		os << CARRIAGE_RETURN << aa;
 		os.flush();
-		//os << "ALL_OK" << std::endl;
+		//os << "ALL_OK" << bj_eol;
 	}
-	os << std::endl << "ALL_OK" << std::endl;
+	os << bj_eol << "ALL_OK" << bj_eol;
 
 }
 
 int	tests_main_(int argc, char** argv){
 	MARK_USED(argc);
 	MARK_USED(argv);
-	std::ostream& os = std::cout;
+	bj_ostream& os = std::cout;
 
 	MEM_CTRL(mem_size tt_mem_in_u = MEM_STATS.num_bytes_in_use;)
 	MEM_CTRL(MARK_USED(tt_mem_in_u));
@@ -1294,7 +1293,7 @@ int	tests_main_(int argc, char** argv){
 	
 	test_thrw_obj();
 
-	os << "ENDING TESTS___________  MEM_STATS.num_bytes_in_use = " << MEM_STATS.num_bytes_in_use << std::endl;
+	os << "ENDING TESTS___________  MEM_STATS.num_bytes_in_use = " << MEM_STATS.num_bytes_in_use << bj_eol;
 	os.flush();
 
 	DBG_CK(tt_mem_in_u == MEM_STATS.num_bytes_in_use);
@@ -1302,8 +1301,8 @@ int	tests_main_(int argc, char** argv){
 	//MEM_CTRL(mem_size mem_u = MEM_STATS.num_bytes_in_use;)  // not nedded. tested during
 	//SUPPORT_CK(mem_u == MEM_STATS.num_bytes_in_use); // mem.cpp MEM_STATS destruction
 
-	os << std::endl;
-	os << "End of tests" << std::endl;
+	os << bj_eol;
+	os << "End of tests" << bj_eol;
 	//getchar();
 
 	return 0;
@@ -1326,12 +1325,12 @@ void th_sub_excep(){
 }
 
 void test_thrw_obj(){
-	std::ostream& os = std::cout;
+	bj_ostream& os = std::cout;
 	
 	try {
 		th_sub_excep();
 	} catch (const top_exception& ex1){
-		os << "GOT THE EXCEP=" << ex1.ex_nm << std::endl;
+		os << "GOT THE EXCEP=" << ex1.ex_nm << bj_eol;
 		//delete ex1;
 	}
 }

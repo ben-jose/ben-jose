@@ -128,7 +128,7 @@ quanton::ck_charge(brain& brn){
 
 bool
 brain::ck_trail(){	
-	std::ostream& os = *(GLB().dbg_os);
+	bj_ostream& os = *(GLB().dbg_os);
 	brain& brn = *this;
 
 	row<quanton*>& the_trl = br_tmp_trail;
@@ -152,7 +152,7 @@ brain::ck_trail(){
 		}
 		
 		if((prev_tier != INVALID_TIER) && (prev_tier > qua->qu_tier)){
-			os << "qua= " << qua << std::endl;
+			os << "qua= " << qua << bj_eol;
 			print_trail(os);
 			ab_mm = "case0." + br_file_name;
 			abort_func(-1, ab_mm.c_str());
@@ -184,13 +184,13 @@ brain::ck_trail(){
 		if(cho){
 			last_choice = qua;
 			if((ch_idx >= br_chosen.size()) || (br_chosen[ch_idx] != qua)){
-				os << "qua= " << qua << std::endl;
+				os << "qua= " << qua << bj_eol;
 				if(ch_idx < br_chosen.size()){
-					os << "chosen= " << br_chosen[ch_idx] << std::endl;
+					os << "chosen= " << br_chosen[ch_idx] << bj_eol;
 				}
 				print_trail(os);
-				os << "chosen" << std::endl;
-				os << br_chosen << std::endl;
+				os << "chosen" << bj_eol;
+				os << br_chosen << bj_eol;
 			}
 			BRAIN_CK_0(ch_idx < br_chosen.size());
 			BRAIN_CK_0(br_chosen[ch_idx] == qua);
@@ -212,8 +212,8 @@ brain::ck_trail(){
 	}
 
 	if((num_null_src != level()) && ((num_null_src + 1) != level())){
-		os << "num_null_src=" << num_null_src << std::endl;
-		os << "lv=" << level() << std::endl;
+		os << "num_null_src=" << num_null_src << bj_eol;
+		os << "lv=" << level() << bj_eol;
 		print_trail(os);
 		ab_mm = "case6." + br_file_name;
 		abort_func(-1, ab_mm.c_str());
@@ -225,8 +225,8 @@ brain::ck_trail(){
 //============================================================
 // print methods
 
-std::ostream&
-memap::print_memap(std::ostream& os, bool from_pt){
+bj_ostream&
+memap::print_memap(bj_ostream& os, bool from_pt){
 	MARK_USED(from_pt);
 	if(from_pt){
 		os << "MM(" << (void*)this <<")";
@@ -237,35 +237,35 @@ memap::print_memap(std::ostream& os, bool from_pt){
 		os.flush();
 		return os;
 	}
-	os << "MEMAP(" << (void*)this <<")={ du=" << ma_dual << std::endl;
-	os << " dotted=" << std::endl;
-	os << ma_dotted << std::endl;
-	os << " filled=" << std::endl;
+	os << "MEMAP(" << (void*)this <<")={ du=" << ma_dual << bj_eol;
+	os << " dotted=" << bj_eol;
+	os << ma_dotted << bj_eol;
+	os << " filled=" << bj_eol;
 	ma_filled.print_row_data(os, true, "\n");
-	os << " szs_dotted=" << std::endl;
-	os << ma_szs_dotted << std::endl;
-	os << " szs_filled=" << std::endl;
-	os << ma_szs_filled << std::endl;
-	os << " fll_in_lv=" << std::endl;
+	os << " szs_dotted=" << bj_eol;
+	os << ma_szs_dotted << bj_eol;
+	os << " szs_filled=" << bj_eol;
+	os << ma_szs_filled << bj_eol;
+	os << " fll_in_lv=" << bj_eol;
 	ma_fll_in_lv.print_row_data(os, true, "\n");
-	os << " save_guide_col=" << std::endl;
+	os << " save_guide_col=" << bj_eol;
 	os << ma_save_guide_col;
-	os << " find_guide_col=" << std::endl;
+	os << " find_guide_col=" << bj_eol;
 	os << ma_find_guide_col;
-	os << " anchor_col=" << std::endl;
+	os << " anchor_col=" << bj_eol;
 	os << ma_anchor_col;
-	os << " ma_anchor_idx=" << ma_anchor_idx << std::endl;
-	os << "bef_rtct_tk=" << ma_before_retract_tk << std::endl;
-	os << "aft_rtct_tks=" << ma_after_retract_tks << std::endl;
-	os << "confl=" << ma_confl << std::endl;
-	os << "active=" << ma_active << std::endl;
+	os << " ma_anchor_idx=" << ma_anchor_idx << bj_eol;
+	os << "bef_rtct_tk=" << ma_before_retract_tk << bj_eol;
+	os << "aft_rtct_tks=" << ma_after_retract_tks << bj_eol;
+	os << "confl=" << ma_confl << bj_eol;
+	os << "active=" << ma_active << bj_eol;
 	os << "}";
 	os.flush();
 	return os;
 }
 
 void
-brain::print_trail(std::ostream& os, bool no_src_only){
+brain::print_trail(bj_ostream& os, bool no_src_only){
 	row<quanton*>& the_trl = br_tmp_trail;
 	br_charge_trail.get_all_ordered_motives(the_trl);
 	os << "TRAIL=[";
@@ -279,12 +279,12 @@ brain::print_trail(std::ostream& os, bool no_src_only){
 		os << " ";
 	}
 	os << "]";
-	os << std::endl;
+	os << bj_eol;
 	os.flush();
 }
 
-std::ostream& 
-brain::print_all_quantons(std::ostream& os, long ln_sz, ch_string ln_fd){
+bj_ostream& 
+brain::print_all_quantons(bj_ostream& os, long ln_sz, ch_string ln_fd){
 	BRAIN_CK_0(br_choices.size() == br_positons.size());
 	long num_null_src = 0;
 	for(long ii = 0; ii < br_choices.size(); ii++){
@@ -513,8 +513,8 @@ brain::brn_compute_dots_of(row<neuron*>& neus, row<quanton*>& assig){
 //============================================================
 // quanton methods
 
-std::ostream&
-quanton::print_quanton(std::ostream& os, bool from_pt){
+bj_ostream&
+quanton::print_quanton(bj_ostream& os, bool from_pt){
 	MARK_USED(from_pt);
 
 	brain* pt_brn = GLB().pt_brain;
@@ -677,12 +677,12 @@ neuron::update_fibres(row<quanton*>& synps, bool orig){
 	if(num_neg_chgs == (fib_sz() - 1)){
 		// ABORT CASE
 		if(ne_fibres[0]->is_neg()){
-			std::ostream& os = *(GLB().dbg_os);
+			bj_ostream& os = *(GLB().dbg_os);
 			if(GLB().pt_brain != NULL){
 				GLB().pt_brain->print_trail(os);
 			}
-			os << this << std::endl;;
-			os << ne_fibres[0] << std::endl;;
+			os << this << bj_eol;;
+			os << ne_fibres[0] << bj_eol;;
 		}
 		BRAIN_CK_0(! ne_fibres[0]->is_neg());
 		forced_qua = forced_quanton();
@@ -870,13 +870,13 @@ neuron::neu_tunnel_signals(brain& brn, quanton& r_qua){
 }
 
 
-std::ostream&
-neuron::print_neuron(std::ostream& os, bool from_pt){
+bj_ostream&
+neuron::print_neuron(bj_ostream& os, bool from_pt){
 	return print_neu_base(os, ! from_pt, true, true);
 }
 
-std::ostream&	
-neuron::print_neu_base(std::ostream& os, bool detail, bool prt_src, bool sort_fib){
+bj_ostream&	
+neuron::print_neu_base(bj_ostream& os, bool detail, bool prt_src, bool sort_fib){
 
 	if(! detail){
 		os << ((void*)(this)) << " ";
@@ -886,9 +886,9 @@ neuron::print_neu_base(std::ostream& os, bool detail, bool prt_src, bool sort_fi
 		}
 		os << ne_fibres;
 		//os << " recoil_tk=" << ne_recoil_tk.tk_recoil;
-		//os << std::endl;
+		//os << bj_eol;
 		//os << " ne_dbg_ccl=" << ne_dbg_ccl;
-		//os << std::endl;
+		//os << bj_eol;
 		//os << " ne_tee so_ccl=" << ne_tee.so_ccl;
 		//os << " num_remote_tees=" << ne_num_remote_tees;
 
@@ -899,14 +899,14 @@ neuron::print_neu_base(std::ostream& os, bool detail, bool prt_src, bool sort_fi
 		if((ne_fibres.size() > 1) && (ne_fibres[1]->qu_source == this)){
 			os << "src_of:" << ne_fibres[1] << " !!!!!!";
 		}*/
-		//os << std::endl;
+		//os << bj_eol;
 
 		os.flush();
 		return os;
 	}
 
 	os << "\n";
-	os << "pt=" << ((void*)(this)) << std::endl;
+	os << "pt=" << ((void*)(this)) << bj_eol;
 	os << "INDEX " << ne_index << " ";
 	os << "orig=" << ((ne_original)?("yes"):("no")) << "\n";
 	os << "fz=" << fib_sz() << " ";
@@ -1372,29 +1372,29 @@ brain::add_neuron(row<quanton*>& quans, quanton*& forced_qua, bool orig){
 	return &neu;
 }
 
-std::ostream&
-brain::print_brain(std::ostream& os){
+bj_ostream&
+brain::print_brain(bj_ostream& os){
 
-	os << std::endl;
-	os << "cho_spin_" << (long)br_choice_spin << std::endl;
-	os << "cho_ord_" << (long)br_choice_order << std::endl;
+	os << bj_eol;
+	os << "cho_spin_" << (long)br_choice_spin << bj_eol;
+	os << "cho_ord_" << (long)br_choice_order << bj_eol;
 
-	os << std::endl << "NEURONS:" << std::endl;
+	os << bj_eol << "NEURONS:" << bj_eol;
 	print_all_original(os);
-	os << std::endl << "POSITONS:" << std::endl; 
-	os << br_positons << std::endl;
-	os << std::endl << "NEGATONS:" << std::endl; 
-	os << br_negatons << std::endl;
+	os << bj_eol << "POSITONS:" << bj_eol; 
+	os << br_positons << bj_eol;
+	os << bj_eol << "NEGATONS:" << bj_eol; 
+	os << br_negatons << bj_eol;
 	print_trail(os);
-	os << "signals:" << std::endl;
+	os << "signals:" << bj_eol;
 	print_psignals(os);
-	os << std::endl;
-	os << std::endl;
-	//os << "choices_lim:" << br_choices_lim << std::endl;
-	//os << "\n choices:"; br_choices.print_row_data(os, true, " ", br_choices_lim, br_choices_lim); os << std::endl;
-	os << "\n choices:"; br_choices.print_row_data(os, true, " "); os << std::endl;
-	//os << "\n satisfying:" << satisfying << std::endl;
-	os << std::endl;
+	os << bj_eol;
+	os << bj_eol;
+	//os << "choices_lim:" << br_choices_lim << bj_eol;
+	//os << "\n choices:"; br_choices.print_row_data(os, true, " ", br_choices_lim, br_choices_lim); os << bj_eol;
+	os << "\n choices:"; br_choices.print_row_data(os, true, " "); os << bj_eol;
+	//os << "\n satisfying:" << satisfying << bj_eol;
+	os << bj_eol;
 
 	os.flush();
 	return os;
@@ -1439,7 +1439,7 @@ brain::config_brain(ch_string f_nam){
 void system_exec(std::ostringstream& strstm){
 	ch_string comm = strstm.str();
 	const char* comm_cstr = comm.c_str();
-	//std::cout << comm_cstr << std::endl;
+	//std::cout << comm_cstr << bj_eol;
 	system(comm_cstr);
 }
 
@@ -1595,12 +1595,12 @@ brain::load_instance(long num_neu, long num_var, row_long_t& load_ccls){
 
 	ch_string f_nam = inst_info.get_f_nam();
 	PRT_OUT(1,
-	os << std::endl;
+	os << bj_eol;
 	os << "***********************************************";
-	os << std::endl;
+	os << bj_eol;
 	os << "LOADED " << f_nam <<
 		" " << GLB().batch_consec << " of " << GLB().batch_num_files <<
-		std::endl;
+		bj_eol;
 	);
 }
 
@@ -1618,8 +1618,8 @@ brain::check_timeout(){
 	}
 }
 
-std::ostream&
-brain::print_all_original(std::ostream& os){
+bj_ostream&
+brain::print_all_original(bj_ostream& os){
 	row<neuron*>& neus = br_tmp_prt_neus;
 	fill_with_origs(neus);
 	neus.print_row_data(os, false, "\n", -1, -1, true);
@@ -1647,7 +1647,7 @@ brain::check_sat_assig(){
 	fill_with_origs(neus);
 
 	if(! brn_compute_binary(neus)){
-		std::cerr << "FATAL ERROR 001. Wrong is_sat answer !" << std::endl;
+		std::cerr << "FATAL ERROR 001. Wrong is_sat answer !" << bj_eol;
 		abort_func(1);
 	}
 
@@ -1658,11 +1658,11 @@ brain::check_sat_assig(){
 	br_charge_trail.get_all_ordered_motives(the_assig);
 
 	if(! brn_compute_dots_of(neus, the_assig)){
-		std::cerr << "FATAL ERROR 002. Wrong is_sat answer !" << std::endl;
+		std::cerr << "FATAL ERROR 002. Wrong is_sat answer !" << bj_eol;
 		abort_func(1);
 	}
 
-	DBG_PRT(4, os << "CHECKED_ASSIG=" << the_assig << std::endl);
+	DBG_PRT(4, os << "CHECKED_ASSIG=" << the_assig << bj_eol);
 
 	//print_satifying(cho_nm);
 
@@ -1686,7 +1686,7 @@ brain::dbg_prt_all_cho(){
 	//dbg_get_all_chosen(br_dbg_all_chosen);
 
 	log_stm << br_dbg_all_chosen;
-	log_stm << std::endl; 
+	log_stm << bj_eol; 
 	log_stm.close();
 }
 
@@ -1752,7 +1752,7 @@ brain::solve_it(){
 
 	DBG(
 		DBG_PRT(116, dbg_prt_all_cho());
-		DBG_PRT(32, os << "BRAIN=" << std::endl;
+		DBG_PRT(32, os << "BRAIN=" << bj_eol;
 			print_brain(os); 
 		);
 
@@ -1770,14 +1770,14 @@ brain::solve_it(){
 
 		br_final_msg << " " << recoil();
 
-		std::cout << br_final_msg.str() << std::endl; 
+		std::cout << br_final_msg.str() << bj_eol; 
 		std::cout.flush();
 
 		//br_final_msg << " " << stats.num_start_syn;
 		//br_final_msg << " " << solve_time();
-		//std::cout << "recoils= " << recoil() << std::endl; 
-		//std::cout << "num_batch_file= " << stats.batch_consec << std::endl; 
-		//std::cout << std::endl;
+		//std::cout << "recoils= " << recoil() << bj_eol; 
+		//std::cout << "num_batch_file= " << stats.batch_consec << bj_eol; 
+		//std::cout << bj_eol;
 		//std::cout << ".";
 
 		if(GLB().dbg_ic_active){
@@ -1853,7 +1853,7 @@ notekeeper::set_motive_notes(row<quanton*>& rr_qua, long from, long until){
 				}
 			);
 			DBG_PRT(20, os << dbg_msg << qua << " num_notes_in_lv " << dk_num_noted_in_layer 
-					<< "lv=" << dk_note_layer << "ti=" << qua.qu_tier << std::endl
+					<< "lv=" << dk_note_layer << "ti=" << qua.qu_tier << bj_eol
 					<< "motives_by_lv= " << dk_motives_by_layer);
 			
 		}
@@ -1980,11 +1980,11 @@ ck_motives(brain& brn, row<quanton*>& mots){
 		BRAIN_CK(mot->qlevel() < brn.br_dbg_before_retract_lv);
 
 		DBG_PRT_COND(DBG_ALL_LVS, ! (mot->get_charge() == cg_negative) ,
-			os << "ABORTING_DATA " << std::endl;
-			os << "mots=" << mots << std::endl;
-			os << "mot=" << mot << std::endl;
+			os << "ABORTING_DATA " << bj_eol;
+			os << "mots=" << mots << bj_eol;
+			os << "mot=" << mot << bj_eol;
 			brn.print_trail(os);
-			os << "END_OF_aborting_data" << std::endl;
+			os << "END_OF_aborting_data" << bj_eol;
 		);
 		BRAIN_CK(mot->get_charge() == cg_negative);
 	}
@@ -2198,11 +2198,11 @@ neuron::set_motives(brain& brn, notekeeper& nke, bool is_first){
 
 	if(ne_original){
 		while(! in_ne_dominated(brn)){
-			DBG_PRT(112, os << "NOT NE dom neu=" << this << std::endl;
+			DBG_PRT(112, os << "NOT NE dom neu=" << this << bj_eol;
 				brn.print_trail(os);
 
 				os << " up_dom=" << brn.get_last_upper_map() 
-				<< " ne_curr_map=" << ne_curr_map << std::endl
+				<< " ne_curr_map=" << ne_curr_map << bj_eol
 				<< " br_maps_active=" << brn.br_maps_active
 			);
 			DBG_PRT(112, os << "HIT RETURN TO CONTINUE..." << " dbg_id=" << skg_dbg_canon_save_id);
@@ -2269,12 +2269,12 @@ brain::dbg_ck_deducs(deduction& dct1, deduction& dct2){
 	MARK_USED(c4);
 
 	DBG_PRT_COND(DBG_ALL_LVS, ! (c1 && c2 && c3 && c4) ,
-		os << "ABORTING_DATA " << std::endl;
-		os << "  c1=" << c1 << "  c2=" << c2 << "  c3=" << c3 << "  c4=" << c4 << std::endl;
-		os << "dct1=" << dct1 << std::endl;
-		os << "dct2=" << dct2 << std::endl;
+		os << "ABORTING_DATA " << bj_eol;
+		os << "  c1=" << c1 << "  c2=" << c2 << "  c3=" << c3 << "  c4=" << c4 << bj_eol;
+		os << "dct1=" << dct1 << bj_eol;
+		os << "dct2=" << dct2 << bj_eol;
 		print_trail(os);
-		os << "END_OF_aborting_data" << std::endl;
+		os << "END_OF_aborting_data" << bj_eol;
 	);
 
 	BRAIN_CK(c1);
@@ -2402,7 +2402,7 @@ memap::map_activate(brain& brn){
 
 void
 memap::map_deactivate(brain& brn){
-	//DBG_PRT(110, os << "DEACTivating " << this << std::endl << STACK_STR);
+	//DBG_PRT(110, os << "DEACTivating " << this << bj_eol << STACK_STR);
 	DBG_PRT(110, os << "DEACTivating " << this);
 
 	BRAIN_CK(ma_active);
@@ -2430,7 +2430,7 @@ brain::deactivate_last_map(){
 	BRAIN_CK(pt_mpp != NULL_PT);
 	memap& mpp = *pt_mpp;
 
-	DBG_PRT(112, os << "DEACTIVATING MEMAP=" << std::endl;
+	DBG_PRT(112, os << "DEACTIVATING MEMAP=" << bj_eol;
 		os << (void*)(&(mpp))
 	);
 
@@ -2446,14 +2446,14 @@ brain::close_all_maps(){
 }
 
 void
-brain::print_active_maps(std::ostream& os){
+brain::print_active_maps(bj_ostream& os){
 	os << "[";
 	for(long aa = 0; aa < br_maps_active.size(); aa++){
 		memap* mpp = br_maps_active[aa];
 		os << " " << (void*)(mpp);
 	}
 	os << " ]";
-	os << std::endl;
+	os << bj_eol;
 
 	os.flush();
 }
@@ -2546,14 +2546,14 @@ memap::map_ck_all_ne_dominated(brain& brn){
 			MARK_USED(fll_neu);
 
 			DBG_PRT_COND(DBG_ALL_LVS, ! (fll_neu.in_ne_dominated(brn)) ,
-				os << "ABORTING_DATA " << std::endl;
-				os << " br_maps_active=" << brn.br_maps_active << std::endl;
-				os << " THIS_MEMAP=" << this << std::endl;
+				os << "ABORTING_DATA " << bj_eol;
+				os << " br_maps_active=" << brn.br_maps_active << bj_eol;
+				os << " THIS_MEMAP=" << this << bj_eol;
 				brn.print_trail(os);
-				os << " up_dom=" << (void*)(brn.get_last_upper_map()) << std::endl;
-				os << " this_map=" << (void*)(this) << std::endl;
-				os << " NO_DOM neu==" << &fll_neu << std::endl;
-				os << "END_OF_aborting_data" << std::endl;
+				os << " up_dom=" << (void*)(brn.get_last_upper_map()) << bj_eol;
+				os << " this_map=" << (void*)(this) << bj_eol;
+				os << " NO_DOM neu==" << &fll_neu << bj_eol;
+				os << "END_OF_aborting_data" << bj_eol;
 			);
 			BRAIN_CK(fll_neu.in_ne_dominated(brn));
 		}
@@ -2982,17 +2982,17 @@ quanton::ck_uncharged_tunnel(){
 		long uch_idx = find_uncharged_tunnel();
 
 		DBG_PRT_COND(DBG_ALL_LVS, ! (uch_idx == INVALID_IDX) ,
-			os << "ABORTING_DATA " << std::endl;
-			os << "qua=" << &qua << std::endl;
+			os << "ABORTING_DATA " << bj_eol;
+			os << "qua=" << &qua << bj_eol;
 			neuron* tnn = qu_tunnels[uch_idx];
-			os << "neu=" << tnn << std::endl;
-			os << "par=" << &(tnn->partner_fib(qua)) << std::endl;
+			os << "neu=" << tnn << bj_eol;
+			os << "par=" << &(tnn->partner_fib(qua)) << bj_eol;
 			brain* pt_brn = GLB().pt_brain;
 			if(pt_brn != NULL_PT){
-				os << " lv=" << pt_brn->level() << std::endl;
-				os << " trail_sz=" << pt_brn->br_charge_trail.get_num_motives() << std::endl;
+				os << " lv=" << pt_brn->level() << bj_eol;
+				os << " trail_sz=" << pt_brn->br_charge_trail.get_num_motives() << bj_eol;
 			}
-			os << "END_OF_aborting_data" << std::endl;
+			os << "END_OF_aborting_data" << bj_eol;
 		);
 
 		bool ok_uchg1 = (uch_idx == INVALID_IDX);
@@ -3004,16 +3004,16 @@ quanton::ck_uncharged_tunnel(){
 	BRAIN_CK(neu == qu_uncharged_tunnel);
 
 	DBG_PRT_COND(DBG_ALL_LVS, ! (neu->is_partner_fib(qua)),
-		os << "ABORTING_DATA x1 " << std::endl;
-		os << "qua=" << &qua << std::endl;
-		os << "neu=" << qu_uncharged_tunnel << std::endl;
-		os << "neu2=" << qua.qu_uncharged_tunnel << std::endl;
+		os << "ABORTING_DATA x1 " << bj_eol;
+		os << "qua=" << &qua << bj_eol;
+		os << "neu=" << qu_uncharged_tunnel << bj_eol;
+		os << "neu2=" << qua.qu_uncharged_tunnel << bj_eol;
 		brain* pt_brn = GLB().pt_brain;
 		if(pt_brn != NULL_PT){
-			os << " lv=" << pt_brn->level() << std::endl;
-			os << " trail_sz=" << pt_brn->br_charge_trail.get_num_motives() << std::endl;
+			os << " lv=" << pt_brn->level() << bj_eol;
+			os << " trail_sz=" << pt_brn->br_charge_trail.get_num_motives() << bj_eol;
 		}
-		os << "END_OF_aborting_data" << std::endl;
+		os << "END_OF_aborting_data" << bj_eol;
 	);
 
 	BRAIN_CK(neu->is_partner_fib(qua));
@@ -3028,16 +3028,16 @@ quanton::ck_uncharged_tunnel(){
 neuron*
 quanton::get_uncharged_tunnel(dbg_call_id dbg_call){
 	DBG_PRT_COND(DBG_ALL_LVS, ! ((qu_uncharged_tunnel == NULL_PT) || qu_uncharged_tunnel->has_qua(*this)),
-		os << "ABORTING_DATA " << std::endl;
-		os << "dbg_call=" << dbg_call << std::endl;
-		os << "qua=" << this << std::endl;
-		os << "neu=" << qu_uncharged_tunnel << std::endl;
+		os << "ABORTING_DATA " << bj_eol;
+		os << "dbg_call=" << dbg_call << bj_eol;
+		os << "qua=" << this << bj_eol;
+		os << "neu=" << qu_uncharged_tunnel << bj_eol;
 		brain* pt_brn = GLB().pt_brain;
 		if(pt_brn != NULL_PT){
-			os << " lv=" << pt_brn->level() << std::endl;
-			os << " trail_sz=" << pt_brn->br_charge_trail.get_num_motives() << std::endl;
+			os << " lv=" << pt_brn->level() << bj_eol;
+			os << " trail_sz=" << pt_brn->br_charge_trail.get_num_motives() << bj_eol;
 		}
-		os << "END_OF_aborting_data" << std::endl;
+		os << "END_OF_aborting_data" << bj_eol;
 	);
 	BRAIN_CK((qu_uncharged_tunnel == NULL_PT) || qu_uncharged_tunnel->has_qua(*this));
 	return qu_uncharged_tunnel;
@@ -3049,7 +3049,7 @@ quanton::set_uncharged_tunnel(brain& brn, long uidx, long dbg_call, neuron* dbg_
 		qu_bak_uncharged_tunnel = qu_uncharged_tunnel;
 		brn.data_level().ld_semi_monos.push(this);		
 
-		DBG_PRT_COND(105, (qu_id == 5), os << "qua=" << this << " setting uncharged to NULL" << std::endl
+		DBG_PRT_COND(105, (qu_id == 5), os << "qua=" << this << " setting uncharged to NULL" << bj_eol
 			<< " LV=" << brn.level());
 
 		qu_uncharged_tunnel = NULL_PT;
@@ -3197,14 +3197,14 @@ dbg_run_satex_on(brain& brn, ch_string f_nam){
 		MARK_USED(is_no_sat);
 
 		DBG_PRT_COND(DBG_ALL_LVS, ! is_no_sat ,
-			os << "ABORTING_DATA " << std::endl;
-			//os << "mmap_before_tk=" << ma_before_retract_tk << std::endl;
-			//os << "mmap_after_tks=" << ma_after_retract_tks << std::endl;
-			os << " brn_tk=" << brn.br_current_ticket << std::endl;
-			os << "	LV=" << brn.level() << std::endl;
-			os << " f_nam=" << f_nam << std::endl;
-			os << " save_consec=" << skg_dbg_canon_save_id << std::endl;
-			os << "END_OF_aborting_data" << std::endl;
+			os << "ABORTING_DATA " << bj_eol;
+			//os << "mmap_before_tk=" << ma_before_retract_tk << bj_eol;
+			//os << "mmap_after_tks=" << ma_after_retract_tks << bj_eol;
+			os << " brn_tk=" << brn.br_current_ticket << bj_eol;
+			os << "	LV=" << brn.level() << bj_eol;
+			os << " f_nam=" << f_nam << bj_eol;
+			os << " save_consec=" << skg_dbg_canon_save_id << bj_eol;
+			os << "END_OF_aborting_data" << bj_eol;
 		);
 		BRAIN_CK(is_no_sat);
 	}
@@ -3228,13 +3228,13 @@ memap::map_ck_simple_no_satisf(mem_op_t mm, brain& brn){
 	dbg_cnf.init_with(skg, dbg_ccls, INVALID_NATURAL, INVALID_NATURAL, INVALID_NATURAL);
 
 	//DBG_PRT_COND(115, false, 
-	//	os << " dbg_simple_cnf=" << std::endl << dbg_cnf << std::endl 
-	//	<< "<<<<<<<<<<" << std::endl << dbg_cnf.cf_sha_str << " sv_id" << skg_dbg_canon_save_id
+	//	os << " dbg_simple_cnf=" << bj_eol << dbg_cnf << bj_eol 
+	//	<< "<<<<<<<<<<" << bj_eol << dbg_cnf.cf_sha_str << " sv_id" << skg_dbg_canon_save_id
 	//);
 
 	BRAIN_CK(dbg_cnf.cf_dims.dd_tot_ccls == dbg_cnf.cf_clauses.size());
 
-	//DBG_PRT(106, os << "MAP NEURONS=" << std::endl; dbg_print_ccls_neus(os, dbg_cnf.cf_clauses));
+	//DBG_PRT(106, os << "MAP NEURONS=" << bj_eol; dbg_print_ccls_neus(os, dbg_cnf.cf_clauses));
 	//DBG_PRT(106, os << "tot_ccls=" << dbg_cnf.cf_dims.dd_tot_ccls);
 
 	ch_string dbg_cnf_nm = skg.kg_running_path + "/DBG_CNF_CK_SAVE.yos";
@@ -3245,7 +3245,7 @@ memap::map_ck_simple_no_satisf(mem_op_t mm, brain& brn){
 	DBG_CHECK_SAVED(dbg_run_satex_on(brn, dbg_cnf_nm));
 
 	//DBG_PRT(106, 
-	//	os << "dbg_cnf_nm=" << dbg_cnf_nm << std::endl;
+	//	os << "dbg_cnf_nm=" << dbg_cnf_nm << bj_eol;
 		//map_dbg_prt(os, mm, brn);
 	//);
 
@@ -3318,11 +3318,11 @@ memap::dbg_ck_used_simple_no_satisf(mem_op_t mm, brain& brn){
 
 	dbg_cnf.init_with(skg, dbg_ccls, INVALID_NATURAL, INVALID_NATURAL, INVALID_NATURAL, false);
 
-	//DBG_PRT(106, os << "USED NEURONS=" << std::endl; dbg_print_ccls_neus(os, dbg_cnf.cf_clauses));
+	//DBG_PRT(106, os << "USED NEURONS=" << bj_eol; dbg_print_ccls_neus(os, dbg_cnf.cf_clauses));
 
 	//DBG_PRT_COND(115, ((skg_dbg_canon_save_id == 2) || (skg_dbg_canon_save_id == 22)), 
-	//	os << " dbg_used_cnf=" << std::endl << dbg_cnf << std::endl 
-	//	<< "<<<<<<<<<<" << std::endl << dbg_cnf.cf_sha_str << " sv_id" << skg_dbg_canon_save_id
+	//	os << " dbg_used_cnf=" << bj_eol << dbg_cnf << bj_eol 
+	//	<< "<<<<<<<<<<" << bj_eol << dbg_cnf.cf_sha_str << " sv_id" << skg_dbg_canon_save_id
 	//);
 
 	ch_string dbg_cnf_nm = skg.kg_running_path + "/DBG_CNF_CK_USED.yos";

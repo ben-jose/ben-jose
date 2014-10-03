@@ -24,41 +24,22 @@ email: joseluisquirogabeltran@gmail.com
 
 ------------------------------------------------------------
 
-bit_row.cpp
+bj_stream.h
 
-binary rows of bits funcs
+Wrapper for ostream class.
 
 --------------------------------------------------------------*/
 
 
-#include "bit_row.h"
+#ifndef BJ_STREAM_H
+#define BJ_STREAM_H
 
-bj_ostream&	
-bit_row::print_bit_row(
-	bj_ostream& os, 
-	bool with_lims,
+#include <iostream>
 
-	char* sep, 
-	bit_row_index low, 
-	bit_row_index hi,
-	bit_row_index grp_sz,
-	char* grp_sep
-	)
-{
-	bit_row_index num_elem = 1;
-	if(with_lims){ os << "["; }
-	for(bit_row_index ii = 0; ii < sz; ii++){
-		if(ii == low){ os << ">"; }
-		os << pos(ii);
-		if(ii == hi){ os << "<"; }
-		os << sep;
-		if((grp_sz > 1) && ((num_elem % grp_sz) == 0)){
-			os << grp_sep;
-		}
-		num_elem++;
-	}
-	if(with_lims){ os << "] "; }
-	os.flush();
-	return os;
-}
+#define bj_eol std::endl
+
+typedef std::ostream bj_ostream;
+
+#endif // BJ_STREAM_H
+
 

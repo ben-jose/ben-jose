@@ -59,8 +59,8 @@ mpz_class	skg_dbg_canon_save_id = 0;
 void	write_in_str(average& the_avg, ch_string& av_str){
 	av_str = "";
 	std::stringstream ss1;
-	ss1 << the_avg.avg << std::endl;
-	ss1 << the_avg.sz << std::endl;
+	ss1 << the_avg.avg << bj_eol;
+	ss1 << the_avg.sz << bj_eol;
 	ss1.flush();
 	av_str = ss1.str();
 }
@@ -295,8 +295,8 @@ set_fstr(ch_string f_nam, ch_string the_val_str){
 	return 0;
 }
 
-std::ostream&
-print_hex_as_txt(std::ostream& os, row<uchar_t>& sha_rr){
+bj_ostream&
+print_hex_as_txt(bj_ostream& os, row<uchar_t>& sha_rr){
 	std::ios_base::fmtflags old_fls = os.flags();
 	os.flags(std::ios::hex);
 	for(int ii = 0; ii < sha_rr.size(); ii++){
@@ -406,7 +406,7 @@ update_elapsed(ch_string f_nam){
 	ch_string out_str;
 	write_in_str(the_avg, out_str);
 
-	//std::cout << "out_str='" << out_str << "'" << std::endl;
+	//std::cout << "out_str='" << out_str << "'" << bj_eol;
 	//std::cout.flush();
 
 	pos0 = lseek(fd, 0, SEEK_SET);
@@ -805,7 +805,7 @@ path_create(ch_string n_pth){
 }
 
 void
-canon_print(std::ostream& os, row<char>& cnn){
+canon_print(bj_ostream& os, row<char>& cnn){
 	// this function should never be modified because the 
 	// whole skeleton is based on shas of this function
 
@@ -824,11 +824,11 @@ canon_sha(row<char>& cnn, ch_string& sha_txt){
 
 	SKELETON_CK((uchar_t*)(cnn.get_c_array()) == to_sha);
 
-	DBG_PRT(94, os << "canon sha CNN=" << std::endl;
-		os << ">>>>>>" << std::endl;
+	DBG_PRT(94, os << "canon sha CNN=" << bj_eol;
+		os << ">>>>>>" << bj_eol;
 		canon_print(os, cnn);
-		os << "<<<<<<" << std::endl;
-		os << "SZ_to_SHA=" << to_sha_sz << std::endl;
+		os << "<<<<<<" << bj_eol;
+		os << "SZ_to_SHA=" << to_sha_sz << bj_eol;
 		os << "SHA=" << sha_txt;
 	);
 }
@@ -888,22 +888,22 @@ canon_equal(ch_string& the_pth, row<char>& cnn){
 		cnn_eq = cnn2.equal_to_diff(cnn, diff1);
 		//cnn_eq = cnn2.equal_to(cnn);
 	}
-	DBG_PRT_COND(92, ! cnn_eq, os << "CNN_TEST=" << std::endl;
-		os << ">>>>>" << std::endl;	
+	DBG_PRT_COND(92, ! cnn_eq, os << "CNN_TEST=" << bj_eol;
+		os << ">>>>>" << bj_eol;	
 		canon_print(os, cnn);
-		os << "<<<<<" << std::endl;	
-		os << "CNN_IN_SKL=" << std::endl;
-		os << ">>>>>" << std::endl;	
+		os << "<<<<<" << bj_eol;	
+		os << "CNN_IN_SKL=" << bj_eol;
+		os << ">>>>>" << bj_eol;	
 		canon_print(os, cnn2);
-		os << "<<<<<" << std::endl;	
-		os << "DIFF=" << std::endl;
-		os << ">>>>>" << std::endl;	
+		os << "<<<<<" << bj_eol;	
+		os << "DIFF=" << bj_eol;
+		os << ">>>>>" << bj_eol;	
 		canon_print(os, diff1);
-		os << "<<<<<" << std::endl;	
-		os << "ld_ok=" << ld_ok << std::endl;
-		os << "cnn_eq=" << cnn_eq << std::endl;
-		os << "cnn_sz=" << cnn.size() << std::endl;
-		os << "cnn2_sz=" << cnn2.size() << std::endl;
+		os << "<<<<<" << bj_eol;	
+		os << "ld_ok=" << ld_ok << bj_eol;
+		os << "cnn_eq=" << cnn_eq << bj_eol;
+		os << "cnn_sz=" << cnn.size() << bj_eol;
+		os << "cnn2_sz=" << cnn2.size() << bj_eol;
 	);
 	return cnn_eq;
 }
@@ -913,9 +913,9 @@ canon_header(ch_string& hd_str, long ccls, long vars){
 	std::stringstream ss_header;
 	ss_header << hd_str;
 	if((vars == 0) || (ccls == 0)){
-		ss_header << EMPTY_CNF_COMMENT << std::endl;
+		ss_header << EMPTY_CNF_COMMENT << bj_eol;
 	}
-	ss_header << "p cnf " << vars << " " << ccls << " " << std::endl;
+	ss_header << "p cnf " << vars << " " << ccls << " " << bj_eol;
 	return ss_header.str();
 }
 
@@ -1116,17 +1116,17 @@ cmp_canon_ids(const long& id1, const long& id2){
 comparison
 cmp_lit_rows(row_long_t& trl1, row_long_t& trl2){
 	DBG_PRT_COND(DBG_ALL_LVS, ! (trl1.is_sorted(cmp_canon_ids)),
-		os << "ABORTING_DATA " << std::endl;
-		os << " trl1=" << trl1 << std::endl;
-		os << " trl2=" << trl2 << std::endl;
-		os << "END_OF_aborting_data" << std::endl;
+		os << "ABORTING_DATA " << bj_eol;
+		os << " trl1=" << trl1 << bj_eol;
+		os << " trl2=" << trl2 << bj_eol;
+		os << "END_OF_aborting_data" << bj_eol;
 	);
 	SKELETON_CK(trl1.is_sorted(cmp_canon_ids));
 	DBG_PRT_COND(DBG_ALL_LVS, ! (trl2.is_sorted(cmp_canon_ids)),
-		os << "ABORTING_DATA " << std::endl;
-		os << " trl1=" << trl1 << std::endl;
-		os << " trl2=" << trl2 << std::endl;
-		os << "END_OF_aborting_data" << std::endl;
+		os << "ABORTING_DATA " << bj_eol;
+		os << " trl1=" << trl1 << bj_eol;
+		os << " trl2=" << trl2 << bj_eol;
+		os << "END_OF_aborting_data" << bj_eol;
 	);
 	SKELETON_CK(trl2.is_sorted(cmp_canon_ids));
 
@@ -1202,9 +1202,9 @@ cmp_clauses(canon_clause* const& ccl1, canon_clause* const& ccl2){
 
 	comparison v_cc = 0;
 	v_cc = cmp_lit_rows(trl1, trl2);
-	DBG_PRT_COND(71, (v_cc > 0), os << "cmp ccl trails" << std::endl
-		<< "trl1" << trl1 << std::endl
-		<< "trl2" << trl2 << std::endl
+	DBG_PRT_COND(71, (v_cc > 0), os << "cmp ccl trails" << bj_eol
+		<< "trl1" << trl1 << bj_eol
+		<< "trl2" << trl2 << bj_eol
 		<< "cmp_1=" << (int)v_cc;
 	);
 
@@ -1259,17 +1259,17 @@ skeleton_glb::init_skeleton_glb(){
 	//init_paths(); // call it when starting
 }
 
-std::ostream&
-skeleton_glb::print_paths(std::ostream& os){
-	os << "running='" << kg_running_path << "'" << std::endl;
-	os << "root='" << kg_root_path << "'" << std::endl;
-	os << "verify='" << kg_verify_path << "'" << std::endl;
-	os << "collisions='" << kg_collisions_path << "'" << std::endl;
-	os << "missing='" << kg_missing_path << "'" << std::endl;
-	os << "corrupted='" << kg_corrupted_path << "'" << std::endl;
-	os << "overlaped='" << kg_overlaped_path << "'" << std::endl;
-	os << "dead='" << kg_dead_path << "'" << std::endl;
-	os << "broken='" << kg_broken_path << "'" << std::endl;
+bj_ostream&
+skeleton_glb::print_paths(bj_ostream& os){
+	os << "running='" << kg_running_path << "'" << bj_eol;
+	os << "root='" << kg_root_path << "'" << bj_eol;
+	os << "verify='" << kg_verify_path << "'" << bj_eol;
+	os << "collisions='" << kg_collisions_path << "'" << bj_eol;
+	os << "missing='" << kg_missing_path << "'" << bj_eol;
+	os << "corrupted='" << kg_corrupted_path << "'" << bj_eol;
+	os << "overlaped='" << kg_overlaped_path << "'" << bj_eol;
+	os << "dead='" << kg_dead_path << "'" << bj_eol;
+	os << "broken='" << kg_broken_path << "'" << bj_eol;
 	os.flush();
 	return os;
 }
@@ -1280,9 +1280,9 @@ skeleton_glb::report_err(ch_string pth, ch_string err_pth){
 
 	if(err_pth.empty() || pth.empty()){
 		DBG_PRT(DBG_ALL_LVS, 
-			os << "ABORTING_DATA " << std::endl;
-			os << "REPORTING " << err_pth << " " << pth << std::endl;
-			os << "END_OF_aborting_data" << std::endl;
+			os << "ABORTING_DATA " << bj_eol;
+			os << "REPORTING " << err_pth << " " << pth << bj_eol;
+			os << "END_OF_aborting_data" << bj_eol;
 		);
 		SKELETON_CK(false);
 		return;
@@ -1293,9 +1293,9 @@ skeleton_glb::report_err(ch_string pth, ch_string err_pth){
 	mpz_class num_err = inc_fnum(as_full_path(err_count_file));
 	if(num_err < 0){
 		DBG_PRT(DBG_ALL_LVS, 
-			os << "ABORTING_DATA " << std::endl;
-			os << "REPORTING " << err_pth << " " << pth << std::endl;
-			os << "END_OF_aborting_data" << std::endl;
+			os << "ABORTING_DATA " << bj_eol;
+			os << "REPORTING " << err_pth << " " << pth << bj_eol;
+			os << "END_OF_aborting_data" << bj_eol;
 		);
 		SKELETON_CK(false);
 		return;
@@ -1305,9 +1305,9 @@ skeleton_glb::report_err(ch_string pth, ch_string err_pth){
 	ref_write(pth, err_lk_nam);
 
 	DBG_PRT(DBG_ALL_LVS, 
-		os << "ABORTING_DATA " << std::endl;
-		os << "REPORTING " << err_pth << " " << pth << std::endl;
-		os << "END_OF_aborting_data" << std::endl;
+		os << "ABORTING_DATA " << bj_eol;
+		os << "REPORTING " << err_pth << " " << pth << bj_eol;
+		os << "END_OF_aborting_data" << bj_eol;
 	);
 	SKELETON_CK(false);
 }
@@ -1325,7 +1325,7 @@ skeleton_glb::init_paths(){
 		if(! kg_keep_skeleton){
 			ch_string skl_pth = kg_root_path + SKG_SKELETON_DIR;
 			delete_directory(skl_pth);
-			BRAIN_CK((std::cout << "DELETING SKELETON" << std::endl) && true);
+			BRAIN_CK((std::cout << "DELETING SKELETON" << bj_eol) && true);
 			DBG_PRT(93, os << "DELETING SKELETON. Type return ...");
 			DBG_COMMAND(93, getchar());
 		}
@@ -1392,8 +1392,8 @@ canon_clause::add_chars_to(row<char>& cnn){
 	DBG_PRT(86, os << "ccl=" << *this);
 }
 
-std::ostream&
-canon_clause::print_canon_clause(std::ostream& os, bool from_pt){
+bj_ostream&
+canon_clause::print_canon_clause(bj_ostream& os, bool from_pt){
 	MARK_USED(from_pt);
 
 	return print_row_data(os, true, " ");
@@ -1431,12 +1431,12 @@ skeleton_glb::get_new_clause(){
 	DBG(ccl.cc_can_release = true);
 
 	DBG_PRT_COND(DBG_ALL_LVS, ! (ccl.is_cc_virgin()),
-		os << "ABORTING_DATA " << std::endl;
-		os << " side=" << cond_side << std::endl;
+		os << "ABORTING_DATA " << bj_eol;
+		os << " side=" << cond_side << bj_eol;
 		os << " ccl=";
 		//ccl.print_row_data(os);
-		os << std::endl;
-		os << "END_OF_aborting_data" << std::endl;
+		os << bj_eol;
+		os << "END_OF_aborting_data" << bj_eol;
 	);
 	SKELETON_CK(ccl.is_cc_virgin());
 	SKELETON_CK(! ccl.cc_in_free);
@@ -1520,7 +1520,7 @@ canon_cnf::add_clauses_as_chars_to(row<canon_clause*>& all_ccl, row<char>& cnn){
 	ch_string hh_str = canon_header(cn_hd_str, all_ccl.size(), cf_dims.dd_tot_vars);
 	canon_string_append(cnn, hh_str);
 
-	DBG_PRT(70, os << "add_clauses_as_chars=" << std::endl; all_ccl.print_row_data(os, true, "\n"));
+	DBG_PRT(70, os << "add_clauses_as_chars=" << bj_eol; all_ccl.print_row_data(os, true, "\n"));
 	SKELETON_CK(! cf_sorted || all_ccl.is_sorted(cmp_clauses));
 
 	for(long ii = 0; ii < all_ccl.size(); ii++){
@@ -1647,8 +1647,8 @@ canon_cnf::get_num_variants_name(){
 	return num_vnt_name;
 }
 
-std::ostream&
-canon_cnf::print_canon_cnf(std::ostream& os, bool from_pt){
+bj_ostream&
+canon_cnf::print_canon_cnf(bj_ostream& os, bool from_pt){
 	MARK_USED(from_pt);
 
 	row<char>& cnn = cf_chars;
@@ -1674,11 +1674,11 @@ canon_cnf::calc_sha_in(ch_string& sha_str){
 
 	canon_sha(cnn, sha_str);
 
-	DBG_PRT(94, os << "calc_sha in cnf=" << (void*)this << std::endl
-		<< ">>>>>>>>" << std::endl;
+	DBG_PRT(94, os << "calc_sha in cnf=" << (void*)this << bj_eol
+		<< ">>>>>>>>" << bj_eol;
 		canon_print(os, cnn);
-		os << ">>>>>>>>" << std::endl;
-		os << "SHA='" << sha_str << "'" << std::endl;
+		os << ">>>>>>>>" << bj_eol;
+		os << "SHA='" << sha_str << "'" << bj_eol;
 	);
 }
 
@@ -1783,13 +1783,13 @@ canon_cnf::calc_loader_sha_str(dimacs_loader& the_loader){
 	
 	ch_string the_sha = sha_txt_of_arr(arr_to_sha, arr_to_sha_sz);
 
-	DBG_PRT(94, os << "calc_loader_sha str " << std::endl << the_loader.ld_file_name << std::endl;
-		os << " CONTENT=" << std::endl;
-		os << ">>>>>>" << std::endl;
+	DBG_PRT(94, os << "calc_loader_sha str " << bj_eol << the_loader.ld_file_name << bj_eol;
+		os << " CONTENT=" << bj_eol;
+		os << ">>>>>>" << bj_eol;
 		os << arr_to_sha;
-		os << "<<<<<<" << std::endl;
-		os << "SZ_to_SHA=" << arr_to_sha_sz << std::endl;
-		os << "SHA=" << the_sha << std::endl;
+		os << "<<<<<<" << bj_eol;
+		os << "SZ_to_SHA=" << arr_to_sha_sz << bj_eol;
+		os << "SHA=" << the_sha << bj_eol;
 		os << "sizeof(std::istream::char_type)=" << sizeof(std::istream::char_type);
 	);
 
@@ -1859,17 +1859,17 @@ canon_cnf::load_from(skeleton_glb& skg, ch_string& f_nam){
 
 	//SKELETON_CK(false);
 
-	DBG_PRT(94, os << "BEFORE_SHA=" << std::endl; canon_print(os, cf_chars); os << "EMPTY=" << cf_chars.is_empty());
+	DBG_PRT(94, os << "BEFORE_SHA=" << bj_eol; canon_print(os, cf_chars); os << "EMPTY=" << cf_chars.is_empty());
 
 	DBG(ch_string ck_sha_str);
 	DBG(calc_sha_in(ck_sha_str));
 	DBG_PRT_COND(DBG_ALL_LVS, ! (cf_sha_str == ck_sha_str),
-		os << "ABORTING_DATA " << std::endl;
-		os << "CLAUSES" << std::endl;
+		os << "ABORTING_DATA " << bj_eol;
+		os << "CLAUSES" << bj_eol;
 		cf_clauses.print_row_data(os, true, "\n");
-		//os << "FILLED" << std::endl;
+		//os << "FILLED" << bj_eol;
 		//cf_filled_clauses.print_row_data(os, true, "\n");
-		os << "END_OF_aborting_data" << std::endl;
+		os << "END_OF_aborting_data" << bj_eol;
 	);
 	SKELETON_CK(cf_sha_str == ck_sha_str);
 
@@ -1938,14 +1938,14 @@ canon_cnf::i_am_super_of(canon_cnf& the_cnf, bool& are_eq){
 
 	bool is_sub = (are_eq || (cmp_resp == k_rgt_is_sub));
 
-	DBG_PRT_COND(92, (cmp_resp == k_rgt_is_sub), os << "IN " << std::endl;
-		os << " MY_CCLS=" << std::endl;
+	DBG_PRT_COND(92, (cmp_resp == k_rgt_is_sub), os << "IN " << bj_eol;
+		os << " MY_CCLS=" << bj_eol;
 		all_my_ccls.print_row_data(os, true, "\n");
-		os << " HAS_SUB=" << std::endl;
+		os << " HAS_SUB=" << bj_eol;
 		all_cnn_ccls.print_row_data(os, true, "\n");
 	);
 
-	DBG_PRT_COND(96, are_eq, os << "CCLS ARE EQUAL (super_of)" << this << std::endl);
+	DBG_PRT_COND(96, are_eq, os << "CCLS ARE EQUAL (super_of)" << this << bj_eol);
 
 	return is_sub;
 }
@@ -1961,10 +1961,10 @@ canon_cnf::i_am_sub_of(canon_cnf& the_cnf, bool& are_eq){
 
 	bool is_sub = (are_eq || (cmp_resp == k_rgt_is_sub));
 
-	DBG_PRT_COND(92, (cmp_resp == k_rgt_is_sub), os << "IN " << std::endl;
-		os << " CNF_CCLS=" << std::endl;
+	DBG_PRT_COND(92, (cmp_resp == k_rgt_is_sub), os << "IN " << bj_eol;
+		os << " CNF_CCLS=" << bj_eol;
 		all_cnn_ccls.print_row_data(os, true, "\n");
-		os << " HAS_SUB=" << std::endl;
+		os << " HAS_SUB=" << bj_eol;
 		all_my_ccls.print_row_data(os, true, "\n");
 	);
 
@@ -2166,10 +2166,10 @@ canon_cnf::all_nxt_vnt(skeleton_glb& skg, row<variant>& all_next, row<ch_string>
 			/*
 			DBG(choose_variant(all_next, avg_szs.avg, true));
 			DBG_PRT(DBG_ALL_LVS, 
-				os << "ABORTING_DATA " << std::endl;
-				os << " all_next=" << all_next << std::endl;
-				os << " avg_szs=" << avg_szs << std::endl;
-				os << "END_OF_aborting_data" << std::endl;
+				os << "ABORTING_DATA " << bj_eol;
+				os << " all_next=" << all_next << bj_eol;
+				os << " avg_szs=" << avg_szs << bj_eol;
+				os << "END_OF_aborting_data" << bj_eol;
 			);
 			SKELETON_CK(false);
 			*/
@@ -2326,7 +2326,7 @@ canon_cnf::update_parent_variants(skeleton_glb& skg, ch_string sv_dir){
 
 		skg.ref_remove(vnt_pth);
 		skg.ref_write(lnk_pth, vnt_pth);
-		DBG_PRT(107, os << "vnt_pth=" << vnt_pth << " to " << std::endl << " lnk_pth=" << lnk_pth);
+		DBG_PRT(107, os << "vnt_pth=" << vnt_pth << " to " << bj_eol << " lnk_pth=" << lnk_pth);
 	}
 
 	SKELETON_CK(aa == all_next.size());
@@ -2347,7 +2347,7 @@ canon_cnf::update_parent_variants(skeleton_glb& skg, ch_string sv_dir){
 
 		skg.ref_remove(lst_pth);
 		skg.ref_write(sv_dir, lst_pth);
-		DBG_PRT(107, os << "lst_pth=" << lst_pth << " to " << std::endl << " full_pth=" << sv_dir);
+		DBG_PRT(107, os << "lst_pth=" << lst_pth << " to " << bj_eol << " full_pth=" << sv_dir);
 
 		SKELETON_CK(skg.ref_exists(lst_pth));
 
@@ -2374,11 +2374,11 @@ canon_cnf::ck_vnts(skeleton_glb& skg){
 	for(aa = 0; aa < num_vnts; aa++){
 		ch_string vpth = get_variant_path(skg, aa);
 		DBG_PRT_COND(DBG_ALL_LVS, ! (vpth != ""),
-			os << "ABORTING_DATA case1" << std::endl;
-			os << " num_vnts=" << num_vnts << std::endl;
-			os << " aa=" << aa << std::endl;
-			os << " vpth=" << vpth << std::endl;
-			os << "END_OF_aborting_data" << std::endl;
+			os << "ABORTING_DATA case1" << bj_eol;
+			os << " num_vnts=" << num_vnts << bj_eol;
+			os << " aa=" << aa << bj_eol;
+			os << " vpth=" << vpth << bj_eol;
+			os << "END_OF_aborting_data" << bj_eol;
 		);
 		SKELETON_CK(vpth != "");
 	}
@@ -2386,11 +2386,11 @@ canon_cnf::ck_vnts(skeleton_glb& skg){
 		for(; aa < SKG_MAX_NUM_VARIANT; aa++){
 			ch_string vpth = get_variant_path(skg, aa, true);
 			DBG_PRT_COND(DBG_ALL_LVS, ! (vpth == ""),
-				os << "ABORTING_DATA case2" << std::endl;
-				os << " num_vnts=" << num_vnts << std::endl;
-				os << " aa=" << aa << std::endl;
-				os << " vpth=" << vpth << std::endl;
-				os << "END_OF_aborting_data" << std::endl;
+				os << "ABORTING_DATA case2" << bj_eol;
+				os << " num_vnts=" << num_vnts << bj_eol;
+				os << " aa=" << aa << bj_eol;
+				os << " vpth=" << vpth << bj_eol;
+				os << "END_OF_aborting_data" << bj_eol;
 			);
 			SKELETON_CK(vpth == "");
 		}
@@ -2436,9 +2436,9 @@ canon_cnf::save_cnf(skeleton_glb& skg, ch_string sv_pth){
 		return false;
 	}
 
-	DBG_PRT(76, os << "before save_cnf'" << sv_pth << "'" << std::endl 
-		<< cf_sha_str << std::endl 
-		<< cf_phdat << std::endl 
+	DBG_PRT(76, os << "before save_cnf'" << sv_pth << "'" << bj_eol 
+		<< cf_sha_str << bj_eol 
+		<< cf_phdat << bj_eol 
 		<< cf_dbg_shas
 	);
 
@@ -2492,11 +2492,11 @@ canon_cnf::save_cnf(skeleton_glb& skg, ch_string sv_pth){
 		DBG(
 			if(existed && has_phases){
 				DBG_PRT_COND(DBG_ALL_LVS, ! ((pth1 == "") || skg.ref_exists(pth1)),
-					os << "ABORTING_DATA " << std::endl;
-					os << " cnf=" << this << std::endl;
-					os << " cf_phdat=" << cf_phdat << std::endl;
-					os << " sv_name=" << sv_name << std::endl;
-					os << "END_OF_aborting_data" << std::endl;
+					os << "ABORTING_DATA " << bj_eol;
+					os << " cnf=" << this << bj_eol;
+					os << " cf_phdat=" << cf_phdat << bj_eol;
+					os << " sv_name=" << sv_name << bj_eol;
+					os << "END_OF_aborting_data" << bj_eol;
 				);
 				SKELETON_CK((pth1 == "") || skg.ref_exists(pth1));
 				SKELETON_CK((pth2 == "") || skg.ref_exists(pth2));
@@ -2548,7 +2548,7 @@ canon_cnf::save_cnf(skeleton_glb& skg, ch_string sv_pth){
 	}
 
 	DBG_PRT(76, os << "AFTER save_cnf'" << sv_pth << "' ok=" << sv_ok << " existed=" << existed
-		<< " dbg_id=" << skg_dbg_canon_save_id << std::endl << std::endl);
+		<< " dbg_id=" << skg_dbg_canon_save_id << bj_eol << bj_eol);
 	//DBG_PRT(76, os << "HIT RETURN TO CONTINUE..." << " dbg_id=" << skg_dbg_canon_save_id);
 	//DBG_COMMAND(76, getchar());
 
@@ -2620,11 +2620,11 @@ skeleton_glb::ref_vnt_name(ch_string vpth, ch_string sub_nm){
 	DBG(ch_string vfull = as_full_path(vpth));
 	DBG(bool ck1 = (! ref_exists(vpth) || (vfull == (path_to_absolute_path(vfull) + '/'))));
 	DBG_PRT_COND(DBG_ALL_LVS, ! ck1,
-		os << "ABORTING_DATA " << std::endl;
-		os << " vpth=" << vpth << std::endl;
-		os << " vfull=" << vfull << std::endl;
-		os << " val2=" << (path_to_absolute_path(vfull) + '/') << std::endl;
-		os << "END_OF_aborting_data" << std::endl;
+		os << "ABORTING_DATA " << bj_eol;
+		os << " vpth=" << vpth << bj_eol;
+		os << " vfull=" << vfull << bj_eol;
+		os << " val2=" << (path_to_absolute_path(vfull) + '/') << bj_eol;
+		os << "END_OF_aborting_data" << bj_eol;
 	);
 	SKELETON_CK(ck1);
 
@@ -2651,19 +2651,19 @@ canon_cnf::init_with(skeleton_glb& skg, row<canon_clause*>& all_ccls,
 			long dbg_tot_vars; long dbg_tot_lits; long dbg_tot_twolits;
 			canon_count_tots(all_ccls, dbg_tot_vars, dbg_tot_lits, dbg_tot_twolits); 
 			DBG_PRT_COND(DBG_ALL_LVS, ! (tot_vars == dbg_tot_vars),
-				os << "ABORTING_DATA " << std::endl;
-				os << " dbg_tot_vars=" << dbg_tot_vars << std::endl;
-				os << " tot_vars=" << tot_vars << std::endl;
-				os << "END_OF_aborting_data" << std::endl;
+				os << "ABORTING_DATA " << bj_eol;
+				os << " dbg_tot_vars=" << dbg_tot_vars << bj_eol;
+				os << " tot_vars=" << tot_vars << bj_eol;
+				os << "END_OF_aborting_data" << bj_eol;
 			);
 			SKELETON_CK(tot_vars == dbg_tot_vars);
 			DBG_PRT_COND(DBG_ALL_LVS, ! (tot_lits == dbg_tot_lits),
-				os << "ABORTING_DATA " << std::endl;
-				os << " all_ccls=" << std::endl;
+				os << "ABORTING_DATA " << bj_eol;
+				os << " all_ccls=" << bj_eol;
 				all_ccls.print_row_data(os, true, "\n");
-				os << " dbg_tot_lits=" << dbg_tot_lits << std::endl;
-				os << " tot_lits=" << tot_lits << std::endl;
-				os << "END_OF_aborting_data" << std::endl;
+				os << " dbg_tot_lits=" << dbg_tot_lits << bj_eol;
+				os << " tot_lits=" << tot_lits << bj_eol;
+				os << "END_OF_aborting_data" << bj_eol;
 			);
 			SKELETON_CK(tot_lits == dbg_tot_lits);
 			SKELETON_CK(tot_twolits == dbg_tot_twolits);

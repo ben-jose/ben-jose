@@ -42,12 +42,12 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 
 #include <ftw.h>
 
-#include <iostream>
 #include <fstream>
 #include <sstream>
 #include <set>
 
 #include "config.h"
+#include "bj_stream.h"
 #include "dimacs.h"
 #include "sha2.h"
 #include "tak_mak.h"
@@ -128,8 +128,8 @@ extern mpz_class	skg_dbg_canon_save_id;
 //=================================================================
 // funtion declarations
 
-std::ostream&
-print_hex_as_txt(std::ostream& os, row<uchar_t>& sha_rr);
+bj_ostream&
+print_hex_as_txt(bj_ostream& os, row<uchar_t>& sha_rr);
 
 ch_string
 sha_txt_of_arr(uchar_t* to_sha, long to_sha_sz);
@@ -192,7 +192,7 @@ bool		canon_equal(ch_string& the_pth, row<char>& cnn);
 ch_string	canon_hash_path(const dima_dims& dims, ch_string sha_str);
 //ch_string	canon_lock_name(const dima_dims& dims, ch_string sha_str);
 
-void		canon_print(std::ostream& os, row<char>& cnn);
+void		canon_print(bj_ostream& os, row<char>& cnn);
 void		canon_sha(row<char>& cnn, ch_string& sha_txt);
 
 ch_string	canon_header(ch_string& hd_str, long ccls, long vars);
@@ -239,10 +239,10 @@ public:
 		return pd_ref2_nam;
 	}
 
-	std::ostream&	print_ref_strs(std::ostream& os, bool from_pt = false){
-		os << "strs=[" << std::endl;
-		os << " '" << pd_ref1_nam << "'" << std::endl;
-		os << " '" << pd_ref2_nam << "'" << std::endl;
+	bj_ostream&	print_ref_strs(bj_ostream& os, bool from_pt = false){
+		os << "strs=[" << bj_eol;
+		os << " '" << pd_ref1_nam << "'" << bj_eol;
+		os << " '" << pd_ref2_nam << "'" << bj_eol;
 		os << "]";
 	
 		os.flush();
@@ -335,7 +335,7 @@ public:
 
 	void		add_chars_to(row<char>& cnn);
 
-	std::ostream&	print_canon_clause(std::ostream& os, bool from_pt = false);
+	bj_ostream&	print_canon_clause(bj_ostream& os, bool from_pt = false);
 };
 
 comparison
@@ -389,8 +389,8 @@ public:
 		vn_elap.init_average();
 	}
 
-	std::ostream&	print_variant(std::ostream& os, bool from_pt = false){	
-		os << "vn[" << vn_real_path << " " << vn_elap << "]" << std::endl;
+	bj_ostream&	print_variant(bj_ostream& os, bool from_pt = false){	
+		os << "vn[" << vn_real_path << " " << vn_elap << "]" << bj_eol;
 		return os;
 	}
 };
@@ -565,18 +565,18 @@ public:
 
 	//void		get_first_full(long& idx_all_pos, long& idx_all_neg);
 
-	//std::ostream&	print_canon_cnf(std::ostream& os);
-	std::ostream&	print_canon_cnf(std::ostream& os, bool from_pt = false);
+	//bj_ostream&	print_canon_cnf(bj_ostream& os);
+	bj_ostream&	print_canon_cnf(bj_ostream& os, bool from_pt = false);
 
-	std::ostream&	print_attrs_canon_cnf(std::ostream& os){
-		os << cf_dims << std::endl;
+	bj_ostream&	print_attrs_canon_cnf(bj_ostream& os){
+		os << cf_dims << bj_eol;
 		/*
-		os << "cf_tot_vars=" << cf_tot_vars << std::endl;
-		os << "cf_tot_ccls=" << cf_tot_ccls << std::endl;
-		os << "cf_tot_lits=" << cf_tot_lits << std::endl;
+		os << "cf_tot_vars=" << cf_tot_vars << bj_eol;
+		os << "cf_tot_ccls=" << cf_tot_ccls << bj_eol;
+		os << "cf_tot_lits=" << cf_tot_lits << bj_eol;
 		*/
-		os << "cf_sha_str=" << cf_sha_str << std::endl;
-		os << "cf_num_purged=" << cf_num_purged << std::endl;
+		os << "cf_sha_str=" << cf_sha_str << bj_eol;
+		os << "cf_num_purged=" << cf_num_purged << bj_eol;
 		return os;
 	}
 };
@@ -687,7 +687,7 @@ public:
 	int		get_write_lock(ch_string lk_dir);
 	void	drop_write_lock(ch_string lk_dir, int fd_lock);
 
-	std::ostream&	print_paths(std::ostream& os);
+	bj_ostream&	print_paths(bj_ostream& os);
 };
 
 

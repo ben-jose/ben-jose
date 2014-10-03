@@ -37,7 +37,6 @@ Declarations of classes and that implement the neural network.
 // includes
 
 #include <limits.h>
-#include <iostream>
 #include <fstream>
 #include <sstream>
 
@@ -116,22 +115,22 @@ typedef mpz_class 		recoil_counter_t;
 // in print_macros.h
 /*
 #define DECLARE_PRINT_FUNCS(obj_t) \
-std::ostream& operator << (std::ostream& os, obj_t& obj1); \
-std::ostream& operator << (std::ostream& os, obj_t* obj1); \
+bj_ostream& operator << (bj_ostream& os, obj_t& obj1); \
+bj_ostream& operator << (bj_ostream& os, obj_t* obj1); \
 \
 
 // end_of_define
 
 #define DEFINE_PRINT_FUNCS(obj_t) \
 inline \
-std::ostream& operator << (std::ostream& os, obj_t& obj1){ \
+bj_ostream& operator << (bj_ostream& os, obj_t& obj1){ \
 	obj1.print_##obj_t(os); \
 	os.flush(); \
 	return os; \
 } \
 \
 inline \
-std::ostream& operator << (std::ostream& os, obj_t* obj1){ \
+bj_ostream& operator << (bj_ostream& os, obj_t* obj1){ \
 	if(obj1 == NULL_PT){ \
 		os << "NULL_" << #obj_t; \
 	} else { \
@@ -186,7 +185,7 @@ void	find_max_level_and_tier(row<quanton*>& tmp_mots, long& max_lev, long& max_t
 
 void	dbg_prepare_used_dbg_ccl(row_quanton_t& rr_qua, canon_clause& dbg_ccl);
 bool	dbg_run_satex_on(brain& brn, ch_string f_nam);
-void	dbg_print_ccls_neus(std::ostream& os, row<canon_clause*>& dbg_ccls);
+void	dbg_print_ccls_neus(bj_ostream& os, row<canon_clause*>& dbg_ccls);
 
 void	split_tees(sort_glb& srg, row<sortee*>& sorted_tees, row<sortee*>& sub_tees, 
 		row<canon_clause*>& ccls_in, row<canon_clause*>& ccls_not_in);
@@ -216,7 +215,7 @@ class ticket {
 
 	void	update_ticket(brain* brn);
 
-	std::ostream&	print_ticket(std::ostream& os, bool from_pt = false){
+	bj_ostream&	print_ticket(bj_ostream& os, bool from_pt = false){
 		os << "[";
 		os << "rc:" << tk_recoil;
 		os << " lv:" << tk_level;
@@ -596,9 +595,9 @@ class quanton {
 		return cho;
 	}
 
-	std::ostream&		print_quanton(std::ostream& os, bool from_pt = false);
+	bj_ostream&		print_quanton(bj_ostream& os, bool from_pt = false);
 
-	std::ostream& 		print_ic_label(std::ostream& os){
+	bj_ostream& 		print_ic_label(bj_ostream& os){
 		os << "\"";
 		if(is_neg()){ os << "K"; }
 		if(qu_spin == cg_negative){ os << "["; }
@@ -892,8 +891,8 @@ class neuron {
 		return ne_tee.so_vessel;
 	}
 
-	std::ostream& 	print_neu_base(std::ostream& os, bool detail, bool prt_src, bool sort_fib);
-	std::ostream&	print_neuron(std::ostream& os, bool from_pt = false);
+	bj_ostream& 	print_neu_base(bj_ostream& os, bool detail, bool prt_src, bool sort_fib);
+	bj_ostream&	print_neuron(bj_ostream& os, bool from_pt = false);
 };
 
 //=============================================================================
@@ -924,7 +923,7 @@ class prop_signal {
 		init_prop_signal();
 	}
 
-	std::ostream& 	print_prop_signal(std::ostream& os, bool from_pt = false){
+	bj_ostream& 	print_prop_signal(bj_ostream& os, bool from_pt = false){
 		MARK_USED(from_pt);
 		os << "sg={";
 		os << ps_quanton;
@@ -1010,7 +1009,7 @@ class deduction {
 		return dt_motives.is_empty();
 	}
 
-	std::ostream&	print_deduction(std::ostream& os, bool from_pt = false){
+	bj_ostream&	print_deduction(bj_ostream& os, bool from_pt = false){
 		MARK_USED(from_pt);
 		os << "dt={ mots=" << dt_motives;
 		os << " qu:" << dt_forced;
@@ -1098,16 +1097,16 @@ class coloring {
 		return true;
 	}
 
-	std::ostream&	print_coloring(std::ostream& os, bool from_pt = false){
+	bj_ostream&	print_coloring(bj_ostream& os, bool from_pt = false){
 		MARK_USED(from_pt);
-		os << "CO(" << (void*)this <<")={ " << std::endl;
-		os << " quas=" << co_quas << std::endl;
-		os << " cols_quas=" << co_qua_colors << std::endl;
-		os << " neus=" << co_neus << std::endl;
+		os << "CO(" << (void*)this <<")={ " << bj_eol;
+		os << " quas=" << co_quas << bj_eol;
+		os << " cols_quas=" << co_qua_colors << bj_eol;
+		os << " neus=" << co_neus << bj_eol;
 		os << " qu_all=" << co_all_qua_consec;
 		os << " ne_all=" << co_all_neu_consec;
 		os << " szs_idx=" << co_szs_idx;
-		os << std::endl;
+		os << bj_eol;
 		os << "}";
 		os.flush();
 		return os;
@@ -1250,8 +1249,8 @@ class memap {
 	bool	map_oper(mem_op_t mm, brain& brn);
 	bool	map_ck_contained_in(brain& brn, coloring& colr, dbg_call_id dbg_id);
 
-	//void	map_dbg_prt(std::ostream& os, mem_op_t mm, brain& brn);
-	void	map_dbg_print(std::ostream& os, mem_op_t mm, brain& brn);
+	//void	map_dbg_prt(bj_ostream& os, mem_op_t mm, brain& brn);
+	void	map_dbg_print(bj_ostream& os, mem_op_t mm, brain& brn);
 
 	void	map_set_all_qu_curr_dom(brain& brn);
 	void	map_reset_all_qu_curr_dom(brain& brn);
@@ -1312,7 +1311,7 @@ class memap {
 	bool 	ck_guide_idx(coloring& guide_col, dbg_call_id id);
 	bool 	ck_map_guides(dbg_call_id dbg_id);
 
-	std::ostream&	print_memap(std::ostream& os, bool from_pt = false);
+	bj_ostream&	print_memap(bj_ostream& os, bool from_pt = false);
 };
 
 inline
@@ -1729,13 +1728,13 @@ class leveldat {
 	void	reset_semi_monos(brain& brn);
 	void	release_learned(brain& brn);
 
-	std::ostream&	print_leveldat(std::ostream& os, bool from_pt = false){
+	bj_ostream&	print_leveldat(bj_ostream& os, bool from_pt = false){
 		MARK_USED(from_pt);
-		os << "LVDAT(" << (void*)this <<")={" << std::endl;
-		os << " ld_map0=" << ld_map0 << std::endl;
-		os << " ld_chosen=" << ld_chosen << std::endl;
-		os << " ld_upper_quas=" << ld_upper_quas << std::endl;
-		os << " ld_semi_monos=" << ld_semi_monos << std::endl;
+		os << "LVDAT(" << (void*)this <<")={" << bj_eol;
+		os << " ld_map0=" << ld_map0 << bj_eol;
+		os << " ld_chosen=" << ld_chosen << bj_eol;
+		os << " ld_upper_quas=" << ld_upper_quas << bj_eol;
+		os << " ld_semi_monos=" << ld_semi_monos << bj_eol;
 		os << "}";
 		os.flush();
 		return os;
@@ -1994,14 +1993,14 @@ class brain {
 
 	quanton*	receive_psignal(bool only_in_dom);
 
-	std::ostream& 	print_psignals(std::ostream& os, bool just_qua = false){
+	bj_ostream& 	print_psignals(bj_ostream& os, bool just_qua = false){
 		os << "[";
 		for(long aa = br_first_psignal + 1; aa <= br_last_psignal; aa++){
 			if(br_psignals.is_valid_idx(aa)){
 				if(just_qua){
 					os << br_psignals[aa].ps_quanton << ", ";
 				} else {
-					os << br_psignals[aa] << std::endl;
+					os << br_psignals[aa] << bj_eol;
 				}
 			}
 		}
@@ -2015,7 +2014,7 @@ class brain {
 	void	deactivate_last_map();
 	void	close_all_maps();
 
-	void	print_active_maps(std::ostream& os);
+	void	print_active_maps(bj_ostream& os);
 
 	// aux neuron
 
@@ -2192,9 +2191,9 @@ class brain {
 
 	bool	ck_choices(bool after = false);
 	bool	ck_trail();
-	void	print_trail(std::ostream& os, bool no_src_only = false);
+	void	print_trail(bj_ostream& os, bool no_src_only = false);
 
-	std::ostream& 	print_all_quantons(std::ostream& os, long ln_sz, ch_string ln_fd);
+	bj_ostream& 	print_all_quantons(bj_ostream& os, long ln_sz, ch_string ln_fd);
 
 	bool	brn_compute_binary(row<neuron*>& neus);
 	bool	brn_compute_dots(row<neuron*>& neus);
@@ -2239,14 +2238,14 @@ class brain {
 	//void		dbg_get_all_chosen(row<quanton*>& all_cho);
 	void		dbg_prt_all_cho();
 
-	void		print_active_blocks(std::ostream& os);
+	void		print_active_blocks(bj_ostream& os);
 
-	std::ostream& 	print_brain(std::ostream& os);
+	bj_ostream& 	print_brain(bj_ostream& os);
 
-	std::ostream&	print_all_original(std::ostream& os);
+	bj_ostream&	print_all_original(bj_ostream& os);
 
-	std::ostream& 	dbg_ic_prt_dotty_label(std::ostream& os);
-	std::ostream& 	dbg_ic_prt_dotty_file(std::ostream& os, row<quanton*>& the_trail, long style = 0);
+	bj_ostream& 	dbg_ic_prt_dotty_label(bj_ostream& os);
+	bj_ostream& 	dbg_ic_prt_dotty_file(bj_ostream& os, row<quanton*>& the_trail, long style = 0);
 
 	void		dbg_ic_print(row<quanton*>& the_trail);
 };
@@ -2568,7 +2567,7 @@ void	system_exec(std::ostringstream& strstm);
 //=============================================================================
 // central.cpp funcs
 
-std::ostream&	test_open_out(std::ofstream& os);
+bj_ostream&	test_open_out(std::ofstream& os);
 void		test_cnf_join();
 void		test_cnf_as_ttnf(bool smpfy_it);
 void		test_cnf_shuffle();
@@ -2576,7 +2575,7 @@ void		test_simplify_cnf();
 
 
 void		call_solve_instance();
-void		print_dimacs_of(std::ostream& os, row<long>& all_lits, long num_cla, long num_var);
+void		print_dimacs_of(bj_ostream& os, row<long>& all_lits, long num_cla, long num_var);
 
 
 #endif		// BRAIN_H
