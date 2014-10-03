@@ -38,13 +38,18 @@ Functions to read and parse dimacs files.
 #include <cassert>
 #include <cstring>
 
+#include "tools.h"
+#include "dimacs.h"
 #include "dimacs_exception.h"
+#include "config.h"
+#include "file_funcs.h"
+
+
 #include "support.h"
 
-#define DIMACS_CK(prm) 	SUPPORT_CK(prm)
+#define DIMACS_CK(prm) 	DBG_CK(prm)
 
 // '\0'
-#define END_OF_SEC	0
 
 
 ch_string	k_dimacs_header_str =
@@ -56,67 +61,6 @@ ch_string	k_dimacs_header_str =
 
 bj_ostr_stream& dimacs_err_msg(long num_line, char ch_err, ch_string msg){
 	return parse_err_msg("DIMACS ERROR. ", num_line, ch_err, msg);
-}
-
-void
-read_file(ch_string f_nam, row<char>& f_data){
-	const char* ff_nn = f_nam.c_str();
-	std::ifstream istm;
-	istm.open(ff_nn, std::ios::binary);
-	if(! istm.good() || ! istm.is_open()){
-		bj_ostr_stream& msg = dimacs_err_msg(0, -1, "Could not open file ");
-		msg << "'" << f_nam << "'.";
-
-		DBG_THROW(bj_out << msg.str() << bj_eol);
-
-		char* dimacs_cannot_open = as_pt_char("Cannot open file dimacs exception");
-		DBG_THROW_CK(dimacs_cannot_open != dimacs_cannot_open);
-		throw dimacs_exception(dimacs_cannot_open);
-		abort_func(1, dimacs_cannot_open);
-	}
-
-	// get size of file:
-	istm.seekg (0, std::ios::end);
-	long file_sz = istm.tellg();
-	istm.seekg (0, std::ios::beg);
-
-	if(file_sz < 0){
-		bj_ostr_stream& msg = dimacs_err_msg(0, -1,
-			"Could not compute file size. ");
-		msg << "'" << f_nam << "'.";
-
-		char* dimacs_cannot_size = as_pt_char("Cannot compute file size dimacs exception");
-		DBG_THROW_CK(dimacs_cannot_size != dimacs_cannot_size);
-		throw dimacs_exception(dimacs_cannot_size);
-		abort_func(1, dimacs_cannot_size);
-	}
-
-	BRAIN_CK(sizeof(char) == 1);
-
-	char* file_content = tpl_malloc<char>(file_sz + 1);
-	istm.read(file_content, file_sz);
-	long num_read = istm.gcount();
-	if(num_read != file_sz){
-		tpl_free<char>(file_content, file_sz + 1);
-
-		bj_ostr_stream& msg = dimacs_err_msg(0, -1,
-			"Could not read full file into memory. ");
-		msg << "'" << f_nam << "'.";
-
-		char* dimacs_cannot_fit = as_pt_char("Cannot fit file in memory dimacs exception");
-		DBG_THROW_CK(dimacs_cannot_fit != dimacs_cannot_fit);
-		throw dimacs_exception(dimacs_cannot_fit);
-		abort_func(1, dimacs_cannot_fit);
-	}
-	file_content[file_sz] = END_OF_SEC;
-
-	s_row<char> tmp_rr;
-	tmp_rr.init_data(file_content, file_sz + 1);
-
-	f_data.clear();
-	tmp_rr.move_to(f_data);
-
-	BRAIN_CK(f_data.last() == END_OF_SEC);
 }
 
 void skip_cnf_decl(const char*& pt_in, long line){
@@ -435,14 +379,6 @@ dimacs_loader::load_file(){
 	read_file(ld_file_name, ld_content);
 
 	DBG_PRT(11, os << " ld_content=" << ld_content.print_row_data(os, true, ""));
-
-	/*
-	uchar_t* arr_to_sha = (uchar_t*)ld_content.get_c_array();
-	long arr_to_sha_sz = ld_content.get_c_array_sz() - 1;
-	ld_sha_str = sha_txt_of_arr(arr_to_sha, arr_to_sha_sz);
-
-	DBG_PRT(11, os << "SHA_SZ 1=" << arr_to_sha_sz);
-	*/
 }
 
 void
@@ -628,7 +564,7 @@ dimacs_loader::calc_f_lit_equal_and(long d_lit, row<long>& and_lits,
 {
 	DBG_PRT(42, os << "EQ_AND. d_lit=" << d_lit << " and_lits=" << and_lits);
 
-	BRAIN_CK(! and_lits.is_empty());
+	DIMACS_CK(! and_lits.is_empty());
 	row<long>& f1 = rr_lits.inc_sz();
 
 	and_lits.copy_to(f1);
@@ -652,43 +588,14 @@ dimacs_loader::calc_f_lit_equal_and(long d_lit, row<long>& and_lits,
 }
 
 void
-print_dimacs_of(bj_ostream& os, row<long>& all_lits, long num_cla, long num_var){
-
-	os << k_dimacs_header_str << bj_eol;
-	os << "p cnf " << num_var << " " << num_cla << " " << bj_eol;
-
-	long first = 0;
-	long neus_cou = 0;
-	long dens_cou = 0;
-
-	for(long ii = 0; ii < all_lits.size(); ii++){
-		long nio_id = all_lits[ii];
-		os << nio_id << " ";
-		if(nio_id == 0){
-			os << bj_eol;
-
-			neus_cou++;
-			long num_dens = ii - first;
-			BRAIN_CK(num_dens > 0);
-			dens_cou += num_dens;
-
-			first = ii + 1;
-		}
-	}
-
-	os << bj_eol;
-	os.flush();
-}
-
-void
 dimacs_loader::finish_parse(row<long>& inst_ccls)
 {
 	verif_num_ccls(ld_file_name, ld_decl_ccls, ld_parsed_ccls);
 
-	BRAIN_CK(ld_as_3cnf || (ld_nud_added_ccls == 0));
-	BRAIN_CK(ld_as_3cnf || (ld_nud_added_vars == 0));
-	BRAIN_CK(ld_as_3cnf || (ld_nud_added_lits == 0));
-	BRAIN_CK(ld_as_3cnf || (ld_nud_added_twolits == 0));
+	DIMACS_CK(ld_as_3cnf || (ld_nud_added_ccls == 0));
+	DIMACS_CK(ld_as_3cnf || (ld_nud_added_vars == 0));
+	DIMACS_CK(ld_as_3cnf || (ld_nud_added_lits == 0));
+	DIMACS_CK(ld_as_3cnf || (ld_nud_added_twolits == 0));
 
 	ld_num_ccls = ld_decl_ccls + ld_nud_added_ccls;
 	ld_num_vars = ld_decl_vars + ld_nud_added_vars;
@@ -696,232 +603,3 @@ dimacs_loader::finish_parse(row<long>& inst_ccls)
 	ld_tot_twolits = ld_parsed_twolits + ld_nud_added_twolits;
 }
 
-
-/*
-// shuffle lits
-
-void
-shuffle_lit_mapping(tak_mak& rnd_gen, row<integer>& to_shuff){
-	row<integer> tmp_bag;
-
-	long sz_0 = to_shuff.size();
-	MARK_USED(sz_0);
-
-	row_index from = FIRST_LIT_IDX;
-	to_shuff.copy_to(tmp_bag, from);
-	to_shuff.clear(true, false, from);
-
-	while(tmp_bag.size() > 0){
-		long idx_pop = rnd_gen.gen_rand_int32_ie(0, tmp_bag.size());
-
-		DIMACS_CK(idx_pop >= 0);
-		DIMACS_CK(idx_pop < tmp_bag.size());
-		integer var1 = tmp_bag.swap_pop(idx_pop);
-		DIMACS_CK(var1 > 0);
-
-		long pol = rnd_gen.gen_rand_int32_ie(0, 2);
-		if(pol == 0){ var1 = -var1; }
-
-		to_shuff.push(var1);
-	}
-
-	DIMACS_CK(to_shuff.size() == sz_0);
-}
-
-void
-init_lit_mapping(tak_mak& rnd_gen, row<integer>& the_map, long num_var){
-	//long rnd_base = gen_random_num(0, 99999);
-	//tak_mak rnd_gen(rnd_base);
-
-	the_map.set_cap(num_var + 1);
-	the_map.clear();
-	for(long kk = 0; kk < num_var + 1; kk++){
-		the_map.push(kk);
-	}
-
-	shuffle_lit_mapping(rnd_gen, the_map);
-
-	DBG_PRT(12, os << "num_var=" << num_var << " VAR_MAPPING=" << the_map);
-}
-
-integer
-map_literal(row<integer>& the_map, integer lit){
-	integer var = get_var(lit);
-	DIMACS_H_CK(var > 0);
-	DIMACS_H_CK(var < the_map.size());
-	integer map_var = the_map[var];
-	if(lit < 0){
-		return -map_var;
-	}
-	return map_var;
-}
-
-void
-map_cnf_lits(row<integer>& the_map, row<long>& in_lits, row<long>& out_lits)
-{
-	out_lits.clear();
-	for(long ii = 0; ii < in_lits.size(); ii++){
-		long in_lit = in_lits[ii];
-		long out_lit = 0;
-		if(in_lit != 0){
-			out_lit = map_literal(the_map, in_lit);
-		}
-		out_lits.push(out_lit);
-	}
-}
-
-void
-shuffle_cnf_lits(tak_mak& rnd_gen, long num_var, row<integer>& the_map,
-		row<long>& in_lits, row<long>& out_lits)
-{
-	init_lit_mapping(rnd_gen, the_map, num_var);
-
-	map_cnf_lits(the_map, in_lits, out_lits);
-}
-
-// join ccls
-
-long
-shift_literal(long in_lit, long the_shift){
-	integer var = get_var(in_lit);
-	DIMACS_CK(var > 0);
-	DIMACS_CK(the_shift > 0);
-	var += the_shift;
-	if(in_lit < 0){
-		return -var;
-	}
-	return var;
-}
-
-void
-shift_cnf_lits(long the_shift, row<long>& in_out_lits)
-{
-	for(long ii = 0; ii < in_out_lits.size(); ii++){
-		long in_lit = in_out_lits[ii];
-		long out_lit = 0;
-		if(in_lit != 0){
-			out_lit = shift_literal(in_lit, the_shift);
-		}
-		in_out_lits[ii] = out_lit;
-	}
-
-}
-
-void
-join_cnf_lits(row<long>& in_out_lits1, long num_var1, row<long>& in_out_lits2)
-{
-	shift_cnf_lits(num_var1, in_out_lits2);
-	in_out_lits2.append_to(in_out_lits1);
-}
-
-// shuffle ccls
-
-void
-shuffle_ccl_mapping(tak_mak& rnd_gen, row<integer>& to_shuff){
-	row<integer> tmp_bag;
-
-	long sz_0 = to_shuff.size();
-	MARK_USED(sz_0);
-
-	to_shuff.copy_to(tmp_bag);
-	to_shuff.clear();
-
-	while(tmp_bag.size() > 0){
-		long idx_pop = rnd_gen.gen_rand_int32_ie(0, tmp_bag.size());
-
-		DIMACS_CK(idx_pop >= 0);
-		DIMACS_CK(idx_pop < tmp_bag.size());
-		integer idx1 = tmp_bag.swap_pop(idx_pop);
-		DIMACS_CK(idx1 >= 0);
-
-		to_shuff.push(idx1);
-	}
-
-	DIMACS_CK(to_shuff.size() == sz_0);
-}
-
-void
-init_ccl_mapping(tak_mak& rnd_gen, row<integer>& the_map, long num_ccl){
-	the_map.set_cap(num_ccl);
-	the_map.clear();
-	for(long kk = 0; kk < num_ccl; kk++){
-		the_map.push(kk);
-	}
-
-	shuffle_ccl_mapping(rnd_gen, the_map);
-
-	DBG_PRT(13, os << "num_ccl=" << num_ccl << " VAR_MAPPING=" << the_map);
-}
-
-void
-rl_to_rrl(row<long>& in_lits, row_row_long_t& out_ccls)
-{
-	row_long_t tmp_rr;
-	out_ccls.clear();
-	tmp_rr.clear();
-	for(long ii = 0; ii < in_lits.size(); ii++){
-		long in_lit = in_lits[ii];
-		if(in_lit != 0){
-			tmp_rr.push(in_lit);
-		} else {
-			row_long_t& rr = out_ccls.inc_sz();
-			tmp_rr.move_to(rr);
-			DIMACS_CK(tmp_rr.is_empty());
-		}
-	}
-}
-
-void
-rrl_to_rl(row_row_long_t& in_ccls, row<long>& out_lits)
-{
-	out_lits.clear();
-	for(long ii = 0; ii < in_ccls.size(); ii++){
-		row_long_t& rr = in_ccls[ii];
-		for(long kk = 0; kk < rr.size(); kk++){
-			long in_lit = rr[kk];
-			out_lits.push(in_lit);
-		}
-		out_lits.push(0);
-	}
-}
-
-void
-shuffle_cnf_ccls(tak_mak& rnd_gen, row<integer>& the_map,
-		row<long>& in_lits, row<long>& out_lits)
-{
-	row_row_long_t in_ccls;
-	rl_to_rrl(in_lits, in_ccls);
-
-	long num_ccls = in_ccls.size();
-	init_ccl_mapping(rnd_gen, the_map, num_ccls);
-
-	DIMACS_CK(the_map.size() == num_ccls);
-
-	row_row_long_t out_ccls;
-	out_ccls.fill_new(num_ccls);
-
-	for(long ii = 0; ii < in_ccls.size(); ii++){
-		row_long_t& rr1 = in_ccls[ii];
-		long n_idx = the_map[ii];
-
-		DIMACS_CK(out_ccls.is_valid_idx(n_idx));
-		row_long_t& rr2 = out_ccls[n_idx];
-
-		DIMACS_CK(! rr1.is_empty());
-		DIMACS_CK(rr2.is_empty());
-
-		rr1.move_to(rr2);
-	}
-
-	rrl_to_rl(out_ccls, out_lits);
-}
-
-void		shuffle_full_cnf(tak_mak& rnd_gen, long num_var, row<integer>& the_map,
-				row<long>& in_ccls, row<long>& out_ccls)
-{
-	row<long> tmp_ccls;
-	shuffle_cnf_lits(rnd_gen, num_var, the_map, in_ccls, tmp_ccls);
-	shuffle_cnf_ccls(rnd_gen, the_map, tmp_ccls, out_ccls);
-}
-
-*/

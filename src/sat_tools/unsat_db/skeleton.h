@@ -50,7 +50,6 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 #include "bj_stream.h"
 #include "dimacs.h"
 #include "sha2.h"
-#include "tak_mak.h"
 #include "print_macros.h"
 
 class canon_clause;

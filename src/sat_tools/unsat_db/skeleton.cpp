@@ -41,6 +41,7 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 #include <cstring>
 
 #include "stack_trace.h"
+#include "file_funcs.h"
 #include "support.h"
 #include "skeleton.h"
 

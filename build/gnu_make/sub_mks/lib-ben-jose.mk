@@ -19,6 +19,7 @@ SOURCES := \
 	$(SRC_BASE_DIR)/sat_tools/debug/dbg_run_satex.cpp \
 	$(SRC_BASE_DIR)/sat_tools/debug/dbg_prt_brn.cpp \
 	$(SRC_BASE_DIR)/utils/stack_trace.cpp \
+	$(SRC_BASE_DIR)/utils/file_funcs.cpp \
 	$(SRC_BASE_DIR)/utils/mem.cpp \
 	$(SRC_BASE_DIR)/utils/tak_mak.cpp \
 	$(SRC_BASE_DIR)/utils/sha2.c 

@@ -347,7 +347,7 @@ global_data::print_totals(bj_ostream& os, double curr_tm){
 
 	if(curr_tm != 0.0){
 		double full_tm = curr_tm - batch_start_time;
-		os << std::fixed;
+		os << bj_fixed;
 		os.precision(2);
 		os << "SECS=" << full_tm << " ";
 	}
@@ -369,7 +369,7 @@ global_data::print_totals(bj_ostream& os, double curr_tm){
 bj_ostream&
 global_data::print_final_totals(bj_ostream& os){
 	os << bj_eol;
-	//os << std::fixed;
+	//os << bj_fixed;
 	//os.precision(2);
 
 	os << GLB().batch_stat_choices;
@@ -409,7 +409,7 @@ global_data::print_batch_consec(){
 	os << CARRIAGE_RETURN;
 	//os.width(15);
 	//os.fill(' ');
-	os << std::fixed;
+	os << bj_fixed;
 	os.precision(2);
 	os << batch_consec << " of " << batch_num_files << " (" << perc << " %)";
 	os.flush();

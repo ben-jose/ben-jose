@@ -2110,7 +2110,7 @@ avg_stat::print_avg_stat(bj_ostream& os){
 		avg_perc = ((avg / vs_max_val) * 100.0);
 	}
 
-	os << std::fixed;
+	os << bj_fixed;
 	os.precision(2);
 
 	os << vs_nam;

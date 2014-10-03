@@ -40,6 +40,8 @@ Wrapper for ostream class.
 #define bj_out std::cout
 #define bj_err std::cerr
 
+#define bj_fixed std::fixed
+
 typedef std::ostream bj_ostream;
 
 typedef std::ostringstream bj_ostr_stream;

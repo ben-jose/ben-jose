@@ -33,20 +33,6 @@ Declaration of functions to read and parse dimacs files.
 #ifndef DIMACS_H
 #define DIMACS_H
 
-/*
-#ifdef _XOPEN_SOURCE
-#undef _XOPEN_SOURCE
-#endif
-
-#define _XOPEN_SOURCE 500	// used in <ftw.h> to define behaviour (see features.h)
-
-#include <ftw.h>
-*/
-
-#include <fstream>
-#include <sstream>
-
-#include "config.h"
 #include "bj_stream.h"
 #include "print_macros.h"
 
@@ -71,9 +57,8 @@ DECLARE_PRINT_FUNCS(dima_dims)
 //=================================================================
 // funtion declarations
 
-void read_file(ch_string f_nam, row<char>& f_data);
 void read_problem_decl(const char*& pt_in, long& num_var, long& num_ccl, long& line);
-void print_dimacs_of(bj_ostream& os, row<long>& all_lits, long num_cla, long num_var);
+//void print_dimacs_of(bj_ostream& os, row<long>& all_lits, long num_cla, long num_var);
 
 //=================================================================
 // dima_dims
@@ -351,33 +336,6 @@ public:
 				row_long_t& input_ccls, row_long_t& inst_ccls);
 	void	finish_parse(row<long>& inst_ccls);
 };
-
-//=================================================================
-// map funcs
-
-/*
-void		shuffle_lit_mapping(tak_mak& rnd_gen, row<integer>& to_shuff);
-void		init_lit_mapping(tak_mak& rnd_gen, row<integer>& the_map, long num_var);
-integer		map_literal(row<integer>& the_map, integer lit);
-integer		shift_literal(long in_lit, long the_shift);
-void		map_cnf_lits(row<integer>& the_map, row<long>& in_ccls, row<long>& out_ccls);
-void		shuffle_cnf_lits(tak_mak& rnd_gen, long num_var, row<integer>& the_map,
-				row<long>& in_ccls, row<long>& out_ccls);
-
-void		shuffle_ccl_mapping(tak_mak& rnd_gen, row<integer>& to_shuff);
-void		init_ccl_mapping(tak_mak& rnd_gen, row<integer>& the_map, long num_neu);
-void		rl_to_rrl(row<long>& in_lits, row_row_long_t& out_ccls);
-void		rrl_to_rl(row_row_long_t& in_ccls, row<long>& out_lits);
-void		shuffle_cnf_ccls(tak_mak& rnd_gen, row<integer>& the_map,
-				row<long>& in_lits, row<long>& out_lits);
-
-void		shuffle_full_cnf(tak_mak& rnd_gen, long num_var, row<integer>& the_map,
-				row<long>& in_ccls, row<long>& out_ccls);
-
-void		shift_cnf_lits(long the_shift, row<long>& in_out_lits);
-void		join_cnf_lits(row<long>& in_out_lits1, long num_var1, row<long>& in_out_lits2);
-
-*/
 
 //=================================================================
 // print funcs
