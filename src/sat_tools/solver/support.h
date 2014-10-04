@@ -58,15 +58,7 @@ Declaration of classes that support and assist the system.
 //=================================================================
 // includes
 
-#include <limits>
-#include <fstream>
-#include <sstream>
-#include <set>
-#include <map>
-#include <iterator>
-
 #include "tools.h"
-#include "dimacs.h"
 
 #include "skeleton.h"
 

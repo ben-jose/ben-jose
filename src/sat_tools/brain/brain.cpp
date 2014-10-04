@@ -38,6 +38,7 @@ Classes and that implement the neural network.
 #include "support.h"
 #include "sortor.h"
 #include "brain.h"
+#include "dimacs.h"
 #include "dbg_run_satex.h"
 #include "dbg_prt_brn.h"
 #include "dbg_ic.h"
@@ -670,17 +671,11 @@ neuron::update_fibres(row<quanton*>& synps, bool orig){
 				GLB().pt_brain->print_trail(os);
 			}
 			os << this << bj_eol;;
-			os << ne_fibres[0] << bj_eol;;
+			os << ne_fibres[0] << bj_eol;
+			abort_func(0, "ABORT !. ne_fibres[0]->is_neg !!!");
 		}
 		BRAIN_CK_0(! ne_fibres[0]->is_neg());
 		forced_qua = forced_quanton();
-
-
-
-
-
-
-
 	}
 
 	ne_edge_tk.init_ticket();
@@ -1621,7 +1616,6 @@ brain::check_sat_assig(){
 		abort_func(1, "FATAL ERROR 001. Wrong is_sat answer !");
 	}
 
-	//row<long>& the_chosen = GLB().final_chosen_ids;
 	row<quanton*>& the_assig = GLB().final_assig;
 	the_assig.clear();
 
@@ -1643,32 +1637,6 @@ brain::solve_it(){
 
 	get_skeleton().kg_instance_file_nam = inst_info.get_f_nam() + "\n";
 	
-	/*
-	// ONLY_SAVE (NEVER FIND)
-		br_forced_srg.sg_quick_find = true;
-		br_forced_srg.sg_dbg_always_find_filled = false;
-
-		br_filled_srg.sg_quick_find = true;
-		br_filled_srg.sg_dbg_always_find_filled = false;
-
-		GLB().gg_skeleton.kg_only_save = true;
-		GLB().gg_skeleton.kg_save_canon = true;
-		GLB().gg_skeleton.kg_verifying = false;
-		GLB().gg_skeleton.kg_local_verifying = false;
-		
-	// ALWAYS FIND (NEVER SAVE)
-		br_forced_srg.sg_quick_find = false;
-		br_forced_srg.sg_dbg_always_find_filled = true;
-
-		br_filled_srg.sg_quick_find = false;
-		br_filled_srg.sg_dbg_always_find_filled = true;
-
-		GLB().gg_skeleton.kg_only_save = false;
-		GLB().gg_skeleton.kg_save_canon = false;
-		GLB().gg_skeleton.kg_verifying = false;
-		GLB().gg_skeleton.kg_local_verifying = false;
-	*/
-
 	if(inst_info.ist_result != k_unknown_satisf){ 
 		return;
 	}
@@ -2974,7 +2942,8 @@ quanton::ck_uncharged_tunnel(){
 
 neuron*
 quanton::get_uncharged_tunnel(dbg_call_id dbg_call){
-	DBG_PRT_COND(DBG_ALL_LVS, ! ((qu_uncharged_tunnel == NULL_PT) || qu_uncharged_tunnel->has_qua(*this)),
+	DBG_PRT_COND(DBG_ALL_LVS, 
+		! ((qu_uncharged_tunnel == NULL_PT) || qu_uncharged_tunnel->has_qua(*this)),
 		os << "ABORTING_DATA " << bj_eol;
 		os << "dbg_call=" << dbg_call << bj_eol;
 		os << "qua=" << this << bj_eol;

@@ -31,6 +31,10 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 
 --------------------------------------------------------------*/
 
+#include <fstream>
+#include <sstream>
+#include <set>
+
 #include <stdio.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -40,10 +44,12 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 #include <cassert>
 #include <cstring>
 
+#include "file_tree.h"
 #include "stack_trace.h"
 #include "file_funcs.h"
 #include "support.h"
 #include "skeleton.h"
+#include "dimacs.h"
 
 #define NUM_BYTES_SHA2	32	// 256 bits
 

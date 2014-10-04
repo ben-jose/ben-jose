@@ -29,8 +29,6 @@ file for test and debugging purposes.
 
 --------------------------------------------------------------*/
 
-#define _XOPEN_SOURCE 500
-#include <ftw.h>
 #include <fcntl.h>
 #include <errno.h>
 
@@ -46,6 +44,7 @@ file for test and debugging purposes.
 #include "unistd.h"
 #include "limits.h"
 
+#include "file_tree.h"
 #include "ch_string.h"
 #include "support.h"
 

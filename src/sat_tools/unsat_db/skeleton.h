@@ -34,16 +34,6 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 #ifndef SKELETON_H
 #define SKELETON_H
 
-#ifdef _XOPEN_SOURCE
-#undef _XOPEN_SOURCE
-#endif
-
-#define _XOPEN_SOURCE 500	// used in <ftw.h> to define behaviour (see features.h)
-
-#include <ftw.h>
-
-#include <fstream>
-#include <sstream>
 #include <set>
 
 #include "config.h"
