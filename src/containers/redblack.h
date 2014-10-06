@@ -36,6 +36,7 @@ Red-black trees template.
 
 #include "mem.h"
 #include "bj_stream.h"
+#include "stack_trace.h"
 
 #define DBG_RBT(prm) DBG(prm)
 #define REDBLACK_CK(prm)	DBG_CK(prm)
@@ -47,15 +48,15 @@ Red-black trees template.
 The class passed to the template ('node_manager_t') must implement the following methods
 
 	rbt_nod_ref_t	create_node(rbt_obj_t const & obj1);
-	void		destroy_subtree(rbt_nod_ref_t const & nd);
-	comparison	compare_node_objects(rbt_obj_t const & obj1, rbt_obj_t const & obj2);
+	void			destroy_all_nodes(redblack<rbt_row_node_handler<obj_t> >& rbt);
+	comparison		compare_node_objects(rbt_obj_t const & obj1, rbt_obj_t const & obj2);
 	rbt_nod_ref_t	get_null_node_reference();
 	rbt_nod_ref_t&	get_right_node_reference_of(rbt_nod_ref_t const & nd);
 	rbt_nod_ref_t&	get_left_node_reference_of(rbt_nod_ref_t const & nd);
 	rbt_nod_ref_t&	get_parent_node_reference_of(rbt_nod_ref_t const & nd);
 	rbt_obj_t&	get_object_of(rbt_nod_ref_t const & nd);
 	rbt_color_t		get_color_of(rbt_nod_ref_t const & nd);
-	void		set_color_of(rbt_nod_ref_t const & nd, rbt_color_t col);
+	void			set_color_of(rbt_nod_ref_t const & nd, rbt_color_t col);
 
 And have public typedefs for:
 
@@ -112,7 +113,7 @@ public:
 		return rbt_sz;
 	}
 
-	rbt_nod_ref_t	get_min(){		
+	rbt_nod_ref_t	get_min(){
 		return min_nod;
 	}
 
@@ -125,11 +126,15 @@ public:
 		return search_node(obj, the_parent);
 	}
 
-	rbt_nod_ref_t	insert(rbt_obj_t const & obj);
+	rbt_nod_ref_t	rbt_insert(rbt_obj_t const & obj);
 	rbt_nod_ref_t	predecessor(rbt_nod_ref_t xx);
 	rbt_nod_ref_t	successor(rbt_nod_ref_t xx);
-	rbt_nod_ref_t	remove(rbt_nod_ref_t zz);
-	bool			is_empty(){ return (root == get_null()); }
+	rbt_nod_ref_t	rbt_remove(rbt_nod_ref_t zz);
+	bool			is_empty(){ 
+		bool ee = (root == get_null()); 
+		REDBLACK_CK(! ee || (rbt_sz == 0));
+		return ee;
+	}
 
 	bool			check_tree(){
 		print(bj_err, true);
@@ -145,13 +150,14 @@ public:
 		return os;
 	}
 
+	/*
 	friend 
 	redblack<node_manager_t>&	operator << (redblack<node_manager_t>& rbt, 
 						rbt_obj_t const & elem)
 	{
-		rbt.insert(elem);
+		rbt.rbt_insert(elem);
 		return rbt;
-	}
+	}*/
 
 	rbt_nod_ref_t	get_null(){
 		return manager.get_null_node_reference();
@@ -162,7 +168,7 @@ public:
 	}
 
 	bool		is_alone(rbt_nod_ref_t const & nd);
-	bool		check_refs(rbt_nod_ref_t const & nd);
+	bool		check_refs(rbt_nod_ref_t const & nd, int from = 0);
 	void		move_node(rbt_nod_ref_t const & nd, rbt_nod_ref_t const & nd_empty);
 
 protected:
@@ -179,8 +185,8 @@ protected:
 		return manager.create_node(obj1);
 	}
 
-	void		destroy_nodes(){
-		manager.destroy_subtree(root);
+	void	destroy_nodes(){
+		manager.destroy_all_nodes(*this);
 	}
 
 	comparison	cmp(rbt_nod_ref_t nod1, rbt_nod_ref_t nod2){
@@ -232,10 +238,10 @@ protected:
 		rbt_nod_ref_t max_found = search_max(root);
 		REDBLACK_CK(min_nod == min_found);
 		REDBLACK_CK(max_nod == max_found);
-		REDBLACK_CK(check_refs(root));
-		REDBLACK_CK(check_refs(last_found));
-		REDBLACK_CK(check_refs(min_nod));
-		REDBLACK_CK(check_refs(max_nod));
+		REDBLACK_CK(check_refs(root, 1));
+		REDBLACK_CK(check_refs(last_found, 2));
+		REDBLACK_CK(check_refs(min_nod, 3));
+		REDBLACK_CK(check_refs(max_nod, 4));
 		return true;
 	}
 
@@ -344,33 +350,38 @@ public:
 	}
 
 	void	go_first_ref(){
-		REDBLACK_CK(the_tree.check_refs(the_ref));
+		REDBLACK_CK(the_tree.check_refs(the_ref, 5));
 		the_ref = the_tree.get_min();
 	}
 
 	void	go_last_ref(){
-		REDBLACK_CK(the_tree.check_refs(the_ref));
+		REDBLACK_CK(the_tree.check_refs(the_ref, 6));
 		the_ref = the_tree.get_max();
 	}
 
 	rbt_obj_t&	get_obj(){
-		REDBLACK_CK(the_tree.check_refs(the_ref));
+		REDBLACK_CK(the_tree.check_refs(the_ref, 7));
 		return the_tree.get_obj(the_ref); 
 	}
 	
 	bool 	in_null(){
-		REDBLACK_CK(the_tree.check_refs(the_ref));
+		REDBLACK_CK(the_tree.check_refs(the_ref, 8));
 		return (the_ref == the_tree.get_null());
 	}
 
 	void	go_next(){
-		REDBLACK_CK(the_tree.check_refs(the_ref));
+		REDBLACK_CK(the_tree.check_refs(the_ref, 9));
 		the_ref = the_tree.successor(the_ref);
 	}
 
 	void	go_prev(){
-		REDBLACK_CK(the_tree.check_refs(the_ref));
+		REDBLACK_CK(the_tree.check_refs(the_ref, 10));
 		the_ref = the_tree.predecessor(the_ref);
+	}
+
+	rbt_nod_ref_t 	get_ref(){
+		REDBLACK_CK(the_tree.check_refs(the_ref, 11));
+		return the_ref;
 	}
 
 	void 	operator ++ (){
@@ -403,10 +414,11 @@ redblack<node_manager_t>::is_alone(rbt_nod_ref_t const & nd){
 
 template<class node_manager_t>
 bool
-redblack<node_manager_t>::check_refs(rbt_nod_ref_t const & nd){
+redblack<node_manager_t>::check_refs(rbt_nod_ref_t const & nd, int from){
 	if(nd == get_null()){
 		return true;
 	}
+			
 	rbt_nod_ref_t pre = get_parent(nd);
 	rbt_nod_ref_t lft = get_left(nd);
 	rbt_nod_ref_t rgt = get_right(nd);
@@ -432,7 +444,8 @@ void
 redblack<node_manager_t>::move_node(rbt_nod_ref_t const & nd, rbt_nod_ref_t const & alone){
 	REDBLACK_CK(is_alone(alone));
 	REDBLACK_CK(alone != nd);
-	REDBLACK_CK(check_refs(nd));
+	REDBLACK_CK(check_refs(nd, 12));
+	REDBLACK_CK(check_refs(alone, 13));
 
 	rbt_nod_ref_t pre = get_parent(nd);
 	if(pre != get_null()){
@@ -464,7 +477,8 @@ redblack<node_manager_t>::move_node(rbt_nod_ref_t const & nd, rbt_nod_ref_t cons
 
 	move_update_min_max(nd, alone);
 
-	REDBLACK_CK(check_refs(alone));
+	REDBLACK_CK(check_refs(nd, 14));
+	REDBLACK_CK(check_refs(alone, 15));
 	SLOW_REDBLACK_CK(check_min_max());
 }
 
@@ -504,6 +518,9 @@ redblack<node_manager_t>::left_rotate(rbt_nod_ref_t xx){
 	rbt_nod_ref_t yy = get_right(xx);
 	rbt_nod_ref_t yy_lft = get_left(yy);
 
+	REDBLACK_CK(check_refs(xx, 16));
+	REDBLACK_CK(check_refs(yy, 17));
+	
 	get_right(xx) = yy_lft;
 	if(yy_lft != get_null()){
 		get_parent(yy_lft) = xx;
@@ -523,7 +540,13 @@ redblack<node_manager_t>::left_rotate(rbt_nod_ref_t xx){
 
 	get_left(yy) = xx;
 	get_parent(xx) = yy;
+
+	REDBLACK_CK(check_refs(parent_xx, 18));
+	REDBLACK_CK(check_refs(yy_lft, 19));
+	REDBLACK_CK(check_refs(xx, 20));
+	REDBLACK_CK(check_refs(yy, 21));	
 }
+
 
 template<class node_manager_t>
 void
@@ -531,6 +554,9 @@ redblack<node_manager_t>::right_rotate(rbt_nod_ref_t yy){
 	rbt_nod_ref_t xx = get_left(yy);
 	rbt_nod_ref_t xx_rgt = get_right(xx);
 
+	REDBLACK_CK(check_refs(xx, 22));
+	REDBLACK_CK(check_refs(yy, 23));
+	
 	get_left(yy) = xx_rgt;
 	if(xx_rgt != get_null()){
 		get_parent(xx_rgt) = yy;
@@ -550,11 +576,16 @@ redblack<node_manager_t>::right_rotate(rbt_nod_ref_t yy){
 
 	get_right(xx) = yy;
 	get_parent(yy) = xx;
+
+	REDBLACK_CK(check_refs(parent_yy, 24));
+	REDBLACK_CK(check_refs(xx_rgt, 25));
+	REDBLACK_CK(check_refs(xx, 26));
+	REDBLACK_CK(check_refs(yy, 27));
 }
 
 template<class node_manager_t>
 typename redblack<node_manager_t>::rbt_nod_ref_t
-redblack<node_manager_t>::insert(rbt_obj_t const & obj){
+redblack<node_manager_t>::rbt_insert(rbt_obj_t const & obj){
 	rbt_nod_ref_t parent = get_null();
 	rbt_nod_ref_t child = search_node(obj, parent);
 	if(child != get_null()){ 
@@ -563,6 +594,7 @@ redblack<node_manager_t>::insert(rbt_obj_t const & obj){
 
 	rbt_nod_ref_t zz = create_node(obj);
 	REDBLACK_CK(zz != get_null());	 
+	REDBLACK_CK(check_refs(zz, 28));
 
 	get_parent(zz) = parent;
 	if(parent == get_null()){
@@ -576,6 +608,7 @@ redblack<node_manager_t>::insert(rbt_obj_t const & obj){
 		get_right(parent) = zz;
 	}
 	rbt_nod_ref_t created = zz;
+	REDBLACK_CK(check_refs(created, 29));
 
 	// fix tree (colors and structure)
 	DBG_RBT(int rotations = 0);
@@ -628,6 +661,7 @@ redblack<node_manager_t>::insert(rbt_obj_t const & obj){
 	set_black(root);
 	REDBLACK_CK(rotations <= 2);
 	insert_update_min_max(created);
+	REDBLACK_CK(check_refs(created, 30));
 	SLOW_REDBLACK_CK(check_min_max());
 	return created;
 }
@@ -782,9 +816,10 @@ redblack<node_manager_t>::fix_remove(rbt_nod_ref_t xx, rbt_nod_ref_t parent){
 
 template<class node_manager_t>
 typename redblack<node_manager_t>::rbt_nod_ref_t
-redblack<node_manager_t>::remove(rbt_nod_ref_t zz){
+redblack<node_manager_t>::rbt_remove(rbt_nod_ref_t zz){
 	if(zz == get_null()){ return get_null(); }
 	REDBLACK_CK(zz != get_null());
+	REDBLACK_CK(check_refs(zz, 31));
 	remove_update_min_max(zz);
 	if(last_found == zz){
 		last_found = get_null();
@@ -845,13 +880,13 @@ redblack<node_manager_t>::print_rec(bj_ostream& os, rbt_nod_ref_t xx, int tb,
 
 		if(! just_cks){
 			for(ii = 0; ii < tb; ii++){ os << "\t"; }
-			os << "#nil" << std::endl;
+			os << "#nil" << bj_eol;
 		}
 		return os;
 	}
 
-	char* cl = "";
-	if(is_black(xx)){ ctr++; cl = "#"; }
+	char* cl = as_pt_char("");
+	if(is_black(xx)){ ctr++; cl = as_pt_char("#"); }
 
 	// right subtree
 	rbt_nod_ref_t rgt = get_right(xx);
@@ -863,18 +898,20 @@ redblack<node_manager_t>::print_rec(bj_ostream& os, rbt_nod_ref_t xx, int tb,
 	// node
 	if(! just_cks){
 		for(ii = 0; ii < tb; ii++){ os << "\t"; }
+		os.flush();
 	}
-	REDBLACK_CK(check_refs(xx));
-	char* min = "";
+	REDBLACK_CK(check_refs(xx, 32));
+	char* min = as_pt_char("");
 	if(xx == get_min()){
-		min = "<";
+		min = as_pt_char("<");
 	}
-	char* max = "";
+	char* max = as_pt_char("");
 	if(xx == get_max()){
-		max = ">";
+		max = as_pt_char(">");
 	}
 	if(! just_cks){
-		os << cl << min << get_obj(xx) << max << std::endl;
+		os << cl << min << get_obj(xx) << max << bj_eol;
+		os.flush();
 	}
 	if((lst_nod != get_null()) && (xx == lst_nod)){ 
 		prev = true; 
@@ -898,11 +935,11 @@ redblack<node_manager_t>::print(bj_ostream& os, bool just_chks,
 		htm = false;
 	}
 	if(htm){
-		os << "<HEAD>" << std::endl;
-		os << "<TITLE>Sermo file</TITLE>" << std::endl;
-		os << "</HEAD>" << std::endl;
-		os << "<BODY>" << std::endl;
-		os << "<PRE>" << std::endl;
+		os << "<HEAD>" << bj_eol;
+		os << "<TITLE>Sermo file</TITLE>" << bj_eol;
+		os << "</HEAD>" << bj_eol;
+		os << "<BODY>" << bj_eol;
+		os << "<PRE>" << bj_eol;
 	}
 
 	int total = 0;
@@ -912,8 +949,8 @@ redblack<node_manager_t>::print(bj_ostream& os, bool just_chks,
 	REDBLACK_CK(check_min_max());
 
 	if(htm){
-		os << "</PRE>" << std::endl;
-		os << "</BODY>" << std::endl;
+		os << "</PRE>" << bj_eol;
+		os << "</BODY>" << bj_eol;
 	}
 	return os;
 }

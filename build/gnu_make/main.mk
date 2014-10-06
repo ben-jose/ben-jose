@@ -7,9 +7,12 @@ TARGET_DIR := bin
 
 CXXFLAGS := -DFULL_DEBUG -rdynamic -Wall 
 
+LDFLAGS := -rdynamic
+
 SUBMAKEFILES := \
 	sub_mks/lib-ben-jose.mk \
 	sub_mks/ben-jose-solver.mk \
+	sub_mks/bj-test-rbt.mk \
 	sub_mks/bj-test.mk
 
 # $(VERBOSE).SILENT:

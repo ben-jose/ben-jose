@@ -36,6 +36,8 @@ Wrapper for ostream class.
 
 #include <iostream>
 
+#define CARRIAGE_RETURN		((char)13)
+
 #define bj_eol std::endl
 #define bj_out std::cout
 #define bj_err std::cerr

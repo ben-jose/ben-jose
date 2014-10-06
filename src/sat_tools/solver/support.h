@@ -76,7 +76,6 @@ extern bool	dbg_bad_cycle1;
 #define DBG_ALL_LVS -1
 
 #define DO_PRINTS(prm)		prm
-#define CARRIAGE_RETURN		((char)13)
 
 #define	DBG_COND(lv_arr, lev, cond)	\
 	(	(	(lev < 0) || \

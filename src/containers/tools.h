@@ -1627,10 +1627,10 @@ is_subset_cmp(iter_t& iter1, iter_t& iter2,
 	TOOLS_CK((is_sub_val == k_lft_is_sub) || (is_sub_val == k_rgt_is_sub));
 
 	while(true){
-		TOOLS_CK(lo_sub_to_ck == lo_sub.get_ref());
-		TOOLS_CK(hi_sub_to_ck == hi_sub.get_ref());
-		TOOLS_CK(lo_set_to_ck == lo_set.get_ref());
-		TOOLS_CK(hi_set_to_ck == hi_set.get_ref());
+		//TOOLS_CK(lo_sub_to_ck == lo_sub.get_ref());
+		//TOOLS_CK(hi_sub_to_ck == hi_sub.get_ref());
+		//TOOLS_CK(lo_set_to_ck == lo_set.get_ref());
+		//TOOLS_CK(hi_set_to_ck == hi_set.get_ref());
 
 		long sub_to_ck = (hi_sub_to_ck - lo_sub_to_ck);
 		long set_to_ck = (hi_set_to_ck - lo_set_to_ck);

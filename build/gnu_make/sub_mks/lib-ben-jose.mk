@@ -14,7 +14,6 @@ SOURCES := \
 	$(SRC_BASE_DIR)/sat_tools/solver/central.cpp \
 	$(SRC_BASE_DIR)/sat_tools/unsat_db/skeleton.cpp \
 	$(SRC_BASE_DIR)/sat_tools/debug/test.cpp \
-	$(SRC_BASE_DIR)/sat_tools/debug/test_rbt.cpp \
 	$(SRC_BASE_DIR)/sat_tools/debug/dbg_ic.cpp \
 	$(SRC_BASE_DIR)/sat_tools/debug/config.cpp \
 	$(SRC_BASE_DIR)/sat_tools/debug/dbg_run_satex.cpp \
