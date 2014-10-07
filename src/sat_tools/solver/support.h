@@ -59,6 +59,7 @@ Declaration of classes that support and assist the system.
 // includes
 
 #include "tools.h"
+#include "util_funcs.h"
 
 #include "skeleton.h"
 
@@ -431,7 +432,7 @@ public:
 
 	global_data(){
 		init_global_data();
-		MEM_CTRL(dbg_mem_at_start = MEM_STATS.num_bytes_in_use;)
+		MEM_CTRL(dbg_mem_at_start = MEM_STATS.num_bytes_in_use);
 
 		//bj_ostream& os = bj_out;
 		//os << "creating 'global data' num_bytes_in_use = " << MEM_STATS.num_bytes_in_use << bj_eol;
@@ -441,7 +442,9 @@ public:
 		//bj_ostream& os = bj_out;
 		//os << "destroying 'global data' num_bytes_in_use = " << MEM_STATS.num_bytes_in_use << bj_eol;
 
-		MEM_CK(dbg_mem_at_start == MEM_STATS.num_bytes_in_use);
+		ch_string msg = as_pt_char("dbg_mem_at_start=") + 
+			long_to_str(dbg_mem_at_start);
+		MEM_CK_2(dbg_mem_at_start == MEM_STATS.num_bytes_in_use, msg.c_str());
 		finish_global_data();
 	}
 

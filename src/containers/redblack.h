@@ -39,10 +39,11 @@ Red-black trees template.
 #include "stack_trace.h"
 
 #define DBG_RBT(prm) DBG(prm)
-#define REDBLACK_CK(prm)	DBG_CK(prm)
+//define REDBLACK_CK(prm)	DBG_CK(prm)
+#define REDBLACK_CK(prm)	/**/
 
 //define SLOW_REDBLACK_CK(prm)	DBG_CK(prm)
-#define SLOW_REDBLACK_CK(prm)
+#define SLOW_REDBLACK_CK(prm)	/**/
 
 /*
 The class passed to the template ('node_manager_t') must implement the following methods
@@ -141,6 +142,8 @@ public:
 		return true;
 	}
 
+	bool	check_order();
+	
 	bj_ostream&	print(bj_ostream& os, 
 		bool just_chks = false, bool htm = false);
 
@@ -729,6 +732,7 @@ redblack<node_manager_t>::fix_remove(rbt_nod_ref_t xx, rbt_nod_ref_t parent){
 		REDBLACK_CK((xx == get_null()) || (parent == get_parent(xx)));
 		if(xx == get_left(parent)){
 			DBG_RBT(bool first_if = false);
+			MARK_USED(first_if);
 			rbt_nod_ref_t ww = get_right(parent);
 			if(is_red(ww)){
 				set_black(ww);
@@ -749,6 +753,7 @@ redblack<node_manager_t>::fix_remove(rbt_nod_ref_t xx, rbt_nod_ref_t parent){
 			} else {
 				if(is_black(get_right(ww))){
 					rbt_nod_ref_t oldWw = ww;
+					MARK_USED(oldWw);
 					REDBLACK_CK(is_red(get_left(ww)));
 					set_black(get_left(ww));
 					set_red(ww);
@@ -769,6 +774,7 @@ redblack<node_manager_t>::fix_remove(rbt_nod_ref_t xx, rbt_nod_ref_t parent){
 			}
 		} else {
 			DBG_RBT(int first_if = false);
+			MARK_USED(first_if);
 			REDBLACK_CK(xx == get_right(parent));
 			rbt_nod_ref_t ww = get_left(parent);
 			if(is_red(ww)){
@@ -790,6 +796,7 @@ redblack<node_manager_t>::fix_remove(rbt_nod_ref_t xx, rbt_nod_ref_t parent){
 			} else {
 				if(is_black(get_left(ww))){
 					rbt_nod_ref_t oldWw = ww;
+					MARK_USED(oldWw);
 					REDBLACK_CK(is_red(get_right(ww)));
 					set_black(get_right(ww));
 					set_red(ww);
@@ -953,6 +960,32 @@ redblack<node_manager_t>::print(bj_ostream& os, bool just_chks,
 		os << "</BODY>" << bj_eol;
 	}
 	return os;
+}
+
+template<class node_manager_t>
+bool
+redblack<node_manager_t>::check_order(){
+	redblack_iter<node_manager_t> iter1(*this);
+
+	redblack<node_manager_t>::rbt_obj_t obj1;
+	redblack<node_manager_t>::rbt_obj_t obj2;
+	bool is_1 = true;
+	
+	iter1.go_first_ref();
+	while(! iter1.in_null()){
+		if(is_1){
+			obj2 = iter1.get_obj();
+		} else {
+			obj1 = obj2;
+			obj2 = iter1.get_obj();
+			comparison cc = cmp_objs(obj1, obj2);
+			if(cc >= 0){
+				abort_func(0, as_pt_char("check_failed !!!"));
+			}
+		}
+		iter1++;
+	}	 
+	return true;
 }
 
 #endif	// REDBLACK_H

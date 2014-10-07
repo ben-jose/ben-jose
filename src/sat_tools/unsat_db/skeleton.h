@@ -586,7 +586,7 @@ public:
 	bool			kg_keep_skeleton;
 	bool			kg_find_cnn_pth;
 
-	string_set_t		kg_cnf_paths_found;
+	string_set_t	kg_cnf_paths_found;
 
 	ch_string		kg_root_path;
 	ch_string		kg_running_path;

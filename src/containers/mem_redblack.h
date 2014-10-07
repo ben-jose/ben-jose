@@ -206,6 +206,7 @@ public:
 			return false;
 		}
 		cmp_func_t cmp_fn = node_hdlr.cmp_func;
+		MARK_USED(cmp_fn);
 
 		REDBLACK_CK(cmp_fn(get_obj(ref_obj), obj) == 0);
 		rbt_nod_ref_t	ref_pop = rbt_remove(ref_obj);

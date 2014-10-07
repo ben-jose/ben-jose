@@ -6,7 +6,8 @@ SRC_BASE_DIR := ../../../src
 TGT_LDFLAGS := -L${TARGET_DIR}
 
 TGT_LDLIBS  := -lben-jose -lstdc++ -lgmpxx -lgmp 
-# TGT_PREREQS := libben-jose.a 
+
+TGT_PREREQS := libben-jose.a 
 
 SOURCES := $(SRC_BASE_DIR)/sat_tools/tests/test_rbt.cpp
 

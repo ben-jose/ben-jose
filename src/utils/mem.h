@@ -39,6 +39,8 @@ Declaration of mem trace funcs and other.
 #include "bj_stream.h"
 #include "top_exception.h"
 
+#define NULL_PT		NULL
+
 //define MEM_PT_DIR(prm)	prm
 #define MEM_PT_DIR(prm)	;
 
@@ -51,11 +53,13 @@ void	dbg_print_ptdir();
 void abort_func(long val, const char* msg = as_pt_char("<msg>"));
 
 bool 
-call_assert(bool vv_ck, const char* file, int line, const char* ck_str);
+call_assert(bool vv_ck, const char* file, int line, 
+			const char* ck_str, const char* msg = NULL_PT);
 
 #define glb_assert(vv) call_assert(vv, as_pt_char(__FILE__), __LINE__, as_pt_char(#vv))
 
-#define NULL_PT		NULL
+#define glb_assert_2(vv, msg) \
+	call_assert(vv, as_pt_char(__FILE__), __LINE__, as_pt_char(#vv), msg)
 
 #ifdef FULL_DEBUG
 #define DBG(prm) prm
@@ -66,6 +70,7 @@ call_assert(bool vv_ck, const char* file, int line, const char* ck_str);
 #endif
 
 #define DBG_CK(prm)	   	DBG(glb_assert(prm))
+#define DBG_CK_2(prm, msg)	   	DBG(glb_assert_2(prm, msg))
 #define DBG_THROW(prm) 		DBG(prm)
 //define DBG_THROW(prm) 		;
 #define DBG_THROW_CK(prm) 	DBG_CK(prm)
@@ -84,6 +89,7 @@ call_assert(bool vv_ck, const char* file, int line, const char* ck_str);
 #endif
 
 #define MEM_CK(prm)		DBG_CK(prm)
+#define MEM_CK_2(prm, msg)		DBG_CK_2(prm, msg)
 
 typedef long			error_code_t;
 typedef unsigned long		mem_size;

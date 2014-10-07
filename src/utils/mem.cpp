@@ -73,10 +73,14 @@ dbg_print_ptdir(){
 }
 
 bool 
-call_assert(bool vv_ck, const char* file, int line, const char* ck_str){
+call_assert(bool vv_ck, const char* file, int line, 
+			const char* ck_str, const char* msg){
 	if(! vv_ck){
 		bj_out << "ASSERT '" << ck_str << "' FAILED" << bj_eol;
 		bj_out << get_stack_trace(file, line) << bj_eol;
+		if(msg != NULL_PT){
+			bj_out << "MSG=" << msg << bj_eol;
+		}
 	}
 	assert(vv_ck);
 	return vv_ck;

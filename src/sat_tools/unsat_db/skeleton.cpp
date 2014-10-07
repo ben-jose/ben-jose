@@ -47,6 +47,7 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 #include "file_tree.h"
 #include "stack_trace.h"
 #include "file_funcs.h"
+#include "util_funcs.h"
 #include "support.h"
 #include "skeleton.h"
 #include "dimacs.h"
@@ -78,6 +79,7 @@ void	read_from_str(average& the_avg, ch_string& av_str){
 	ss2 >> the_avg.sz;
 }
 
+/*
 ch_string
 long_to_str(long val){
 	bj_ostr_stream ss_val;
@@ -85,6 +87,7 @@ long_to_str(long val){
 	TOOLS_CK(! ss_val.str().empty());
 	return ss_val.str();
 }
+*/
 
 bool
 not_skl_path(ch_string the_pth){
@@ -305,6 +308,19 @@ set_fstr(ch_string f_nam, ch_string the_val_str){
 ch_string
 print_hex_as_txt(row<uchar_t>& sha_rr){
 	SKELETON_CK(sha_rr.size() == NUM_BYTES_SHA2);
+	
+	row<char> hex_str;
+	sha_rr.as_hex_txt(hex_str);
+	hex_str.push(0);
+	
+	ch_string str2(hex_str.get_c_array());
+	return str2;
+}
+
+/*
+ch_string
+old_print_hex_as_txt(row<uchar_t>& sha_rr){
+	SKELETON_CK(sha_rr.size() == NUM_BYTES_SHA2);
 	bj_ostr_stream os;
 	
 	std::ios_base::fmtflags old_fls = os.flags();
@@ -319,6 +335,7 @@ print_hex_as_txt(row<uchar_t>& sha_rr){
 	ch_string sha_txt = os.str();
 	return sha_txt;
 }
+*/
 
 ch_string
 sha_txt_of_arr(uchar_t* to_sha, long to_sha_sz){

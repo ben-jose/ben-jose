@@ -35,6 +35,7 @@ Wrapper for ostream class.
 #define BJ_STREAM_H
 
 #include <iostream>
+#include <sstream>
 
 #define CARRIAGE_RETURN		((char)13)
 

@@ -1723,14 +1723,14 @@ memap::map_oper(mem_op_t mm, brain& brn){
 
 			GLB().batch_stat_sub_hits.add_val(1);
 
-			row<neuron*>& all_found = brn.br_tmp_found_neus;
-			all_found.clear();
+			row<neuron*>& all_tmp_found = brn.br_tmp_found_neus;
+			all_tmp_found.clear();
 
-			ccl_row_as<neuron>(tmp_diff_cnf.cf_clauses, all_found, true);
+			ccl_row_as<neuron>(tmp_diff_cnf.cf_clauses, all_tmp_found, true);
 			
-			for(long aa = 0; aa < all_found.size(); aa++){
-				BRAIN_CK(all_found[aa] != NULL_PT);
-				neuron& neu = *(all_found[aa]);			
+			for(long aa = 0; aa < all_tmp_found.size(); aa++){
+				BRAIN_CK(all_tmp_found[aa] != NULL_PT);
+				neuron& neu = *(all_tmp_found[aa]);			
 				neu.ne_recoil_tk.update_ticket(&brn);
 			}			
 		}

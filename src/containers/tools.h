@@ -138,6 +138,10 @@ template <bool> struct ILLEGAL_USE_OF_OBJECT;
 template <> struct ILLEGAL_USE_OF_OBJECT<true>{};
 #define OBJECT_COPY_ERROR ILLEGAL_USE_OF_OBJECT<false>()
 
+#define lo_hex_as_int(the_byte)	(((the_byte) >> 4) & 0xF)
+#define hi_hex_as_int(the_byte)	((the_byte) & 0x0F)
+
+
 //======================================================================
 // bit_row_exception
 
@@ -956,7 +960,8 @@ public:
 	}
 
 	void		as_hex_txt(row<char>& hex_str){
-		char hexval[16] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+		char hexval[16] = {'0', '1', '2', '3', '4', '5', '6', '7', 
+							'8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 		const t_1byte* by_arr = get_data();
 		long sz_arr = get_data_sz();
 		long hex_sz = sz_arr * 2;
@@ -965,8 +970,8 @@ public:
 		hex_str.fill('0', hex_sz);
 
 		for(long aa = 0; aa < sz_arr; aa++){
-			hex_str[aa * 2] = hexval[((by_arr[aa] >> 4) & 0xF)];
-			hex_str[(aa * 2) + 1] = hexval[(by_arr[aa]) & 0x0F];
+			hex_str[aa * 2] = hexval[lo_hex_as_int(by_arr[aa])];
+			hex_str[(aa * 2) + 1] = hexval[hi_hex_as_int(by_arr[aa])];
 		}
 	}
 	

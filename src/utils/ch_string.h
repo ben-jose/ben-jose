@@ -38,6 +38,7 @@ Wrapper for string class.
 
 typedef std::string ch_string;
 
+
 #endif // CH_STRING_H
 
 
