@@ -30,13 +30,6 @@ funcs for inference graph printing
 
 --------------------------------------------------------------*/
 
-#include <fstream>
-#include <sstream>
-
-#include <cassert>
-#include <cstdlib>
-#include <cstring>
-
 #include "support.h"
 #include "brain.h"
 #include "dbg_run_satex.h"
@@ -210,7 +203,7 @@ brain::dbg_ic_prt_dotty_file(bj_ostream& os, row<quanton*>& the_trail, long styl
 
 		quanton* qua = qua1;
 		qua->print_ic_label(os);
-		assert(qua->qlevel() <= lev);
+		DBG_CK(qua->qlevel() <= lev);
 
 		bool has_src = (qua->qu_source != NULL_PT);
 

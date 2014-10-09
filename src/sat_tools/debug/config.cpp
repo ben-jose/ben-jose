@@ -30,11 +30,6 @@ Functions to read and parse config files.
 
 --------------------------------------------------------------*/
 
-#include <sys/stat.h>
-
-#include <cassert>
-#include <cstring>
-
 #include "support.h"
 
 

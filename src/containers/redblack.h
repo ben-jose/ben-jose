@@ -34,7 +34,7 @@ Red-black trees template.
 #ifndef REDBLACK_H
 #define REDBLACK_H
 
-#include "mem.h"
+#include "bj_mem.h"
 #include "bj_stream.h"
 #include "stack_trace.h"
 

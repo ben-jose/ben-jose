@@ -30,20 +30,11 @@ Functions to read and parse dimacs files.
 
 --------------------------------------------------------------*/
 
-
-#include <errno.h>
-#include <limits.h>
-#include <sys/stat.h>
-
-#include <cassert>
-#include <cstring>
-
 #include "tools.h"
 #include "dimacs.h"
 #include "dimacs_exception.h"
 #include "config.h"
 #include "file_funcs.h"
-
 
 #include "support.h"
 

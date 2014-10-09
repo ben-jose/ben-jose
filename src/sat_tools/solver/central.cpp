@@ -30,11 +30,6 @@ funcs that implement top level funcs.
 
 --------------------------------------------------------------*/
 
-#include <execinfo.h>	// trace stack 
-#include <cxxabi.h>	// trace stack 
-#include <cstring>
-
-
 #include "support.h"
 #include "dimacs.h"
 #include "brain.h"

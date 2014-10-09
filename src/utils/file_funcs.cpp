@@ -30,9 +30,6 @@ file funcs.
 
 --------------------------------------------------------------*/
 
-#include <sstream>
-#include <execinfo.h>
-#include <cstdlib>
 #include <fstream>
 
 #include "tools.h"

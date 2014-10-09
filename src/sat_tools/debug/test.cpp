@@ -29,20 +29,10 @@ file for test and debugging purposes.
 
 --------------------------------------------------------------*/
 
-#include <fcntl.h>
-#include <errno.h>
-
-#include <cstring>
 #include <set>
-#include <map>
 #include <iterator>
 
-#include <gmpxx.h>
-
 //     g++ t1.cpp -lgmpxx -lgmp -o tt.exe
-
-#include "unistd.h"
-#include "limits.h"
 
 #include "file_tree.h"
 #include "ch_string.h"

@@ -24,7 +24,7 @@ email: joseluisquirogabeltran@gmail.com
 
 ------------------------------------------------------------
 
-mem.h
+bj_mem.h
 
 Declaration of mem trace funcs and other.
 
@@ -33,10 +33,10 @@ Declaration of mem trace funcs and other.
 #ifndef JLQ_MEM_H
 #define JLQ_MEM_H
 
+#include <cstring>
 #include <cstdlib>
 
 #include "platform.h"
-#include "bj_stream.h"
 #include "top_exception.h"
 
 #define NULL_PT		NULL
@@ -55,6 +55,17 @@ void abort_func(long val, const char* msg = as_pt_char("<msg>"));
 bool 
 call_assert(bool vv_ck, const char* file, int line, 
 			const char* ck_str, const char* msg = NULL_PT);
+
+
+inline
+void* bj_memcpy(void *dest, const void *src, size_t n){
+	return memcpy(dest, src, n);
+}
+
+inline
+void* bj_memset(void *s, int c, size_t n){
+	return memset(s, c, n);
+}
 
 #define glb_assert(vv) call_assert(vv, as_pt_char(__FILE__), __LINE__, as_pt_char(#vv))
 
@@ -143,7 +154,7 @@ public:
 
 
 //======================================================================
-// 'malloc()'-style memory allocation -- never returns NULL_PT; aborts instead:
+// 'mem_alloc()'-style memory allocation -- never returns NULL_PT; aborts instead:
 
 template<class obj_t> static inline obj_t* 
 tpl_malloc(size_t the_size = 1){
@@ -158,20 +169,20 @@ tpl_malloc(size_t the_size = 1){
 			if(MEM_STATS.set_memout_func != NULL_PT){
 				(*MEM_STATS.set_memout_func)();
 			} else {
-				char* mem_out_in_malloc = as_pt_char("Memory exhausted in tpl_malloc");
-				DBG_THROW_CK(mem_out_in_malloc != mem_out_in_malloc);
-				throw mem_exception(mem_out_in_malloc);
-				abort_func(0, mem_out_in_malloc);
+				char* mem_out_in_mem_alloc = as_pt_char("Memory exhausted in tpl-mem-alloc");
+				DBG_THROW_CK(mem_out_in_mem_alloc != mem_out_in_mem_alloc);
+				throw mem_exception(mem_out_in_mem_alloc);
+				abort_func(0, mem_out_in_mem_alloc);
 			}
 		}
 	);
 
 	obj_t*   tmp = (obj_t*)malloc(mem_sz);
 	if((tmp == NULL_PT) && (the_size != 0)){
-		char* mem_out_in_malloc_2 = as_pt_char("Memory exhausted in tpl_malloc case 2");
-		DBG_THROW_CK(mem_out_in_malloc_2 != mem_out_in_malloc_2);
-		throw mem_exception(mem_out_in_malloc_2);
-		abort_func(0, mem_out_in_malloc_2);
+		char* mem_out_in_mem_alloc_2 = as_pt_char("Memory exhausted in tpl-mem-alloc case 2");
+		DBG_THROW_CK(mem_out_in_mem_alloc_2 != mem_out_in_mem_alloc_2);
+		throw mem_exception(mem_out_in_mem_alloc_2);
+		abort_func(0, mem_out_in_mem_alloc_2);
 	}
 	MEM_PT_DIR(dbg_add_to_ptdir(tmp));
 	return tmp; 
@@ -184,17 +195,17 @@ tpl_secure_realloc(obj_t* ptr, size_t old_size, size_t the_size){
 	mem_size mem_sz = the_size * sizeof(obj_t);
 	obj_t*   tmp = (obj_t*)malloc(mem_sz);
 	if((tmp == NULL_PT) && (the_size != 0)){
-		char* mem_out_in_sec_realloc = as_pt_char("Memory exhausted in tpl_secure_realloc");
-		DBG_THROW_CK(mem_out_in_sec_realloc != mem_out_in_sec_realloc);
-		throw mem_exception(mem_out_in_sec_realloc);
-		abort_func(0, mem_out_in_sec_realloc);
+		char* memout_in_sec_re_alloc = as_pt_char("Memory exhausted in tpl-sec-re-alloc");
+		DBG_THROW_CK(memout_in_sec_re_alloc != memout_in_sec_re_alloc);
+		throw mem_exception(memout_in_sec_re_alloc);
+		abort_func(0, memout_in_sec_re_alloc);
 	}
 	MEM_PT_DIR(dbg_add_to_ptdir(tmp));
 
 	if(ptr != NULL_PT){
 		mem_size old_mem_sz = old_size * sizeof(obj_t);
-		memcpy(tmp, ptr, old_mem_sz);
-		memset(ptr, 0, old_mem_sz);
+		bj_memcpy(tmp, ptr, old_mem_sz);
+		bj_memset(ptr, 0, old_mem_sz);
 		free(ptr);
 		MEM_PT_DIR(dbg_del_from_ptdir(ptr));
 	}
@@ -217,10 +228,10 @@ tpl_realloc(obj_t* ptr, size_t old_size, size_t the_size){
 			if(MEM_STATS.set_memout_func != NULL_PT){
 				(*MEM_STATS.set_memout_func)();
 			} else {
-				char* mem_out_in_realloc = as_pt_char("Memory exhausted in tpl_realloc");
-				DBG_THROW_CK(mem_out_in_realloc != mem_out_in_realloc);
-				throw mem_exception(mem_out_in_realloc);
-				abort_func(0, mem_out_in_realloc);
+				char* mem_out_in_re_alloc = as_pt_char("Memory exhausted in tpl-re-alloc");
+				DBG_THROW_CK(mem_out_in_re_alloc != mem_out_in_re_alloc);
+				throw mem_exception(mem_out_in_re_alloc);
+				abort_func(0, mem_out_in_re_alloc);
 			}
 		}
 	);
@@ -232,10 +243,10 @@ tpl_realloc(obj_t* ptr, size_t old_size, size_t the_size){
 	MEM_PT_DIR(dbg_del_from_ptdir(ptr));
 	obj_t*   tmp = (obj_t*)realloc((void*)ptr, mem_sz);
 	if((tmp == NULL_PT) && (the_size != 0)){
-		char* mem_out_in_realloc_2 = as_pt_char("Memory exhausted in tpl_realloc case 2");
-		DBG_THROW_CK(mem_out_in_realloc_2 != mem_out_in_realloc_2);
-		throw mem_exception(mem_out_in_realloc_2);
-		abort_func(0, mem_out_in_realloc_2);
+		char* mem_out_in_re_alloc_2 = as_pt_char("Memory exhausted in tpl-re-alloc case 2");
+		DBG_THROW_CK(mem_out_in_re_alloc_2 != mem_out_in_re_alloc_2);
+		throw mem_exception(mem_out_in_re_alloc_2);
+		abort_func(0, mem_out_in_re_alloc_2);
 	}
 	MEM_PT_DIR(dbg_add_to_ptdir(tmp));
 	return tmp; 
@@ -247,7 +258,7 @@ tpl_free(obj_t*& ptr, size_t the_size = 1){
 		MEM_SRTY(
 			mem_size s_old_mem_sz = the_size * sizeof(obj_t);
 			if(MEM_STATS.use_secure_alloc){
-				memset(ptr, 0, s_old_mem_sz);
+				bj_memset(ptr, 0, s_old_mem_sz);
 			}
 		);
 		free(ptr); 

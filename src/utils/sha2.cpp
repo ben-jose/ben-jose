@@ -38,10 +38,7 @@ sha2 implementation.
 #define _CRT_SECURE_NO_DEPRECATE 1
 #endif
 
-#include <string.h>
-/*include <stdio.h>*/
-
-#include "platform.h"
+#include "bj_mem.h"
 #include "sha2.h"
 
 /*
@@ -256,7 +253,7 @@ void sha2_update( sha2_context *ctx, unsigned char *input, int ilen )
 
     if( left && ilen >= fill )
     {
-        memcpy( (void *) (ctx->buffer + left),
+        bj_memcpy( (void *) (ctx->buffer + left),
                 (void *) input, fill );
         sha2_process( ctx, ctx->buffer );
         input += fill;
@@ -273,7 +270,7 @@ void sha2_update( sha2_context *ctx, unsigned char *input, int ilen )
 
     if( ilen > 0 )
     {
-        memcpy( (void *) (ctx->buffer + left),
+        bj_memcpy( (void *) (ctx->buffer + left),
                 (void *) input, ilen );
     }
 }
@@ -332,7 +329,7 @@ void sha2( unsigned char *input,  int ilen,
     sha2_update( &ctx, input, ilen );
     sha2_finish( &ctx, output );
 
-    memset( &ctx, 0, sizeof( sha2_context ) );
+    bj_memset( &ctx, 0, sizeof( sha2_context ) );
 }
 
 /*
@@ -357,7 +354,7 @@ int sha2_file( char *path, unsigned char *output, int is224 )
 
     sha2_finish( &ctx, output );
 
-    memset( &ctx, 0, sizeof( sha2_context ) );
+    bj_memset( &ctx, 0, sizeof( sha2_context ) );
 
     if( ferror( f ) != 0 )
     {
@@ -378,8 +375,8 @@ void sha2_hmac_starts( sha2_context *ctx,  int is224,
 {
     int i;
 
-    memset( ctx->ipad, 0x36, 64 );
-    memset( ctx->opad, 0x5C, 64 );
+    bj_memset( ctx->ipad, 0x36, 64 );
+    bj_memset( ctx->opad, 0x5C, 64 );
 
     for( i = 0; i < keylen; i++ )
     {
@@ -419,7 +416,7 @@ void sha2_hmac_finish( sha2_context *ctx, unsigned char *output )
     sha2_update( ctx, tmpbuf, hlen );
     sha2_finish( ctx, output );
 
-    memset( tmpbuf, 0, sizeof( tmpbuf ) );
+    bj_memset( tmpbuf, 0, sizeof( tmpbuf ) );
 }
 
 /*
@@ -435,7 +432,7 @@ void sha2_hmac( unsigned char *key,  int keylen,
     sha2_hmac_update( &ctx, input, ilen );
     sha2_hmac_finish( &ctx, output );
 
-    memset( &ctx, 0, sizeof( sha2_context ) );
+    bj_memset( &ctx, 0, sizeof( sha2_context ) );
 }
 
 static const char _sha2_src[] = "_sha2_src";
@@ -496,7 +493,7 @@ int sha2_self_test( int verbose )
     unsigned char sha2sum[32];
     sha2_context ctx;
 
-    memset( buf, 'a', 1000 );
+    bj_memset( buf, 'a', 1000 );
 
     for( i = 0; i < 6; i++ )
     {

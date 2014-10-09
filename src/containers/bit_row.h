@@ -35,7 +35,8 @@ binary rows of bits.
 #define BIT_ROW_H
 
 #include "top_exception.h"
-#include "mem.h"
+#include "bj_mem.h"
+#include "bj_stream.h"
 
 typedef long		bit_row_index;
 
@@ -48,7 +49,7 @@ typedef long		bit_row_index;
 #endif
 
 #ifndef START_CAP
-#define START_CAP 		16	// avoid mem problems (due to malloc, realloc failures)
+#define START_CAP 		16	// avoid mem problems (due to mem alloc, re-alloc failures)
 #endif
 
 #ifndef k_num_bits_byte
@@ -121,7 +122,7 @@ private:
 
 	bit_row&  operator = (bit_row& other){
 		MARK_USED(other);
-		char* bit_row_bad_eq_op = as_pt_char("Memory exhausted during op =");
+		char* bit_row_bad_eq_op = as_pt_char("operator = not allowed in bit_row");
 		DBG_THROW_CK(bit_row_bad_eq_op != bit_row_bad_eq_op);
 		throw bit_row_exception(bit_row_bad_eq_op);
 		abort_func(0, bit_row_bad_eq_op);
@@ -130,7 +131,7 @@ private:
 
 	bit_row(bit_row& other){ 
 		MARK_USED(other);
-		char* bit_row_bad_creat = as_pt_char("Memory exhausted during creator bit_row");
+		char* bit_row_bad_creat = as_pt_char("creator bit_row with bit_row not allowed");
 		DBG_THROW_CK(bit_row_bad_creat != bit_row_bad_creat);
 		throw bit_row_exception(bit_row_bad_creat);
 		abort_func(0, bit_row_bad_creat);
@@ -149,6 +150,16 @@ public:
 
 	~bit_row(){
 		clear(true, true);
+	}
+	
+	void init_with_copy_of(t_1byte* dat_bytes, long dat_num_bytes){
+		if(size() > 0){
+			clear(true, true);
+		}
+		bit_row_index nw_sz = to_bits(dat_num_bytes);
+		set_cap(nw_sz);
+		bj_memcpy(data, dat_bytes, cap);
+		sz = nw_sz;
 	}
 
 	bit_row_index	get_cap(){
@@ -437,24 +448,25 @@ public:
 		return true;
 	}
 
-	void move_to(bit_row& dest, bool just_init = false){ 
-		if(!just_init){ 
-			dest.clear(true, true); 
-		}
-		dest.data = data; 
-		dest.sz = sz; 
-		dest.cap = cap; 
-		data = NULL_PT; 
-		sz = 0; 
-		cap = 0; 
+	void swap_with(bit_row& dest){ 
+		bit_row_index tmp_cap = cap;
+		bit_row_index tmp_sz = sz;
+		t_1byte* tmp_data = data;
+		
+		cap = dest.cap; 
+		sz = dest.sz; 
+		data = dest.data; 
+		
+		dest.cap = tmp_cap; 
+		dest.sz = tmp_sz; 
+		dest.data = tmp_data; 
 	}
 
-	/*
 	void mem_copy_to(bit_row& r_cpy){
 		r_cpy.set_cap(sz);
-		memcpy(r_cpy.data, data, r_cpy.cap);
+		bj_memcpy(r_cpy.data, data, r_cpy.cap);
 		r_cpy.sz = sz;
-	}*/
+	}
 };
 
 inline

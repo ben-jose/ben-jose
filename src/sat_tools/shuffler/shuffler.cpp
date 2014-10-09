@@ -30,16 +30,7 @@ Functions to shuffle dimacs representations.
 
 --------------------------------------------------------------*/
 
-
-#include <errno.h>
-#include <limits.h>
-#include <sys/stat.h>
-
-#include <cassert>
-#include <cstring>
-
 #include "shuffler.h"
-
 
 void
 shuffle_lit_mapping(tak_mak& rnd_gen, row<integer>& to_shuff){

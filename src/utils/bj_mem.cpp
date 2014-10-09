@@ -30,11 +30,10 @@ mem trace funcs and other.
 
 --------------------------------------------------------------*/
 
-#include <fstream>
 #include <cassert>
 #include <map>
 
-#include "mem.h"
+#include "bj_mem.h"
 #include "bj_stream.h"
 #include "ch_string.h"
 #include "stack_trace.h"
@@ -88,8 +87,8 @@ call_assert(bool vv_ck, const char* file, int line,
 
 void abort_func(long val, const char* msg){
 	bj_err << bj_eol << "ABORTING! " << msg << bj_eol; 
-	bj_err << "Type ENTER.\n";
-	getchar();
+	//bj_err << "Type ENTER.\n";
+	//getchar();
 	exit(val);
 }
 

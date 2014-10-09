@@ -36,10 +36,6 @@ Declarations of classes and that implement the neural network.
 //=============================================================================
 // includes
 
-#include <limits.h>
-#include <fstream>
-#include <sstream>
-
 #include "tools.h"
 #include "support.h"
 #include "sortor.h"

@@ -21,9 +21,9 @@ SOURCES := \
 	$(SRC_BASE_DIR)/utils/stack_trace.cpp \
 	$(SRC_BASE_DIR)/utils/file_funcs.cpp \
 	$(SRC_BASE_DIR)/utils/util_funcs.cpp \
-	$(SRC_BASE_DIR)/utils/mem.cpp \
+	$(SRC_BASE_DIR)/utils/bj_mem.cpp \
 	$(SRC_BASE_DIR)/utils/tak_mak.cpp \
-	$(SRC_BASE_DIR)/utils/sha2.c 
+	$(SRC_BASE_DIR)/utils/sha2.cpp
 
 
 SRC_INCDIRS := \

@@ -30,10 +30,6 @@ Classes and that implement the neural network.
 
 --------------------------------------------------------------*/
 
-#include <execinfo.h>	// trace stack 
-#include <cxxabi.h>	// trace stack 
-#include <cstring>
-
 #include "stack_trace.h"
 #include "support.h"
 #include "sortor.h"

@@ -90,8 +90,9 @@ get_stack_trace( const ch_string & file, int line ){
 	stack_strings = backtrace_symbols( stack_addrs, stack_depth );
 	for( size_t i = 1; i < stack_depth; ++i ) {
 		//result << "   " << demangle_cxx_name( stack_strings[i] ) << "\n";
-		result << "   " << stack_strings[i] << "\n";
+		result << "   " << stack_strings[i] << bj_eol;
 	}
+	result << "(to see full call names link with -rdynamic option)" << bj_eol;
 	std::free( stack_strings );
 
 	return result.str();

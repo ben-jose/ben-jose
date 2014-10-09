@@ -30,9 +30,6 @@ Global classes and functions that support and assist the system.
 
 --------------------------------------------------------------*/
 
-#include <limits.h>
-#include <cstring>
-
 #include "top_exception.h"
 #include "stack_trace.h"
 #include "support.h"

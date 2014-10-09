@@ -30,10 +30,6 @@ Classes and that implement a sortor.
 
 --------------------------------------------------------------*/
 
-#include <errno.h>
-#include <limits.h>
-#include <sys/stat.h>
-
 #include "sortor.h"
 #include "support.h"
 

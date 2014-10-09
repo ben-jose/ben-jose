@@ -30,10 +30,6 @@ dbg_prt_brn funcs.
 
 --------------------------------------------------------------*/
 
-#include <sstream>
-#include <execinfo.h>
-#include <cstdlib>
-
 #include "bj_stream.h"
 #include "ch_string.h"
 #include "brain.h"

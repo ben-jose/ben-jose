@@ -30,9 +30,6 @@ dbg_run_satex func.
 
 --------------------------------------------------------------*/
 
-#include <sstream>
-#include <execinfo.h>
-#include <cstdlib>
 
 #include "bj_stream.h"
 #include "ch_string.h"

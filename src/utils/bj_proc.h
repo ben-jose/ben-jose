@@ -24,54 +24,31 @@ email: joseluisquirogabeltran@gmail.com
 
 ------------------------------------------------------------
 
-config.h
+bj_proc.h
 
-Declaration of functions to read and parse config files.
+Wrapper for process funcs.
 
 --------------------------------------------------------------*/
 
-#ifndef CONFIG_H
-#define CONFIG_H
 
-#include <fstream>
+#ifndef BJ_PROC_H
+#define BJ_PROC_H
 
-#include "tools.h"
+#ifdef WIN32
+#include <windows.h>
+static inline void yield(void){
+	Sleep(0);
+}
+#endif
 
-// '\0'
-#define END_OF_SEC	0
-
-#define CONFIG_DBG(prm)	DBG(prm)
-#define CONFIG_CK(prm) 	DBG_CK(prm)
-
-//=================================================================
-// parser funcs
-
-bj_ostr_stream& parse_err_msg(ch_string hd_msg, long num_line, char ch_err, ch_string msg);
-
-void skip_whitespace(const char*& pt_in, long& line);
-void skip_line(const char*& pt_in, long& line);
-ch_string read_text_line(const char*& pt_in, long& line);
-integer parse_int(const char*& pt_in, long line);
+#ifdef __linux
+#include <sched.h>
+static inline void yield(void){
+	sched_yield();
+}
+#endif
 
 
-//=================================================================
-// config_reader
+#endif // BJ_PROC_H
 
-class config_reader {
-	public:
-
-	config_reader(){
-	}
-
-	~config_reader(){}
-
-	void 	parse_debug_line(row<long>& dbg_line, ch_string& str_ln);
-	void	add_config_line(ch_string& str_ln);
-	void	read_config(const char* f_name);
-};
-
-//void rm_ic_files();
-
-
-#endif		// CONFIG_H
 

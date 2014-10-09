@@ -30,11 +30,6 @@ funcs that implement reverse func.
 
 --------------------------------------------------------------*/
 
-#include <execinfo.h>	// trace stack 
-#include <cxxabi.h>	// trace stack 
-#include <cstring>
-
-
 #include "stack_trace.h"
 #include "support.h"
 #include "dimacs.h"

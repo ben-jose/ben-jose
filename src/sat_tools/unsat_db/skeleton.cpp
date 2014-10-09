@@ -31,18 +31,9 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 
 --------------------------------------------------------------*/
 
-#include <fstream>
-#include <sstream>
-#include <set>
-
-#include <stdio.h>
-#include <fcntl.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <limits.h>
-#include <sstream>
-
-#include <cassert>
-#include <cstring>
 
 #include "file_tree.h"
 #include "stack_trace.h"

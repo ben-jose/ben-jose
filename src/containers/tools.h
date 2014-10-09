@@ -35,11 +35,10 @@ Some usefult abstract template classes and others.
 
 #include <gmpxx.h>
 
-#include "platform.h"
-#include "top_exception.h"
-#include "mem.h"
-#include "ch_string.h"
 #include "bit_row.h"
+#include "bj_time.h"
+#include "top_exception.h"
+#include "ch_string.h"
 #include "print_macros.h"
 
 enum dbg_call_id { 
@@ -125,7 +124,7 @@ enum	cmp_is_sub {
 #endif
 
 #ifndef START_CAP
-#define START_CAP 		16	// avoid mem problems (due to malloc, realloc failures)
+#define START_CAP 		16	// avoid mem problems (due to mem alloc, re-alloc failures)
 #endif
 
 #define SZ_ATTRIB_T(the_type)	row_data<the_type>::sz
@@ -262,33 +261,6 @@ get_idx_of_pt(obj_t* data, obj_t* pt_obj, row_index the_size){
 }
 
 //======================================================================
-// Time:
-
-
-#ifdef WIN32
-#include <ctime>
-static inline double cpu_time(void){
-	// time in seconds
-	// This is a slow function use with care in performance code
-	clock_t ct = clock();
-	if(ct == -1){ return (double)ct; }
-	return (((double)ct) / CLOCKS_PER_SEC);
-}
-#endif
-
-#ifdef __linux
-#include <sys/time.h>
-#include <sys/resource.h>
-static inline double cpu_time(void){
-	// time in seconds
-	// This is a slow function use with care in performance code
-	struct rusage ru;
-	getrusage(RUSAGE_SELF, &ru);
-	return (double)ru.ru_utime.tv_sec + (double)ru.ru_utime.tv_usec / 1000000; 
-}
-#endif
-
-//======================================================================
 // flags
 
 #define	k_flag0		((char)0x01)
@@ -362,61 +334,10 @@ long	as_num_bits(long num_bytes){
 }
 
 //======================================================================
-// yield:
-
-#ifdef WIN32
-#include <windows.h>
-static inline void yield(void){
-	Sleep(0);
-}
-#endif
-
-#ifdef __linux
-#include <sched.h>
-static inline void yield(void){
-	sched_yield();
-}
-#endif
-
-
-//======================================================================
-// random
-
-/*
-static inline
-long 
-init_random_nums(long seed = 0){
-	if(seed == 0){
-		seed = time(0);
-	}
-
-	srand(seed);
-	return seed;
-}
-
-static inline
-long
-gen_random_num(long min, long max){
-	// min is inclusive
-	// max is exclusive
-
-	long diff = 0, resp = 0;
-	diff = max - min;
-	if(diff == 0){ 
-		return min; 
-	}
-	if(diff < 0){ diff = -diff; }
-
-	resp = min + (rand() % diff);
-	return resp;
-}*/
-
-
-//======================================================================
 // row_data
 
 
-// NOTE. ONLY for types that can be used with 'realloc'
+// NOTE. ONLY for types that can be used with 're-alloc'
 
 
 template<class obj_t>
@@ -1072,7 +993,7 @@ public:
 
 	void mem_copy_to(row<obj_t>& r_cpy){ 
 		r_cpy.set_cap(SZ_ATTRIB);
-		memcpy(r_cpy.data, data, row_data<obj_t>::sz_in_bytes());
+		bj_memcpy(r_cpy.data, data, row_data<obj_t>::sz_in_bytes());
 		r_cpy.sz = SZ_ATTRIB;
 	}
 
@@ -1247,7 +1168,7 @@ public:
 		if(DATA_ATTRIB == NULL_PT){
 			return;
 		}
-		memset(DATA_ATTRIB, 0, (SZ_ATTRIB * sizeof(obj_t)));
+		bj_memset(DATA_ATTRIB, 0, (SZ_ATTRIB * sizeof(obj_t)));
 	}
 };
 
@@ -2137,7 +2058,6 @@ bj_ostream& operator << (bj_ostream& os, avg_stat& obj){
 //=================================================================
 // timer
 
-//define GET_RUN_TIME() 		cpu_time()
 #define MIN_TIMER_PERIOD	0.0
 #define MIN_TIMER_TIMEOUT	0.0
 
