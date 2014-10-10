@@ -35,9 +35,6 @@ classes to implement a sortor.
 #ifndef SORTOR_H
 #define SORTOR_H
 
-//include "support.h"
-//include "dimacs.h"
-//include "skeleton.h"
 #include "tools.h"
 #include "print_macros.h"
 #include "skeleton.h"

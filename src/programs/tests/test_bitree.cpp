@@ -34,16 +34,16 @@ file for test and debugging bitree class.
 
 #include "tools.h"
 #include "tak_mak.h"
+#include "util_funcs.h"
 
 #define THE_TREE_CMP_FUNC cmp_mem_redblack
 
 typedef std::set<long>	set_long_t;
 typedef std::pair<std::set<long>::iterator,bool> ret_set_long_t;
 
-#define NUM_TESTS 30
 #define MAX_SZ_STR	4000
 
-#define TEST_USE_SETS 1
+//define TEST_USE_SETS 1
 
 #ifdef TEST_USE_SETS
 #define SETS_COD(prm)	prm
@@ -99,6 +99,8 @@ public:
 		
 		bit_pos_t ii = -1;
 		for(ii = from_pos; ii < min_sz; ii++){
+			BITREE_CK(bits_1.is_valid_idx(ii));
+			BITREE_CK(bits_2.is_valid_idx(ii));
 			bool vv1 = bits_1[ii];
 			bool vv2 = bits_2[ii];
 			if(vv1 != vv2){
@@ -107,7 +109,7 @@ public:
 		}
 		bit_pos_t lst_pos = ii - 1;
 		if((lst_pos >= from_pos) && (lst_pos < min_sz)){
-			BITREE_CK(bits_1[ii] == bits_2[ii]);
+			BITREE_CK(bits_1[lst_pos] == bits_2[lst_pos]);
 			return lst_pos;
 		}
 		return -1;
@@ -186,7 +188,7 @@ public:
 	bitree_leaf(bit_pos_t curr_pos, bit_row& bits_2){
 		be_pos = curr_pos;
 		lf_reset = false;
-		bits_2.copy_to(lf_bits);
+		bits_2.swap_with(lf_bits);
 		BITREE_CK(be_pos < lf_bits.size());
 	}
 	
@@ -231,15 +233,42 @@ public:
 
 	virtual
 	bool check_entry(){
-		return false;
+		BITREE_CK(be_pos < lf_bits.size());
+		return true;
 	}
 	
 	virtual
 	bitree_node* walk_tree(row<bitree_leaf*>& all_leafs, bool with_free){
-		all_leafs.push(this);
+		if(! lf_reset){
+			all_leafs.push(this);
+			lf_reset = true;
+		}
 		return NULL_PT;
 	}
 	
+	static
+	long clear_leafs(row<bitree_leaf*>& all_leafs, bool with_free){
+		long max_sz = 0;
+		for(long aa = 0; aa < all_leafs.size(); aa++){
+			bitree_leaf* lf = all_leafs[aa];
+			BITREE_CK(lf != NULL_PT);
+			lf->lf_reset = false;
+			
+			int lf_sz = lf->size();
+			if(lf_sz > max_sz){
+				max_sz = lf_sz;
+			}
+			
+			if(with_free){
+				bitree_leaf::free_bitree_leaf(lf);
+				all_leafs[aa] = NULL_PT;
+			}
+		}
+		if(with_free){
+			all_leafs.clear(true, true);
+		}
+		return max_sz;
+	}
 };
 
 //======================================================================
@@ -262,8 +291,7 @@ public:
 		be_pos = add_pos;
 		
 		nd_zero = NULL_PT;
-		nd_one = NULL_PT;
-		
+		nd_one = NULL_PT;		
 		nd_leaf = NULL_PT;
 	}
 	
@@ -354,7 +382,15 @@ public:
 
 	virtual
 	bool check_entry(){
-		return false;
+		BITREE_CK(nd_leaf != NULL_PT);
+		BITREE_CK(be_pos < get_bits().size());
+		if(nd_zero != NULL_PT){
+			BITREE_CK(be_pos < nd_zero->be_pos);
+		}
+		if(nd_one != NULL_PT){
+			BITREE_CK(be_pos < nd_one->be_pos);
+		}
+		return true;
 	}
 	
 	virtual
@@ -371,6 +407,7 @@ public:
 			if(nd2 != NULL_PT){
 				bitree_node::free_bitree_node(nd2);
 			}
+			init_bitree_node(-2);
 		}
 		return this;
 	}
@@ -421,7 +458,8 @@ bitree_entry::insert_node(bitree_entry*& from, bit_row& bits_2){
 		sd = nw_lf;
 	}
 	
-	BITREE_CK(nw_from->check_entry());
+	//bj_ostream& oo = (bj_out << "HOLA" << bj_eol);
+	
 	BITREE_CK(from->be_pos < nw_from->be_pos);
 	from = nw_from;
 	return nw_from;
@@ -440,6 +478,7 @@ bitree_leaf::add_bits(bitree_entry*& from, bit_pos_t curr_leq_pos, bit_row& bits
 	BITREE_CK(nw_nd != NULL_PT);
 	be_pos = nw_nd->diff_pos();
 	BITREE_CK(be_pos <= lf_bits.size());
+	BITREE_CK(nw_nd->check_entry());
 	return true;
 }
 
@@ -458,6 +497,7 @@ bitree_node::add_bits(bitree_entry*& from, bit_pos_t curr_leq_pos, bit_row& bits
 		BITREE_CK(check_entry());
 		bitree_node* nw_nd = insert_node(from, bits_2);
 		bool nd_ok = (nw_nd != NULL_PT);
+		BITREE_CK(! nd_ok || (nw_nd->check_entry()));
 		return nd_ok;
 	}
 	
@@ -496,11 +536,15 @@ class bitree {
 public:
 	
 	bitree(){
-		bt_head = NULL_PT;
-		bt_sz = 0;
+		init_bitree();
 	}
 	
 	~bitree(){
+	}
+	
+	void init_bitree(){
+		bt_head = NULL_PT;
+		bt_sz = 0;
 	}
 	
 	void add_bits(bit_row& bits_2){
@@ -515,8 +559,28 @@ public:
 		}
 	}
 	
+	long size(){
+		return bt_sz;
+	}
+	
 	bool find_bits(bit_row& bits_2){
 		return false;
+	}
+	
+	long walk_bitree(row<bitree_leaf*>& all_leafs, bool with_free){
+		all_leafs.clear();
+		if(bt_head == NULL_PT){
+			return 0;
+		}
+		bitree_node* nd1 = bt_head->walk_tree(all_leafs, with_free);
+		long max_sz = bitree_leaf::clear_leafs(all_leafs, with_free);
+		if(with_free){
+			if(nd1 != NULL_PT){
+				bitree_node::free_bitree_node(nd1);
+			}
+			init_bitree();
+		}
+		return max_sz;
 	}
 	
 	bj_ostream&	print(bj_ostream& os){
@@ -525,9 +589,13 @@ public:
 			return os;
 		}
 		row<bitree_leaf*> all_leafs(bt_sz);
-		bt_head->walk_tree(all_leafs, false);
+		long max_sz = walk_bitree(all_leafs, false);
 		for(long aa = 0; aa < all_leafs.size(); aa++){
 			bit_row& br = all_leafs[aa]->get_bits();
+			long df_sz = max_sz - br.size();
+			for(long bb = 0; bb < df_sz; bb++){
+				os << " ";
+			}
 			os << br << bj_eol;;
 		}
 		return os;
@@ -535,21 +603,145 @@ public:
 
 	void reset(){
 		if(bt_head == NULL_PT){
+			BITREE_CK(bt_sz == 0);
 			return;
 		}
+		BITREE_CK(bt_sz != 0);
+		
 		row<bitree_leaf*> all_leafs(bt_sz);
-		bitree_node* nd1 = bt_head->walk_tree(all_leafs, true);
-		if(nd1 != NULL_PT){
-			bitree_node::free_bitree_node(nd1);
-		}
-		for(long aa = 0; aa < all_leafs.size(); aa++){
-			bitree_leaf::free_bitree_leaf(all_leafs[aa]);
-		}
+		walk_bitree(all_leafs, true);
 	}
 	
+	bool is_empty(){
+		bool is_e = (bt_head == NULL);
+		BITREE_CK(is_e == (bt_sz == 0));
+		return is_e;
+	}
+	
+	bool check_tree(){
+		if(bt_head == NULL){
+			BITREE_CK(is_empty());
+			return true;
+		}
+		BITREE_CK(bt_head->check_entry());
+		return true;
+	}
 	
 };
 
+void set_random_bits(tak_mak& rnd_gen, bit_row& br){
+	long max_row_sz = 15;
+	
+	br.clear();
+	long sz_rr = rnd_gen.gen_rand_int32_ie(2, max_row_sz);
+	for(long aa = 0; aa < sz_rr; aa++){
+		long val_bt = rnd_gen.gen_rand_int32_ie(0, 2);
+		if(val_bt == 0){
+			br.push(false);
+		} else {
+			br.push(true);
+		}
+	}
+}
+
+#define NUM_TESTS 3
+#define MAX_SZ_BTR 10
+
+void	test_bitree(){
+	bj_ostream& os = bj_out;
+	BTRS_COD(bitree rr);
+	SETS_COD(set_long_t ss);
+	ret_set_long_t rsl;
+
+	os << "test_bitree" << bj_eol;
+	BTRS_COD(os << "using_btrs" << bj_eol);
+	SETS_COD(os << "USING_SETS" << bj_eol);
+	os << "MAX_SZ_BTR=" << MAX_SZ_BTR << bj_eol;
+
+	average		avg_sz;
+
+	long rr_tm = 20;
+	tak_mak rnd_gen(rr_tm);
+	
+	long num_tests = NUM_TESTS;
+
+	long min_sz = -1;
+	long max_sz = -1;
+	
+	double start_tm = run_time();
+	
+	bit_row br;
+
+	for(long jj = 0; jj < num_tests; jj++){
+		unsigned long tot_byt_1 = MEM_STATS.num_bytes_available;
+		MARK_USED(tot_byt_1);
+		
+		long sz_btr = rnd_gen.gen_rand_int32_ie(0, MAX_SZ_BTR);
+			
+		if((min_sz == -1) || (sz_btr < min_sz)){
+			min_sz = sz_btr;
+		}
+		if((max_sz == -1) || (sz_btr > max_sz)){
+			max_sz = sz_btr;
+		}
+
+		//long max_item = rnd_gen.gen_rand_int32_ie(sz_btr, 3 * sz_btr);
+		
+		BTRS_COD(rr.reset());
+
+		BITREE_CK(rr.is_empty());
+		
+		os << "sz_btr=" << sz_btr << bj_eol;;
+		// fill btr.
+		for(long kk = 0; kk < sz_btr; kk++){
+			set_random_bits(rnd_gen, br);
+
+			os << "adding=" << br << bj_eol;
+			
+			BITREE_CK(rr.check_tree());
+			BTRS_COD(rr.add_bits(br));
+			SETS_COD(
+				rsl = ss.insert(nxt_elem);
+				ok = rsl.second;
+			)
+			/*
+			if((kk % 1000) == 0){
+				os << CARRIAGE_RETURN;
+				BTRS_COD(os << rr.size());
+				SETS_COD(os << ss.size());
+			}
+			*/
+		}
+		
+		os << CARRIAGE_RETURN;
+		os << as_pt_char("                     ");
+		os << CARRIAGE_RETURN;
+		BTRS_COD(os << rr.size());
+		SETS_COD(os << ss.size());
+		os.flush();
+		
+		BITREE_CK(rr.check_tree());
+
+		BTRS_COD(avg_sz.add_val((double)rr.size()));
+		SETS_COD(avg_sz.add_val((double)ss.size()));
+
+		BITREE_CK(rr.check_tree());
+		os << CARRIAGE_RETURN;
+		os << jj;
+		rr.print(os);
+
+		BITREE_CK(MEM_STATS.num_bytes_available == tot_byt_1);
+	}
+
+	double fill_tm = run_time() - start_tm;
+	
+	os << bj_eol;
+	os << "min_sz=" << min_sz << " max_sz=" << max_sz <<
+		" avg_sz=" << avg_sz.avg << bj_eol;
+
+	os << "TIME=" << fill_tm << bj_eol;
+	
+}
 
 int	
 main(int argc, char** argv){
@@ -557,6 +749,8 @@ main(int argc, char** argv){
 	//os << "dbg_mem_at_start0=" << GLB().dbg_mem_at_start << bj_eol;
 
 	os << bj_eol;
+	
+	test_bitree();
 
 	os << "sizeof(bitree_entry)=" << sizeof(bitree_entry) << bj_eol;
 	os << "sizeof(bitree_leaf)=" << sizeof(bitree_leaf) << bj_eol;

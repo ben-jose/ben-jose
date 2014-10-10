@@ -214,7 +214,6 @@ global_data::init_global_data(){
 
 	dbg_file_name = "";
 	dbg_os = &(bj_out);
-	dbg_os_bak = NULL_PT;
 
 	long num_dbg_levs = DBG_NUM_LEVS;
 	dbg_lev.set_cap(num_dbg_levs);

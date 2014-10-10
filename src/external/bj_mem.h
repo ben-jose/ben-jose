@@ -38,6 +38,7 @@ Declaration of mem trace funcs and other.
 
 #include "platform.h"
 #include "top_exception.h"
+#include "bj_stream.h"
 
 #define NULL_PT		NULL
 
@@ -69,8 +70,8 @@ void* bj_memset(void *s, int c, size_t n){
 
 #define glb_assert(vv) call_assert(vv, as_pt_char(__FILE__), __LINE__, as_pt_char(#vv))
 
-#define glb_assert_2(vv, msg) \
-	call_assert(vv, as_pt_char(__FILE__), __LINE__, as_pt_char(#vv), msg)
+#define glb_assert_2(vv, ostmsg) \
+	call_assert(vv, as_pt_char(__FILE__), __LINE__, as_pt_char(#vv), (ostmsg))
 
 #ifdef FULL_DEBUG
 #define DBG(prm) prm
@@ -81,7 +82,8 @@ void* bj_memset(void *s, int c, size_t n){
 #endif
 
 #define DBG_CK(prm)	   	DBG(glb_assert(prm))
-#define DBG_CK_2(prm, msg)	   	DBG(glb_assert_2(prm, msg))
+#define DBG_CK_2(prm, ostmsg)	   	DBG(glb_assert_2(prm, ostmsg))
+
 #define DBG_THROW(prm) 		DBG(prm)
 //define DBG_THROW(prm) 		;
 #define DBG_THROW_CK(prm) 	DBG_CK(prm)
@@ -100,7 +102,6 @@ void* bj_memset(void *s, int c, size_t n){
 #endif
 
 #define MEM_CK(prm)		DBG_CK(prm)
-#define MEM_CK_2(prm, msg)		DBG_CK_2(prm, msg)
 
 typedef long			error_code_t;
 typedef unsigned long		mem_size;

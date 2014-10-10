@@ -42,6 +42,13 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 #include "sha2.h"
 #include "print_macros.h"
 
+enum charge_t {
+	cg_negative = -1,
+	cg_neutral = 0,
+	cg_positive = 1
+};
+
+
 class canon_clause;
 class variant;
 class canon_cnf;

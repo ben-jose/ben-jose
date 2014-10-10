@@ -361,9 +361,8 @@ public:
 	mem_size 		dbg_mem_at_start;
 
 	ch_string		dbg_file_name;
-	std::ofstream		dbg_file;
+	std::ofstream	dbg_file;
 	bj_ostream*		dbg_os;
-	bj_ostream*		dbg_os_bak;
 	row<bool>		dbg_lev;
 
 	bool			dbg_skip_print_info;
@@ -442,9 +441,9 @@ public:
 		//bj_ostream& os = bj_out;
 		//os << "destroying 'global data' num_bytes_in_use = " << MEM_STATS.num_bytes_in_use << bj_eol;
 
-		ch_string msg = as_pt_char("dbg_mem_at_start=") + 
-			long_to_str(dbg_mem_at_start);
-		MEM_CK_2(dbg_mem_at_start == MEM_STATS.num_bytes_in_use, msg.c_str());
+		//ch_string msg = as_pt_char("dbg_mem_at_start=") + 
+		//	long_to_str(dbg_mem_at_start);
+		MEM_CK(dbg_mem_at_start == MEM_STATS.num_bytes_in_use);
 		finish_global_data();
 	}
 

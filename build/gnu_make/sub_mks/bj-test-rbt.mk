@@ -9,10 +9,10 @@ TGT_LDLIBS  := -lben-jose -lstdc++ -lgmpxx -lgmp
 
 TGT_PREREQS := libben-jose.a 
 
-SOURCES := $(SRC_BASE_DIR)/sat_tools/tests/test_rbt.cpp
+SOURCES := $(SRC_BASE_DIR)/programs/tests/test_rbt.cpp
 
 SRC_INCDIRS := \
-	$(SRC_BASE_DIR)/containers \
+	$(SRC_BASE_DIR)/external \
 	$(SRC_BASE_DIR)/utils 
 
 

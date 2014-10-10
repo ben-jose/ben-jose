@@ -41,30 +41,11 @@ Some usefult abstract template classes and others.
 #include "ch_string.h"
 #include "print_macros.h"
 
-enum dbg_call_id { 
-	dbg_call_1 = 201,
-	dbg_call_2,
-	dbg_call_3,
-	dbg_call_4,
-	dbg_call_5,
-	dbg_call_6,
-	dbg_call_7,
-	dbg_call_8,
-	dbg_call_9,
-	dbg_call_10,
-};
-
 class ref_strs;
 
 DECLARE_PRINT_FUNCS(ref_strs)
 
 #define NUM_BYTES_IN_KBYTE	1024
-
-enum charge_t {
-	cg_negative = -1,
-	cg_neutral = 0,
-	cg_positive = 1
-};
 
 // 'integer' must be of a signed type
 typedef long			integer;
@@ -1172,33 +1153,6 @@ public:
 	}
 };
 
-//=============================================================================
-// queue
-
-template <class obj_t>
-class queue : public row<obj_t> {
-    long     first;
-
-public:
-    queue(void) : first(0) { }
-
-    obj_t   head() { 
-		return row<obj_t>::pos(first); 
-	}
-    obj_t   pick() { 
-		return row<obj_t>::pos(first++); 
-	}
-
-	virtual void	clear(bool destroy = false, bool dealloc = false){ 
-		first = 0;
-		row<obj_t>::clear(destroy, dealloc); 
-	}
-	virtual long		size() const { 
-		return SZ_ATTRIB - first; 
-	}
-};
-
-
 //======================================================================
 // k_row
 
@@ -1371,6 +1325,33 @@ public:
 	}
 
 };
+
+//=============================================================================
+// queue
+
+template <class obj_t>
+class queue : public row<obj_t> {
+    long     first;
+
+public:
+    queue(void) : first(0) { }
+
+    obj_t   head() { 
+		return row<obj_t>::pos(first); 
+	}
+    obj_t   pick() { 
+		return row<obj_t>::pos(first++); 
+	}
+
+	virtual void	clear(bool destroy = false, bool dealloc = false){ 
+		first = 0;
+		row<obj_t>::clear(destroy, dealloc); 
+	}
+	virtual long		size() const { 
+		return SZ_ATTRIB - first; 
+	}
+};
+
 
 //======================================================================
 // heap
