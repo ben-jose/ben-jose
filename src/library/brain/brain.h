@@ -475,7 +475,7 @@ class quanton {
 		qu_tee.so_me = this;
 		qu_tee.so_related = &qu_reltee;
 
-		qu_tee.so_dbg_extern_id = qu_id;
+		qu_tee.so_dbg_extrn_id = qu_id;
 
 		if(qu_inverse != NULL_PT){
 			sortee& oppt = qu_inverse->qu_tee;

@@ -33,9 +33,16 @@ Global classes and functions that support and assist the system.
 #include "support.h"
  
 int	main(int argc, char** argv){
-	//int rr = tests_main_(argc, argv);
+	mem_start_stats();
+	row<bool> dbg_arr;
+	dbg_init_lv_arr(dbg_arr);
+	
 	int rr = solver_main(argc, argv);
+	
+	dbg_arr.clear(true, true);
+	mem_finish_stats();
 	return rr;
+	//return 0;
 }
 
 /*

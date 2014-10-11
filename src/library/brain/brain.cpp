@@ -36,7 +36,7 @@ Classes and that implement the neural network.
 #include "brain.h"
 #include "dimacs.h"
 #include "dbg_run_satex.h"
-#include "dbg_prt_brn.h"
+#include "dbg_prt.h"
 #include "dbg_ic.h"
 
 DEFINE_NI_FLAG_FUNCS(qu_flags, note0, br_qu_tot_note0, true);
@@ -113,7 +113,7 @@ quanton::ck_charge(brain& brn){
 
 bool
 brain::ck_trail(){	
-	bj_ostream& os = *(GLB().dbg_os);
+	bj_ostream& os = bj_dbg;
 	brain& brn = *this;
 
 	row<quanton*>& the_trl = br_tmp_trail;
@@ -662,7 +662,7 @@ neuron::update_fibres(row<quanton*>& synps, bool orig){
 	if(num_neg_chgs == (fib_sz() - 1)){
 		// ABORT CASE
 		if(ne_fibres[0]->is_neg()){
-			bj_ostream& os = *(GLB().dbg_os);
+			bj_ostream& os = bj_dbg;
 			if(GLB().pt_brain != NULL){
 				GLB().pt_brain->print_trail(os);
 			}

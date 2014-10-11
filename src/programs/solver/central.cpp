@@ -55,8 +55,6 @@ call_solve_instance(){
 	//the_brain.stab_it();
 
 	GLB().count_instance(inst_info);
-
-	//GLB().dbg_lev[6] = true;
 }
 
 void

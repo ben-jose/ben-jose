@@ -1039,30 +1039,6 @@ comparison		cmp_with(row<obj_t>& set1, row<obj_t>& set2, CMP_FN_T(cmp_fn)){
 }
 
 //======================================================================
-// secure_row
-
-template<class obj_t>
-class secure_row: public row<obj_t> {
-	public:
-	virtual void	set_cap(row_index min_cap){ 
-		MEM_SRTY(
-			bool old_sec = MEM_STATS.use_secure_alloc;
-			MEM_STATS.use_secure_alloc = true
-		);
-		row<obj_t>::set_cap(min_cap);
-		MEM_SRTY(MEM_STATS.use_secure_alloc = old_sec);
-	}
-	virtual void	clear(bool destroy = false, bool dealloc = false, row_index from = 0){ 
-		MEM_SRTY(
-			bool old_sec = MEM_STATS.use_secure_alloc;
-			MEM_STATS.use_secure_alloc = true
-		);
-		row<obj_t>::clear(destroy, dealloc, from);
-		MEM_SRTY(MEM_STATS.use_secure_alloc = old_sec);
-	}
-};
-
-//======================================================================
 // s_row
 
 // careful: cannot free the given data while using the 

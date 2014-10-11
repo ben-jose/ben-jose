@@ -1694,7 +1694,7 @@ memap::map_oper(mem_op_t mm, brain& brn){
 		///////  start of debug of NO DEBUG
 
 		if(GLB().op_debug_clean_code && (skg_dbg_canon_find_id == 10)){
-			bj_ostream& os = GLB().get_dbg_os();
+			bj_ostream& os = bj_dbg;
 
 			os << "TRYING to find cnf=" << bj_eol << tmp_diff_cnf << bj_eol
 				<< "SHAS=" << bj_eol << tmp_diff_cnf.cf_dbg_shas << bj_eol

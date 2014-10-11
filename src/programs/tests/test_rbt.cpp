@@ -83,8 +83,6 @@ void	test_redblack(){
 	double start_tm = run_time();
 
 	for(long jj = 0; jj < num_tests; jj++){
-		unsigned long tot_byt_1 = MEM_STATS.num_bytes_available;
-		MARK_USED(tot_byt_1);
 		
 		long sz_rbt = rnd_gen.gen_rand_int32_ie(0, MAX_SZ_RBT);
 		if((min_sz == -1) || (sz_rbt < min_sz)){
@@ -201,7 +199,6 @@ void	test_redblack(){
 		REDBLACK_CK(rr.is_empty());
 		REDBLACK_CK(aux_rr.is_empty());
 		
-		REDBLACK_CK(MEM_STATS.num_bytes_available == tot_byt_1);
 	}
 
 	double fill_tm = run_time() - start_tm;

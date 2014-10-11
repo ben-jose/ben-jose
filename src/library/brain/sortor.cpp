@@ -91,7 +91,7 @@ bj_ostream&
 sortee::print_sortee(bj_ostream& os, bool from_pt){
 	MARK_USED(from_pt);
 
-	os << "(" << so_dbg_extern_id << ")";
+	os << "(" << so_dbg_extrn_id << ")";
 	//os << "(" << (void*)this << ").";
 	os << so_tee_consec;
 	os << "[" << so_last_ccl_id << "]";
@@ -109,11 +109,11 @@ sortee::print_sortee(bj_ostream& os, bool from_pt){
 			quanton& qua = *((quanton*)so_me);
 			os << " qua=" << &qua; // << " SRC=" << qua.qu_source;
 		}
-		if(so_dbg_extern_src != NULL_PT){
-			neuron& neu = *((neuron*)so_dbg_extern_src);	
+		if(so_dbg_extrn_src != NULL_PT){
+			neuron& neu = *((neuron*)so_dbg_extrn_src);	
 			os << " SRC=" << &neu;
 		} else {
-			os << " SRC=NULL_extern_src";
+			os << " SRC=NULL_extrn_src";
 		}
 		if(so_dbg_me_class == 2){
 			SORTER_CK(so_me != NULL_PT);

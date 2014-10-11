@@ -673,8 +673,6 @@ void	test_bitree(){
 	bit_row br;
 
 	for(long jj = 0; jj < num_tests; jj++){
-		unsigned long tot_byt_1 = MEM_STATS.num_bytes_available;
-		MARK_USED(tot_byt_1);
 		
 		long sz_btr = rnd_gen.gen_rand_int32_ie(0, MAX_SZ_BTR);
 			
@@ -730,7 +728,6 @@ void	test_bitree(){
 		os << jj;
 		rr.print(os);
 
-		BITREE_CK(MEM_STATS.num_bytes_available == tot_byt_1);
 	}
 
 	double fill_tm = run_time() - start_tm;

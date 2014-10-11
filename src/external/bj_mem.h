@@ -39,6 +39,9 @@ Declaration of mem trace funcs and other.
 #include "platform.h"
 #include "top_exception.h"
 #include "bj_stream.h"
+#include "stack_trace.h"
+
+#define DBG_TPL_ALLOC	false
 
 #define NULL_PT		NULL
 
@@ -81,8 +84,28 @@ void* bj_memset(void *s, int c, size_t n){
 // end_of_def
 #endif
 
+#define	DBG_COND_COMM(cond, comm)	\
+	DBG( \
+		if(cond){ \
+			bj_ostream& os = bj_dbg; \
+			comm; \
+			os << bj_eol; \
+			os.flush(); \
+		} \
+	) \
+
+//--end_of_def
+
 #define DBG_CK(prm)	   	DBG(glb_assert(prm))
-#define DBG_CK_2(prm, ostmsg)	   	DBG(glb_assert_2(prm, ostmsg))
+
+#define DBG_CK_2(prm, comms1) \
+	DBG_COND_COMM((! (prm)), \
+		comms1; \
+		glb_assert(prm); \
+	) \
+	
+//--end_of_def
+
 
 #define DBG_THROW(prm) 		DBG(prm)
 //define DBG_THROW(prm) 		;
@@ -101,7 +124,6 @@ void* bj_memset(void *s, int c, size_t n){
 #define MEM_SRTY(prm) ;
 #endif
 
-#define MEM_CK(prm)		DBG_CK(prm)
 
 typedef long			error_code_t;
 typedef unsigned long		mem_size;
@@ -127,31 +149,116 @@ public:
 //======================================================================
 // glb_mem_data
 
+
 class glb_mem_data;
+
+extern glb_mem_data* glb_pt_mem_stat;
 extern glb_mem_data MEM_STATS;
 
-//define DEFINE_MEM_STATS	glb_mem_data MEM_STATS
+typedef void (*memout_func_t)();
 
 class glb_mem_data {
 public:
-	typedef void (*memout_func_t)();
 
 	mem_size 		num_bytes_in_use;
 	mem_size 		num_bytes_available;
 	memout_func_t	set_memout_func;
-	bool			use_secure_alloc;
 
 	glb_mem_data(){
 		num_bytes_in_use = 0;
 		num_bytes_available = 0;
 		set_memout_func = NULL_PT;
-		use_secure_alloc = false;
 	}
 
 	~glb_mem_data(){
-		MEM_CK(num_bytes_in_use == 0);
 	}
 };
+
+#define MEM_CK(prm) if(glb_pt_mem_stat != NULL){DBG_CK(prm);}
+
+inline
+void
+mem_start_stats(){
+	if(glb_pt_mem_stat != NULL){
+		abort_func(0);
+	}
+	glb_pt_mem_stat = &MEM_STATS;
+	MEM_CK(glb_pt_mem_stat->num_bytes_in_use == 0);
+}
+
+inline
+void
+mem_finish_stats(){
+	if(glb_pt_mem_stat == NULL){
+		abort_func(0);
+	}
+	MEM_CK(glb_pt_mem_stat->num_bytes_in_use == 0);
+	glb_pt_mem_stat = NULL_PT;
+}
+
+inline
+mem_size
+mem_get_num_by_in_use(){
+	if(glb_pt_mem_stat == NULL_PT){
+		return 0;
+	}
+	return glb_pt_mem_stat->num_bytes_in_use;
+}
+
+inline
+void
+mem_inc_num_by_in_use(mem_size val){
+	if(glb_pt_mem_stat == NULL_PT){
+		return;
+	}
+	glb_pt_mem_stat->num_bytes_in_use += val;
+}
+
+inline
+void
+mem_dec_num_by_in_use(mem_size val){
+	if(glb_pt_mem_stat == NULL_PT){
+		return;
+	}
+	glb_pt_mem_stat->num_bytes_in_use -= val;
+}
+
+inline
+mem_size
+mem_get_num_by_available(){
+	if(glb_pt_mem_stat == NULL_PT){
+		return 0;
+	}
+	return glb_pt_mem_stat->num_bytes_available;
+}
+
+inline
+void
+mem_set_num_by_available(mem_size val){
+	if(glb_pt_mem_stat == NULL_PT){
+		return;
+	}
+	glb_pt_mem_stat->num_bytes_available = val;
+}
+
+inline
+memout_func_t
+mem_get_memout_fn(){
+	if(glb_pt_mem_stat == NULL_PT){
+		return NULL_PT;
+	}
+	return glb_pt_mem_stat->set_memout_func;
+}
+
+inline
+void
+mem_set_memout_fn(memout_func_t ff){
+	if(glb_pt_mem_stat == NULL_PT){
+		return;
+	}
+	glb_pt_mem_stat->set_memout_func = ff;
+}
+
 
 
 //======================================================================
@@ -159,16 +266,18 @@ public:
 
 template<class obj_t> static inline obj_t* 
 tpl_malloc(size_t the_size = 1){
+	DBG_COND_COMM(DBG_TPL_ALLOC, os << STACK_STR << "the_size=" << the_size << bj_eol);
 	mem_size mem_sz = the_size * sizeof(obj_t);
 	MEM_CTRL(
-		MEM_CK((MAX_MEM_SZ - mem_sz) > MEM_STATS.num_bytes_in_use);
-		MEM_STATS.num_bytes_in_use += mem_sz;
+		MEM_CK((MAX_MEM_SZ - mem_sz) > mem_get_num_by_in_use());
+		mem_inc_num_by_in_use(mem_sz);
 
-		if(	(MEM_STATS.num_bytes_available > 0) && 
-			(MEM_STATS.num_bytes_in_use > MEM_STATS.num_bytes_available) )
+		if(	(mem_get_num_by_available() > 0) && 
+			(mem_get_num_by_in_use() > mem_get_num_by_available()) )
 		{
-			if(MEM_STATS.set_memout_func != NULL_PT){
-				(*MEM_STATS.set_memout_func)();
+			memout_func_t mof = mem_get_memout_fn();
+			if(mof != NULL_PT){
+				(*mof)();
 			} else {
 				char* mem_out_in_mem_alloc = as_pt_char("Memory exhausted in tpl-mem-alloc");
 				DBG_THROW_CK(mem_out_in_mem_alloc != mem_out_in_mem_alloc);
@@ -191,6 +300,7 @@ tpl_malloc(size_t the_size = 1){
 
 template<class obj_t> static inline obj_t* 
 tpl_secure_realloc(obj_t* ptr, size_t old_size, size_t the_size){
+	DBG_COND_COMM(DBG_TPL_ALLOC, os << STACK_STR << "the_size=" << the_size << bj_eol);
 	MEM_CK(the_size > old_size);
 
 	mem_size mem_sz = the_size * sizeof(obj_t);
@@ -215,30 +325,27 @@ tpl_secure_realloc(obj_t* ptr, size_t old_size, size_t the_size){
 
 template<class obj_t> static inline obj_t* 
 tpl_realloc(obj_t* ptr, size_t old_size, size_t the_size){
+	DBG_COND_COMM(DBG_TPL_ALLOC, os << STACK_STR << "the_size=" << the_size << bj_eol);
 	mem_size mem_sz = the_size * sizeof(obj_t);
 	MEM_CTRL(
 		mem_size old_mem_sz = old_size * sizeof(obj_t);
-		MEM_CK(MEM_STATS.num_bytes_in_use >= old_mem_sz);
-		MEM_STATS.num_bytes_in_use -= old_mem_sz;
-		MEM_CK((MAX_MEM_SZ - mem_sz) > MEM_STATS.num_bytes_in_use);
-		MEM_STATS.num_bytes_in_use += mem_sz;
+		MEM_CK(mem_get_num_by_in_use() >= old_mem_sz);
+		mem_dec_num_by_in_use(old_mem_sz);
+		MEM_CK((MAX_MEM_SZ - mem_sz) > mem_get_num_by_in_use());
+		mem_inc_num_by_in_use(mem_sz);
 
-		if(	(MEM_STATS.num_bytes_available > 0) && 
-			(MEM_STATS.num_bytes_in_use > MEM_STATS.num_bytes_available) )
+		if(	(mem_get_num_by_available() > 0) && 
+			(mem_get_num_by_in_use() > mem_get_num_by_available()) )
 		{
-			if(MEM_STATS.set_memout_func != NULL_PT){
-				(*MEM_STATS.set_memout_func)();
+			memout_func_t mof = mem_get_memout_fn();
+			if(mof != NULL_PT){
+				(*mof)();
 			} else {
 				char* mem_out_in_re_alloc = as_pt_char("Memory exhausted in tpl-re-alloc");
 				DBG_THROW_CK(mem_out_in_re_alloc != mem_out_in_re_alloc);
 				throw mem_exception(mem_out_in_re_alloc);
 				abort_func(0, mem_out_in_re_alloc);
 			}
-		}
-	);
-	MEM_SRTY(
-		if(MEM_STATS.use_secure_alloc){
-			return tpl_secure_realloc(ptr, old_size, the_size); 
 		}
 	);
 	MEM_PT_DIR(dbg_del_from_ptdir(ptr));
@@ -255,12 +362,10 @@ tpl_realloc(obj_t* ptr, size_t old_size, size_t the_size){
 
 template<class obj_t> static inline void 
 tpl_free(obj_t*& ptr, size_t the_size = 1){
+	DBG_COND_COMM(DBG_TPL_ALLOC, os << STACK_STR << "the_size=" << the_size << bj_eol);
 	if(ptr != NULL_PT){ 
 		MEM_SRTY(
 			mem_size s_old_mem_sz = the_size * sizeof(obj_t);
-			if(MEM_STATS.use_secure_alloc){
-				bj_memset(ptr, 0, s_old_mem_sz);
-			}
 		);
 		free(ptr); 
 		MEM_PT_DIR(dbg_del_from_ptdir(ptr));
@@ -268,8 +373,8 @@ tpl_free(obj_t*& ptr, size_t the_size = 1){
 	}
 	MEM_CTRL(
 		mem_size old_mem_sz = the_size * sizeof(obj_t);
-		MEM_CK(MEM_STATS.num_bytes_in_use >= old_mem_sz);
-		MEM_STATS.num_bytes_in_use -= old_mem_sz;
+		MEM_CK(mem_get_num_by_in_use() >= old_mem_sz);
+		mem_dec_num_by_in_use(old_mem_sz);
 	);
 }
 

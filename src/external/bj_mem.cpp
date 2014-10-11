@@ -42,6 +42,8 @@ typedef std::map<long, ch_string> dbg_ptdir_t;
 
 bool		dbg_keeping_ptdir = false;
 dbg_ptdir_t	DBG_MEM_PTDIR;
+
+glb_mem_data* glb_pt_mem_stat = NULL_PT;
 glb_mem_data 	MEM_STATS;
 
 void
@@ -61,7 +63,7 @@ dbg_del_from_ptdir(void* pt_val){
 void
 dbg_print_ptdir(){
 	bj_out << "DBG_MEM_PTDIR=[" << bj_eol;
-	MEM_CK(sizeof(long) == sizeof(void*));
+	DBG_CK(sizeof(long) == sizeof(void*));
 	for(dbg_ptdir_t::iterator aa = DBG_MEM_PTDIR.begin(); aa != DBG_MEM_PTDIR.end(); aa++){
 		long kk = (*aa).first;
 		void* pt = (void*)kk;

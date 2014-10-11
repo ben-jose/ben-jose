@@ -3,7 +3,7 @@ TARGET := ben-jose-solver
 
 SRC_BASE_DIR := ../../../src
 
-TGT_LDFLAGS := -L${TARGET_DIR}
+TGT_LDFLAGS := -rdynamic -L${TARGET_DIR}
 
 TGT_LDLIBS  := -lben-jose -lstdc++ -lgmpxx -lgmp 
 TGT_PREREQS := libben-jose.a 

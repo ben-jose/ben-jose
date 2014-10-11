@@ -42,6 +42,7 @@ Wrapper for ostream class.
 #define bj_eol std::endl
 #define bj_out std::cout
 #define bj_err std::cerr
+#define bj_dbg std::cout
 
 #define bj_fixed std::fixed
 

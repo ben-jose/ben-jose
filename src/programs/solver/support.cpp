@@ -36,10 +36,6 @@ Global classes and functions that support and assist the system.
 #include "config.h"
 #include "sortor.h"
 
-//DEFINE_MEM_STATS;
-
-bool	dbg_bad_cycle1 = false;		// dbg_print_cond_func
-
 ch_string	satisf_val_nams[k_last_satisf_val];
 
 void	init_glb_nams(){
@@ -140,6 +136,11 @@ GLB(){
 
 void
 global_data::dbg_update_config_entries(){
+	if(! dbg_has_lv_arr()){
+		return;
+	}
+	row<bool>& dbg_arr = dbg_get_lv_arr();
+	
 	bj_ostream& os = bj_out;
 	MARK_USED(os);
 
@@ -155,8 +156,8 @@ global_data::dbg_update_config_entries(){
 		(start_lst[start_idx].dbg_round <= curr_round))
 	{
 		long start_dbg_id = start_lst[start_idx].dbg_id;
-		SUPPORT_CK(GLB().dbg_lev.is_valid_idx(start_dbg_id));
-		GLB().dbg_lev[start_dbg_id] = true;
+		SUPPORT_CK(dbg_arr.is_valid_idx(start_dbg_id));
+		dbg_arr[start_dbg_id] = true;
 		start_idx++;
 	} 
 
@@ -164,16 +165,14 @@ global_data::dbg_update_config_entries(){
 		(stop_lst[stop_idx].dbg_round < curr_round))
 	{
 		long stop_dbg_id = stop_lst[stop_idx].dbg_id;
-		SUPPORT_CK(GLB().dbg_lev.is_valid_idx(stop_dbg_id));
-		GLB().dbg_lev[stop_dbg_id] = false;
+		SUPPORT_CK(dbg_arr.is_valid_idx(stop_dbg_id));
+		dbg_arr[stop_dbg_id] = false;
 		stop_idx++;
 	} 
 }
 
 void
 global_data::init_global_data(){
-	//bj_ostream& os = bj_out;
-	//os << "starting 'init_global data'  MEM_STATS.num_bytes_in_use = " << MEM_STATS.num_bytes_in_use << bj_eol;
 
 	using_mem_ctrl = false;
 
@@ -200,7 +199,7 @@ global_data::init_global_data(){
 
 	MEM_CTRL(using_mem_ctrl = true);
 
-	MEM_STATS.set_memout_func = glb_set_memout;		
+	mem_set_memout_fn(glb_set_memout);
 
 	pt_brain = NULL_PT;
 
@@ -213,13 +212,6 @@ global_data::init_global_data(){
 	}
 
 	dbg_file_name = "";
-	dbg_os = &(bj_out);
-
-	long num_dbg_levs = DBG_NUM_LEVS;
-	dbg_lev.set_cap(num_dbg_levs);
-	for(ii = 0; ii < num_dbg_levs; ii++){
-		dbg_lev.inc_sz() = false;
-	}
 
 	dbg_skip_print_info = false;
 
@@ -280,12 +272,22 @@ global_data::init_global_data(){
 	init_glb_nams();
 
 	set_active_out_levs();
-
-	//os << "ending 'init_global data'  MEM_STATS.num_bytes_in_use = " << MEM_STATS.num_bytes_in_use << bj_eol;
 }
 
 void
 global_data::finish_global_data(){
+	/*
+	final_assig.clear(true, true);
+	final_trail_ids.clear(true, true);
+	final_chosen_ids.clear(true, true);
+	*/
+	out_lev.clear(true, true);
+	/*
+	dbg_config_line.clear(true, true);
+	dbg_start_dbg_entries.clear(true, true);
+	dbg_stop_dbg_entries.clear(true, true);
+	batch_instances.clear(true, true);
+	*/
 }
 
 void	
@@ -299,28 +301,10 @@ global_data::set_active_out_levs(){
 
 }
 
-/*
-double
-global_data::mem_percent_used(){
-	double perc_mem_used = 0.0;
-	if(GLB().using_mem_ctrl && (MEM_STATS.num_bytes_available > 0)){
-		double tot = (double)(MEM_STATS.num_bytes_available);
-		double in_use = (double)(MEM_STATS.num_bytes_in_use);
-		perc_mem_used = ((in_use / tot) * 100);
-	}
-	return perc_mem_used; 
-}
-*/
-
 bj_ostream&
 global_data::print_mem_used(bj_ostream& os){
 	if(GLB().using_mem_ctrl){
 		os << GLB().batch_stat_mem_used;
-		/*
-		long used_mem = (long)mem_percent_used();
-		os << "MEM=" << MEM_STATS.num_bytes_in_use << " bytes of " 
-			<< MEM_STATS.num_bytes_available << " (" << used_mem << "%)";
-		*/
 	}
 	return os;
 }
@@ -453,9 +437,9 @@ global_data::count_instance(instance_info& inst_info){
 	*/
 
 	if(using_mem_ctrl){
-		long tot_byt = MEM_STATS.num_bytes_available;
+		long tot_byt = mem_get_num_by_available();
 		MARK_USED(tot_byt);
-		long by_in_use = MEM_STATS.num_bytes_in_use;
+		long by_in_use = mem_get_num_by_in_use();
 
 		batch_stat_mem_used.add_val(by_in_use);
 
@@ -557,47 +541,6 @@ global_data::print_stats(bj_ostream& os, double current_secs){
 
 //============================================================
 // global functions
-
-bool	dbg_print_cond_func(bool prm, bool is_ck, const ch_string fnam, int lnum,
-		const ch_string prm_str, long dbg_lv)
-{
-	DBG_CK(! dbg_bad_cycle1);
-	dbg_bad_cycle1 = true;
-
-	bool resp = true;
-	if(prm){
-		bj_ostream& os = *(GLB().dbg_os);
-		if(dbg_lv != INVALID_DBG_LV){
-			if(dbg_lv == DBG_ALL_LVS){
-				os << "ckALL.";
-			} else {
-				os << "ck" << dbg_lv << ".";
-			}
-		}
-		if(GLB().batch_num_files > 1){
-			os << "#" << GLB().batch_consec << ".";
-		}
-
-		consecutive_t the_lap = GLB().get_curr_lap();
-		if(the_lap > 0){
-			if(is_ck){ os << "LAP="; }
-			os << the_lap << ".";
-		}
-
-		if(is_ck){
-			os << "ASSERT '" << prm_str << "' FAILED (";
-			os << GLB().get_curr_f_nam();
-			os << ")";
-			os << " in " << fnam << " at " << lnum;
-			os << bj_eol;
-		}
-		os.flush();
-		resp = (! is_ck);
-	}
-
-	dbg_bad_cycle1 = false;
-	return resp;
-}
 
 void	err_header(bj_ostr_stream& msg_err){
 	msg_err.clear();
@@ -911,10 +854,6 @@ void	init_dbg_conf(){
 	GLB().dbg_current_stop_entry = 0;
 	GLB().dbg_update_config_entries();
 
-	//DBG_PRT(-1, os << "start_dbgs=" << GLB().dbg_start_dbg_entries << bj_eol); 
-	//DBG_PRT(-1, os << "stop_dbgs=" << GLB().dbg_stop_dbg_entries << bj_eol); 
-	//DBG_PRT(-1, os << "dbg_lev=" << GLB().dbg_lev << bj_eol); 
-
 	DBG_COMMAND(37, os << "PRINT_FULL_INFO" << bj_eol; 
 		GLB().dbg_skip_print_info = true);
 
@@ -990,7 +929,7 @@ void	do_all_instances(){
 			GLB().batch_prt_totals_timer.
 				check_period(print_periodic_totals);
 
-			MEM_CTRL(mem_size mem_in_u = MEM_STATS.num_bytes_in_use;)
+			MEM_CTRL(mem_size mem_in_u = mem_get_num_by_in_use());
 			MEM_CTRL(MARK_USED(mem_in_u));
 			MEM_CTRL(dbg_keeping_ptdir = true);
 
@@ -998,14 +937,14 @@ void	do_all_instances(){
 
 			DBG_PRT(6, os << "AFTER do_cnf_file");
 
-			DBG_PRT_COND(DBG_ALL_LVS, ! (mem_in_u == MEM_STATS.num_bytes_in_use) ,
+			DBG_PRT_COND(DBG_ALL_LVS, ! (mem_in_u == mem_get_num_by_in_use()) ,
 				os << "ABORTING_DATA " << bj_eol;
 				os << "mem_in_u=" << mem_in_u << bj_eol;
-				os << "MEM_STATS.num_bytes_in_use=" << MEM_STATS.num_bytes_in_use << bj_eol;
+				os << "mem_get_num_by_in_use()=" << mem_get_num_by_in_use() << bj_eol;
 				dbg_print_ptdir();
 				os << "END_OF_aborting_data" << bj_eol;
 			);
-			SUPPORT_CK(mem_in_u == MEM_STATS.num_bytes_in_use);
+			SUPPORT_CK(mem_in_u == mem_get_num_by_in_use());
 			MEM_CTRL(dbg_keeping_ptdir = false);
 		}
 	}
@@ -1098,7 +1037,7 @@ global_data::get_args(int argc, char** argv)
 			long max_mem = atol(argv[kk_idx]);
 			max_mem = (max_mem * NUM_BYTES_IN_KBYTE);
 			if(max_mem > 0){
-				MEM_STATS.num_bytes_available = max_mem;
+				mem_set_num_by_available(max_mem);
 			}
 
 		} else if(input_file_nm.size() == 0){
@@ -1136,6 +1075,7 @@ global_data::get_args(int argc, char** argv)
 }
 
 int	solver_main(int argc, char** argv){
+	MEM_CTRL(GLB().dbg_mem_at_start = mem_get_num_by_in_use());
 	DBG_CHECK_SAVED(
 		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
 		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
@@ -1156,10 +1096,10 @@ int	solver_main(int argc, char** argv){
 	SUPPORT_CK(GLB().dbg_start_dbg_entries.get_cap() == 0);
 	SUPPORT_CK(GLB().dbg_stop_dbg_entries.get_cap() == 0);
 
-	MEM_CTRL(mem_size mem_in_u = MEM_STATS.num_bytes_in_use;)
+	MEM_CTRL(mem_size mem_in_u = mem_get_num_by_in_use());
 	MEM_CTRL(MARK_USED(mem_in_u));
 
-	MEM_STATS.num_bytes_available = (get_free_mem_kb() * NUM_BYTES_IN_KBYTE);
+	mem_set_num_by_available(get_free_mem_kb() * NUM_BYTES_IN_KBYTE);
 
 	DBG(init_dbg_conf());
 
@@ -1171,11 +1111,11 @@ int	solver_main(int argc, char** argv){
 	if(args_ok){
 		PRT_OUT(1, os << ".STARTING AT " << run_time() << bj_eol);
 
-		double tot_mem = (double)(MEM_STATS.num_bytes_available);
+		double tot_mem = (double)(mem_get_num_by_available());
 		GLB().batch_stat_mem_used.vs_max_val = tot_mem;
 
 		PRT_OUT(0, os << "Starting with "
-			<< MEM_STATS.num_bytes_available << " bytes available" 
+			<< mem_get_num_by_available() << " bytes available" 
 			<< bj_eol); 
 		DBG(PRT_OUT(1, os << "DEBUG_BRAIN activated" 
 			<< bj_eol));
@@ -1187,7 +1127,7 @@ int	solver_main(int argc, char** argv){
 	GLB().dbg_start_dbg_entries.clear(true, true);
 	GLB().dbg_stop_dbg_entries.clear(true, true);
 
-	SUPPORT_CK(mem_in_u == MEM_STATS.num_bytes_in_use);
+	SUPPORT_CK(mem_in_u == mem_get_num_by_in_use());
 
 	double end_tm = 0.0;
 	MARK_USED(end_tm);
@@ -1213,7 +1153,18 @@ int	solver_main(int argc, char** argv){
 		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
 	);
 
+	DBG_CK_2(GLB().dbg_mem_at_start == mem_get_num_by_in_use(), 
+		os << "dbg_mem_at_start=" << GLB().dbg_mem_at_start << bj_eol;
+		os << "mem_get_num_by_in_use()=" << mem_get_num_by_in_use() << bj_eol
+	);
 	return resp;
 }
 
+global_data::global_data(){
+	dbg_mem_at_start = 0;
+	init_global_data();
+}
 
+global_data::~global_data(){
+	//finish_global_data();
+}

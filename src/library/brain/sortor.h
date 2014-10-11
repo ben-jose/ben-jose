@@ -374,8 +374,8 @@ public:
 	sortrel*	so_related;
 
 	char		so_dbg_me_class;
-	long		so_dbg_extern_id;
-	void*		so_dbg_extern_src;
+	long		so_dbg_extrn_id;
+	void*		so_dbg_extrn_src;
 
 	long		so_saved_tee_consec;
 	long		so_tee_consec;
@@ -403,8 +403,8 @@ public:
 		so_related = NULL_PT;
 
 		so_dbg_me_class = 0;
-		so_dbg_extern_id = 0;
-		so_dbg_extern_src = NULL_PT;
+		so_dbg_extrn_id = 0;
+		so_dbg_extrn_src = NULL_PT;
 
 		so_saved_tee_consec = INVALID_NATURAL;
 		so_tee_consec = INVALID_NATURAL;
@@ -479,7 +479,7 @@ public:
 			quar.so_mates.clear();
 		}
 
-		so_dbg_extern_src = NULL_PT;
+		so_dbg_extrn_src = NULL_PT;
 		so_ccl.cc_clear(false);
 	}
 	

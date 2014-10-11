@@ -105,8 +105,9 @@ void	test_long_to_pth(int argc, char** argv){
 
 void	test_dims_to_path(int argc, char** argv){
 	bj_ostream& os = bj_out;
+	row<bool>& dbg_arr = dbg_get_lv_arr();
 
-	GLB().dbg_lev[96] = true;
+	dbg_arr[96] = true;
 
 	if(argc < 4){
 		os << "Faltan args" << bj_eol;
@@ -340,17 +341,19 @@ test_nfwt(int argc, char** argv)
 {
 	bj_ostream& os = bj_out;
 	MARK_USED(os);
+	
+	row<bool>& dbg_arr = dbg_get_lv_arr();
 
-	GLB().dbg_lev[2] = true;
-	GLB().dbg_lev[78] = true;
-	GLB().dbg_lev[81] = true;
-	//GLB().dbg_lev[82] = true;
-	GLB().dbg_lev[88] = true;
-	GLB().dbg_lev[89] = true;
-	//GLB().dbg_lev[92] = true;
-	GLB().dbg_lev[93] = true;
-	GLB().dbg_lev[94] = true;
-	GLB().dbg_lev[95] = true;
+	dbg_arr[2] = true;
+	dbg_arr[78] = true;
+	dbg_arr[81] = true;
+	//dbg_arr[82] = true;
+	dbg_arr[88] = true;
+	dbg_arr[89] = true;
+	//dbg_arr[92] = true;
+	dbg_arr[93] = true;
+	dbg_arr[94] = true;
+	dbg_arr[95] = true;
 
 	//ccl_skl_walker& skl_wlkr = GSKE.kg_ccl_wlkr;
 	//clause_walker& wlkr = skl_wlkr.fw_walker;
@@ -562,7 +565,9 @@ test_subsets(){
 
 	MARK_USED(os);
 
-	GLB().dbg_lev[2] = true;
+	row<bool>& dbg_arr = dbg_get_lv_arr();
+	
+	dbg_arr[2] = true;
 
 	GSKE.kg_root_path = TEST_ROOT_PATH;
 	GSKE.init_paths();
@@ -571,7 +576,7 @@ test_subsets(){
 	ch_string GSKE_ROOT = GSKE.kg_root_path + SKG_SKELETON_DIR;
 	os << "WARNING !!! deleting '" << GSKE_ROOT << "'" << bj_eol;
 	delete_directory(GSKE_ROOT);
-	//GLB().dbg_lev[80] = true;
+	//dbg_arr[80] = true;
 
 	long num_test_to_gen = 1000;
 	//unsigned long init_val = (long)(run_time());
@@ -984,8 +989,10 @@ gen_phases(tak_mak& gg, ref_strs& the_ph){
 
 void
 test_skl(){
-	GLB().dbg_lev[2] = true;
-	//GLB().dbg_lev[95] = true;
+	row<bool>& dbg_arr = dbg_get_lv_arr();
+	
+	dbg_arr[2] = true;
+	//dbg_arr[95] = true;
 
 	bj_ostream& os = bj_out;
 	MARK_USED(os);
@@ -1008,12 +1015,12 @@ test_skl(){
 
 	GSKE.kg_save_canon = true;
 
-	//GLB().dbg_lev[107] = true;
-	GLB().dbg_lev[73] = true;
-	//GLB().dbg_lev[76] = true;
-	//GLB().dbg_lev[78] = true;
-	//GLB().dbg_lev[108] = true;
-	//GLB().dbg_lev[109] = true;
+	//dbg_arr[107] = true;
+	dbg_arr[73] = true;
+	//dbg_arr[76] = true;
+	//dbg_arr[78] = true;
+	//dbg_arr[108] = true;
+	//dbg_arr[109] = true;
 
 	//ccl_skl_walker& skl_wlkr = GSKE.kg_ccl_wlkr;
 	//clause_walker& wlkr = skl_wlkr.fw_walker;
@@ -1303,10 +1310,10 @@ int	tests_main_(int argc, char** argv){
 	MARK_USED(argc);
 	MARK_USED(argv);
 	bj_ostream& os = bj_out;
-
-	MEM_CTRL(mem_size tt_mem_in_u = MEM_STATS.num_bytes_in_use;)
-	MEM_CTRL(MARK_USED(tt_mem_in_u));
-
+	
+	row<bool> dbg_arr;
+	dbg_init_lv_arr(dbg_arr);
+	
 	//test_realpath(argc, argv);
 	//test_subsets();
 	//test_dims_to_path(argc, argv);
@@ -1325,13 +1332,7 @@ int	tests_main_(int argc, char** argv){
 	//test_thrw_obj();
 	pru_hex_as_txt();
 	
-	os << "ENDING TESTS___________  MEM_STATS.num_bytes_in_use = " << MEM_STATS.num_bytes_in_use << bj_eol;
 	os.flush();
-
-	DBG_CK(tt_mem_in_u == MEM_STATS.num_bytes_in_use);
-
-	//MEM_CTRL(mem_size mem_u = MEM_STATS.num_bytes_in_use;)  // not nedded. tested during
-	//SUPPORT_CK(mem_u == MEM_STATS.num_bytes_in_use); // mem.cpp MEM_STATS destruction
 
 	os << bj_eol;
 	os << "End of tests" << bj_eol;

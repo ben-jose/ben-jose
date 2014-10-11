@@ -61,24 +61,20 @@ Declaration of classes that support and assist the system.
 #include "tools.h"
 #include "util_funcs.h"
 
+#include "dbg_prt.h"
 #include "skeleton.h"
 
 //=================================================================
 // pre-configuration decl
 
-extern bool	dbg_bad_cycle1;
+#define init_nams(nams, fst_idx, lst_idx) \
+	for(long nams##kk = fst_idx; nams##kk < lst_idx; nams##kk++){ \
+		nams[nams##kk] = "invalid_name !!!"; \
+	} \
 
-//=================================================================
-// debug defs
+// end_define
 
-//define DBG_CHECK_SAVED(cod)	;
-#define DBG_CHECK_SAVED(cod)		DBG(cod)
-
-#define DBG_ALL_LVS -1
-
-#define DO_PRINTS(prm)		prm
-
-#define	DBG_COND(lv_arr, lev, cond)	\
+#define	OUT_COND(lv_arr, lev, cond)	\
 	(	(	(lev < 0) || \
 			((lev >= 0) && lv_arr[lev]) \
 		) && \
@@ -89,7 +85,7 @@ extern bool	dbg_bad_cycle1;
 
 #define PRT_OUT(lev, comm) \
 	DO_PRINTS( \
-		if(DBG_COND(GLB().out_lev, lev, \
+		if(OUT_COND(GLB().out_lev, lev, \
 				(GLB().out_os != NULL_PT))) \
 		{ \
 			bj_ostream& os = *(GLB().out_os); \
@@ -99,90 +95,6 @@ extern bool	dbg_bad_cycle1;
 	) \
 			
 //--end_of_def
-
-#define INVALID_DBG_LV 		-123
-
-#define SET_LV(lev, nm_var, tmp_lev) \
-	bool nm_var = GLB().dbg_lev[tmp_lev]; \
-	if(DBG_COND(GLB().dbg_lev, lev, true)){ \
-		GLB().dbg_lev[tmp_lev] = true; \
-	} \
-
-//--end_of_def
-
-#define RESET_LV(lev, nm_var, tmp_lev) \
-	bool nm_var = GLB().dbg_lev[tmp_lev]; \
-	if(DBG_COND(GLB().dbg_lev, lev, true)){ \
-		GLB().dbg_lev[tmp_lev] = false; \
-	} \
-
-//--end_of_def
-
-#define RECOVER_LV(tmp_lev, nm_var) \
-	GLB().dbg_lev[tmp_lev] = nm_var; \
-
-//--end_of_def
-
-bool	dbg_print_cond_func(bool prm,
-		bool is_ck = false,
-		const ch_string fnam = "NO_NAME",
-		int lnum = 0,
-		const ch_string prm_str = "NO_PRM",
-		long dbg_lv = INVALID_DBG_LV);
-
-#define	DBG_PRT_COND(lev, cond, comm)	\
-	DBG( \
-		dbg_print_cond_func(DBG_COND(GLB().dbg_lev, lev, cond), \
-			false, "NO_NAME", 0, #cond, lev); \
-		if(DBG_COND(GLB().dbg_lev, lev, cond)){ \
-			bj_ostream& os = *(GLB().dbg_os); \
-			comm; \
-			os << bj_eol; \
-			os.flush(); \
-		} \
-	) \
-
-//--end_of_def
-	
-#define	DBG_PRT(lev, comm)	DBG_PRT_COND(lev, true, comm)
-
-#define	DBG_COMMAND(lev, comm) \
-		if(DBG_COND(GLB().dbg_lev, lev, true)){ \
-			bj_ostream& os = *(GLB().dbg_os); \
-			DBG(comm); \
-			os.flush(); \
-		} \
-
-//--end_of_def
-
-#define SUPPORT_CK(prm) \
-	DBG_CK(dbg_print_cond_func((! (prm)), true, __FILE__, __LINE__, #prm)); \
-
-// end_of_def
-
-//define BRAIN_CK_0(prm)	;
-#define BRAIN_CK_0(prm)	SUPPORT_CK(prm)
-
-#define BRAIN_CK(prm) \
-	DBG_CK(dbg_print_cond_func((! (prm)), true, __FILE__, __LINE__, #prm)); \
-
-// end_of_def
-
-#define BRAIN_CK_1(prm)	;
-//define BRAIN_CK_1(prm)	BRAIN_CK(prm)
-
-#define BRAIN_CK_2(prm)	;
-//define BRAIN_CK_2(prm)	BRAIN_CK(prm)
-
-#define DBG_SLOW(prm)
-//define DBG_SLOW(prm)	DBG(prm)
-
-#define init_nams(nams, fst_idx, lst_idx) \
-	for(long nams##kk = fst_idx; nams##kk < lst_idx; nams##kk++){ \
-		nams[nams##kk] = "invalid_name !!!"; \
-	} \
-
-// end_define
 
 
 //=================================================================
@@ -199,7 +111,6 @@ typedef	int	location;
 
 #define OUT_NUM_LEVS 10
 
-#define DBG_NUM_LEVS 200
 
 //=================================================================
 // consecutive
@@ -362,8 +273,6 @@ public:
 
 	ch_string		dbg_file_name;
 	std::ofstream	dbg_file;
-	bj_ostream*		dbg_os;
-	row<bool>		dbg_lev;
 
 	bool			dbg_skip_print_info;
 
@@ -429,23 +338,8 @@ public:
 	void 		init_global_data();
 	void 		finish_global_data();
 
-	global_data(){
-		init_global_data();
-		MEM_CTRL(dbg_mem_at_start = MEM_STATS.num_bytes_in_use);
-
-		//bj_ostream& os = bj_out;
-		//os << "creating 'global data' num_bytes_in_use = " << MEM_STATS.num_bytes_in_use << bj_eol;
-	}
-
-	~global_data(){
-		//bj_ostream& os = bj_out;
-		//os << "destroying 'global data' num_bytes_in_use = " << MEM_STATS.num_bytes_in_use << bj_eol;
-
-		//ch_string msg = as_pt_char("dbg_mem_at_start=") + 
-		//	long_to_str(dbg_mem_at_start);
-		MEM_CK(dbg_mem_at_start == MEM_STATS.num_bytes_in_use);
-		finish_global_data();
-	}
+	global_data();
+	~global_data();
 
 	void		reset_global(){
 		reset_err_msg();
@@ -499,15 +393,8 @@ public:
 
 	void 	dbg_update_config_entries();
 
-	bj_ostream& 	get_dbg_os(){
-		if(dbg_os != NULL_PT){
-			return *dbg_os;
-		}
-		return bj_out;
-	}
-
 	void	dbg_default_info(){
-		bj_ostream& os = *(dbg_os);
+		bj_ostream& os = bj_dbg;
 	
 		os << "NO DBG INFO AVAILABLE " << 
 		"(define a func for this error code)" << bj_eol; 
