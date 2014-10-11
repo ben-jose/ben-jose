@@ -470,6 +470,36 @@ public:
 };
 
 inline
+bj_ostream&
+bit_row::print_bit_row(
+	bj_ostream& os, 
+	bool with_lims,
+
+	char* sep, 
+	bit_row_index low, 
+	bit_row_index hi,
+	bit_row_index grp_sz,
+	char* grp_sep
+	)
+{
+	bit_row_index num_elem = 1;
+	if(with_lims){ os << "["; }
+	for(bit_row_index ii = 0; ii < sz; ii++){
+		if(ii == low){ os << ">"; }
+		os << pos(ii);
+		if(ii == hi){ os << "<"; }
+		os << sep;
+		if((grp_sz > 1) && ((num_elem % grp_sz) == 0)){
+			os << grp_sep;
+		}
+		num_elem++;
+	}
+	if(with_lims){ os << "] "; }
+	os.flush();
+	return os;
+}
+
+inline
 bit_ref& bit_ref::operator = (bool val){
 	BITS_CK(brow != NULL_PT);
 	brow->set_val(idx, val);

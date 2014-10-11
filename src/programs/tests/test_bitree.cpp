@@ -54,6 +54,7 @@ typedef std::pair<std::set<long>::iterator,bool> ret_set_long_t;
 #endif
 
 #define BITREE_CK(prm)	DBG_CK(prm)
+#define BITREE_CK_2(prm, comm)	DBG_CK_2(prm, comm)
 
 //======================================================================
 // bitree_exception
@@ -95,7 +96,12 @@ public:
 		int sz1 = bits_1.size();
 		int sz2 = bits_2.size();
 		int min_sz = (sz1 < sz2)?(sz1):(sz2);
-		BITREE_CK(from_pos < min_sz);
+		BITREE_CK_2(from_pos < min_sz, 
+			os << "from_pos=" << from_pos << bj_eol;
+			os << "min_sz=" << min_sz << bj_eol;
+			os << "bits_1=" << bits_1 << bj_eol;
+			os << "bits_2=" << bits_2 << bj_eol;
+		);
 		
 		bit_pos_t ii = -1;
 		for(ii = from_pos; ii < min_sz; ii++){
@@ -156,6 +162,14 @@ public:
 	}
 
 	virtual
+	void update_pos(bit_pos_t eq_pos){
+		char* bad_btr_update = as_pt_char("invalid call to bitree_entry::update_pos");
+		DBG_THROW_CK(bad_btr_update != bad_btr_update);
+		throw bitree_exception(bad_btr_update);
+		abort_func(0, bad_btr_update);
+	}
+
+	virtual
 	bool check_entry(){
 		char* bad_bitree_ck = as_pt_char("invalid call to bitree_entry::check_entry");
 		DBG_THROW_CK(bad_bitree_ck != bad_bitree_ck);
@@ -186,10 +200,14 @@ public:
 	bit_row lf_bits;
 	
 	bitree_leaf(bit_pos_t curr_pos, bit_row& bits_2){
+		BITREE_CK(! bits_2.is_empty());
 		be_pos = curr_pos;
 		lf_reset = false;
 		bits_2.swap_with(lf_bits);
-		BITREE_CK(be_pos < lf_bits.size());
+		BITREE_CK_2(be_pos <= lf_bits.size(),
+			os << "be_pos=" << be_pos << bj_eol;
+			os << "lf_bits.size()=" << lf_bits.size() << bj_eol;
+		);
 	}
 	
 	~bitree_leaf(){
@@ -214,7 +232,8 @@ public:
 	
 	virtual
 	bool find_bits(bit_pos_t pos, bit_row& bits_2){
-		return false;
+		bool eq_lf = lf_bits.equal_to(bits_2);
+		return eq_lf;
 	}
 
 	virtual
@@ -227,13 +246,19 @@ public:
 		return this;
 	}
 	
+	virtual
+	void update_pos(bit_pos_t eq_pos){
+		be_pos = eq_pos + 1;
+	}
+	
 	int size(){
 		return lf_bits.size();
 	}
 
 	virtual
 	bool check_entry(){
-		BITREE_CK(be_pos < lf_bits.size());
+		BITREE_CK(! get_bits().is_empty());
+		BITREE_CK(be_pos <= lf_bits.size());
 		return true;
 	}
 	
@@ -314,7 +339,7 @@ public:
 	bool leaf_is_deeper(){
 		if(! has_leaf()){ return true; }
 		
-		bitree_entry* sd = get_bits_side();
+		bitree_entry* sd = get_side_of_lf_diff_bit();
 		if(sd == NULL_PT){ return false; }
 
 		int lf_sz = nd_leaf->size();
@@ -338,7 +363,7 @@ public:
 		}
 	}
 	
-	bitree_entry* get_bits_side(){
+	bitree_entry* get_side_of_lf_diff_bit(){
 		if(has_final()){
 			return NULL_PT;
 		}
@@ -365,8 +390,41 @@ public:
 	bool add_bits(bitree_entry*& from, bit_pos_t curr_leq_pos, bit_row& bits_2);
 	
 	virtual
-	bool find_bits(bit_pos_t pos, bit_row& bits_2){
-		return false;
+	bool find_bits(bit_pos_t curr_leq_pos, bit_row& bits_2){
+		BITREE_CK(curr_leq_pos < bits_2.size());
+	
+		if(curr_leq_pos <= be_pos){
+			bit_row& bits_1 = get_bits();
+			BITREE_CK(be_pos < bits_1.size());
+			curr_leq_pos = get_last_eq_pos(curr_leq_pos, bits_1, bits_2);
+		}
+		
+		if(curr_leq_pos < be_pos){
+			return false;
+		}
+		
+		int dff_pos = diff_pos();
+		BITREE_CK(dff_pos <= bits_2.size());
+
+		bool found_ok = true;
+		if(dff_pos < bits_2.size()){
+			bool hx1 = bits_2[dff_pos];
+			bitree_entry*& ee = get_side(hx1);
+			if(ee == NULL_PT){
+				BITREE_CK(curr_leq_pos == be_pos);
+				return false;
+			} else {
+				BITREE_CK(be_pos < ee->be_pos);
+				found_ok = ee->find_bits(curr_leq_pos, bits_2);
+			}
+		} else
+		if(dff_pos == bits_2.size()){
+			if(! has_final()){
+				return false;
+			}
+			found_ok = nd_leaf->find_bits(curr_leq_pos, bits_2);
+		}
+		return found_ok;
 	}
 	
 	virtual
@@ -377,12 +435,19 @@ public:
 
 	virtual
 	bitree_leaf* get_leaf(){
+		BITREE_CK(nd_leaf != NULL_PT);
 		return nd_leaf;
 	}
 
 	virtual
+	void update_pos(bit_pos_t eq_pos){
+		// does nothing. leave it like this.
+	}
+	
+	virtual
 	bool check_entry(){
 		BITREE_CK(nd_leaf != NULL_PT);
+		BITREE_CK(! get_bits().is_empty());
 		BITREE_CK(be_pos < get_bits().size());
 		if(nd_zero != NULL_PT){
 			BITREE_CK(be_pos < nd_zero->be_pos);
@@ -393,20 +458,24 @@ public:
 		return true;
 	}
 	
+	void walk_side(bitree_entry* ee, row<bitree_leaf*>& all_leafs, bool with_free){
+		if(ee != NULL_PT){
+			bitree_node* nd1 = ee->walk_tree(all_leafs, with_free);
+			if(with_free && (nd1 != NULL_PT)){
+				bitree_node::free_bitree_node(nd1);
+			}
+		}
+	}
+	
 	virtual
 	bitree_node* walk_tree(row<bitree_leaf*>& all_leafs, bool with_free){
 		if(has_final()){
-			all_leafs.push(nd_leaf);
+			BITREE_CK(nd_leaf != NULL_PT);
+			nd_leaf->walk_tree(all_leafs, with_free);
 		}
-		bitree_node* nd1 = nd_zero->walk_tree(all_leafs, with_free);
-		bitree_node* nd2 = nd_one->walk_tree(all_leafs, with_free);
+		walk_side(nd_zero, all_leafs, with_free);
+		walk_side(nd_one, all_leafs, with_free);
 		if(with_free){
-			if(nd1 != NULL_PT){
-				bitree_node::free_bitree_node(nd1);
-			}
-			if(nd2 != NULL_PT){
-				bitree_node::free_bitree_node(nd2);
-			}
 			init_bitree_node(-2);
 		}
 		return this;
@@ -414,25 +483,27 @@ public:
 };
 
 bitree_node*
-bitree_entry::insert_node(bitree_entry*& from, bit_row& bits_2){
+bitree_entry::insert_node(bitree_entry*& from, bit_row& in_bits){
 	BITREE_CK(from == this);
 	
 	bit_row& bits_1 = get_bits();
 	int sz1 = bits_1.size();
-	int sz2 = bits_2.size();
+	int sz2 = in_bits.size();
 	
 	if(sz2 == 0){
 		return NULL_PT;
 	}
 	
-	bit_pos_t lst_eq = get_last_eq_pos(-1, bits_1, bits_2);
+	bit_pos_t lst_eq = get_last_eq_pos(-1, bits_1, in_bits);
 	int fst_diff = lst_eq + 1;
 	
 	if((sz1 == sz2) && (lst_eq == (sz1 - 1))){
 		return NULL_PT;
 	}
 	
-	bitree_leaf* nw_lf = bitree_leaf::create_bitree_leaf(fst_diff, bits_2);
+	bitree_leaf* nw_lf = bitree_leaf::create_bitree_leaf(fst_diff, in_bits);
+	bit_row& bits_2 = nw_lf->get_bits();
+	
 	bitree_node* nw_from = bitree_node::create_bitree_node(lst_eq);
 	
 	if(nw_from->is_final(nw_lf)){
@@ -459,9 +530,17 @@ bitree_entry::insert_node(bitree_entry*& from, bit_row& bits_2){
 	}
 	
 	//bj_ostream& oo = (bj_out << "HOLA" << bj_eol);
+	update_pos(lst_eq);
 	
-	BITREE_CK(from->be_pos < nw_from->be_pos);
+	BITREE_CK_2(nw_from->be_pos < be_pos, 
+			os << "be_pos=" << be_pos 
+			<< " nw_from->be_pos=" << nw_from->be_pos << bj_eol
+			<< "bits1=" << bits_1 << bj_eol
+			<< "bits2=" << bits_2 << bj_eol);
 	from = nw_from;
+	
+	BITREE_CK(from->check_entry());
+	BITREE_CK(nw_from->check_entry());
 	return nw_from;
 }
 
@@ -476,7 +555,6 @@ bitree_leaf::add_bits(bitree_entry*& from, bit_pos_t curr_leq_pos, bit_row& bits
 	}
 	
 	BITREE_CK(nw_nd != NULL_PT);
-	be_pos = nw_nd->diff_pos();
 	BITREE_CK(be_pos <= lf_bits.size());
 	BITREE_CK(nw_nd->check_entry());
 	return true;
@@ -515,12 +593,12 @@ bitree_node::add_bits(bitree_entry*& from, bit_pos_t curr_leq_pos, bit_row& bits
 			BITREE_CK(be_pos < ee->be_pos);
 			add_ok = ee->add_bits(ee, curr_leq_pos, bits_2);
 		}
-	}
+	} else
 	if(dff_pos == bits_2.size()){
 		if(! has_final()){
 			bitree_leaf* nw_lf = bitree_leaf::create_bitree_leaf(dff_pos, bits_2);
 			set_leaf(nw_lf);
-			BITREE_CK(get_bits().equal_to(bits_2));
+			BITREE_CK(nw_lf->get_bits().equal_to(get_bits()));
 			BITREE_CK(has_final());
 		}
 	}
@@ -564,6 +642,9 @@ public:
 	}
 	
 	bool find_bits(bit_row& bits_2){
+		if(bt_head == NULL_PT){
+			return false;
+		}
 		return false;
 	}
 	
@@ -585,17 +666,18 @@ public:
 	
 	bj_ostream&	print(bj_ostream& os){
 		if(bt_head == NULL_PT){
+			BITREE_CK(is_empty());
 			os << "NULL_BITREE" << bj_eol;;
 			return os;
 		}
 		row<bitree_leaf*> all_leafs(bt_sz);
-		long max_sz = walk_bitree(all_leafs, false);
+		walk_bitree(all_leafs, false);
 		for(long aa = 0; aa < all_leafs.size(); aa++){
 			bit_row& br = all_leafs[aa]->get_bits();
-			long df_sz = max_sz - br.size();
-			for(long bb = 0; bb < df_sz; bb++){
-				os << " ";
-			}
+			//long df_sz = max_sz - br.size();
+			//for(long bb = 0; bb < df_sz; bb++){
+			//	os << "  ";
+			//}
 			os << br << bj_eol;;
 		}
 		return os;
@@ -629,8 +711,12 @@ public:
 	
 };
 
+#define NUM_TESTS 3
+#define MAX_SZ_BTR 400000
+#define MAX_BITS_SZ 35
+
 void set_random_bits(tak_mak& rnd_gen, bit_row& br){
-	long max_row_sz = 15;
+	long max_row_sz = MAX_BITS_SZ;
 	
 	br.clear();
 	long sz_rr = rnd_gen.gen_rand_int32_ie(2, max_row_sz);
@@ -643,9 +729,6 @@ void set_random_bits(tak_mak& rnd_gen, bit_row& br){
 		}
 	}
 }
-
-#define NUM_TESTS 3
-#define MAX_SZ_BTR 10
 
 void	test_bitree(){
 	bj_ostream& os = bj_out;
@@ -689,27 +772,33 @@ void	test_bitree(){
 
 		BITREE_CK(rr.is_empty());
 		
-		os << "sz_btr=" << sz_btr << bj_eol;;
+		//os << "sz_btr=" << sz_btr << bj_eol;;
 		// fill btr.
 		for(long kk = 0; kk < sz_btr; kk++){
 			set_random_bits(rnd_gen, br);
 
-			os << "adding=" << br << bj_eol;
+			//os << "adding=" << br << bj_eol;
 			
 			BITREE_CK(rr.check_tree());
-			BTRS_COD(rr.add_bits(br));
+			BTRS_COD(
+					rr.add_bits(br);
+					
+					//os << "TREE=" << bj_eol;
+					//rr.print(os);
+			);
 			SETS_COD(
 				rsl = ss.insert(nxt_elem);
 				ok = rsl.second;
 			)
-			/*
+			
 			if((kk % 1000) == 0){
 				os << CARRIAGE_RETURN;
 				BTRS_COD(os << rr.size());
 				SETS_COD(os << ss.size());
 			}
-			*/
+			
 		}
+		//os << "FINISHED_ADDING" << bj_eol;
 		
 		os << CARRIAGE_RETURN;
 		os << as_pt_char("                     ");
@@ -726,8 +815,9 @@ void	test_bitree(){
 		BITREE_CK(rr.check_tree());
 		os << CARRIAGE_RETURN;
 		os << jj;
-		rr.print(os);
-
+		
+		//os << bj_eol;
+		//rr.print(os);
 	}
 
 	double fill_tm = run_time() - start_tm;
@@ -749,6 +839,7 @@ main(int argc, char** argv){
 	
 	test_bitree();
 
+	/*
 	os << "sizeof(bitree_entry)=" << sizeof(bitree_entry) << bj_eol;
 	os << "sizeof(bitree_leaf)=" << sizeof(bitree_leaf) << bj_eol;
 	os << "sizeof(bitree_node)=" << sizeof(bitree_node) << bj_eol;
@@ -756,6 +847,7 @@ main(int argc, char** argv){
 	os << "sizeof(int)=" << sizeof(int) << bj_eol;
 	os << "sizeof(long)=" << sizeof(long) << bj_eol;
 	os << "sizeof(long long)=" << sizeof(long long) << bj_eol;
+	*/
 	
 	os << "End of test-bitree. Type ENTER." << bj_eol;
 	return 0;

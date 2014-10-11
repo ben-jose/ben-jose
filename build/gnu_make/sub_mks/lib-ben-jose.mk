@@ -19,7 +19,6 @@ SOURCES := \
 	$(SRC_BASE_DIR)/library/debug/dbg_prt.cpp \
 	$(SRC_BASE_DIR)/programs/solver/support.cpp \
 	$(SRC_BASE_DIR)/programs/solver/central.cpp \
-	$(SRC_BASE_DIR)/utils/bit_row.cpp \
 	$(SRC_BASE_DIR)/utils/file_funcs.cpp \
 	$(SRC_BASE_DIR)/utils/util_funcs.cpp \
 	$(SRC_BASE_DIR)/utils/tak_mak.cpp \
