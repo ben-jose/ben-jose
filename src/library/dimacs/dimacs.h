@@ -44,9 +44,6 @@ class dima_dims;
 
 #define MAX_DIMACS_HEADER_SZ 4096
 
-typedef ch_string::size_type str_pos_t;
-typedef unsigned char		uchar_t;
-
 extern ch_string	k_dimacs_header_str;
 
 //=================================================================

@@ -31,10 +31,6 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 
 --------------------------------------------------------------*/
 
-#include <errno.h>
-#include <fcntl.h>
-#include <limits.h>
-
 #include "file_tree.h"
 #include "stack_trace.h"
 #include "file_funcs.h"
@@ -49,26 +45,11 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 mpz_class	skg_dbg_canon_find_id = 0;
 mpz_class	skg_dbg_canon_save_id = 0;
 
-#define SKELETON_CK(prm) 	BRAIN_CK(prm)
-#define SKELETON_CK_1(prm) 	BRAIN_CK_1(prm)
+#define SKELETON_CK(prm) 	DEBUG_CK(prm)
+#define SKELETON_CK_1(prm) 	DEBUG_CK_1(prm)
 
 // '\0'
-#define END_OF_SEC	0
-
-void	write_in_str(average& the_avg, ch_string& av_str){
-	av_str = "";
-	std::stringstream ss1;
-	ss1 << the_avg.avg << bj_eol;
-	ss1 << the_avg.sz << bj_eol;
-	ss1.flush();
-	av_str = ss1.str();
-}
-
-void	read_from_str(average& the_avg, ch_string& av_str){
-	std::stringstream ss2(av_str);
-	ss2 >> the_avg.avg;
-	ss2 >> the_avg.sz;
-}
+//define END_OF_SEC	0
 
 /*
 ch_string
@@ -83,217 +64,6 @@ long_to_str(long val){
 bool
 not_skl_path(ch_string the_pth){
 	return ! path_begins_with(the_pth, SKG_SKELETON_DIR);
-}
-
-mpz_class
-inc_fnum(ch_string f_nam){
-	int fd;
-	struct flock fl;
-
-	SKELETON_CK(not_skl_path(f_nam));
-	fd = open(f_nam.c_str(), O_RDWR|O_CREAT, 0744);
-	if(fd == -1){
-		return -1;
-	}
-
-	fl.l_type = F_WRLCK;
-	fl.l_whence = SEEK_SET;
-	fl.l_start = 0;
-	fl.l_len = 0;	// the whole file
-
-	if(fcntl(fd, F_SETLK, &fl) == -1) {
-		if(errno == EACCES || errno == EAGAIN) {
-			close(fd);
-			return -2;
-		} else {
-			close(fd);
-			return -3;
-		}
-	}
-
-	mpz_class the_num = 0;
-
-	off_t pos1 = lseek(fd, 0, SEEK_END);
-	if(pos1 == 0){
-		the_num = 1;
-		write(fd, "1", 1);
-	}
-	else if(pos1 != -1){
-		off_t pos0 = lseek(fd, 0, SEEK_SET);
-		if(pos0 != 0){
-			close(fd);
-			return -4;
-		}
-
-		ch_string num_str;
-		char* pt_str = (char*)malloc(pos1 + 1);
-		ssize_t nr = read(fd, pt_str, pos1);
-		if(nr != pos1){
-			close(fd);
-			return -5;
-		}
-		pt_str[pos1] = 0;
-		num_str = pt_str;
-		free(pt_str);
-
-		the_num = num_str;
-
-		pos0 = lseek(fd, 0, SEEK_SET);
-		if(pos0 != 0){
-			close(fd);
-			return -6;
-		}
-
-		pos0 = ftruncate(fd, 0);
-		if(pos0 != 0){
-			close(fd);
-			return -7;
-		}
-
-		the_num++;
-		ch_string num_str2 = the_num.get_str();
-		off_t pos2 = num_str2.size();
-		ssize_t nw = write(fd, num_str2.c_str(), pos2);
-		if(nw != pos2){
-			close(fd);
-			return -8;
-		}
-	}
-
-	fl.l_type = F_UNLCK;
-	fl.l_whence = SEEK_SET;
-	fl.l_start = 0;
-	fl.l_len = 0;
-
-	if(fcntl(fd, F_SETLK, &fl) == -1){
-		close(fd);
-		return -9;
-	}
-
-	close(fd);
-	return the_num;
-}
-
-ch_string
-get_fstr(ch_string f_nam){
-	int fd;
-	struct flock fl;
-
-	SKELETON_CK(not_skl_path(f_nam));
-	fd = open(f_nam.c_str(), O_RDONLY, 0744);
-	if(fd == -1){
-		return "-1";
-	}
-
-	fl.l_type = F_RDLCK;
-	fl.l_whence = SEEK_SET;
-	fl.l_start = 0;
-	fl.l_len = 0;	// the whole file
-
-	if(fcntl(fd, F_SETLK, &fl) == -1) {
-		if(errno == EACCES || errno == EAGAIN) {
-			close(fd);
-			return "-2";
-		} else {
-			close(fd);
-			return "-3";
-		}
-	}
-
-	ch_string the_val_str = "";
-
-	off_t pos0 = 0;
-	off_t pos1 = lseek(fd, 0, SEEK_END);
-	if((pos1 != -1) && (pos1 != 0)){
-		pos0 = lseek(fd, 0, SEEK_SET);
-		if(pos0 != 0){
-			close(fd);
-			return "-4";
-		}
-
-		char* pt_str = (char*)malloc(pos1 + 1);
-		ssize_t nr = read(fd, pt_str, pos1);
-		if(nr != pos1){
-			close(fd);
-			return "-5";
-		}
-		pt_str[pos1] = 0;
-
-		the_val_str = pt_str;
-		free(pt_str);
-	}
-
-	fl.l_type = F_UNLCK;
-	fl.l_whence = SEEK_SET;
-	fl.l_start = 0;
-	fl.l_len = 0;
-
-	if(fcntl(fd, F_SETLK, &fl) == -1){
-		close(fd);
-		return "-6";
-	}
-
-	close(fd);
-	return the_val_str;
-}
-
-long
-set_fstr(ch_string f_nam, ch_string the_val_str){
-	int fd;
-	struct flock fl;
-
-	SKELETON_CK(not_skl_path(f_nam));
-	fd = open(f_nam.c_str(), O_RDWR|O_CREAT, 0744);
-	if(fd == -1){
-		return -1;
-	}
-
-	fl.l_type = F_WRLCK;
-	fl.l_whence = SEEK_SET;
-	fl.l_start = 0;
-	fl.l_len = 0;	// the whole file
-
-	if(fcntl(fd, F_SETLK, &fl) == -1) {
-		if(errno == EACCES || errno == EAGAIN) {
-			close(fd);
-			return -2;
-		} else {
-			close(fd);
-			return -3;
-		}
-	}
-
-	off_t pos0 = lseek(fd, 0, SEEK_SET);
-	if(pos0 != 0){
-		close(fd);
-		return -4;
-	}
-
-	pos0 = ftruncate(fd, 0);
-	if(pos0 != 0){
-		close(fd);
-		return -5;
-	}
-
-	off_t pos2 = the_val_str.size();
-	ssize_t nw = write(fd, the_val_str.c_str(), pos2);
-	if(nw != pos2){
-		close(fd);
-		return -6;
-	}
-
-	fl.l_type = F_UNLCK;
-	fl.l_whence = SEEK_SET;
-	fl.l_start = 0;
-	fl.l_len = 0;
-
-	if(fcntl(fd, F_SETLK, &fl) == -1){
-		close(fd);
-		return -7;
-	}
-
-	close(fd);
-	return 0;
 }
 
 ch_string
@@ -349,181 +119,6 @@ sha_txt_of_arr(uchar_t* to_sha, long to_sha_sz){
 }
 
 //============================================================
-// elapsed funcs
-
-mpf_class
-update_elapsed(ch_string f_nam){
-	struct stat sf1;
-	time_t last_mtime = 0;
-
-	int resp1 = stat(f_nam.c_str(), &sf1);
-	if(resp1 == 0){
-		last_mtime = sf1.st_mtime;
-	}
-
-	int fd;
-	struct flock fl;
-
-	SKELETON_CK(not_skl_path(f_nam));
-	fd = open(f_nam.c_str(), O_RDWR|O_CREAT|O_SYNC, 0744);
-	if(fd == -1){
-		return -1;
-	}
-
-	fl.l_type = F_WRLCK;
-	fl.l_whence = SEEK_SET;
-	fl.l_start = 0;
-	fl.l_len = 0;	// the whole file
-
-	if(fcntl(fd, F_SETLK, &fl) == -1) {
-		if(errno == EACCES || errno == EAGAIN) {
-			fsync(fd); close(fd);
-			return -2;
-		} else {
-			fsync(fd); close(fd);
-			return -3;
-		}
-	}
-
-	average	the_avg;
-
-	off_t pos0 = 0;
-	off_t pos1 = lseek(fd, 0, SEEK_END);
-	if((pos1 != -1) && (pos1 != 0)){
-		pos0 = lseek(fd, 0, SEEK_SET);
-		if(pos0 != 0){
-			fsync(fd); close(fd);
-			return -4;
-		}
-
-		char* pt_str = (char*)malloc(pos1 + 1);
-		ssize_t nr = read(fd, pt_str, pos1);
-		if(nr != pos1){
-			fsync(fd); close(fd);
-			return -5;
-		}
-		pt_str[pos1] = 0;
-
-		ch_string av_str = pt_str;
-
-		free(pt_str);
-
-		read_from_str(the_avg, av_str);
-
-		time_t now_time = time(0);
-		double dtm = difftime(now_time, last_mtime);
-		big_floating_t nxt_elap = dtm;
-
-		the_avg.add_val(nxt_elap);
-	}
-
-	ch_string out_str;
-	write_in_str(the_avg, out_str);
-
-	//bj_out << "out_str='" << out_str << "'" << bj_eol;
-	//bj_out.flush();
-
-	pos0 = lseek(fd, 0, SEEK_SET);
-	if(pos0 != 0){
-		fsync(fd); close(fd);
-		return -6;
-	}
-
-	pos0 = ftruncate(fd, 0);
-	if(pos0 != 0){
-		fsync(fd); close(fd);
-		return -7;
-	}
-
-	off_t endpos = out_str.size();
-	ssize_t nw = write(fd, out_str.c_str(), endpos);
-	if(nw != endpos){
-		fsync(fd); close(fd);
-		return -8;
-	}
-	fsync(fd);
-
-	fl.l_type = F_UNLCK;
-	fl.l_whence = SEEK_SET;
-	fl.l_start = 0;
-	fl.l_len = 0;
-
-	if(fcntl(fd, F_SETLK, &fl) == -1){
-		fsync(fd); close(fd);
-		return -9;
-	}
-
-	fsync(fd); close(fd);
-	return the_avg.avg;
-}
-
-long
-read_elapsed(ch_string f_nam, average& the_avg){
-	the_avg.init_average();
-
-	int fd;
-	struct flock fl;
-
-	SKELETON_CK(not_skl_path(f_nam));
-	fd = open(f_nam.c_str(), O_RDONLY, 0744);
-	if(fd == -1){
-		return -1;
-	}
-
-	fl.l_type = F_RDLCK;
-	fl.l_whence = SEEK_SET;
-	fl.l_start = 0;
-	fl.l_len = 0;	// the whole file
-
-	if(fcntl(fd, F_SETLK, &fl) == -1) {
-		if(errno == EACCES || errno == EAGAIN) {
-			close(fd);
-			return -2;
-		} else {
-			close(fd);
-			return -3;
-		}
-	}
-
-	off_t pos0 = 0;
-	off_t pos1 = lseek(fd, 0, SEEK_END);
-	if((pos1 != -1) && (pos1 != 0)){
-		pos0 = lseek(fd, 0, SEEK_SET);
-		if(pos0 != 0){
-			close(fd);
-			return -4;
-		}
-
-		char* pt_str = (char*)malloc(pos1 + 1);
-		ssize_t nr = read(fd, pt_str, pos1);
-		if(nr != pos1){
-			close(fd);
-			return -5;
-		}
-		pt_str[pos1] = 0;
-
-		ch_string av_str = pt_str;
-
-		free(pt_str);
-
-		read_from_str(the_avg, av_str);
-	}
-
-	fl.l_type = F_UNLCK;
-	fl.l_whence = SEEK_SET;
-	fl.l_start = 0;
-	fl.l_len = 0;
-
-	if(fcntl(fd, F_SETLK, &fl) == -1){
-		close(fd);
-		return -6;
-	}
-
-	close(fd);
-	return 0;
-}
-
-//============================================================
 // path funcs
 
 bool		
@@ -554,7 +149,7 @@ path_ends_with(ch_string& the_str, ch_string& the_suf){
 
 ch_string
 path_to_absolute_path(ch_string pth){
-	char rpath[PATH_MAX];
+	char rpath[BJ_PATH_MAX];
 
 	char* rr = realpath(pth.c_str(), rpath);
 	if(rr == rpath){ 
@@ -582,34 +177,8 @@ nam_subset_resp(cmp_is_sub rr){
 }
 
 ch_string
-get_errno_str(long val_errno){
-	ch_string out_str = "?ERROR?";
-	switch(val_errno){
-	case EACCES:		out_str = "EACCES";		break;
-	case EBUSY:		out_str = "EBUSY";		break;
-	case EFAULT:		out_str = "EFAULT";		break;
-	case EINVAL:		out_str = "EINVAL";		break;
-	case EISDIR:		out_str = "EISDIR";		break;
-	case ELOOP:		out_str = "ELOOP";		break;
-	case EMLINK:		out_str = "EMLINK";		break;
-	case ENAMETOOLONG:	out_str = "ENAMETOOLONG";	break;
-	case ENOENT:		out_str = "ENOENT";		break;
-	case ENOMEM:		out_str = "ENOMEM";		break;
-	case ENOSPC:		out_str = "ENOSPC";		break;
-	case ENOTDIR:		out_str = "ENOTDIR";		break;
-	case ENOTEMPTY:		out_str = "ENOTEMPTY";		break;
-	case EEXIST:		out_str = "EEXIST";		break;
-	case EPERM:		out_str = "EPERM";		break;
-	case EROFS:		out_str = "EROFS";		break;
-	case EXDEV:		out_str = "EXDEV";		break;
-	};
-	DBG_PRT(83, os << out_str);
-	return out_str;
-}
-
-ch_string
 path_get_running_path(){
-	char exepath[PATH_MAX] = {0};
+	char exepath[BJ_PATH_MAX] = {0};
 	readlink("/proc/self/exe", exepath, sizeof(exepath) - 1);
 	ch_string the_pth = exepath;
 	return the_pth;
@@ -620,14 +189,6 @@ path_get_directory(ch_string the_pth){
 	long pos = (long)the_pth.rfind('/');
 	ch_string the_dir = the_pth.substr(0, pos);
 	return the_dir;
-}
-
-bool
-path_exists(ch_string th_pth){
-	std::ifstream istm;
-	SKELETON_CK(not_skl_path(th_pth));
-	istm.open(th_pth.c_str(), std::ios_base::in);
-	return istm.good();
 }
 
 bool
@@ -645,37 +206,6 @@ path_newer_than(ch_string the_pth, time_t tm1){
 }
 
 bool
-path_is_dead_lock(ch_string the_pth){
-	SKELETON_CK(not_skl_path(the_pth));
-	ch_string posfix = SKG_LOCK_NAME;
-	long idx = the_pth.size() - posfix.size();
-	if(idx < 0){ return false; }
-	
-	ch_string endstr = the_pth.substr(idx);
-	if(endstr != posfix){ return false; }
-
-	time_t tm1 = time(NULL_PT);
-	if(tm1 == -1){ return false; }
-
-	struct stat sf1;
-
-	int resp1 = stat(the_pth.c_str(), &sf1);
-	bool ok1 = (resp1 == 0);
-
-	double dtm = difftime(tm1, sf1.st_mtime);
-
-	bool is_dead = ok1 && (dtm >= SKG_SECS_DEAD_LOCK);
-	return is_dead;
-}
-
-bool 
-path_touch(ch_string the_pth){
-	SKELETON_CK(not_skl_path(the_pth));
-	int ok1 = utimensat(AT_FDCWD, the_pth.c_str(), NULL_PT, 0);
-	return (ok1 == 0);
-}
-
-bool
 dims_path_exists(ch_string base_pth, const dima_dims& dims){
 	SKELETON_CK(! base_pth.empty());
 
@@ -686,74 +216,9 @@ dims_path_exists(ch_string base_pth, const dima_dims& dims){
 
 	ch_string full_dim_pth = base_pth + dim_pth;
 
-	bool pth_ok = path_exists(full_dim_pth);
+	bool pth_ok = file_exists(full_dim_pth);
 	SKELETON_CK(! pth_ok || (full_dim_pth == path_to_absolute_path(full_dim_pth)));
 	return pth_ok;
-}
-
-ch_string
-get_nftw_flag_str(long ff){
-	ch_string out_str = "?ERROR?";
-	switch(ff){
-	case FTW_F:		out_str = "FTW_F";		break;
-	case FTW_D:		out_str = "FTW_D";		break;
-	case FTW_DNR:		out_str = "FTW_DNR";		break;
-	case FTW_NS:		out_str = "FTW_NS";		break;
-	case FTW_SL:		out_str = "FTW_SL";		break;
-	case FTW_SLN:		out_str = "FTW_SLN";		break;
-	case FTW_DP:		out_str = "FTW_DP";		break;
-	};
-	DBG_PRT(83, os << out_str);
-	return out_str;
-}
-
-int
-delete_dir_entry(const char *fpath, const struct stat *sb,
-			int tflag, struct FTW *ftwbuf)
-{
-	MARK_USED(sb);
-	MARK_USED(ftwbuf);
-	DBG_PRT(95, os << "deleting entry " << fpath);
-
-	switch (tflag) {
-	case FTW_D:
-	case FTW_DNR:
-	case FTW_DP:
-		{
-			int rr1 = rmdir(fpath);
-			MARK_USED(rr1);
-			DBG_PRT_COND(95, (rr1 != 0), os << "failed deleting dir " << fpath 
-				<< " errno=" << errno << " " << get_errno_str(errno)
-				<< " tflag=" << tflag << " " << get_nftw_flag_str(tflag));
-			SKELETON_CK((rr1 == 0) || (errno == ENOTEMPTY));
-		}
-		break;
-	default:
-		{
-			int rr2 = unlink(fpath);
-			MARK_USED(rr2);
-			DBG_PRT_COND(95, (rr2 != 0), os << "failed deleting file " << fpath 
-				<< " errno=" << errno << " " << get_errno_str(errno)
-				<< " tflag=" << tflag << " " << get_nftw_flag_str(tflag));
-			SKELETON_CK((rr2 == 0) || (errno == ENOTEMPTY));
-		}
-		break;
-	}
-	return (0);
-}
-
-void
-delete_directory(ch_string& dir_nm){
-	long max_depth = SKG_MAX_PATH_DEPTH;
-
-	str_pos_t lst_pos = dir_nm.size() - 1;
-	if(dir_nm[lst_pos] == '/'){
-		dir_nm = dir_nm.substr(0, lst_pos);
-	}
-
-	DBG_PRT(74, os << "deleting directory " << dir_nm);
-
-	nftw(dir_nm.c_str(), delete_dir_entry, max_depth, FTW_DEPTH | FTW_PHYS);
 }
 
 void
@@ -856,27 +321,12 @@ canon_save(ch_string& the_pth, row<char>& cnn, bool write_once){
 	DBG_PRT(78, os << "HIT RETURN TO CONTINUE..." << " dbg_id=" << skg_dbg_canon_save_id);
 	DBG_COMMAND(78, getchar());
 
-	int fd = 0;
 	SKELETON_CK(not_skl_path(the_pth));
 	
-	if(write_once){
-		if((fd = open(the_pth.c_str(), O_RDWR|O_CREAT|O_EXCL, 0444)) == -1){
-			return false;
-		}
-	} else {
-		if((fd = creat(the_pth.c_str(), 0777)) == -1){
-			return false;
-		}
-	}
-
-	const char* the_data = cnn.get_c_array();
-	long the_sz = cnn.size();
-
-	write(fd, the_data, the_sz);
-	close(fd);
-
+	bool ok = write_file(the_pth, cnn, write_once);
+	
 	DBG_PRT(78, os << "SAVED " << the_pth << " dbg_id=" << skg_dbg_canon_save_id);
-	return true;
+	return ok;
 }
 
 bool
@@ -982,7 +432,7 @@ canon_full_path(ch_string base_pth, ch_string upth, ch_string id_str){
 	ch_string full_pth = base_pth + upth + id_str + '/' + pth_ending + '/';
 
 	SKELETON_CK(! full_pth.empty());
-	DBG(bool ck1 = (! path_exists(full_pth) || (full_pth == (path_to_absolute_path(full_pth) + '/'))));
+	DBG(bool ck1 = (! file_exists(full_pth) || (full_pth == (path_to_absolute_path(full_pth) + '/'))));
 	SKELETON_CK(ck1);
 	return full_pth;
 }
@@ -1330,7 +780,7 @@ void
 skeleton_glb::init_paths(){
 	ch_string r_pth = path_get_running_path();
 	kg_running_path = path_get_directory(r_pth);
-	SKELETON_CK(path_exists(kg_running_path));
+	SKELETON_CK(file_exists(kg_running_path));
 
 	DBG_PRT(93, os << "Initing paths");
 
@@ -1339,7 +789,7 @@ skeleton_glb::init_paths(){
 		if(! kg_keep_skeleton){
 			ch_string skl_pth = kg_root_path + SKG_SKELETON_DIR;
 			delete_directory(skl_pth);
-			BRAIN_CK((bj_out << "DELETING SKELETON" << bj_eol) && true);
+			SKELETON_CK((bj_out << "DELETING SKELETON" << bj_eol) && true);
 			DBG_PRT(93, os << "DELETING SKELETON. Type return ...");
 			DBG_COMMAND(93, getchar());
 		}
@@ -1368,7 +818,7 @@ skeleton_glb::init_paths(){
 	path_create(as_full_path(kg_dead_path));
 	path_create(as_full_path(kg_broken_path));
 
-	if(path_exists(kg_verify_path)){
+	if(file_exists(kg_verify_path)){
 		kg_verifying = true;
 		kg_local_verifying = false;
 
@@ -2060,6 +1510,7 @@ skeleton_glb::find_path(ch_string pth_to_find){
 	SKELETON_CK(! pth_to_find.empty());
 
 	bool found_it = (all_found.find(pth_to_find) != all_found.end());
+	//bool found_it = all_found.search(pth_to_find);
 	if(found_it){
 		GLB().batch_stat_direct_hits.add_val(1);
 	}
@@ -2073,7 +1524,7 @@ skeleton_glb::find_path(ch_string pth_to_find){
 	if(! found_it){
 		to_inser = true;
 		if(! kg_verifying){
-			found_it = path_exists(pth_to_find);
+			found_it = file_exists(pth_to_find);
 		} else {
 			found_it = path_newer_than(pth_to_find, kg_verify_mtime);
 		}
@@ -2309,6 +1760,7 @@ void
 canon_cnf::update_parent_variants(skeleton_glb& skg, ch_string sv_dir){
 	SKELETON_CK(has_phase_path());
 
+	//DBG(string_set_t all_lnks(cmp_string));
 	DBG(string_set_t all_lnks);
 
 	row<variant>& all_next = skg.kg_tmp_all_nxt_vnts;
@@ -2335,6 +1787,7 @@ canon_cnf::update_parent_variants(skeleton_glb& skg, ch_string sv_dir){
 		SKELETON_CK(skg.ref_exists(lnk_pth));
 		
 		DBG(bool in_lnks = (all_lnks.find(lnk_pth) != all_lnks.end()));
+		//DBG(bool in_lnks = all_lnks.search(lnk_pth));
 		SKELETON_CK(! in_lnks);
 		DBG(all_lnks.insert(lnk_pth));
 
@@ -2356,6 +1809,7 @@ canon_cnf::update_parent_variants(skeleton_glb& skg, ch_string sv_dir){
 
 	if(! has_eq){
 		DBG(bool in_lnks2 = (all_lnks.find(sv_dir) != all_lnks.end()));
+		//DBG(bool in_lnks2 = all_lnks.search(sv_dir));
 		SKELETON_CK(! in_lnks2);
 		DBG(all_lnks.insert(sv_dir));
 
@@ -2436,12 +1890,24 @@ canon_count_tots(row<canon_clause*>& all_ccls, long& tot_vars, long& tot_lits, l
 }
 
 bool
-skeleton_glb::ref_create(ch_string a_ref, dbg_call_id dbg_id){
+skeleton_glb::ref_exists(ch_string a_ref){
 	ch_string f_pth = as_full_path(a_ref);
-	DBG_PRT(74, os << "ref_create '" << a_ref << "' call_id=" << dbg_id);
+	return file_exists(f_pth);
+}
+
+bool
+skeleton_glb::ref_create(ch_string a_ref){
+	ch_string f_pth = as_full_path(a_ref);
+	DBG_PRT(74, os << "ref_create '" << a_ref << "'");
 	return path_create(f_pth);
 }
 
+bool
+skeleton_glb::ref_touch(ch_string a_ref){
+	ch_string f_pth = as_full_path(a_ref);
+	return file_touch(f_pth);
+}
+	
 bool
 canon_cnf::save_cnf(skeleton_glb& skg, ch_string sv_pth){
 	ch_string sv_dir = path_get_directory(sv_pth) + '/';
@@ -2487,7 +1953,7 @@ canon_cnf::save_cnf(skeleton_glb& skg, ch_string sv_pth){
 	// saving
 
 	if(! skg.ref_exists(sv_dir)){
-		skg.ref_create(sv_dir, dbg_call_1);
+		skg.ref_create(sv_dir);
 	}
 
 	ch_string pth1 = cf_phdat.pd_ref1_nam;
@@ -2526,10 +1992,10 @@ canon_cnf::save_cnf(skeleton_glb& skg, ch_string sv_pth){
 		SKELETON_CK(pth2 != sv_dir);
 
 		if((pth1 != "") && ! skg.ref_exists(pth1)){
-			skg.ref_create(pth1, dbg_call_2);
+			skg.ref_create(pth1);
 		}
 		if((pth2 != "") && ! skg.ref_exists(pth2)){
-			skg.ref_create(pth2, dbg_call_3);
+			skg.ref_create(pth2);
 		}
 
 		SKELETON_CK((pth1 == "") || skg.ref_exists(pth1));
@@ -2577,29 +2043,29 @@ skeleton_glb::get_write_lock(ch_string lk_dir){
 	}
 
 	if(! ref_exists(lk_dir)){
-		ref_create(lk_dir, dbg_call_5);
+		ref_create(lk_dir);
 	}
 
-	ch_string lk_nm = lk_dir + SKG_LOCK_NAME;
+	ch_string lk_nm = lk_dir + BJ_LOCK_NAME;
 	ch_string full_nm = as_full_path(lk_nm);
 
 	DBG_PRT(72, os << "GETTING LOCK '" << full_nm << "'");
 
-	int fd_lock = open(full_nm.c_str(), O_RDWR|O_CREAT|O_EXCL, 0444);
+	int fd_lock = get_file_write_lock(full_nm);
 	if(fd_lock == -1){
 		if(path_is_dead_lock(full_nm)){
 			report_err(lk_nm, kg_dead_path);
 		}
-		SKELETON_CK(false);		
+		SKELETON_CK(false);
 	}
 	return fd_lock;
 }
 
 void
 skeleton_glb::drop_write_lock(ch_string lk_dir, int fd_lock){
-	close(fd_lock);
+	drop_file_write_lock(fd_lock);
 
-	ch_string lk_nm = lk_dir + SKG_LOCK_NAME;
+	ch_string lk_nm = lk_dir + BJ_LOCK_NAME;
 	ref_remove(lk_nm);
 }
 

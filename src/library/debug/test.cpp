@@ -37,10 +37,12 @@ file for test and debugging purposes.
 #include "file_tree.h"
 #include "ch_string.h"
 #include "support.h"
+#include "config.h"
 
 #include "brain.h"
 #include "tak_mak.h"
 #include "skeleton.h"
+#include "file_funcs.h"
 
 #include "top_exception.h"
 
@@ -913,7 +915,7 @@ load_entry(const char *fpath, const struct stat *sb, int tflag, struct FTW *ftwb
 
 void
 load_all_in_dir(ch_string& dir_nm){
-	long max_depth = SKG_MAX_PATH_DEPTH;
+	long max_depth = BJ_FILE_MAX_PATH_DEPTH;
 	nftw(dir_nm.c_str(), load_entry, max_depth, FTW_DEPTH);
 }
 
@@ -957,7 +959,7 @@ void
 update_rnd_elap_in_dir(tak_mak& gg, ch_string& dir_nm){
 	long num_rr = gg.gen_rand_int32_ie(0, 10);
 
-	long max_depth = SKG_MAX_PATH_DEPTH;
+	long max_depth = BJ_FILE_MAX_PATH_DEPTH;
 
 	for(long aa = 0; aa < num_rr; aa++){
 		nftw(dir_nm.c_str(), update_elap_entry, max_depth, FTW_DEPTH);
@@ -1047,9 +1049,9 @@ test_skl(){
 	ch_string r2_pth = rr_pth + "/test_ref2/";
 	ch_string r3_pth = rr_pth + "/test_ref3/";
 
-	GSKE.ref_create(r1_pth, dbg_call_1);
-	GSKE.ref_create(r2_pth, dbg_call_2);
-	GSKE.ref_create(r3_pth, dbg_call_3);
+	GSKE.ref_create(r1_pth);
+	GSKE.ref_create(r2_pth);
+	GSKE.ref_create(r3_pth);
 
 	//GSKE.report_err("a_missing_path", GSKE.kg_missing_path);
 

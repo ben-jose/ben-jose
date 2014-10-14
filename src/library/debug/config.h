@@ -37,20 +37,6 @@ Declaration of functions to read and parse config files.
 
 #include "tools.h"
 
-enum dbg_call_id { 
-	dbg_call_1 = 201,
-	dbg_call_2,
-	dbg_call_3,
-	dbg_call_4,
-	dbg_call_5,
-	dbg_call_6,
-	dbg_call_7,
-	dbg_call_8,
-	dbg_call_9,
-	dbg_call_10,
-};
-
-
 // '\0'
 #define END_OF_SEC	0
 

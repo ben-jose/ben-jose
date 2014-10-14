@@ -33,16 +33,26 @@ Declarations of classes and that implement the neural network.
 #ifndef BRAIN_H
 #define BRAIN_H
 
-//=============================================================================
-// includes
+//=================================================================
 
 #include "tools.h"
-#include "support.h"
+#include "ben_jose.h"
 #include "sortor.h"
-#include "skeleton.h"
+#include "dbg_prt.h"
 
 //=============================================================================
 // defines
+
+#define BRAIN_CK(prm) DEBUG_CK(prm)
+
+//define BRAIN_CK_0(prm)	;
+#define BRAIN_CK_0(prm)	BRAIN_CK(prm)
+
+#define BRAIN_CK_1(prm)	;
+//define BRAIN_CK_1(prm)	BRAIN_CK(prm)
+
+#define BRAIN_CK_2(prm)	;
+//define BRAIN_CK_2(prm)	BRAIN_CK(prm)
 
 //define DBG_SOURCES(cod)	DBG(cod)
 
@@ -87,6 +97,9 @@ enum action_t {
 
 //=============================================================================
 // decl
+
+class instance_info;
+class skeleton_glb;
 
 class ticket;
 class quanton;
@@ -1881,25 +1894,11 @@ class brain {
 
 	// methods
 
-	brain(){
-		DBG_CK(GLB().pt_brain == NULL_PT);
-		GLB().pt_brain = this;
-
-		init_brain();
-	}
+	brain();
+	~brain();
 
 	void	init_brain();
 
-	~brain(){
-		DBG_PRT(6, os << "releasing brain 0");
-
-		DBG_CK(GLB().pt_brain == this);
-		GLB().pt_brain = NULL_PT;
-
-		release_brain();
-
-		DBG_PRT(6, os << "RELEASING brain 1");
-	}
 
 	void	all_mutual_init(){
 		br_guide_neus_srg.stab_mutual_init();
@@ -1911,10 +1910,7 @@ class brain {
 
 	void	release_brain();
 
-	skeleton_glb& 	get_skeleton(){
-		return GLB().gg_skeleton;
-	}
-
+	skeleton_glb& 	get_skeleton();
 
 	// core methods
 
@@ -2216,18 +2212,9 @@ class brain {
 	void		check_timeout();
 	void		check_sat_assig();
 
-	instance_info&	get_my_inst(){
-		BRAIN_CK(br_pt_inst != NULL_PT);
-		return *br_pt_inst;
-	}
-
+	instance_info&	get_my_inst();
 	void		set_result(satisf_val re);
-	satisf_val	get_result(){
-		instance_info& inst_info = get_my_inst();
-		satisf_val the_result = inst_info.ist_result;
-
-		return the_result;
-	}
+	satisf_val	get_result();
 
 	void		dbg_add_to_used(neuron& neu);
 

@@ -30,6 +30,7 @@ Functions to read and parse config files.
 
 --------------------------------------------------------------*/
 
+#include "config.h"
 #include "support.h"
 
 

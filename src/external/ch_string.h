@@ -37,6 +37,8 @@ Wrapper for string class.
 #include <string>
 
 typedef std::string ch_string;
+typedef ch_string::size_type str_pos_t;
+typedef unsigned char		uchar_t;
 
 
 #endif // CH_STRING_H

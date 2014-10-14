@@ -33,18 +33,20 @@ dbg_run_satex func.
 
 #include "bj_stream.h"
 #include "ch_string.h"
+#include "file_funcs.h"
 #include "brain.h"
+#include "support.h"
 #include "dbg_run_satex.h"
 
 bool
 dbg_run_satex_on(brain& brn, ch_string f_nam){
-	if(path_exists(f_nam)){
+	if(file_exists(f_nam)){
 		ch_string o_str = "satex -s " + f_nam;
 
 		system_exec(o_str);
 		ch_string lg_nm = get_log_name(f_nam, LOG_NM_RESULTS);
 
-		BRAIN_CK(path_exists(lg_nm));
+		BRAIN_CK(file_exists(lg_nm));
 		bool is_no_sat = all_results_batch_instances(lg_nm, k_no_satisf);
 		MARK_USED(is_no_sat);
 

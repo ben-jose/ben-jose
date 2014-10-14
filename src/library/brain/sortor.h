@@ -53,6 +53,8 @@ classes to implement a sortor.
 #define FINAL_COMMENT	"final\n"
 #define MUTUAL_COMMENT	"mutual_stab\n"
 
+class skeleton_glb;
+
 class binder;
 class sortee;
 class sorset;

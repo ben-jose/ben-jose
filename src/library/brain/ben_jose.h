@@ -24,20 +24,26 @@ email: joseluisquirogabeltran@gmail.com
 
 ------------------------------------------------------------
 
-util_funcs.cpp  
+ben_jose.h
 
-util funcs.
+ben_jose interfase.
 
 --------------------------------------------------------------*/
 
-#include "bj_stream.h"
-#include "util_funcs.h"
-#include "tools.h"
+#ifndef BEN_JOSE_H
+#define BEN_JOSE_H
 
-ch_string
-long_to_str(long val){
-	bj_ostr_stream ss_val;
-	ss_val << val;
-	return ss_val.str();
-}
+enum satisf_val {
+	k_unknown_satisf,
+	k_yes_satisf,
+	k_no_satisf,
+	k_timeout,
+	k_memout,
+	k_error
+};
+
+
+
+#endif		// BEN_JOSE_H
+
 

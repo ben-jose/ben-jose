@@ -33,6 +33,7 @@ Global classes and functions that support and assist the system.
 #include "top_exception.h"
 #include "stack_trace.h"
 #include "support.h"
+#include "brain.h"
 #include "config.h"
 #include "sortor.h"
 
@@ -211,7 +212,7 @@ global_data::init_global_data(){
 		out_lev.inc_sz() = false;
 	}
 
-	dbg_file_name = "";
+	//dbg_file_name = "";
 
 	dbg_skip_print_info = false;
 

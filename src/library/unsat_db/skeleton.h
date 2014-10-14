@@ -36,8 +36,9 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 
 #include <set>
 
-#include "config.h"
 #include "bj_stream.h"
+//include "mem_redblack.h"
+#include "tools.h"
 #include "dimacs.h"
 #include "sha2.h"
 #include "print_macros.h"
@@ -57,7 +58,6 @@ class skeleton_glb;
 //=================================================================
 // defines
 
-#define SKG_MAX_PATH_DEPTH 40
 #define SKG_NUM_DIGITS_IN_DIRNAM_OF_NUMBER_PATH 1
 #define SKG_MAX_SAMPLE_NUM_LITS 1000
 #define SKG_MAX_SAMPLE_NUM_CCLS 10
@@ -83,6 +83,8 @@ class skeleton_glb;
 // type declarations
 
 typedef std::set<ch_string> 	string_set_t;
+//typedef mem_redblack<ch_string>						string_set_t;
+//typedef mem_redblack<ch_string>::rbt_nod_ref_t 		string_set_nd_ref_t;
 
 //=================================================================
 // global dbg declarations
@@ -94,8 +96,6 @@ extern mpz_class	skg_dbg_canon_save_id;
 // skeleton defines
 
 //define SKG_APROX_SHA_PTH_SZ	70
-
-#define SKG_SECS_DEAD_LOCK	10000
 
 #define SKG_SKELETON_DIR	"/SKELETON"
 #define SKG_CNF_DIR		"/SKELETON/CNF"
@@ -115,7 +115,6 @@ extern mpz_class	skg_dbg_canon_save_id;
 #define SKG_ELAPSED_NAME	"elapsed.skl"
 #define SKG_NUM_VNT_NAME	"numvariants.skl"
 
-#define SKG_LOCK_NAME		"lock.skl"
 #define SKG_ERR_COUNT_NAME	"err_count.skl"
 #define SKG_READY_NAME		"ready"
 
@@ -148,9 +147,7 @@ void		string_replace_char(ch_string& src_str, char orig, char repl);
 
 ch_string	path_get_running_path();
 
-bool		path_exists(ch_string the_pth);
 bool		path_newer_than(ch_string the_pth, time_t tm1);
-bool 		path_touch(ch_string the_pth);
 bool		path_is_dead_lock(ch_string the_pth);
 void		path_delete(ch_string full_pth, ch_string up_to);
 bool		path_create(ch_string n_pth);
@@ -617,7 +614,8 @@ public:
 	row<variant> 		kg_tmp_all_nxt_vnts;
 	row<ch_string> 	kg_tmp_all_del_paths;
 
-	skeleton_glb(){
+	//skeleton_glb() : kg_cnf_paths_found(cmp_string) {
+	skeleton_glb() {
 		init_skeleton_glb();
 	}
 
@@ -653,22 +651,16 @@ public:
 		return path_begins_with(a_ref, SKG_SKELETON_DIR);
 	}
 
-	bool	ref_exists(ch_string a_ref){
-		ch_string f_pth = as_full_path(a_ref);
-		return path_exists(f_pth);
-	}
+	bool	ref_exists(ch_string a_ref);
 
-	bool	ref_create(ch_string a_ref, dbg_call_id dbg_id);
+	bool	ref_create(ch_string a_ref);
 
 	bool	ref_find(ch_string a_ref){
 		ch_string f_pth = as_full_path(a_ref);
 		return find_path(f_pth);
 	}
 
-	bool	ref_touch(ch_string a_ref){
-		ch_string f_pth = as_full_path(a_ref);
-		return path_touch(f_pth);
-	}
+	bool	ref_touch(ch_string a_ref);
 
 	void	ref_remove(ch_string a_ref){
 		ch_string f_pth = as_full_path(a_ref);

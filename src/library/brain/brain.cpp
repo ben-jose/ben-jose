@@ -918,6 +918,29 @@ neuron::print_neu_base(bj_ostream& os, bool detail, bool prt_src, bool sort_fib)
 //============================================================
 // brain methods
 
+brain::brain(){
+	DBG_CK(GLB().pt_brain == NULL_PT);
+	GLB().pt_brain = this;
+
+	init_brain();
+}
+
+brain::~brain(){
+	DBG_PRT(6, os << "releasing brain 0");
+
+	DBG_CK(GLB().pt_brain == this);
+	GLB().pt_brain = NULL_PT;
+
+	release_brain();
+
+	DBG_PRT(6, os << "RELEASING brain 1");
+}
+
+skeleton_glb& 	
+brain::get_skeleton(){
+	return GLB().gg_skeleton;
+}
+
 void
 brain::init_brain(){
 	br_pt_inst = NULL_PT;
@@ -1427,6 +1450,12 @@ brain::load_it(){
 	load_instance(num_neu, num_var, inst_ccls);
 }
 
+instance_info&
+brain::get_my_inst(){
+	BRAIN_CK(br_pt_inst != NULL_PT);
+	return *br_pt_inst;
+}
+
 void
 brain::set_result(satisf_val re){
 	instance_info& inst_info = get_my_inst();
@@ -1441,6 +1470,14 @@ brain::set_result(satisf_val re){
 	DBG_PRT(27, os << "RESULT " << satisf_val_nams[the_result]);
 	DBG_PRT(28, os << "HIT ENTER TO CONTINUE...");
 	DBG_COMMAND(28, getchar());
+}
+
+satisf_val
+brain::get_result(){
+	instance_info& inst_info = get_my_inst();
+	satisf_val the_result = inst_info.ist_result;
+
+	return the_result;
 }
 
 void

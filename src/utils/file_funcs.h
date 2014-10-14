@@ -35,6 +35,16 @@ file funcs.
 
 #include "top_exception.h"
 #include "tools.h"
+//include <limits.h>
+
+#define FILE_FN_CK(prm)		DBG_CK(prm)
+#define FILE_FN_CK_2(prm, comm)		DBG_CK_2(prm, comm)
+
+#define BJ_FILE_MAX_PATH_DEPTH 40
+#define BJ_PATH_MAX 500  // should be PATH_MAX as in limits.h
+
+#define BJ_LOCK_NAME	"lock.skl"
+#define BJ_SECS_DEAD_LOCK	10000
 
 #define END_OF_SEC	0
 
@@ -49,6 +59,49 @@ public:
 void
 read_file(ch_string f_nam, row<char>& f_data);
 
+bool
+write_file(ch_string& the_pth, row<char>& cnn, bool write_once);
+
+mpz_class
+inc_fnum(ch_string f_nam);
+
+ch_string
+get_fstr(ch_string f_nam);
+
+long
+set_fstr(ch_string f_nam, ch_string the_val_str);
+
+mpf_class
+update_elapsed(ch_string f_nam);
+	
+long
+read_elapsed(ch_string f_nam, average& the_avg);
+
+ch_string
+get_nftw_flag_str(long ff);
+
+ch_string
+get_errno_str(long val_errno);
+
+int
+delete_dir_entry(const char *fpath, const struct stat *sb,
+			int tflag, struct FTW *ftwbuf);
+
+void
+delete_directory(ch_string& dir_nm);
+
+bool 
+file_touch(ch_string the_pth);
+
+int
+get_file_write_lock(ch_string lk_dir);
+	
+void
+drop_file_write_lock(int fd_lock);
+
+bool
+file_exists(ch_string th_pth);
+	
 #endif		// FILE_FUNCS_H
 
 

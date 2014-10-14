@@ -56,11 +56,11 @@ Declaration of classes that support and assist the system.
 #define LOG_NM_ASSIGS	"assigs.log"
 
 //=================================================================
-// includes
 
 #include "tools.h"
 #include "util_funcs.h"
 
+#include "ben_jose.h"
 #include "dbg_prt.h"
 #include "skeleton.h"
 
@@ -124,15 +124,6 @@ typedef mpz_class 	consecutive_t;
 
 //=================================================================
 // instance_info
-
-enum satisf_val {
-	k_unknown_satisf,
-	k_yes_satisf,
-	k_no_satisf,
-	k_timeout,
-	k_memout,
-	k_error
-};
 
 extern ch_string	satisf_val_nams[];
 
@@ -271,8 +262,8 @@ public:
 
 	mem_size 		dbg_mem_at_start;
 
-	ch_string		dbg_file_name;
-	std::ofstream	dbg_file;
+	//ch_string		dbg_file_name;
+	//std::ofstream	dbg_file;
 
 	bool			dbg_skip_print_info;
 

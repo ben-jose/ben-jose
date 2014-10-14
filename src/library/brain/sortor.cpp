@@ -30,6 +30,7 @@ Classes and that implement a sortor.
 
 --------------------------------------------------------------*/
 
+#include "skeleton.h"
 #include "sortor.h"
 #include "support.h"
 

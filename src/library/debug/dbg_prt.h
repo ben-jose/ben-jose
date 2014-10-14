@@ -96,24 +96,13 @@ bool	dbg_print_cond_func(bool prm,
 
 //--end_of_def
 
-#define SUPPORT_CK(prm) \
+#define DEBUG_CK(prm) \
 	DBG_CK(dbg_print_cond_func((! (prm)), true, __FILE__, __LINE__, #prm)); \
 
 // end_of_def
 
-//define BRAIN_CK_0(prm)	;
-#define BRAIN_CK_0(prm)	SUPPORT_CK(prm)
+#define SUPPORT_CK(prm) DEBUG_CK(prm)
 
-#define BRAIN_CK(prm) \
-	DBG_CK(dbg_print_cond_func((! (prm)), true, __FILE__, __LINE__, #prm)); \
-
-// end_of_def
-
-#define BRAIN_CK_1(prm)	;
-//define BRAIN_CK_1(prm)	BRAIN_CK(prm)
-
-#define BRAIN_CK_2(prm)	;
-//define BRAIN_CK_2(prm)	BRAIN_CK(prm)
 
 #define DBG_SLOW(prm)
 //define DBG_SLOW(prm)	DBG(prm)
