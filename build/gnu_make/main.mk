@@ -6,6 +6,7 @@ TARGET_DIR := bin
 # DBG_FLAGS = -DFULL_DEBUG -rdynamic  
 
 CXXFLAGS := -DFULL_DEBUG -rdynamic -Wall 
+# CXXFLAGS := -rdynamic -Wall 
 
 LDFLAGS := -rdynamic
 
@@ -13,7 +14,6 @@ SUBMAKEFILES := \
 	sub_mks/lib-ben-jose.mk \
 	sub_mks/ben-jose-solver.mk \
 	sub_mks/bj-test-rbt.mk \
-	sub_mks/bj-test-bitree.mk \
 	sub_mks/bj-test.mk
 
 # $(VERBOSE).SILENT:

@@ -51,6 +51,7 @@ public:
 	}
 	~rbt_mem_node(){
 		init_rbt_mem_node();
+		//obj.~obj_t();
 	}
 	void	init_rbt_mem_node(){
 		left = NULL_PT;
@@ -87,6 +88,7 @@ public:
 
 	~rbt_mem_node_handler(){
 		cmp_func = NULL_PT;
+		REDBLACK_CK(cmp_func == NULL_PT);
 	}
 
 	// Don't allow copying (error prone):
@@ -112,7 +114,9 @@ public:
 	void	destroy_all_nodes(redblack<rbt_mem_node_handler<obj_t> >& rbt);
 
 	comparison	compare_node_objects(rbt_obj_t const & obj1, rbt_obj_t const & obj2){
-		return (*cmp_func)(obj1, obj2);
+		REDBLACK_CK(cmp_func != NULL_PT);
+		comparison cc_val = (*cmp_func)(obj1, obj2);
+		return cc_val;
 	}
 	rbt_nod_ref_t	get_null_node_reference(){
 		return NULL_PT;
@@ -181,6 +185,8 @@ public:
 	{}
 
 	~mem_redblack(){
+		// MUST DO THIS so order destruction does not leave cmp in mgr in NULL
+		rbt_sup_t::clear_redblack();
 	}
 
 	// Don't allow copying (error prone):

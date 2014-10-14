@@ -45,9 +45,9 @@ typedef std::set<long>	set_long_t;
 typedef std::pair<std::set<long>::iterator,bool> ret_set_long_t;
 
 #define NUM_TESTS 30
-#define MAX_SZ_RBT	40000000
+#define MAX_SZ_RBT	4000
 
-#define TEST_USE_SETS 1
+//define TEST_USE_SETS 1
 
 #ifdef TEST_USE_SETS
 #define SETS_COD(prm)	prm

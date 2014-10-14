@@ -72,6 +72,7 @@ enum	cmp_is_sub {
 #endif
 
 #define TOOLS_CK(prm)		DBG_CK(prm)
+#define TOOLS_CK_2(prm, comm)		DBG_CK_2(prm, comm)
 
 #define MIN_TYPE(type)		(((type)1) << (sizeof(type) * k_num_bits_byte - 1))
 #define MAX_TYPE(type)		(- (MIN_TYPE(type) + 1))
@@ -161,6 +162,14 @@ inline
 long
 get_var(long lit){
 	return abs_long(lit);
+}
+
+inline 
+comparison 
+cmp_string(ch_string const & n1, ch_string const & n2){ 
+	if(n1 == n2){ return 0; }
+	if(n1 < n2){ return -1; }
+	return 1;
 }
 
 inline 
@@ -472,6 +481,15 @@ public:
 		obj_t tmp1 = pos(idx1);
 		pos(idx1) = pos(idx2);
 		pos(idx2) = tmp1;
+	}
+
+	void	call_swap_with(row_index idx1, row_index idx2){ 
+		TOOLS_CK(is_valid_idx(idx1));
+		TOOLS_CK(is_valid_idx(idx2));
+
+		obj_t& tmp1 = pos(idx1);
+		obj_t& tmp2 = pos(idx2);
+		tmp1.swap_with(tmp2);
 	}
 
 	/*
@@ -1584,6 +1602,57 @@ cmp_sorted_rows(row_data<obj_t>& r1, row_data<obj_t>& r2,
 // FUNCTIONS
 
 template<class obj_t>
+static inline
+row_index
+get_last_eq_obj_pos(row_index from_pos, 
+				row<obj_t>& rr1, row<obj_t>& rr2){
+	if(rr1.is_empty()){
+		return -1;
+	}
+	if(rr2.is_empty()){
+		return -1;
+	}
+	if(from_pos < 0){
+		from_pos = 0;
+	}
+	TOOLS_CK(from_pos >= 0);
+	int sz1 = rr1.size();
+	int sz2 = rr2.size();
+	int min_sz = (sz1 < sz2)?(sz1):(sz2);
+	TOOLS_CK_2(from_pos < min_sz, 
+		os << "from_pos=" << from_pos << bj_eol;
+		os << "min_sz=" << min_sz << bj_eol;
+		os << "sz1=" << sz1 << bj_eol;
+		os << "sz2=" << sz2 << bj_eol;
+	);
+	
+	row_index ii = -1;
+	for(ii = from_pos; ii < min_sz; ii++){
+		TOOLS_CK(rr1.is_valid_idx(ii));
+		TOOLS_CK(rr2.is_valid_idx(ii));
+		obj_t vv1 = rr1[ii];
+		obj_t vv2 = rr2[ii];
+		if(vv1 != vv2){
+			break;
+		}
+	}
+	row_index lst_pos = ii - 1;
+	if((lst_pos >= from_pos) && (lst_pos < min_sz)){
+		TOOLS_CK_2(rr1[lst_pos] == rr2[lst_pos],
+			os << "from_pos=" << from_pos << bj_eol;
+			os << "min_sz=" << min_sz << bj_eol;
+			os << "sz1=" << sz1 << bj_eol;
+			os << "sz2=" << sz2 << bj_eol;
+			os << "lst_pos=" << lst_pos << bj_eol;
+			os << "rr1=" << rr1 << bj_eol;
+			os << "rr2=" << rr2 << bj_eol;
+		);
+		return lst_pos;
+	}
+	return -1;
+}
+	
+template<class obj_t>
 cmp_is_sub
 row<obj_t>::sorted_set_is_subset(row<obj_t>& set, 
 					 cmp_func_t cmp_fn, bool& are_eq)
@@ -1596,10 +1665,10 @@ void
 row<obj_t>::sorted_set_shared(row<obj_t>& shared, 
 			row<obj_t>& rr2, cmp_func_t cmp_fn)
 {
-	long lo_idx1 = 0;
-	long hi_idx1 = row<obj_t>::last_idx();
-	long lo_idx2 = 0;
-	long hi_idx2 = rr2.last_idx();
+	row_index lo_idx1 = 0;
+	row_index hi_idx1 = row<obj_t>::last_idx();
+	row_index lo_idx2 = 0;
+	row_index hi_idx2 = rr2.last_idx();
 
 	shared.clear(true, true);
 

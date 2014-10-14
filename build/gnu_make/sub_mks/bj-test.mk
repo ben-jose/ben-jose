@@ -8,7 +8,7 @@ TGT_LDFLAGS := -L${TARGET_DIR}
 TGT_LDLIBS  := -lben-jose -lstdc++ -lgmpxx -lgmp 
 TGT_PREREQS := libben-jose.a 
 
-SOURCES := $(SRC_BASE_DIR)/programs/solver/test_main.cpp
+SOURCES := $(SRC_BASE_DIR)/programs/tests/test_main.cpp
 
 SRC_INCDIRS := \
 	$(SRC_BASE_DIR)/programs/solver \

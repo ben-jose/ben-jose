@@ -162,6 +162,14 @@ public:
 		sz = nw_sz;
 	}
 
+	const t_1byte*	get_c_array(){
+		return (t_1byte*)data;
+	}
+
+	long	get_c_array_sz(){
+		return (long)(to_bytes(sz));
+	}
+
 	bit_row_index	get_cap(){
 		return to_bits(cap);
 	}
