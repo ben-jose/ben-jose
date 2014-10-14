@@ -1200,7 +1200,7 @@ canon_cnf::purge_clauses(skeleton_glb& skg){
 
 void
 skeleton_glb::start_local(){
-	kg_cnf_paths_found.clear();
+	kg_cnf_paths_found.clear_redblack();
 }
 
 void
@@ -1214,11 +1214,14 @@ skeleton_glb::clear_all(){
 
 	kg_clauses.clear(true, true);
 	kg_free_clauses.clear(true, true);
+	
+	kg_cnf_paths_found.clear_redblack();
 
 	DBG_PRT(89, os << "CLEARED free_clauses" << " stack=" << STACK_STR);
 
 	SKELETON_CK(kg_clauses.is_empty());
 	SKELETON_CK(kg_free_clauses.is_empty());
+	SKELETON_CK(kg_cnf_paths_found.is_empty());
 }
 
 void
@@ -1509,8 +1512,8 @@ skeleton_glb::find_path(ch_string pth_to_find){
 
 	SKELETON_CK(! pth_to_find.empty());
 
-	bool found_it = (all_found.find(pth_to_find) != all_found.end());
-	//bool found_it = all_found.search(pth_to_find);
+	//bool found_it = (all_found.find(pth_to_find) != all_found.end());
+	bool found_it = all_found.search(pth_to_find);
 	if(found_it){
 		GLB().batch_stat_direct_hits.add_val(1);
 	}
@@ -1532,7 +1535,7 @@ skeleton_glb::find_path(ch_string pth_to_find){
 	}
 	if(found_it && to_inser && ! pth_to_find.empty()){
 		DBG_PRT(98, os << "ADDING FOUND '" << pth_to_find << "'");
-		all_found.insert(pth_to_find);
+		all_found.push(pth_to_find);
 	}
 
 	return found_it;
@@ -1760,8 +1763,8 @@ void
 canon_cnf::update_parent_variants(skeleton_glb& skg, ch_string sv_dir){
 	SKELETON_CK(has_phase_path());
 
-	//DBG(string_set_t all_lnks(cmp_string));
-	DBG(string_set_t all_lnks);
+	DBG(string_set_t all_lnks(cmp_string));
+	//DBG(string_set_t all_lnks);
 
 	row<variant>& all_next = skg.kg_tmp_all_nxt_vnts;
 	row<ch_string>& all_del = skg.kg_tmp_all_del_paths;
@@ -1786,10 +1789,10 @@ canon_cnf::update_parent_variants(skeleton_glb& skg, ch_string sv_dir){
 		SKELETON_CK(skg.ref_in_skl(lnk_pth));
 		SKELETON_CK(skg.ref_exists(lnk_pth));
 		
-		DBG(bool in_lnks = (all_lnks.find(lnk_pth) != all_lnks.end()));
-		//DBG(bool in_lnks = all_lnks.search(lnk_pth));
+		//DBG(bool in_lnks = (all_lnks.find(lnk_pth) != all_lnks.end()));
+		DBG(bool in_lnks = all_lnks.search(lnk_pth));
 		SKELETON_CK(! in_lnks);
-		DBG(all_lnks.insert(lnk_pth));
+		DBG(all_lnks.push(lnk_pth));
 
 		skg.ref_remove(vnt_pth);
 		skg.ref_write(lnk_pth, vnt_pth);
@@ -1808,10 +1811,10 @@ canon_cnf::update_parent_variants(skeleton_glb& skg, ch_string sv_dir){
 	long nm_vnts = all_next.size();
 
 	if(! has_eq){
-		DBG(bool in_lnks2 = (all_lnks.find(sv_dir) != all_lnks.end()));
-		//DBG(bool in_lnks2 = all_lnks.search(sv_dir));
+		//DBG(bool in_lnks2 = (all_lnks.find(sv_dir) != all_lnks.end()));
+		DBG(bool in_lnks2 = all_lnks.search(sv_dir));
 		SKELETON_CK(! in_lnks2);
-		DBG(all_lnks.insert(sv_dir));
+		DBG(all_lnks.push(sv_dir));
 
 		skg.ref_remove(lst_pth);
 		skg.ref_write(sv_dir, lst_pth);
@@ -2014,10 +2017,10 @@ canon_cnf::save_cnf(skeleton_glb& skg, ch_string sv_pth){
 	}
 
 	if(skg.kg_local_verifying && sv_ok){
-		if(pth1 != ""){ skg.kg_cnf_paths_found.insert(skg.as_full_path(pth1)); }
-		if(pth2 != ""){ skg.kg_cnf_paths_found.insert(skg.as_full_path(pth2)); }
-		//if(pth3 != ""){ skg.kg_cnf_paths_found.insert(skg.as_full_path(pth3)); }
-		if(sv_dir != ""){ skg.kg_cnf_paths_found.insert(skg.as_full_path(sv_dir)); }
+		if(pth1 != ""){ skg.kg_cnf_paths_found.push(skg.as_full_path(pth1)); }
+		if(pth2 != ""){ skg.kg_cnf_paths_found.push(skg.as_full_path(pth2)); }
+		//if(pth3 != ""){ skg.kg_cnf_paths_found.push(skg.as_full_path(pth3)); }
+		if(sv_dir != ""){ skg.kg_cnf_paths_found.push(skg.as_full_path(sv_dir)); }
 	}
 
 	if(skg.kg_verifying && sv_ok){ 

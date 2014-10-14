@@ -34,10 +34,8 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 #ifndef SKELETON_H
 #define SKELETON_H
 
-#include <set>
-
 #include "bj_stream.h"
-//include "mem_redblack.h"
+#include "mem_redblack.h"
 #include "tools.h"
 #include "dimacs.h"
 #include "sha2.h"
@@ -82,9 +80,9 @@ class skeleton_glb;
 //=================================================================
 // type declarations
 
-typedef std::set<ch_string> 	string_set_t;
-//typedef mem_redblack<ch_string>						string_set_t;
-//typedef mem_redblack<ch_string>::rbt_nod_ref_t 		string_set_nd_ref_t;
+//typedef std::set<ch_string> 	string_set_t;
+typedef mem_redblack<ch_string>						string_set_t;
+typedef mem_redblack<ch_string>::rbt_nod_ref_t 		string_set_nd_ref_t;
 
 //=================================================================
 // global dbg declarations
@@ -614,8 +612,8 @@ public:
 	row<variant> 		kg_tmp_all_nxt_vnts;
 	row<ch_string> 	kg_tmp_all_del_paths;
 
-	//skeleton_glb() : kg_cnf_paths_found(cmp_string) {
-	skeleton_glb() {
+	//skeleton_glb() {
+	skeleton_glb() : kg_cnf_paths_found(cmp_string) {
 		init_skeleton_glb();
 	}
 
