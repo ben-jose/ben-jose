@@ -2064,7 +2064,7 @@ notekeeper::clear_all_motives(long lim_lv, bool reset_notes){
 void
 neuron::mem_ne_fill_remote_sortees(mem_op_t mm, brain& brn){
 
-	DBG(quanton& cf_qu = brn.br_conflict_quanton);
+	DBG(quanton& cnfl_qu = brn.br_conflict_quanton);
 
 	ne_num_remote_tees = 0;
 
@@ -2075,8 +2075,8 @@ neuron::mem_ne_fill_remote_sortees(mem_op_t mm, brain& brn){
 
 		bool base_qua = false;
 
-		BRAIN_CK(&cf_qu != &qua);
-		BRAIN_CK(&cf_qu != &opp);
+		BRAIN_CK(&cnfl_qu != &qua);
+		BRAIN_CK(&cnfl_qu != &opp);
 
 		if(qua.has_pos_mark()){ 
 			BRAIN_CK(qua.has_mark());
@@ -2101,11 +2101,11 @@ neuron::mem_ne_fill_remote_sortees(mem_op_t mm, brain& brn){
 		}
 	}
 
-	BRAIN_CK(cf_qu.qu_inverse != NULL_PT);
-	BRAIN_CK(cf_qu.qu_reltee.so_positive.is_empty());
-	BRAIN_CK(cf_qu.qu_reltee.so_negative.is_empty());
-	BRAIN_CK(cf_qu.qu_inverse->qu_reltee.so_positive.is_empty());
-	BRAIN_CK(cf_qu.qu_inverse->qu_reltee.so_negative.is_empty());
+	BRAIN_CK(cnfl_qu.qu_inverse != NULL_PT);
+	BRAIN_CK(cnfl_qu.qu_reltee.so_positive.is_empty());
+	BRAIN_CK(cnfl_qu.qu_reltee.so_negative.is_empty());
+	BRAIN_CK(cnfl_qu.qu_inverse->qu_reltee.so_positive.is_empty());
+	BRAIN_CK(cnfl_qu.qu_inverse->qu_reltee.so_negative.is_empty());
 }
 
 void
@@ -3276,7 +3276,7 @@ void
 neuron::mem_ne_fill_sortees(brain& brn, quanton& aft_qua){
 
 	BRAIN_CK(aft_qua.qu_inverse != NULL_PT);
-	DBG(quanton& cf_qu = brn.br_conflict_quanton);
+	DBG(quanton& cnfl_qu = brn.br_conflict_quanton);
 
 	row<sortee*>& all_after = aft_qua.qu_reltee.so_after;
 	BRAIN_CK(all_after.is_empty());
@@ -3290,8 +3290,8 @@ neuron::mem_ne_fill_sortees(brain& brn, quanton& aft_qua){
 		quanton& qua = *(ne_fibres[aa]);
 		quanton& opp = *(qua.qu_inverse);
 
-		BRAIN_CK(&cf_qu != &qua);
-		BRAIN_CK(&cf_qu != &opp);
+		BRAIN_CK(&cnfl_qu != &qua);
+		BRAIN_CK(&cnfl_qu != &opp);
 
 		if(&qua == &aft_qua){ 
 			DBG(found_it = true);
@@ -3320,7 +3320,7 @@ neuron::mem_ne_fill_sortees(brain& brn, quanton& aft_qua){
 		all_before.push(&(aft_qua.qu_tee));
 	}
 
-	BRAIN_CK((&aft_qua == &cf_qu) || found_it);
+	BRAIN_CK((&aft_qua == &cnfl_qu) || found_it);
 }
 */
 

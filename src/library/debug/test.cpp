@@ -29,6 +29,7 @@ file for test and debugging purposes.
 
 --------------------------------------------------------------*/
 
+#include <fstream>
 #include <set>
 #include <iterator>
 

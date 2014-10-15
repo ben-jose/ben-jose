@@ -33,12 +33,7 @@ Declaration of functions to read and parse config files.
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include <fstream>
-
 #include "tools.h"
-
-// '\0'
-#define END_OF_SEC	0
 
 #define CONFIG_DBG(prm)	DBG(prm)
 #define CONFIG_CK(prm) 	DBG_CK(prm)

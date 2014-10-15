@@ -101,7 +101,16 @@ drop_file_write_lock(int fd_lock);
 
 bool
 file_exists(ch_string th_pth);
-	
+
+bool
+file_newer_than(ch_string the_pth, time_t tm1);
+
+time_t
+path_verify(ch_string the_pth);
+
+bool
+make_dir(ch_string the_pth, mode_t mod);
+
 #endif		// FILE_FUNCS_H
 
 

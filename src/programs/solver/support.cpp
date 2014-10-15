@@ -30,6 +30,8 @@ Global classes and functions that support and assist the system.
 
 --------------------------------------------------------------*/
 
+#include <fstream>
+
 #include "top_exception.h"
 #include "stack_trace.h"
 #include "support.h"
@@ -543,6 +545,7 @@ global_data::print_stats(bj_ostream& os, double current_secs){
 //============================================================
 // global functions
 
+/*
 void	err_header(bj_ostr_stream& msg_err){
 	msg_err.clear();
 	//msg_err = "";
@@ -552,8 +555,9 @@ void	err_header(bj_ostr_stream& msg_err){
 		<< GLB().get_curr_f_nam() << "'";
 	//msg_err << bj_eol;
 }
-
-void	log_message(const bj_ostr_stream& msg_log){
+*/
+		
+void	log_message(const ch_string& msg_log){
 
 	if(! GLB().batch_log_on){
 		return;
@@ -567,7 +571,7 @@ void	log_message(const bj_ostr_stream& msg_log){
 	std::ofstream log_stm;
 	log_stm.open(log_nm, std::ios::app);
 	if(log_stm.good() && log_stm.is_open()){
-		log_stm << msg_log.str() << bj_eol; 
+		log_stm << msg_log << bj_eol; 
 		log_stm.close();
 	}
 }
@@ -591,7 +595,7 @@ void	log_batch_info(){
 		GLB().error_stm << "Could not open file " << log_nm << ".";
 		msg_log << GLB().error_stm.str();
 		bj_err << msg_log.str() << bj_eol;
-		log_message(msg_log);
+		log_message(msg_log.str());
 		return;
 	}
 
@@ -611,7 +615,7 @@ void	log_batch_info(){
 		GLB().error_stm << "Could not open file " << msg_nm << ".";
 		msg_log << GLB().error_stm.str();
 		bj_err << msg_log.str() << bj_eol;
-		log_message(msg_log);
+		log_message(msg_log.str());
 		return;
 	}
 
@@ -746,24 +750,16 @@ void	call_and_handle_exceptions(core_func_t the_func){
 	try{
 		(*the_func)();
 		DBG_PRT(6, os << "AFTER THE_FUNC in call_and_handle_exceptions");
-	} 
-	catch (long code) {
-		err_header(msg_err);
-		msg_err << GLB().error_stm.str();
-		bj_err << msg_err.str() << bj_eol;
-		log_message(msg_err);
+	} catch (top_exception& ex1){
+		bj_err << ex1.get_str() << bj_eol;
+		log_message(ex1.get_str());
 		abort_func(0);
 	}
 	catch (...) {
 		bj_out << "INTERNAL ERROR !!! (call_and_handle_exceptions)" << bj_eol;
 		bj_out << STACK_STR << bj_eol;
 		bj_out.flush();
-		abort_func(0);		
-		
-		//err_header(msg_err);
-		//msg_err << "Unknown type exception in  ";
-		//bj_err << msg_err.str() << bj_eol;
-		//log_message(msg_err);
+		abort_func(0);
 	}
 
 	DBG_PRT(6, os << "AFTER try_catch in call_and_handle_exceptions");
@@ -925,7 +921,7 @@ void	do_all_instances(){
 		ch_string inst_nam = all_insts[ii].ist_file_path;
 		//GLB().file_name = all_insts[ii].ist_file_path;
 
-		std::ifstream i_ff;
+		//std::ifstream i_ff;
 		if(inst_nam.size() > 0){
 			GLB().batch_prt_totals_timer.
 				check_period(print_periodic_totals);

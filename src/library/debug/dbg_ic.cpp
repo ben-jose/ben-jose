@@ -30,6 +30,8 @@ funcs for inference graph printing
 
 --------------------------------------------------------------*/
 
+#include <fstream>
+
 #include "support.h"
 #include "brain.h"
 #include "dbg_run_satex.h"

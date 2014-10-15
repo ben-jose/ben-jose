@@ -669,3 +669,33 @@ file_exists(ch_string th_pth){
 	return istm.good();
 }
 
+bool
+file_newer_than(ch_string the_pth, time_t tm1){
+	//SKELETON_CK(not_skl_path(the_pth));
+	struct stat sf1;
+
+	int resp1 = stat(the_pth.c_str(), &sf1);
+	bool ok1 = (resp1 == 0);
+
+	double dtm = difftime(sf1.st_mtime, tm1);
+
+	bool nwr_than = ok1 && (dtm > 0);
+	return nwr_than;
+}
+
+time_t
+path_verify(ch_string the_pth){
+	time_t vrf_tm = -1;
+	struct stat sf1;
+	int ok1 = stat(the_pth.c_str(), &sf1);
+	if(ok1 == 0){
+		vrf_tm = sf1.st_mtime;
+	} 
+	return vrf_tm;
+}
+
+bool
+make_dir(ch_string the_pth, mode_t mod){
+	int resp = mkdir(the_pth.c_str(), mod);
+	return (resp == 0);
+}

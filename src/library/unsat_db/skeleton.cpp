@@ -31,7 +31,6 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 
 --------------------------------------------------------------*/
 
-#include "file_tree.h"
 #include "stack_trace.h"
 #include "file_funcs.h"
 #include "util_funcs.h"
@@ -192,20 +191,6 @@ path_get_directory(ch_string the_pth){
 }
 
 bool
-path_newer_than(ch_string the_pth, time_t tm1){
-	SKELETON_CK(not_skl_path(the_pth));
-	struct stat sf1;
-
-	int resp1 = stat(the_pth.c_str(), &sf1);
-	bool ok1 = (resp1 == 0);
-
-	double dtm = difftime(sf1.st_mtime, tm1);
-
-	bool nwr_than = ok1 && (dtm > 0);
-	return nwr_than;
-}
-
-bool
 dims_path_exists(ch_string base_pth, const dima_dims& dims){
 	SKELETON_CK(! base_pth.empty());
 
@@ -257,7 +242,7 @@ path_create(ch_string n_pth){
 	DBG_PRT(77, os << "HIT RETURN TO CONTINUE...");
 	DBG_COMMAND(16, getchar());
 
-	long resp = true;
+	//long resp = true;
 	int eos = (int)ch_string::npos;
 	int pos1 = n_pth.find('/');
 	bool path_ok = true;
@@ -268,9 +253,12 @@ path_create(ch_string n_pth){
 
 		ch_string nm_dir = n_pth.substr(0, pos1);
 		if(nm_dir.size() > 0){
+			path_ok = make_dir(nm_dir, 0700);
+			/*
 			resp = mkdir(nm_dir.c_str(), 0700);
 			//path_ok = ((resp == 0) || (errno == EEXIST));
 			path_ok = (resp == 0);
+			*/
 		}
 
 		if((pos1 + 1) < (int)n_pth.size()){
@@ -336,7 +324,7 @@ canon_load(ch_string& the_pth, row<char>& cnn){
 	try{
 		read_file(the_pth, cnn);
 		load_ok = true;
-	} catch (long code) {
+	} catch (const top_exception& ex1){
 		load_ok = false;
 	}
 	return load_ok;
@@ -822,6 +810,14 @@ skeleton_glb::init_paths(){
 		kg_verifying = true;
 		kg_local_verifying = false;
 
+		time_t tt = path_verify(kg_verify_path);
+		if(tt != -1){
+			kg_verify_mtime = tt;
+		} else {
+			kg_verifying = false;
+			kg_local_verifying = false;
+		}
+		/*
 		struct stat sf1;
 		int ok1 = stat(kg_verify_path.c_str(), &sf1);
 		if(ok1 == 0){
@@ -829,7 +825,7 @@ skeleton_glb::init_paths(){
 		} else {
 			kg_verifying = false;
 			kg_local_verifying = false;
-		}
+		}*/
 	}
 
 	if(kg_only_save){
@@ -1275,7 +1271,7 @@ canon_cnf::load_from(skeleton_glb& skg, ch_string& f_nam){
 	dimacs_loader	the_loader;
 	try{
 		the_loader.parse_file(f_nam, all_lits);
-	} catch (long code) {
+	} catch (const top_exception& ex1){
 		load_ok = false;
 	}
 
@@ -1529,7 +1525,7 @@ skeleton_glb::find_path(ch_string pth_to_find){
 		if(! kg_verifying){
 			found_it = file_exists(pth_to_find);
 		} else {
-			found_it = path_newer_than(pth_to_find, kg_verify_mtime);
+			found_it = file_newer_than(pth_to_find, kg_verify_mtime);
 		}
 		DBG_PRT(109, os << "found_it=" << found_it << " for path " << pth_to_find);
 	}

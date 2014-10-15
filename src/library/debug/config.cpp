@@ -30,6 +30,9 @@ Functions to read and parse config files.
 
 --------------------------------------------------------------*/
 
+#include <fstream>
+
+#include "file_funcs.h"
 #include "config.h"
 #include "support.h"
 
@@ -66,7 +69,7 @@ bj_ostr_stream& parse_err_msg(ch_string hd_msg, long num_line, char ch_err, ch_s
 
 void skip_whitespace(const char*& pt_in, long& line){
 	while(	(! isalnum(*pt_in) || isspace(*pt_in)) && 
-			(*pt_in != '-') && (*pt_in != '+') && (*pt_in != 0))
+			(*pt_in != '-') && (*pt_in != '+') && (*pt_in != END_OF_SEC))
 	{ 
 		if(*pt_in == '\n'){ 
 			line++; 
@@ -76,7 +79,7 @@ void skip_whitespace(const char*& pt_in, long& line){
 }
 
 void skip_line(const char*& pt_in, long& line){
-	while(*pt_in != 0){
+	while(*pt_in != END_OF_SEC){
 		if(*pt_in == '\n'){ 
 			line++; 
 			pt_in++; 
@@ -92,7 +95,7 @@ read_text_line(const char*& pt_in, long& line){
 	const char* pt_0 = pt_in;
 	bool all_prt = true;
 
-	while(*pt_in != 0){
+	while(*pt_in != END_OF_SEC){
 		if(*pt_in == '\n'){ 
 			if(all_prt){
 				char* pt_1 = (char*)pt_in;
@@ -185,12 +188,6 @@ config_reader::add_config_line(ch_string& str_ln){
 		}
 	}
 }
-
-/*void
-mini_test(){
-	bj_ostream& os = bj_out;
-	os << "isalnum('/') " << isalnum('/') << bj_eol;
-}*/
 
 void
 config_reader::read_config(const char* file_nm){

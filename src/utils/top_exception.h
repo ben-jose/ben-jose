@@ -46,6 +46,10 @@ public:
 		ex_nm = descr;
 		ex_id = 0;
 	}
+	
+	char* get_str(){
+		return ex_nm;
+	}
 };
 
 #endif // TOP_EXCEPTION_H

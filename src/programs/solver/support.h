@@ -493,8 +493,7 @@ typedef void (*core_func_t)(void);
 ch_string	get_log_name(ch_string f_nam, ch_string sufix);
 
 void	init_dbg_conf();
-void	err_header(bj_ostr_stream& msg_err);
-void	log_message(const bj_ostr_stream& msg_log);
+void	log_message(const ch_string& msg_log);
 void	log_batch_info();
 void	call_and_handle_exceptions(core_func_t the_func);
 void	chomp_string(ch_string& s1);
