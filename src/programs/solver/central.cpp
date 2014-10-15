@@ -45,14 +45,12 @@ print_op_cnf(){
 
 void
 call_solve_instance(){
-	brain the_brain;
-
+	skeleton_glb& the_skl = GLB().gg_skeleton;
 	instance_info& inst_info = GLB().get_curr_inst();
-	the_brain.br_pt_inst = &inst_info;
-
+	
+	brain the_brain(the_skl, inst_info);
 	the_brain.load_it();
 	the_brain.solve_it();
-	//the_brain.stab_it();
 
 	GLB().count_instance(inst_info);
 }

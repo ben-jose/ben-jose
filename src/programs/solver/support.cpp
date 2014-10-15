@@ -39,22 +39,8 @@ Global classes and functions that support and assist the system.
 #include "config.h"
 #include "sortor.h"
 
-ch_string	satisf_val_nams[k_last_satisf_val];
-
-void	init_glb_nams(){
-	init_nams(satisf_val_nams, k_first_satisf_val, k_last_satisf_val);
-	satisf_val_nams[k_unknown_satisf] = "unknown";
-	satisf_val_nams[k_yes_satisf] = "yes_satisf";
-	satisf_val_nams[k_no_satisf] = "no_satisf";
-	satisf_val_nams[k_timeout] = "timeout";
-	satisf_val_nams[k_memout] = "memout";
-	satisf_val_nams[k_error] = "error";
-}
-
 void	glb_set_memout(){
-	if(GLB().has_brain()){
-		GLB().result() = k_memout;
-	}
+	GLB().result() = k_memout;
 }
 
 long
@@ -204,8 +190,6 @@ global_data::init_global_data(){
 
 	mem_set_memout_fn(glb_set_memout);
 
-	pt_brain = NULL_PT;
-
 	out_os = &(bj_out);
 	long ii = 0;
 	long num_out_levs = OUT_NUM_LEVS;
@@ -271,8 +255,6 @@ global_data::init_global_data(){
 	gg_file_name = "";
 
 	//gg_skeleton.init_paths();
-
-	init_glb_nams();
 
 	set_active_out_levs();
 }
@@ -653,80 +635,6 @@ read_batch_instances(ch_string file_nm, row<instance_info>& f_insts){
 		}
 	}
 	in_stm.close();
-}
-
-ch_string 
-instance_info::parse_field(const char*& pt_in){
-	char sep = RESULT_FIELD_SEP_CHAR;
-	char eol = '\n';
-
-	ch_string the_field = "";
-	const char* pt_0 = pt_in;
-
-	while(*pt_in != 0){
-		if(*pt_in == sep){ 
-			// get the field
-			char* pt_1 = (char*)pt_in;
-			(*pt_1) = 0;
-			the_field = pt_0;
-			(*pt_1) = sep;
-			SUPPORT_CK((*pt_in) == sep);
-
-			pt_in++; 
-			break;
-		}
-		if(! isprint(*pt_in) || (*pt_in == eol)){
-			break;
-		}
-		pt_in++; 
-	}
-	return the_field;
-}
-
-satisf_val
-as_satisf(ch_string str_ln){
-	satisf_val the_val = k_unknown_satisf;
-	if(str_ln == satisf_val_nams[k_unknown_satisf]){
-		the_val = k_unknown_satisf;
-	} else if(str_ln == satisf_val_nams[k_yes_satisf]){
-		the_val = k_yes_satisf;
-	} else if(str_ln == satisf_val_nams[k_no_satisf]){
-		the_val = k_no_satisf;
-	} else if(str_ln == satisf_val_nams[k_timeout]){
-		the_val = k_timeout;
-	} else if(str_ln == satisf_val_nams[k_memout]){
-		the_val = k_memout;
-	} else if(str_ln == satisf_val_nams[k_error]){
-		the_val = k_error;
-	}
-	return the_val;
-}
-
-void
-instance_info::parse_instance(ch_string str_ln, long line){
-	init_instance_info();
-
-	DBG_PRT(30, os << "LINE inst=" << str_ln);
-
-	const char* pt_in = str_ln.c_str();
-	ist_file_path = parse_field(pt_in);
-	ch_string r_fi = parse_field(pt_in);
-	ist_result = as_satisf(r_fi);
-
-	DBG_PRT(30, os << "read inst=" << *this);
-
-	/*
-	parse_field(pt_in); // double
-
-	ist_num_vars = parse_int(pt_in, line);
-	parse_field(pt_in); // sep
-
-	ist_num_ccls = parse_int(pt_in, line);
-	parse_field(pt_in); // sep
-
-	ist_num_lits = parse_int(pt_in, line);
-	parse_field(pt_in); // sep
-	*/
 }
 
 bool

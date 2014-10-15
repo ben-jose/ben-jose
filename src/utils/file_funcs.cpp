@@ -141,7 +141,7 @@ write_file(ch_string& the_pth, row<char>& dat, bool write_once){
 	return true;
 }
 
-mpz_class
+bj_big_int_t
 inc_fnum(ch_string f_nam){
 	int fd;
 	struct flock fl;
@@ -167,7 +167,7 @@ inc_fnum(ch_string f_nam){
 		}
 	}
 
-	mpz_class the_num = 0;
+	bj_big_int_t the_num = 0;
 
 	off_t pos1 = lseek(fd, 0, SEEK_END);
 	if(pos1 == 0){
@@ -355,7 +355,7 @@ set_fstr(ch_string f_nam, ch_string the_val_str){
 //============================================================
 // elapsed funcs
 
-mpf_class
+bj_big_float_t
 update_elapsed(ch_string f_nam){
 	struct stat sf1;
 	time_t last_mtime = 0;
@@ -416,7 +416,7 @@ update_elapsed(ch_string f_nam){
 
 		time_t now_time = time(0);
 		double dtm = difftime(now_time, last_mtime);
-		big_floating_t nxt_elap = dtm;
+		bj_big_float_t nxt_elap = dtm;
 
 		the_avg.add_val(nxt_elap);
 	}

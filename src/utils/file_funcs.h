@@ -62,7 +62,9 @@ read_file(ch_string f_nam, row<char>& f_data);
 bool
 write_file(ch_string& the_pth, row<char>& cnn, bool write_once);
 
-mpz_class
+// fnum = concurrent safe consec counter kept in file f_nam
+
+bj_big_int_t
 inc_fnum(ch_string f_nam);
 
 ch_string
@@ -71,7 +73,7 @@ get_fstr(ch_string f_nam);
 long
 set_fstr(ch_string f_nam, ch_string the_val_str);
 
-mpf_class
+bj_big_float_t
 update_elapsed(ch_string f_nam);
 	
 long

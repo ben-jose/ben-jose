@@ -87,8 +87,8 @@ typedef mem_redblack<ch_string>::rbt_nod_ref_t 		string_set_nd_ref_t;
 //=================================================================
 // global dbg declarations
 
-extern mpz_class	skg_dbg_canon_find_id;
-extern mpz_class	skg_dbg_canon_save_id;
+extern bj_big_int_t skg_dbg_canon_find_id;
+extern bj_big_int_t skg_dbg_canon_save_id;
 
 //=================================================================
 // skeleton defines
@@ -140,12 +140,10 @@ DECLARE_PRINT_FUNCS(canon_cnf)
 bool		not_skl_path(ch_string pth);
 
 ch_string	nam_subset_resp(cmp_is_sub rr);
-ch_string	get_errno_str(long val_errno);
 void		string_replace_char(ch_string& src_str, char orig, char repl);
 
 ch_string	path_get_running_path();
 
-bool		path_newer_than(ch_string the_pth, time_t tm1);
 bool		path_is_dead_lock(ch_string the_pth);
 void		path_delete(ch_string full_pth, ch_string up_to);
 bool		path_create(ch_string n_pth);
@@ -155,19 +153,7 @@ ch_string	path_to_absolute_path(ch_string pth);
 bool		path_begins_with(ch_string the_pth, ch_string the_beg);
 bool		path_ends_with(ch_string& the_str, ch_string& the_suf);
 
-// fnum = concurrent safe consec counter kept in file f_nam
-
-mpz_class	inc_fnum(ch_string f_nam);	// neg on err o the num after inc. 
-
-ch_string	get_fstr(ch_string f_nam);
-long		set_fstr(ch_string f_nam, ch_string the_val_str);
-
-mpf_class	update_elapsed(ch_string f_nam);	// update avg elapsed modification time of f_nam
-long		read_elapsed(ch_string f_nam, average& the_avg);	// read avg elapsed modification time of f_nam
-
 bool 		dims_path_exists(ch_string base_pth, const dima_dims& dims);
-int		delete_dir_entry(const char *fpath, const struct stat *sb, int tflag, struct FTW *ftwbuf);
-void		delete_directory(ch_string& dir_nm);
 
 ch_string&	slice_str_to_path(ch_string& sha_txt);
 ch_string	long_to_path(long nn, long d_per_dir);
@@ -386,7 +372,8 @@ public:
 	}
 };
 
-long		choose_variant(row<variant>& all_vnt, mpf_class& avg_szs, bool in_dbg = false);
+long		choose_variant(row<variant>& all_vnt, 
+						   bj_big_float_t& avg_szs, bool in_dbg = false);
 
 comparison
 cmp_variant(variant const & vnt1, variant const & vnt2);
@@ -510,8 +497,8 @@ public:
 	bool	i_sub_of_vnt(skeleton_glb& skg, ch_string& vpth, bool& are_eq);
 	bool	i_super_of_vnt(skeleton_glb& skg, ch_string& vpth);
 
-	mpz_class	get_num_variants(skeleton_glb& skg);
-	void		set_num_variants(skeleton_glb& skg, mpz_class num_vnts);
+	bj_big_int_t	get_num_variants(skeleton_glb& skg);
+	void		set_num_variants(skeleton_glb& skg, bj_big_int_t num_vnts);
 
 	bool	all_nxt_vnt(skeleton_glb& skg, row<variant>& all_next, row<ch_string>& all_del);
 	long	first_vnt_i_super_of(skeleton_glb& skg);

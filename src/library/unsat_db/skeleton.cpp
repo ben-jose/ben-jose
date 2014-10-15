@@ -41,8 +41,8 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 #define NUM_BYTES_SHA2	32	// 256 bits
 
 //long canon_cnf::CF_NUM_CNFS = 0;
-mpz_class	skg_dbg_canon_find_id = 0;
-mpz_class	skg_dbg_canon_save_id = 0;
+bj_big_int_t	skg_dbg_canon_find_id = 0;
+bj_big_int_t	skg_dbg_canon_save_id = 0;
 
 #define SKELETON_CK(prm) 	DEBUG_CK(prm)
 #define SKELETON_CK_1(prm) 	DEBUG_CK_1(prm)
@@ -670,8 +670,8 @@ cmp_clauses(canon_clause* const& ccl1, canon_clause* const& ccl2){
 
 comparison
 cmp_variant(variant const & vnt1, variant const & vnt2){
-	const big_floating_t& elp1 = vnt1.vn_elap.avg;
-	const big_floating_t& elp2 = vnt2.vn_elap.avg;
+	const bj_big_float_t& elp1 = vnt1.vn_elap.avg;
+	const bj_big_float_t& elp2 = vnt2.vn_elap.avg;
 	return cmp_big_floating(elp1, elp2);
 }
 
@@ -742,7 +742,7 @@ skeleton_glb::report_err(ch_string pth, ch_string err_pth){
 	SKELETON_CK(ref_exists(err_pth));
 
 	ch_string err_count_file = err_pth + '/' + SKG_ERR_COUNT_NAME;
-	mpz_class num_err = inc_fnum(as_full_path(err_count_file));
+	bj_big_int_t num_err = inc_fnum(as_full_path(err_count_file));
 	if(num_err < 0){
 		DBG_PRT(DBG_ALL_LVS, 
 			os << "ABORTING_DATA " << bj_eol;
@@ -1537,11 +1537,11 @@ skeleton_glb::find_path(ch_string pth_to_find){
 	return found_it;
 }
 
-mpz_class
+bj_big_int_t
 canon_cnf::get_num_variants(skeleton_glb& skg){
 	ch_string f_nm = skg.as_full_path(get_num_variants_name());
 	ch_string num_str1 = get_fstr(f_nm);
-	mpz_class num_vnts;
+	bj_big_int_t num_vnts;
 	num_vnts = num_str1;
 	if(num_vnts < 0){
 		num_vnts = 0;
@@ -1553,7 +1553,7 @@ canon_cnf::get_num_variants(skeleton_glb& skg){
 }
 
 void
-canon_cnf::set_num_variants(skeleton_glb& skg, mpz_class num_vnts){
+canon_cnf::set_num_variants(skeleton_glb& skg, bj_big_int_t num_vnts){
 	if(num_vnts < 0){
 		num_vnts = 0;
 	}
@@ -1579,7 +1579,7 @@ canon_cnf::all_nxt_vnt(skeleton_glb& skg, row<variant>& all_next, row<ch_string>
 	all_next.clear();
 	all_del.clear();
 
-	mpz_class num_vnts = get_num_variants(skg);
+	bj_big_int_t num_vnts = get_num_variants(skg);
 	for(long aa = 0; aa < num_vnts; aa++){
 		ch_string vpth = get_variant_path(skg, aa);
 		if(vpth == ""){
@@ -1679,7 +1679,7 @@ canon_cnf::first_vnt_i_super_of(skeleton_glb& skg){
 
 	//for(long aa = 0; aa < SKG_MAX_NUM_VARIANT; aa++){
 
-	mpz_class num_vnts = get_num_variants(skg);
+	bj_big_int_t num_vnts = get_num_variants(skg);
 	for(long aa = 0; aa < num_vnts; aa++){
 		ch_string vpth = get_variant_path(skg, aa, skg.in_verif());
 		if(vpth == ""){
@@ -1697,14 +1697,14 @@ canon_cnf::first_vnt_i_super_of(skeleton_glb& skg){
 }
 
 long
-choose_variant(row<variant>& all_vnt, mpf_class& avg_szs, bool in_dbg){
-	//mpz_class avg_szs = r_avg_szs;
+choose_variant(row<variant>& all_vnt, bj_big_float_t& avg_szs, bool in_dbg){
+	//bj_big_int_t avg_szs = r_avg_szs;
 	long ch_idx = INVALID_IDX;
-	mpf_class max_val_elap = INVALID_NATURAL;
+	bj_big_float_t max_val_elap = INVALID_NATURAL;
 	
 	for(long aa = 0; aa < all_vnt.size(); aa++){
 		average& nxt_avg = all_vnt[aa].vn_elap;
-		big_integer_t& n_avg_sz = nxt_avg.sz;
+		bj_big_int_t& n_avg_sz = nxt_avg.sz;
 
 		if(n_avg_sz < 0){
 			DBG_PRT_COND(73, in_dbg, os << "n_avg_sz=" << n_avg_sz);
@@ -1715,7 +1715,7 @@ choose_variant(row<variant>& all_vnt, mpf_class& avg_szs, bool in_dbg){
 			continue;
 		}
 
-		mpf_class nxt_elap = nxt_avg.avg;
+		bj_big_float_t nxt_elap = nxt_avg.avg;
 		
 		if((ch_idx == INVALID_IDX) || (nxt_elap > max_val_elap)){
 			ch_idx = aa;
@@ -1836,7 +1836,7 @@ bool
 canon_cnf::ck_vnts(skeleton_glb& skg){
 	DBG_PRT(107, os << "checking=" << skg.as_full_path(get_all_variant_dir_name()));
 
-	mpz_class num_vnts = get_num_variants(skg);
+	bj_big_int_t num_vnts = get_num_variants(skg);
 	long aa = 0;
 	for(aa = 0; aa < num_vnts; aa++){
 		ch_string vpth = get_variant_path(skg, aa);

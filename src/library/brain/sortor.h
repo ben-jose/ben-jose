@@ -63,7 +63,7 @@ class sort_glb;
 //=================================================================
 // type defs
 
-typedef mpz_class	sort_id_t;
+typedef bj_big_int_t	sort_id_t;
 typedef row<sort_id_t> 	row_sort_id_t;
 
 

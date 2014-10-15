@@ -33,8 +33,7 @@ Some usefult abstract template classes and others.
 #ifndef TOOLS_H
 #define TOOLS_H
 
-#include <gmpxx.h>
-
+#include "bj_big_number.h"
 #include "bit_row.h"
 #include "bj_time.h"
 #include "top_exception.h"
@@ -51,9 +50,6 @@ DECLARE_PRINT_FUNCS(ref_strs)
 typedef long			integer;
 typedef integer			row_index;
 typedef char			comparison;
-
-typedef mpz_class		big_integer_t;
-typedef mpf_class		big_floating_t;
 
 #define CMP_FN_T(nm_fun) comparison (*nm_fun)(obj_t const & obj1, obj_t const & obj2)
 
@@ -208,7 +204,7 @@ cmp_integer(integer const & i1, integer const & i2){
 
 inline
 comparison
-cmp_big_floating(big_floating_t const & bn1, big_floating_t const & bn2){
+cmp_big_floating(bj_big_float_t const & bn1, bj_big_float_t const & bn2){
 	if(bn1 < bn2){ return -1; }
 	if(bn1 > bn2){ return 1; }
 	return 0;
@@ -1963,20 +1959,6 @@ heap<obj_t>::dbg_is_heap_ok(row_index idx){
 	return true;
 }
 
-//======================================================================
-// Relation operators -- extend definitions from '==' and '<'
-
-/*	THESE COLLIDE WITH mpz_class operators !!!
-
-#ifndef __SGI_STL_INTERNAL_RELOPS   // (be aware of SGI's STL implementation...)
-#define __SGI_STL_INTERNAL_RELOPS
-template <class obj_t> static inline bool operator != (const obj_t& x, const obj_t& y) { return !(x == y); }
-template <class obj_t> static inline bool operator >  (const obj_t& x, const obj_t& y) { return y < x;     }
-template <class obj_t> static inline bool operator <= (const obj_t& x, const obj_t& y) { return !(y < x);  }
-template <class obj_t> static inline bool operator >= (const obj_t& x, const obj_t& y) { return !(x < y);  }
-#endif
-*/
-
 //=================================================================
 // row based types
 
@@ -1987,27 +1969,27 @@ typedef row<ch_string>	row_str_t;
 
 class average {
 public:
-	big_floating_t	avg;
-	big_integer_t	sz;		// the number of avg numbers
+	bj_big_float_t	avg;
+	bj_big_int_t	sz;		// the number of avg numbers
 
 	average(){
 		init_average();
 	}
 
-	void	init_average(big_floating_t the_avg = 0, big_integer_t the_sz = 0){
+	void	init_average(bj_big_float_t the_avg = 0, bj_big_int_t the_sz = 0){
 		avg = the_avg;
 		sz = the_sz;
 	}
 
-	void	add_val(big_floating_t val){
+	void	add_val(bj_big_float_t val){
 		if(sz == 0){ sz = 1; avg = val; return; }
-		avg = (avg * ((big_floating_t)sz / (sz + 1))) + (val / (sz + 1));
+		avg = (avg * ((bj_big_float_t)sz / (sz + 1))) + (val / (sz + 1));
 		sz++;
 	}
 
-	void	remove_val(big_floating_t val){
+	void	remove_val(bj_big_float_t val){
 		if(sz == 1){ sz = 0; avg = 0; return; }
-		avg = (avg * ((big_floating_t)sz / (sz - 1))) - (val / (sz - 1));
+		avg = (avg * ((bj_big_float_t)sz / (sz - 1))) - (val / (sz - 1));
 		sz--;
 	}
 
@@ -2029,8 +2011,8 @@ bj_ostream& operator << (bj_ostream& os, average& obj){
 
 class avg_stat : private average {
 public:
-	big_floating_t	vs_tot_val;
-	big_floating_t	vs_max_val;
+	bj_big_float_t	vs_tot_val;
+	bj_big_float_t	vs_max_val;
 	ch_string	vs_nam;
 
 	avg_stat(ch_string nam = "avg?") {
@@ -2039,13 +2021,13 @@ public:
 		vs_nam = nam;
 	}
 
-	void	add_val(big_floating_t val){
+	void	add_val(bj_big_float_t val){
 		vs_tot_val += val;
 		average::add_val(val);
 		if(val > vs_max_val){ vs_max_val = val; }
 	}
 
-	void	remove_val(big_floating_t val){
+	void	remove_val(bj_big_float_t val){
 		vs_tot_val -= val;
 		average::remove_val(val);
 	}
@@ -2057,7 +2039,7 @@ public:
 inline
 bj_ostream&
 avg_stat::print_avg_stat(bj_ostream& os){
-	big_floating_t avg_perc = 0.0;
+	bj_big_float_t avg_perc = 0.0;
 	if(vs_max_val > 0.0){
 		avg_perc = ((avg / vs_max_val) * 100.0);
 	}

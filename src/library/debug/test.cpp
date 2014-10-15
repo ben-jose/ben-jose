@@ -656,7 +656,7 @@ void test_sets(){
 // ========================
 
 void	test_big_num(){
-	mpz_class a, b, c, d;
+	bj_big_int_t a, b, c, d;
 
 	a = 0;
 	mpz_setbit(a.get_mpz_t(), 6);
@@ -675,7 +675,7 @@ void	test_big_num(){
 void	test_big2(){
 	mpz_t v1;
 	mpz_t v2;
-	mpz_class a, b, c, d;
+	bj_big_int_t a, b, c, d;
 
 	//mpz_setbit(d, 6);
 
@@ -687,7 +687,7 @@ void	test_big2(){
 	//std::ios_base::showbase = 2;
 	bj_out << "v1 is " << v1 << "\n";
 
-	d = mpz_class(v1);
+	d = bj_big_int_t(v1);
 	bj_out << "d is " << d << "\n";
 
 	ch_string s_d;
@@ -731,7 +731,7 @@ void	test_big2(){
 void	test_big3(){
 	bj_ostream& os = bj_out;
 
-	mpz_class p1, p2;
+	bj_big_int_t p1, p2;
 	p1 = 0;
 	p2 = 500;
 	for(long aa = 0; aa < 100; aa++){
@@ -745,7 +745,7 @@ void	test_big3(){
 void	test_big4(){
 	bj_ostream& os = bj_out;
 
-	big_integer_t p1, p2, p3;
+	bj_big_int_t p1, p2, p3;
 
 	p1 = "123412351346163457";
 	p2 = "123412351346163456";
@@ -799,7 +799,7 @@ void	test_tm_elapsed(int argc, char** argv){
 	ch_string pth = argv[2];
 	
 	long rd_ok = -1;
-	mpf_class n_avg;
+	bj_big_float_t n_avg;
 	average the_avg;
 
 	if(oper == "r"){
@@ -1166,7 +1166,7 @@ test_num1(){
 	bj_ostream& os = bj_out;
 	MARK_USED(os);
 
-	mpz_class num_vnts;
+	bj_big_int_t num_vnts;
 
 	num_vnts = "-1";
 	os << "num_vnts=" << num_vnts << bj_eol;

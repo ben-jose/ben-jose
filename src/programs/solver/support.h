@@ -47,8 +47,6 @@ Declaration of classes that support and assist the system.
 #define PRINT_PERIOD			4.0
 #define PRINT_TOTALS_PERIOD 		10.0
 //define MAX_CONFLICTS			0		// all
-#define RESULT_FIELD_SEP		"|"
-#define RESULT_FIELD_SEP_CHAR		'|'
 
 #define LOG_NM_ERROR	"error.log"
 #define LOG_NM_RESULTS	"results.log"
@@ -61,6 +59,7 @@ Declaration of classes that support and assist the system.
 #include "util_funcs.h"
 
 #include "ben_jose.h"
+#include "instance_info.h"
 #include "dbg_prt.h"
 #include "skeleton.h"
 
@@ -111,66 +110,6 @@ typedef	int	location;
 
 #define OUT_NUM_LEVS 10
 
-
-//=================================================================
-// consecutive
-
-//typedef long 	consecutive_t;
-typedef mpz_class 	consecutive_t;
-
-#define INVALID_CONSECUTIVE	-1
-//define MAX_CONSECUTIVE		std::numeric_limits<double>::max()
-
-
-//=================================================================
-// instance_info
-
-extern ch_string	satisf_val_nams[];
-
-#define k_first_satisf_val		k_unknown_satisf
-#define k_last_satisf_val		(k_error + 1)
-
-class instance_info {
-public:
-	ch_string		ist_file_path;
-	satisf_val		ist_result;
-	double			ist_solve_time;
-	long			ist_num_vars;
-	long			ist_num_ccls;
-	long			ist_num_lits;
-	consecutive_t		ist_num_laps;
-
-	instance_info(){
-		init_instance_info();
-	}
-
-	void	init_instance_info(){
-		ist_file_path = "Unknown path";
-		ist_result = k_unknown_satisf;
-		ist_solve_time = 0.0;
-		ist_num_vars = 0;
-		ist_num_ccls = 0;
-		ist_num_lits = 0;
-		ist_num_laps = 0;
-	}
-
-	ch_string	get_f_nam(){
-		return ist_file_path;
-	}
-
-	static
-	bj_ostream& 	print_headers(bj_ostream& os);
-
-	bj_ostream& 	print_instance_info(bj_ostream& os);
-
-	void		parse_instance(ch_string str_ln, long line);
-	ch_string	parse_field(const char*& pt_in);
-};
-
-inline
-bj_ostream& operator << (bj_ostream& os, instance_info& obj){
-	return obj.print_instance_info(os);
-}
 
 //=================================================================
 // debug_entry
@@ -254,8 +193,6 @@ public:
 
 	row<long>		final_trail_ids;
 	row<long>		final_chosen_ids;
-
-	brain*			pt_brain;
 
 	bj_ostream*		out_os;
 	row<bool>		out_lev;
@@ -371,10 +308,6 @@ public:
 		return (result() != k_unknown_satisf);
 	}
 
-	bool		has_brain(){
-		return (pt_brain != NULL_PT);
-	}
-
 	bool	is_here(location rk){
 		MARK_USED(rk);
 		return true;
@@ -444,34 +377,6 @@ public:
 
 //=================================================================
 // FUNCTION
-
-inline
-bj_ostream& 	
-instance_info::print_headers(bj_ostream& os){
-	ch_string sep = RESULT_FIELD_SEP;
-	os << "file_path" << sep;
-	os << "solve_time" << sep;
-	os << "result" << sep;
-	os << "#vars" << sep;
-	os << "#ccls" << sep;
-	os << "#lits" << sep;
-	os << "#laps" << sep;
-	return os;
-}
-
-inline
-bj_ostream& 	
-instance_info::print_instance_info(bj_ostream& os){
-	ch_string sep = RESULT_FIELD_SEP;
-	os << ist_file_path << sep;
-	os << satisf_val_nams[ist_result] << sep;
-	os << ist_solve_time << sep;
-	os << ist_num_vars << sep;
-	os << ist_num_ccls << sep;
-	os << ist_num_lits << sep;
-	os << ist_num_laps << sep;
-	return os;
-}
 
 inline
 bj_ostream& 	

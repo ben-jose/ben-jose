@@ -43,6 +43,8 @@ Declarations of classes and that implement the neural network.
 //=============================================================================
 // defines
 
+#define BRAIN_DBG(prm) DBG(prm)
+
 #define BRAIN_CK(prm) DEBUG_CK(prm)
 
 //define BRAIN_CK_0(prm)	;
@@ -116,7 +118,7 @@ class brain;
 typedef	row<quanton*>		row_quanton_t;
 typedef	row<row_quanton_t>	row_row_quanton_t;
 
-typedef mpz_class 		recoil_counter_t;
+typedef bj_big_int_t	recoil_counter_t;
 
 //=================================================================
 // printing declarations
@@ -371,6 +373,10 @@ class quanton {
 	char*	get_cls_name(){
 		return quanton::CL_NAME;
 	}
+	
+	BRAIN_DBG(
+		brain*		qu_pt_brn;
+	)
 
 	long			qu_dbg_ic_trail_idx;	// idx in trail
 
@@ -418,13 +424,13 @@ class quanton {
 
 	// dbg attributes
 	
-	mpz_class		qu_dbg_fst_lap_cho;
-	mpz_class		qu_dbg_num_laps_cho;
+	bj_big_int_t	qu_dbg_fst_lap_cho;
+	bj_big_int_t	qu_dbg_num_laps_cho;
 
 	// methods
 
 	quanton(){
-		init_quanton(cg_neutral, INVALID_IDX, NULL);
+		init_quanton(NULL, cg_neutral, INVALID_IDX, NULL);
 	}
 
 	~quanton(){
@@ -435,7 +441,7 @@ class quanton {
 
 		qu_tunnels.clear(false, true);
 
-		init_quanton(cg_neutral, 0, NULL);
+		init_quanton(NULL, cg_neutral, 0, NULL);
 	}
 
 	DECLARE_NI_FLAG_FUNCS(qu_flags, note0, true);
@@ -446,8 +452,15 @@ class quanton {
 	DECLARE_NI_FLAG_FUNCS(qu_flags, note5, false);
 
 	void	qua_tunnel_signals(brain* brn);
+	
+	brain*	get_dbg_brn(){
+		brain* the_brn = NULL;
+		BRAIN_DBG(the_brn = qu_pt_brn);
+		return the_brn;
+	}
 
-	void	init_quanton(charge_t spn, long ii, quanton* inv){
+	void	init_quanton(brain* brn, charge_t spn, long ii, quanton* inv){
+		BRAIN_DBG(qu_pt_brn = brn);
 
 		qu_dbg_ic_trail_idx = INVALID_IDX;
 
@@ -1757,7 +1770,8 @@ void		due_periodic_prt(void* pm, double curr_secs);
 class brain {
 	public:
 
-	instance_info*		br_pt_inst;
+	skeleton_glb*	br_pt_skl;
+	instance_info*	br_pt_inst;
 	timer			br_prt_timer;
 
 	double 			br_start_load_tm;
@@ -1833,8 +1847,8 @@ class brain {
 	row<neuron*>	 	br_dbg_used_neus;
 	row<canon_clause*> 	br_dbg_ccls;
 	canon_cnf		br_dbg_cnf;
-	mpz_class		br_dbg_find_id;
-	mpz_class		br_dbg_save_id;
+	bj_big_int_t	br_dbg_find_id;
+	bj_big_int_t	br_dbg_save_id;
 
 	row<neuron*>	 	br_dbg_original_used;
 
@@ -1894,11 +1908,10 @@ class brain {
 
 	// methods
 
-	brain();
+	brain(skeleton_glb& the_skl, instance_info& inst);
 	~brain();
 
-	void	init_brain();
-
+	void	init_brain(skeleton_glb& the_skl, instance_info& inst);
 
 	void	all_mutual_init(){
 		br_guide_neus_srg.stab_mutual_init();
@@ -2488,8 +2501,8 @@ inline
 comparison	cmp_dbg_fst_lap_cho(quanton* const & qua1, quanton* const & qua2){
 	BRAIN_CK(qua1 != NULL_PT);
 	BRAIN_CK(qua2 != NULL_PT);
-	mpz_class lap1 = qua1->qu_dbg_fst_lap_cho;
-	mpz_class lap2 = qua2->qu_dbg_fst_lap_cho;
+	bj_big_int_t lap1 = qua1->qu_dbg_fst_lap_cho;
+	bj_big_int_t lap2 = qua2->qu_dbg_fst_lap_cho;
 
 	if(lap1 < lap1){ return -1; }
 	if(lap1 > lap1){ return 1; }

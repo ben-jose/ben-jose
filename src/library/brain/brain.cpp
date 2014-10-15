@@ -502,7 +502,7 @@ bj_ostream&
 quanton::print_quanton(bj_ostream& os, bool from_pt){
 	MARK_USED(from_pt);
 
-	brain* pt_brn = GLB().pt_brain;
+	brain* pt_brn = get_dbg_brn();
 
 	if((pt_brn != NULL_PT) && (this == &(pt_brn->br_conflict_quanton))){
 		os << "CONFL_QUA";
@@ -523,7 +523,7 @@ quanton::print_quanton(bj_ostream& os, bool from_pt){
 
 	bool dominated = false;
 	if(pt_brn != NULL_PT){
-		dominated = in_qu_dominated(*(GLB().pt_brain));
+		dominated = in_qu_dominated(*(pt_brn));
 	}
 
 	neuron* neu = qu_source;
@@ -663,8 +663,9 @@ neuron::update_fibres(row<quanton*>& synps, bool orig){
 		// ABORT CASE
 		if(ne_fibres[0]->is_neg()){
 			bj_ostream& os = bj_dbg;
-			if(GLB().pt_brain != NULL){
-				GLB().pt_brain->print_trail(os);
+			brain* pt_brn = ne_fibres[0]->get_dbg_brn();
+			if(pt_brn != NULL){
+				pt_brn->print_trail(os);
 			}
 			os << this << bj_eol;;
 			os << ne_fibres[0] << bj_eol;
@@ -918,18 +919,12 @@ neuron::print_neu_base(bj_ostream& os, bool detail, bool prt_src, bool sort_fib)
 //============================================================
 // brain methods
 
-brain::brain(){
-	DBG_CK(GLB().pt_brain == NULL_PT);
-	GLB().pt_brain = this;
-
-	init_brain();
+brain::brain(skeleton_glb& the_skl, instance_info& inst){
+	init_brain(the_skl, inst);
 }
 
 brain::~brain(){
 	DBG_PRT(6, os << "releasing brain 0");
-
-	DBG_CK(GLB().pt_brain == this);
-	GLB().pt_brain = NULL_PT;
 
 	release_brain();
 
@@ -938,12 +933,15 @@ brain::~brain(){
 
 skeleton_glb& 	
 brain::get_skeleton(){
-	return GLB().gg_skeleton;
+	BRAIN_CK(br_pt_skl != NULL);
+	return *br_pt_skl;
 }
 
 void
-brain::init_brain(){
-	br_pt_inst = NULL_PT;
+brain::init_brain(skeleton_glb& the_skl, instance_info& inst){
+	br_pt_skl = &the_skl;
+	
+	br_pt_inst = &inst;
 	br_prt_timer.init_timer(PRINT_PERIOD, SOLVING_TIMEOUT);
 
 	br_start_load_tm = 0.0;
@@ -990,6 +988,9 @@ brain::init_brain(){
 
 	br_num_memo = 0;
 
+	br_conflict_quanton.init_quanton(this, cg_neutral, INVALID_IDX, NULL);
+	br_top_block.init_quanton(this, cg_neutral, INVALID_IDX, NULL);
+	
 	BRAIN_CK(br_conflict_quanton.qu_tee.is_alone());
 	BRAIN_CK(br_top_block.qu_tee.is_alone());
 
@@ -1042,8 +1043,10 @@ brain::release_brain(){
 
 	get_skeleton().clear_all();
 
-	br_conflict_quanton.init_quanton(cg_neutral, 0, NULL);
-	br_top_block.init_quanton(cg_neutral, 0, NULL);
+	br_conflict_quanton.init_quanton(this, cg_neutral, INVALID_IDX, NULL);
+	br_top_block.init_quanton(this, cg_neutral, INVALID_IDX, NULL);
+	//br_conflict_quanton.init_quanton(this, cg_neutral, 0, NULL);
+	//br_top_block.init_quanton(this, cg_neutral, 0, NULL);
 
 	BRAIN_CK(br_tot_qu_dots == 0);
 	//BRAIN_CK(br_tot_qu_marks == 0);
@@ -1275,8 +1278,8 @@ brain::init_loading(long num_qua, long num_neu){
 		quanton* qua_pos = &(br_positons.last());
 		quanton* qua_neg = &(br_negatons.last());
 
-		qua_pos->init_quanton(cg_positive, ii, qua_neg);
-		qua_neg->init_quanton(cg_negative, ii, qua_pos);
+		qua_pos->init_quanton(this, cg_positive, ii, qua_neg);
+		qua_neg->init_quanton(this, cg_negative, ii, qua_pos);
 
 		long idx = ii;
 		if(br_choice_order == k_left_order){
@@ -1467,7 +1470,7 @@ brain::set_result(satisf_val re){
 
 	the_result = re;
 
-	DBG_PRT(27, os << "RESULT " << satisf_val_nams[the_result]);
+	DBG_PRT(27, os << "RESULT " << as_satisf_str(the_result));
 	DBG_PRT(28, os << "HIT ENTER TO CONTINUE...");
 	DBG_COMMAND(28, getchar());
 }
@@ -2935,7 +2938,7 @@ quanton::ck_uncharged_tunnel(){
 			neuron* tnn = qu_tunnels[uch_idx];
 			os << "neu=" << tnn << bj_eol;
 			os << "par=" << &(tnn->partner_fib(qua)) << bj_eol;
-			brain* pt_brn = GLB().pt_brain;
+			brain* pt_brn = get_dbg_brn();
 			if(pt_brn != NULL_PT){
 				os << " lv=" << pt_brn->level() << bj_eol;
 				os << " trail_sz=" << pt_brn->br_charge_trail.get_num_motives() << bj_eol;
@@ -2956,7 +2959,7 @@ quanton::ck_uncharged_tunnel(){
 		os << "qua=" << &qua << bj_eol;
 		os << "neu=" << qu_uncharged_tunnel << bj_eol;
 		os << "neu2=" << qua.qu_uncharged_tunnel << bj_eol;
-		brain* pt_brn = GLB().pt_brain;
+		brain* pt_brn = get_dbg_brn();
 		if(pt_brn != NULL_PT){
 			os << " lv=" << pt_brn->level() << bj_eol;
 			os << " trail_sz=" << pt_brn->br_charge_trail.get_num_motives() << bj_eol;
@@ -2981,7 +2984,7 @@ quanton::get_uncharged_tunnel(dbg_call_id dbg_call){
 		os << "dbg_call=" << dbg_call << bj_eol;
 		os << "qua=" << this << bj_eol;
 		os << "neu=" << qu_uncharged_tunnel << bj_eol;
-		brain* pt_brn = GLB().pt_brain;
+		brain* pt_brn = get_dbg_brn();
 		if(pt_brn != NULL_PT){
 			os << " lv=" << pt_brn->level() << bj_eol;
 			os << " trail_sz=" << pt_brn->br_charge_trail.get_num_motives() << bj_eol;
