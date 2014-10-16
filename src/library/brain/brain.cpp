@@ -531,8 +531,10 @@ quanton::print_quanton(bj_ostream& os, bool from_pt){
 	if(from_pt){
 		os << "("; 
 		os << qu_id; 
-		os << "." << qu_dbg_fst_lap_cho; 
-		os << "." << qu_dbg_num_laps_cho; 
+		DBG(
+			os << "." << qu_dbg_fst_lap_cho; 
+			os << "." << qu_dbg_num_laps_cho; 
+		)
 		os << ")"; 
 		os.flush();
 		return os;
@@ -717,7 +719,7 @@ void
 neuron::neu_tunnel_signals(brain& brn, quanton& r_qua){
 	BRAIN_CK(fib_sz() >= 2);
 	BRAIN_CK(! is_ne_virgin());
-	BRAIN_CK(ne_original || (brn.br_dbg_last_recoil_lv == brn.level()));
+	BRAIN_CK(ne_original || (brn.br_dbg.dbg_last_recoil_lv == brn.level()));
 
 
 	quanton* qua = &r_qua;
@@ -809,6 +811,8 @@ neuron::neu_tunnel_signals(brain& brn, quanton& r_qua){
 
 	bool dbg1 = false;
 	bool dbg2 = false;
+	MARK_USED(dbg1);
+	MARK_USED(dbg2);
 	if(q_neg && (cg1 == cg_negative)){
 		BRAIN_CK(ck_all_charges(&brn, 1));
 
@@ -948,7 +952,7 @@ brain::init_brain(skeleton_glb& the_skl, instance_info& inst){
 
 	// debug attributes
 
-	br_dbg_last_recoil_lv = INVALID_LEVEL;
+	BRAIN_DBG(br_dbg.dbg_last_recoil_lv = INVALID_LEVEL);
 
 	// temp attributes
 
@@ -981,9 +985,6 @@ brain::init_brain(skeleton_glb& the_skl, instance_info& inst){
 
 	br_retract_is_first_lv = false;
 
-	br_dbg_find_id = 0;
-	br_dbg_save_id = 0;
-
 	br_conflict_found = NULL_PT;
 
 	br_num_memo = 0;
@@ -1001,7 +1002,11 @@ brain::init_brain(skeleton_glb& the_skl, instance_info& inst){
 
 	init_tots_notes();
 
-	br_dbg_all_chosen.clear();
+	DBG(
+		br_dbg_find_id = 0;
+		br_dbg_save_id = 0;
+		br_dbg_all_chosen.clear();
+	)
 }
 
 void
@@ -1016,6 +1021,7 @@ brain::release_brain(){
 
 	// temporal attributes
 	br_tmp_fixing_quantons.clear(false, true);
+	br_tmp_load_quantons.clear(false, true);
 
 	br_tmp_motives.clear(false, true);
 	br_tmp_edge.clear(false, true);
@@ -1316,7 +1322,9 @@ brain::init_loading(long num_qua, long num_neu){
 
 	init_tots_notes();
 
-	br_dbg_all_chosen.clear();
+	DBG(
+		br_dbg_all_chosen.clear();
+	)
 }
 
 void
@@ -1432,25 +1440,60 @@ brain::config_brain(ch_string f_nam){
 }
 
 void
-brain::load_it(){
+brain::read_cnf(dimacs_loader& ldr){
+	instance_info& inst_info = get_my_inst();
+	ch_string& f_nam = inst_info.get_f_nam();
+	
+	if(inst_info.is_parsed()){
+		ldr.ld_file_name = f_nam;
+		return;
+	}
+	
+	if(inst_info.is_read()){
+		ldr.ld_file_name = f_nam;
+		
+		row<char>& dat = inst_info.ist_data;
+		dat.swap_with(ldr.ld_content);
+		return;
+	}
+	
+	ldr.load_file(f_nam);
+}
+
+void
+brain::parse_cnf(dimacs_loader& ldr, row<long>& all_ccls){
 	instance_info& inst_info = get_my_inst();
 
+	if(inst_info.is_parsed()){
+		inst_info.ist_ccls.swap_with(all_ccls);
+		return;
+	}
+	
+	ldr.parse_content(all_ccls);
+	
+	inst_info.ist_num_ccls = ldr.ld_num_ccls;
+	inst_info.ist_num_vars = ldr.ld_num_vars;
+	inst_info.ist_num_lits = ldr.ld_tot_lits;
+}
+
+bool
+brain::load_instance(){
 	br_start_load_tm = run_time();
-
-	ch_string f_nam = inst_info.get_f_nam();
-
-	// dimacs loading
-
+	
 	dimacs_loader	the_loader;
-	row<long> inst_ccls;
-	the_loader.parse_file(f_nam, inst_ccls);
+	row<long> all_ccls;
+	
+	read_cnf(the_loader);
+	parse_cnf(the_loader, all_ccls);
 
 	// brain loading
 
-	long num_neu = the_loader.ld_num_ccls;
-	long num_var = the_loader.ld_num_vars;
-
-	load_instance(num_neu, num_var, inst_ccls);
+	instance_info& inst_info = get_my_inst();
+	long num_neu = inst_info.ist_num_ccls;
+	long num_var = inst_info.ist_num_vars;
+	
+	bool all_ok = load_brain(num_neu, num_var, all_ccls);
+	return all_ok;
 }
 
 instance_info&
@@ -1484,45 +1527,27 @@ brain::get_result(){
 }
 
 void
-brain::get_quantons_from_lits(row_long_t& all_lits, long first, long last, row<quanton*>& neu_quas){
-	neu_quas.clear();
+brain::load_neuron(row<quanton*>& neu_quas){
+	DBG_PRT(29, os << "ADDING NEU=" << neu_quas);
 
-	for(long ii = first; ii < last; ii++){
-		BRAIN_CK(all_lits.is_valid_idx(ii));
-		long nio_id = all_lits[ii];
-
-		quanton* qua = get_quanton(nio_id);
-		BRAIN_CK_0(qua != NULL_PT);
-		neu_quas.push(qua);
-	}
-}
-
-void
-brain::add_neuron_from_lits(row_long_t& all_lits, long first, long last){
-	row<quanton*>& quas = br_tmp_fixing_quantons;
-
-	quas.clear();
-	get_quantons_from_lits(all_lits, first, last, quas);
-
-	DBG_PRT(29, os << "ADDING NEU=" << quas);
-
-	BRAIN_CK_0(quas.size() > 0);
-	if(quas.size() > 1){
+	BRAIN_CK_0(neu_quas.size() > 0);
+	if(neu_quas.size() > 1){
 		bool is_orig = true;
 		quanton* forced_qua = NULL;
-		add_neuron(quas, forced_qua, is_orig);
+		add_neuron(neu_quas, forced_qua, is_orig);
 		BRAIN_CK_0(forced_qua == NULL);
 	} else {
-		BRAIN_CK_0(quas.size() == 1);
+		BRAIN_CK_0(neu_quas.size() == 1);
 		BRAIN_CK_0(level() == ROOT_LEVEL);
 
 		neuron& neu = locate_neuron();
 		neu.ne_original = false;
-		neu.ne_fibres.push(quas.first());
+		neu.ne_fibres.push(neu_quas.first());
 		br_unit_neurons.push(&neu);
 
-		send_psignal(*(quas.first()), NULL, 0);
+		send_psignal(*(neu_quas.first()), NULL, 0);
 	}
+	neu_quas.clear();
 }
 
 void
@@ -1543,10 +1568,31 @@ brain::init_uncharged(){
 	}
 }
 
-void
-brain::load_instance(long num_neu, long num_var, row_long_t& load_ccls){
+quanton*
+brain::get_quanton(long q_id){
+	quanton* qua = NULL;
+	BRAIN_CK(q_id != 0);
+	if(q_id < 0){ 
+		long idx_ne = -q_id - 1;
+		if(! br_negatons.is_valid_idx(idx_ne)){
+			return NULL;
+		}
+		qua = &(br_negatons[idx_ne]);
+	} else {
+		BRAIN_CK(q_id > 0);
+		long idx_po = q_id - 1;
+		if(! br_positons.is_valid_idx(idx_po)){
+			return NULL;
+		}
+		qua =  &(br_positons[idx_po]);
+	}
+	BRAIN_CK(qua->qu_id == q_id);
+	return qua;
+}
+
+bool
+brain::load_brain(long num_neu, long num_var, row_long_t& load_ccls){
 	instance_info& inst_info = get_my_inst();
-	inst_info.ist_num_vars = num_var;
 
 	init_loading(num_var, num_neu);
 
@@ -1560,13 +1606,22 @@ brain::load_instance(long num_neu, long num_var, row_long_t& load_ccls){
 
 	long max_neu_sz = 0;
 
-	long ii = 0;
-	long first = 0;
-	for(ii = 0; ii < load_ccls.size(); ii++){
+	//long ii = 0;
+	//long first = 0;
+	
+	row<quanton*>& neu_quas = br_tmp_load_quantons;
+	neu_quas.clear();
+	
+	for(long ii = 0; ii < load_ccls.size(); ii++){
 		long nio_id = load_ccls[ii];
-		if(nio_id == 0){
+		
+		if(nio_id != 0){
+			quanton* qua = get_quanton(nio_id);
+			if(qua == NULL){ return false; }
+			neu_quas.push(qua);
+		} else {
 			num_neu_added++;
-			long num_dens = ii - first;
+			long num_dens = neu_quas.size();
 
 			BRAIN_CK(num_dens > 0);
 			num_den_added += num_dens;
@@ -1575,21 +1630,20 @@ brain::load_instance(long num_neu, long num_var, row_long_t& load_ccls){
 				max_neu_sz = num_dens;
 			}
 
-			add_neuron_from_lits(load_ccls, first, ii);
+			load_neuron(neu_quas);
 			if(inst_info.ist_result != k_unknown_satisf){ 
 				break; 
 			}
 
-			first = ii + 1;
+			//first = ii + 1;
+			
+			neu_quas.clear();
 		}
 	}
 
 	//BRAIN_CK(net.nt_neurons.size() == num_neu_added);
 
 	init_uncharged();
-
-	inst_info.ist_num_ccls = num_neu_added;
-	inst_info.ist_num_lits = num_den_added;
 
 	double end_load_tm = run_time();
 	double ld_tm = (end_load_tm - br_start_load_tm);
@@ -1604,6 +1658,7 @@ brain::load_instance(long num_neu, long num_var, row_long_t& load_ccls){
 		" " << GLB().batch_consec << " of " << GLB().batch_num_files <<
 		bj_eol;
 	);
+	return true;
 }
 
 void	due_periodic_prt(void* pm, double curr_secs){
@@ -1668,8 +1723,13 @@ brain::check_sat_assig(){
 }
 
 void 
-brain::solve_it(){
+brain::solve_instance(){
 	instance_info& inst_info = get_my_inst();
+	bool all_ok = load_instance();
+	if(! all_ok){
+		// TODO: set an error here.
+		return;
+	}
 
 	get_skeleton().kg_instance_file_nam = inst_info.get_f_nam() + "\n";
 	
@@ -1928,7 +1988,7 @@ ck_motives(brain& brn, row<quanton*>& mots){
 		MARK_USED(mot);
 		BRAIN_CK(mot != NULL_PT);
 		BRAIN_CK(mot->qlevel() <= brn.level());
-		BRAIN_CK(mot->qlevel() < brn.br_dbg_before_retract_lv);
+		BRAIN_CK(mot->qlevel() < brn.br_dbg.dbg_before_retract_lv);
 
 		DBG_PRT_COND(DBG_ALL_LVS, ! (mot->get_charge() == cg_negative) ,
 			os << "ABORTING_DATA " << bj_eol;
@@ -2240,6 +2300,7 @@ brain::dbg_ck_deducs(deduction& dct1, deduction& dct2){
 
 void
 neuron::map_set_dbg_ccl(mem_op_t mm, brain& brn){
+#ifdef FULL_DEBUG
 	ne_dbg_ccl.cc_clear(false);
 
 	for(long aa = 0; aa < fib_sz(); aa++){
@@ -2252,10 +2313,14 @@ neuron::map_set_dbg_ccl(mem_op_t mm, brain& brn){
 	}
 
 	ne_dbg_ccl.cc_mix_sort(cmp_canon_ids);
+#endif
 }
 
 void
-neuron::add_dbg_ccl(brain& brn, row<canon_clause*>& the_ccls, row<neuron*>& the_neus, dima_dims& dims){
+neuron::add_dbg_ccl(brain& brn, row<canon_clause*>& the_ccls, 
+					row<neuron*>& the_neus, dima_dims& dims)
+{
+#ifdef FULL_DEBUG
 	canon_clause& ccl = ne_dbg_ccl;
 	if(! ne_spot){
 		set_spot(brn);
@@ -2265,12 +2330,14 @@ neuron::add_dbg_ccl(brain& brn, row<canon_clause*>& the_ccls, row<neuron*>& the_
 		if(ccl.cc_size() == 2){ dims.dd_tot_twolits++; }
 		dims.dd_tot_lits += ccl.cc_size();
 	}
+#endif
 }
 
 void
-memap::map_set_dbg_cnf(mem_op_t mm, brain& brn, row<canon_clause*>& the_ccls, row<neuron*>& the_neus,
-		dima_dims& dims)
+memap::map_set_dbg_cnf(mem_op_t mm, brain& brn, row<canon_clause*>& the_ccls, 
+					   row<neuron*>& the_neus, dima_dims& dims)
 {
+#ifdef FULL_DEBUG
 	the_ccls.clear();
 	the_neus.clear();
 
@@ -2325,6 +2392,7 @@ memap::map_set_dbg_cnf(mem_op_t mm, brain& brn, row<canon_clause*>& the_ccls, ro
 	BRAIN_CK(brn.br_tot_qu_marks == 0);
 
 	the_ccls.mix_sort(cmp_clauses);
+#endif
 }
 
 void
@@ -2800,11 +2868,13 @@ brain::pulsate(){
 
 		if(! cho->is_note5()){ 
 			cho->set_note5(brn); 
-			cho->qu_dbg_fst_lap_cho = brn.br_current_ticket.tk_recoil;
-			br_dbg_all_chosen.push(cho);
+			DBG(
+				cho->qu_dbg_fst_lap_cho = brn.br_current_ticket.tk_recoil;
+				br_dbg_all_chosen.push(cho);
+			)
 		}
 		if(cho->opposite().is_note5()){ 
-			cho->qu_dbg_num_laps_cho++;
+			DBG(cho->qu_dbg_num_laps_cho++);
 		}
 
 		DBG_PRT(25, os << "**CHOICE** " << cho << " in tier=" << tier());
@@ -3137,6 +3207,7 @@ brain::retract_choice(){
 
 bool
 memap::map_ck_simple_no_satisf(mem_op_t mm, brain& brn){
+#ifdef FULL_DEBUG
 	//long tot_vars = brn.br_positons.size();
 	//long tot_lits = 0;
 	//long tot_twolits = 0;
@@ -3174,12 +3245,13 @@ memap::map_ck_simple_no_satisf(mem_op_t mm, brain& brn){
 	//);
 
 	dbg_cnf.clear_cnf();
-
+#endif
 	return true;
 }
 
 void
 dbg_prepare_used_dbg_ccl(row_quanton_t& rr_qua, canon_clause& dbg_ccl){
+#ifdef FULL_DEBUG
 	dbg_ccl.cc_clear(false);
 
 
@@ -3191,10 +3263,12 @@ dbg_prepare_used_dbg_ccl(row_quanton_t& rr_qua, canon_clause& dbg_ccl){
 			dbg_ccl.cc_push(qua.qu_id);
 		}
 	}
+#endif
 }
 
 void
 memap::dbg_prepare_used_dbg_cnf(mem_op_t mm, brain& brn, row<canon_clause*>& the_ccls){
+#ifdef FULL_DEBUG
 	long trace_sz = get_trace_sz(mm);
 	long filled_sz = get_filled_sz(mm);
 	MARK_USED(filled_sz);
@@ -3225,11 +3299,12 @@ memap::dbg_prepare_used_dbg_cnf(mem_op_t mm, brain& brn, row<canon_clause*>& the
 
 	BRAIN_CK(brn.br_tot_ne_spots == 0);
 	BRAIN_CK(brn.br_tot_qu_marks == 0);
+#endif
 }
 
 bool
 memap::dbg_ck_used_simple_no_satisf(mem_op_t mm, brain& brn){
-
+#ifdef FULL_DEBUG
 	row<canon_clause*>& dbg_ccls = brn.br_dbg_ccls;
 	skeleton_glb& skg = brn.get_skeleton();
 	canon_cnf& dbg_cnf = brn.br_dbg_cnf;
@@ -3258,17 +3333,20 @@ memap::dbg_ck_used_simple_no_satisf(mem_op_t mm, brain& brn){
 
 	dbg_cnf.clear_cnf();
 
+#endif
 	return true;
 }
 
 void
 brain::dbg_add_to_used(neuron& neu){
+#ifdef FULL_DEBUG
 	if(! neu.ne_dbg_in_used){
 		neu.ne_dbg_in_used = true;
 		if(neu.ne_original){
 			br_dbg_original_used.push(&neu);
 		} 
 	}
+#endif
 }
 
 //============================================================

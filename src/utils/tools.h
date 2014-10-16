@@ -111,16 +111,12 @@ enum	cmp_is_sub {
 #define SZ_ATTRIB		row_data<obj_t>::sz
 #define CAP_ATTRIB		row_data<obj_t>::cap
 
-template <bool> struct ILLEGAL_USE_OF_OBJECT;
-template <> struct ILLEGAL_USE_OF_OBJECT<true>{};
-#define OBJECT_COPY_ERROR ILLEGAL_USE_OF_OBJECT<false>()
-
 #define lo_hex_as_int(the_byte)	(((the_byte) >> 4) & 0xF)
 #define hi_hex_as_int(the_byte)	((the_byte) & 0x0F)
 
 
 //======================================================================
-// bit_row_exception
+// row_exception
 
 class row_exception : public top_exception {
 public:
@@ -866,6 +862,17 @@ protected:
 
 public:
 	typedef comparison (*cmp_func_t)(obj_t const & obj1, obj_t const & obj2);
+
+	// Don't allow copying (error prone):
+	// force use of referenced rows
+
+	row<obj_t>&  operator = (row<obj_t>& other) { 
+		OBJECT_COPY_ERROR; 
+	}
+
+	row(row<obj_t>& other){ 
+		OBJECT_COPY_ERROR; 
+	}
 
 	const t_1byte*	get_data(){
 		return ((t_1byte*)data);

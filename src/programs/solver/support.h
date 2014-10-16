@@ -63,6 +63,9 @@ Declaration of classes that support and assist the system.
 #include "dbg_prt.h"
 #include "skeleton.h"
 
+#define SUPPORT_CK(prm) DBG_CK(prm)
+
+
 //=================================================================
 // pre-configuration decl
 

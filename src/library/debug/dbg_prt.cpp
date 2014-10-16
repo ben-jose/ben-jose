@@ -69,6 +69,7 @@ dbg_init_lv_arr(row<bool>& nw_lv_arr){
 
 void 
 dbg_prt_all_cho(brain& brn){
+#ifdef FULL_DEBUG
 	bool is_batch = false;
 	ch_string f_nam = GLB().get_file_name(is_batch);
 	ch_string cho_nam = f_nam + "_chosen.log";
@@ -87,15 +88,17 @@ dbg_prt_all_cho(brain& brn){
 	log_stm << brn.br_dbg_all_chosen;
 	log_stm << bj_eol; 
 	log_stm.close();
+#endif
 }
 
 bool	dbg_print_cond_func(bool prm, bool is_ck, const ch_string fnam, int lnum,
 		const ch_string prm_str, long dbg_lv)
 {
+	bool resp = true;
+#ifdef FULL_DEBUG
 	DBG_CK(! dbg_bad_cycle1);
 	dbg_bad_cycle1 = true;
 
-	bool resp = true;
 	if(prm){
 		bj_ostream& os = bj_dbg;
 		if(dbg_lv != INVALID_DBG_LV){
@@ -127,6 +130,7 @@ bool	dbg_print_cond_func(bool prm, bool is_ck, const ch_string fnam, int lnum,
 	}
 
 	dbg_bad_cycle1 = false;
+#endif
 	return resp;
 }
 

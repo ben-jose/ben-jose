@@ -48,6 +48,10 @@ Declaration of mem trace funcs and other.
 //define MEM_PT_DIR(prm)	prm
 #define MEM_PT_DIR(prm)	;
 
+template <bool> struct ILLEGAL_USE_OF_OBJECT;
+template <> struct ILLEGAL_USE_OF_OBJECT<true>{};
+#define OBJECT_COPY_ERROR ILLEGAL_USE_OF_OBJECT<false>()
+
 extern 	bool	dbg_keeping_ptdir;
 
 void	dbg_add_to_ptdir(void* pt_val);
@@ -83,6 +87,8 @@ void* bj_memset(void *s, int c, size_t n){
 
 // end_of_def
 #endif
+
+#define DBG_MARK_USED(X)  DBG(MARK_USED(X))
 
 #define	DBG_COND_COMM(cond, comm)	\
 	DBG( \
@@ -149,7 +155,7 @@ typedef t_4byte			t_dword;
 #define MAX_MEM_SZ		MAX_UTYPE(mem_size)
 
 //======================================================================
-// bit_row_exception
+// mem_exception
 
 class mem_exception : public top_exception {
 public:
@@ -187,7 +193,7 @@ public:
 	}
 };
 
-#define MEM_CK(prm) if(glb_pt_mem_stat != NULL){DBG_CK(prm);}
+#define MEM_CK(prm) DBG(if(glb_pt_mem_stat != NULL){DBG_CK(prm);})
 
 inline
 void

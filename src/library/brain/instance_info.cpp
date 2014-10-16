@@ -31,6 +31,7 @@ all info to keep or return of an instance cnf to solve.
 --------------------------------------------------------------*/
 
 #include "instance_info.h"
+#include "dbg_prt.h"
 
 ch_string 
 instance_info::parse_field(const char*& pt_in){

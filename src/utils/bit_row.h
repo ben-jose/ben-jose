@@ -38,7 +38,7 @@ binary rows of bits.
 #include "bj_mem.h"
 #include "bj_stream.h"
 
-typedef long		bit_row_index;
+typedef long		bit_rw_idx;
 
 #ifndef INVALID_IDX
 #define INVALID_IDX		-1
@@ -75,11 +75,11 @@ typedef long		bit_row_index;
 #define to_bits(num_bytes)	(num_bytes * k_num_bits_byte)
 
 //======================================================================
-// bit_row_exception
+// bit_rw_exception
 
-class bit_row_exception : public top_exception {
+class bit_rw_exception : public top_exception {
 public:
-	bit_row_exception(char* descr = as_pt_char("undefined bit_row exception")){
+	bit_rw_exception(char* descr = as_pt_char("undefined bit_row exception")){
 		ex_nm = descr;
 		ex_id = 0;
 	}
@@ -92,7 +92,7 @@ class bit_row;
 
 class bit_ref {
 public:
-	bit_row_index	idx;
+	bit_rw_idx	idx;
 	bit_row*	brow;
 	
 	bit_ref(){
@@ -104,11 +104,11 @@ public:
 	operator bool();
 };
 
-bit_row_index
-rot_lft_idx(bit_row_index pos, bit_row_index row_sz, long num_rot);
+bit_rw_idx
+rot_lft_idx(bit_rw_idx pos, bit_rw_idx row_sz, long num_rot);
 
-bit_row_index 
-rot_rgt_idx(bit_row_index pos, bit_row_index row_sz, long num_rot);
+bit_rw_idx 
+rot_rgt_idx(bit_rw_idx pos, bit_rw_idx row_sz, long num_rot);
 
 bj_ostream&	operator << (bj_ostream& os, bit_row& rr);
 bit_row&	operator << (bit_row& rr, const bool elem);
@@ -117,29 +117,27 @@ bit_row&	operator << (bit_row& rr1, bit_row& rr2);
 
 class bit_row {
 private:
-	// Don't allow copying (error prone):
-	// force use of referenced rows
-
 	bit_row&  operator = (bit_row& other){
 		MARK_USED(other);
-		char* bit_row_bad_eq_op = as_pt_char("operator = not allowed in bit_row");
-		DBG_THROW_CK(bit_row_bad_eq_op != bit_row_bad_eq_op);
-		throw bit_row_exception(bit_row_bad_eq_op);
-		abort_func(0, bit_row_bad_eq_op);
+		char* bit_rw_bad_eq_op = as_pt_char("operator = not allowed in bit_row");
+		DBG_THROW_CK(bit_rw_bad_eq_op != bit_rw_bad_eq_op);
+		throw bit_rw_exception(bit_rw_bad_eq_op);
+		abort_func(0, bit_rw_bad_eq_op);
 		return (*this);
 	}
 
 	bit_row(bit_row& other){ 
 		MARK_USED(other);
-		char* bit_row_bad_creat = as_pt_char("creator bit_row with bit_row not allowed");
-		DBG_THROW_CK(bit_row_bad_creat != bit_row_bad_creat);
-		throw bit_row_exception(bit_row_bad_creat);
-		abort_func(0, bit_row_bad_creat);
+		char* bit_rw_bad_creat = as_pt_char("creator bit_row with bit_row not allowed");
+		DBG_THROW_CK(bit_rw_bad_creat != bit_rw_bad_creat);
+		throw bit_rw_exception(bit_rw_bad_creat);
+		abort_func(0, bit_rw_bad_creat);
 	}
+	
 
 public:
-	bit_row_index	cap;	// num bytes of cap
-	bit_row_index	sz;		// num bits in arr
+	bit_rw_idx	cap;	// num bytes of cap
+	bit_rw_idx	sz;		// num bits in arr
 	t_1byte*	data;
 
 	bit_row(){
@@ -156,7 +154,7 @@ public:
 		if(size() > 0){
 			clear(true, true);
 		}
-		bit_row_index nw_sz = to_bits(dat_num_bytes);
+		bit_rw_idx nw_sz = to_bits(dat_num_bytes);
 		set_cap(nw_sz);
 		bj_memcpy(data, dat_bytes, cap);
 		sz = nw_sz;
@@ -170,27 +168,27 @@ public:
 		return (long)(to_bytes(sz));
 	}
 
-	bit_row_index	get_cap(){
+	bit_rw_idx	get_cap(){
 		return to_bits(cap);
 	}
 
-	bit_row_index	get_bytes_cap(){
+	bit_rw_idx	get_bytes_cap(){
 		return cap;
 	}
 
-	bool	is_valid_idx(bit_row_index idx){
+	bool	is_valid_idx(bit_rw_idx idx){
 		return ((idx >= 0) && (idx < size()));
 	}
 
-	bit_row_index	last_idx(){
+	bit_rw_idx	last_idx(){
 		return (size() - 1);
 	}
 
 	virtual
-	void	grow(bit_row_index bits_cap){
-		bit_row_index min_cap = to_bytes(bits_cap);
+	void	grow(bit_rw_idx bits_cap){
+		bit_rw_idx min_cap = to_bytes(bits_cap);
 		if(min_cap <= cap){ return; }
-		bit_row_index nxt_cap = cap;
+		bit_rw_idx nxt_cap = cap;
 
 		if(nxt_cap == 0){ 
 			nxt_cap = to_bytes(START_CAP); 
@@ -205,10 +203,10 @@ public:
 	}
 
 	virtual
-	void	set_cap(bit_row_index bits_cap){ 
-		bit_row_index min_cap = to_bytes(bits_cap);
+	void	set_cap(bit_rw_idx bits_cap){ 
+		bit_rw_idx min_cap = to_bytes(bits_cap);
 		if(min_cap <= cap){ return; }
-		bit_row_index old_cap = cap;
+		bit_rw_idx old_cap = cap;
 		BITS_CK(old_cap >= 0);
 		cap = min_cap;
 		t_1byte* n_dat = tpl_realloc(data, old_cap, cap);
@@ -216,13 +214,13 @@ public:
 	}
 
 	virtual
-	void	set_size(bit_row_index bits_sz){ 
+	void	set_size(bit_rw_idx bits_sz){ 
 		set_cap(bits_sz);
 		sz = bits_sz;
 	}
 
 	virtual
-	void	clear(bool reset_them = false, bool dealloc = false, bit_row_index from = 0){ 
+	void	clear(bool reset_them = false, bool dealloc = false, bit_rw_idx from = 0){ 
 		if(data != NULL_PT){
 			if(from != 0){
 				dealloc = false;
@@ -231,7 +229,7 @@ public:
 				reset_them = false;
 			}
 			if(reset_them){ 
-				for(bit_row_index ii = from; ii < sz; ii++){ 
+				for(bit_rw_idx ii = from; ii < sz; ii++){ 
 					reset_bit(data, ii);
 				}
 			}
@@ -244,11 +242,11 @@ public:
 		} 
 	}
 
-	bit_row_index	size() const { 
+	bit_rw_idx	size() const { 
 		return sz; 
 	}
 
-	bit_row_index	num_bytes() const { 
+	bit_rw_idx	num_bytes() const { 
 		return to_bytes(sz); 
 	}
 
@@ -260,19 +258,19 @@ public:
 		return (sz == 0);
 	}
 
-	bool	pos(bit_row_index idx){ 
+	bool	pos(bit_rw_idx idx){ 
 		return get_bit(data, idx);
 	}
 
-	void	set(bit_row_index idx){ 
+	void	set(bit_rw_idx idx){ 
 		set_bit(data, idx);
 	}
 
-	void	reset(bit_row_index idx){ 
+	void	reset(bit_rw_idx idx){ 
 		reset_bit(data, idx);
 	}
 
-	void	set_val(bit_row_index idx, bool val = false){ 
+	void	set_val(bit_rw_idx idx, bool val = false){ 
 		if(val){
 			set_bit(data, idx);
 		} else {
@@ -317,14 +315,14 @@ public:
 		return pos(sz - 1); 
 	}
 
-	void	swap(bit_row_index idx1, bit_row_index idx2){ 
+	void	swap(bit_rw_idx idx1, bit_rw_idx idx2){ 
 		bool tmp1 = pos(idx1);
 		set_val(idx1, pos(idx2));
 		set_val(idx2, tmp1);
 	}
 
 	virtual
-	bool	swap_pop(bit_row_index idx){
+	bool	swap_pop(bit_rw_idx idx){
 		bool tmp1 = pos(idx);
 		sz--;
 		set_val(idx, pos(sz));
@@ -333,13 +331,13 @@ public:
 	}
 
 	virtual
-	void	swapop(bit_row_index idx){ 
+	void	swapop(bit_rw_idx idx){ 
 		sz--;
 		set_val(idx, pos(sz));
 		reset_bit(data, sz);
 	}
 
-	void	fill(const bool elem, bit_row_index num_fill = INVALID_IDX,
+	void	fill(const bool elem, bit_rw_idx num_fill = INVALID_IDX,
 			bool only_new = false)
 	{
 		if(num_fill == INVALID_IDX){
@@ -349,7 +347,7 @@ public:
 			num_fill = get_cap();
 		}
 		set_cap(num_fill);
-		bit_row_index ii = 0;
+		bit_rw_idx ii = 0;
 		if(! only_new){
 			for(ii = 0; ((ii < sz) && (ii < num_fill)); ii++){
 				set_val(ii, elem);
@@ -360,7 +358,7 @@ public:
 		}
 	}
 
-	void	fill_new(bit_row_index num_fill = INVALID_IDX){ 
+	void	fill_new(bit_rw_idx num_fill = INVALID_IDX){ 
 		clear(true);
 		if(num_fill == INVALID_IDX){
 			num_fill = sz;
@@ -369,12 +367,12 @@ public:
 			num_fill = get_cap();
 		}
 		set_cap(num_fill);
-		for(bit_row_index ii = 0; ii < num_fill; ii++){
+		for(bit_rw_idx ii = 0; ii < num_fill; ii++){
 			inc_sz();
 		}
 	}
 
-	bit_ref    operator [] (bit_row_index idx)        { 
+	bit_ref    operator [] (bit_rw_idx idx)        { 
 		BITS_CK(idx >= 0);
 		BITS_CK(idx < sz);
 		bit_ref the_ref;
@@ -383,7 +381,7 @@ public:
 		return the_ref; 
 	}
 
-    void copy_to(bit_row& r_cpy, bit_row_index first_ii = 0, bit_row_index last_ii = -1){ 
+    void copy_to(bit_row& r_cpy, bit_rw_idx first_ii = 0, bit_rw_idx last_ii = -1){ 
 		r_cpy.clear(true, false); 
 		if((last_ii < 0) || (last_ii > sz)){
 			last_ii = sz;
@@ -392,7 +390,7 @@ public:
 			first_ii = 0;
 		}
 		r_cpy.set_cap(last_ii - first_ii); 
-		for (bit_row_index ii = first_ii; ii < last_ii; ii++){
+		for (bit_rw_idx ii = first_ii; ii < last_ii; ii++){
 			bool ob = pos(ii);
 			r_cpy.push(ob);
 		}
@@ -400,7 +398,7 @@ public:
 
 	void append_to(bit_row& orig){
 		orig.set_cap(orig.sz + sz); 
-		for (bit_row_index ii = 0; ii < sz; ii++){
+		for (bit_rw_idx ii = 0; ii < sz; ii++){
 			orig.push(pos(ii));
 		}
 	}
@@ -411,8 +409,8 @@ public:
 		dest.set_size(size());
 		BITS_CK(size() == dest.size());
 		long d_sz = dest.size();
-		for(bit_row_index aa = 0; aa < size(); aa++){
-			bit_row_index d_idx = rot_lft_idx(aa, d_sz, num_bits);
+		for(bit_rw_idx aa = 0; aa < size(); aa++){
+			bit_rw_idx d_idx = rot_lft_idx(aa, d_sz, num_bits);
 			dest[d_idx] = pos(aa);
 		}
 	}
@@ -421,8 +419,8 @@ public:
 		dest.set_size(size());
 		BITS_CK(size() == dest.size());
 		long d_sz = dest.size();
-		for(bit_row_index aa = 0; aa < size(); aa++){
-			bit_row_index d_idx = rot_rgt_idx(aa, d_sz, num_bits);
+		for(bit_rw_idx aa = 0; aa < size(); aa++){
+			bit_rw_idx d_idx = rot_rgt_idx(aa, d_sz, num_bits);
 			dest[d_idx] = pos(aa);
 		}
 	}
@@ -434,21 +432,21 @@ public:
 		bool with_lims = true,
 
 		char* sep = as_pt_char(" "), 
-		bit_row_index low = INVALID_IDX, 
-		bit_row_index hi = INVALID_IDX,
-		bit_row_index grp_sz = -1,
+		bit_rw_idx low = INVALID_IDX, 
+		bit_rw_idx hi = INVALID_IDX,
+		bit_rw_idx grp_sz = -1,
 		char* grp_sep = as_pt_char("\n")
 		);
 
-	bool	equal_to(bit_row& rw2, bit_row_index first_ii = 0, bit_row_index last_ii = -1){
+	bool	equal_to(bit_row& rw2, bit_rw_idx first_ii = 0, bit_rw_idx last_ii = -1){
 		if((last_ii < 0) || (last_ii > sz)){
 			last_ii = sz;
 		}
 		if((first_ii < 0) || (first_ii > last_ii)){
 			first_ii = 0;
 		}
-		//for(bit_row_index ii = 0; ii < sz; ii++){
-		for (bit_row_index ii = first_ii; ii < last_ii; ii++){
+		//for(bit_rw_idx ii = 0; ii < sz; ii++){
+		for (bit_rw_idx ii = first_ii; ii < last_ii; ii++){
 			if(pos(ii) != rw2.pos(ii)){
 				return false;
 			}
@@ -457,8 +455,8 @@ public:
 	}
 
 	void swap_with(bit_row& dest){ 
-		bit_row_index tmp_cap = cap;
-		bit_row_index tmp_sz = sz;
+		bit_rw_idx tmp_cap = cap;
+		bit_rw_idx tmp_sz = sz;
 		t_1byte* tmp_data = data;
 		
 		cap = dest.cap; 
@@ -484,15 +482,15 @@ bit_row::print_bit_row(
 	bool with_lims,
 
 	char* sep, 
-	bit_row_index low, 
-	bit_row_index hi,
-	bit_row_index grp_sz,
+	bit_rw_idx low, 
+	bit_rw_idx hi,
+	bit_rw_idx grp_sz,
 	char* grp_sep
 	)
 {
-	bit_row_index num_elem = 1;
+	bit_rw_idx num_elem = 1;
 	if(with_lims){ os << "["; }
-	for(bit_row_index ii = 0; ii < sz; ii++){
+	for(bit_rw_idx ii = 0; ii < sz; ii++){
 		if(ii == low){ os << ">"; }
 		os << pos(ii);
 		if(ii == hi){ os << "<"; }
@@ -521,11 +519,11 @@ bit_ref::operator bool(){
 }
 
 inline
-bit_row_index
-rot_lft_idx(bit_row_index pos, bit_row_index row_sz, long num_rot){
+bit_rw_idx
+rot_lft_idx(bit_rw_idx pos, bit_rw_idx row_sz, long num_rot){
 	//long r_rot = row_sz - (num_rot % row_sz);
 	long r_rot = (num_rot % row_sz);
-	bit_row_index n_idx = (pos - r_rot);
+	bit_rw_idx n_idx = (pos - r_rot);
 	if(n_idx < 0){
 		n_idx = row_sz + n_idx;
 	}
@@ -535,11 +533,11 @@ rot_lft_idx(bit_row_index pos, bit_row_index row_sz, long num_rot){
 }
 
 inline
-bit_row_index 
-rot_rgt_idx(bit_row_index pos, bit_row_index row_sz, long num_rot){
+bit_rw_idx 
+rot_rgt_idx(bit_rw_idx pos, bit_rw_idx row_sz, long num_rot){
 	//long r_rot = row_sz - (num_rot % row_sz);
 	long r_rot = (num_rot % row_sz);
-	bit_row_index n_idx = (pos + r_rot);
+	bit_rw_idx n_idx = (pos + r_rot);
 	if(n_idx >= row_sz){
 		n_idx = n_idx % row_sz;
 	}
@@ -581,11 +579,11 @@ bit_row&	operator << (bit_row& rr1, bit_row& rr2){
 class s_bit_row : public bit_row {
 private:
 	virtual
-	void	grow(bit_row_index bits_cap){ MARK_USED(bits_cap); }
+	void	grow(bit_rw_idx bits_cap){ MARK_USED(bits_cap); }
 	virtual
-	void	set_cap(bit_row_index bits_cap){ MARK_USED(bits_cap); }
+	void	set_cap(bit_rw_idx bits_cap){ MARK_USED(bits_cap); }
 	virtual
-	void	set_size(bit_row_index bits_sz){ MARK_USED(bits_sz); }
+	void	set_size(bit_rw_idx bits_sz){ MARK_USED(bits_sz); }
 	virtual
 	void	push(const bool elem){ MARK_USED(elem); }
 	virtual
@@ -595,13 +593,13 @@ private:
 	virtual
 	bool	pop(){ return false; }
 	virtual
-	bool	swap_pop(bit_row_index idx){ MARK_USED(idx); return false; }
+	bool	swap_pop(bit_rw_idx idx){ MARK_USED(idx); return false; }
 	virtual
-	void	swapop(bit_row_index idx){ MARK_USED(idx); }
+	void	swapop(bit_rw_idx idx){ MARK_USED(idx); }
 
 public:
 	virtual
-	void	clear(bool reset_them = false, bool dealloc = false, bit_row_index from = 0){
+	void	clear(bool reset_them = false, bool dealloc = false, bit_rw_idx from = 0){
 		MARK_USED(reset_them);
 		MARK_USED(dealloc);
 		MARK_USED(from);

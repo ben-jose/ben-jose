@@ -246,7 +246,6 @@ enum fix_kind {
 
 class dimacs_loader {
 public:
-	typedef std::istream::char_type ld_char_t;
 	typedef std::istream::pos_type ld_pos_t;
 
 	ch_string		ld_file_name;
@@ -256,7 +255,7 @@ public:
 	long			ld_max_in_ccl_sz;
 
 	long			ld_num_line;
-	row<ld_char_t>		ld_content;
+	row<char>		ld_content;
 	const char*		ld_cursor;
 
 	long			ld_decl_ccls;
@@ -270,7 +269,7 @@ public:
 
 	nid_bits		ld_dots;
 
-	row<integer>		ld_fixes;
+	row<integer>	ld_fixes;
 
 	row_long_t 		ld_lits1;
 	row_long_t 		ld_lits2;
@@ -298,10 +297,18 @@ public:
 		init_dimacs_loader();
 	}
 
+	/*
+	dimacs_loader&  operator = (dimacs_loader& other) { 
+		OBJECT_COPY_ERROR; 
+	}
+
+	dimacs_loader(dimacs_loader& other){ 
+		OBJECT_COPY_ERROR; 
+	}*/
+
 	void	init_parse();
 	void	init_dimacs_loader();
 
-	void	load_file();
 	void	parse_header();
 	bool	parse_clause(row<integer>& lits);
 
@@ -327,11 +334,13 @@ public:
 	long	calc_f_lit_equal_or_of_ands(long in_lit, row<long>& ccl_lits,
 			row_row_long_t& rr_lits);
 
+	void	load_file(ch_string& f_nam);
+	
 	void	parse_all_ccls(row<long>& inst_ccls);
-	void	parse_file(ch_string& f_nam, row<long>& inst_ccls);
-	void	parse_from_ccls(long num_in_ccls, long num_in_vars, long num_in_lits, 
-				row_long_t& input_ccls, row_long_t& inst_ccls);
 	void	finish_parse(row<long>& inst_ccls);
+	void	parse_content(row<long>& inst_ccls);
+	
+	void	parse_file(ch_string& f_nam, row<long>& inst_ccls);
 };
 
 //=================================================================

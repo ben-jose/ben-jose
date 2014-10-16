@@ -1241,14 +1241,16 @@ void	test_sorted_ops2(){
 		}
 		SUPPORT_CK(eq_sh);
 
-		bool r_eq = false;
-		cmp_is_sub cmp_val;
+		DBG(
+			bool r_eq = false;
+			cmp_is_sub cmp_val;
 
-		cmp_val = cmp_sorted_rows<long>(to_red, orig_rr, cmp_canon_ids, r_eq);
-		SUPPORT_CK(cmp_val == k_lft_is_sub);
+			cmp_val = cmp_sorted_rows<long>(to_red, orig_rr, cmp_canon_ids, r_eq);
+			SUPPORT_CK(cmp_val == k_lft_is_sub);
 
-		cmp_val = cmp_sorted_rows<long>(diff_rr, orig_rr, cmp_canon_ids, r_eq);
-		SUPPORT_CK(cmp_val == k_lft_is_sub);
+			cmp_val = cmp_sorted_rows<long>(diff_rr, orig_rr, cmp_canon_ids, r_eq);
+			SUPPORT_CK(cmp_val == k_lft_is_sub);
+		);
 
 		diff_rr.sorted_set_shared(shrd_rr, to_red, cmp_canon_ids);
 		SUPPORT_CK(shrd_rr.is_empty());

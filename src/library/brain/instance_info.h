@@ -34,16 +34,15 @@ all info to keep or return of an instance cnf to solve.
 #define INSTANCE_INF_H
 
 #include "bj_big_number.h"
-#include "bj_stream.h"
+#include "tools.h"
 #include "ch_string.h"
 #include "ben_jose.h"
-#include "dbg_prt.h"
 
 
 //=================================================================
 // defs
 
-#define INSTANCE_CK(prm) DEBUG_CK(prm)
+#define INSTANCE_CK(prm) DBG_CK(prm)
 
 
 #define RESULT_FIELD_SEP		"|"
@@ -53,6 +52,7 @@ all info to keep or return of an instance cnf to solve.
 // decl
 	
 class instance_info;
+class quanton;
 
 DECLARE_PRINT_FUNCS(instance_info)
 
@@ -63,6 +63,17 @@ DECLARE_PRINT_FUNCS(instance_info)
 typedef bj_big_int_t 	consecutive_t;
 
 #define INVALID_CONSECUTIVE	-1
+
+//======================================================================
+// instance_exception
+
+class instance_exception : public top_exception {
+public:
+	instance_exception(char* descr = as_pt_char("undefined instance exception")){
+		ex_nm = descr;
+		ex_id = 0;
+	}
+};
 
 //=================================================================
 // instance_info
@@ -122,6 +133,24 @@ as_satisf_str(satisf_val vv){
 }
 
 class instance_info {
+private:
+	instance_info&  operator = (instance_info& other){
+		MARK_USED(other);
+		char* inst_bad_eq_op = as_pt_char("operator = not allowed in instance_info");
+		DBG_THROW_CK(inst_bad_eq_op != inst_bad_eq_op);
+		throw instance_exception(inst_bad_eq_op);
+		abort_func(0, inst_bad_eq_op);
+		return (*this);
+	}
+
+	instance_info(instance_info& other){ 
+		MARK_USED(other);
+		char* inst_bad_creat = as_pt_char("copy creator instance_info not allowed");
+		DBG_THROW_CK(inst_bad_creat != inst_bad_creat);
+		throw instance_exception(inst_bad_creat);
+		abort_func(0, inst_bad_creat);
+	}
+	
 public:
 	ch_string		ist_file_path;
 	satisf_val		ist_result;
@@ -129,11 +158,23 @@ public:
 	long			ist_num_vars;
 	long			ist_num_ccls;
 	long			ist_num_lits;
-	consecutive_t		ist_num_laps;
+	consecutive_t	ist_num_laps;
 
+	row<char> 		ist_data;
+	row<long> 		ist_ccls;
+	
 	instance_info(){
 		init_instance_info();
 	}
+
+	/*
+	instance_info&  operator = (instance_info& other) { 
+		OBJECT_COPY_ERROR; 
+	}
+
+	instance_info(instance_info& other){ 
+		OBJECT_COPY_ERROR; 
+	}*/
 
 	void	init_instance_info(){
 		ist_file_path = "Unknown path";
@@ -143,10 +184,25 @@ public:
 		ist_num_ccls = 0;
 		ist_num_lits = 0;
 		ist_num_laps = 0;
+		
+		ist_data.clear();
+		ist_ccls.clear();
+	}
+	
+	ch_string&	get_f_nam(){
+		return ist_file_path;
+	}
+	
+	bool is_read(){
+		return (! ist_data.is_empty());
 	}
 
-	ch_string	get_f_nam(){
-		return ist_file_path;
+	bool is_parsed(){
+		bool c1 = ! ist_ccls.is_empty();
+		bool c2 = (ist_num_vars >= 0);
+		bool c3 = (ist_num_ccls >= 0);
+		bool is_p = (c1 && c2 && c3);
+		return is_p;
 	}
 
 	static
@@ -157,6 +213,75 @@ public:
 	void		parse_instance(ch_string str_ln, long line);
 	ch_string	parse_field(const char*& pt_in);
 };
+
+//=================================================================
+// instance_stats
+
+class instance_stats {
+public:
+	
+	long			sta_tot_inst;
+	long			sta_consec;
+	double			sta_load_tm;
+	double			sta_saved_targets;
+	double			sta_old_hits;
+	double			sta_old_sub_hits;
+	double			sta_new_hits;
+	double			sta_new_sub_hits;
+	
+	row<quanton*>	sta_final_assig;
+
+	instance_stats(){
+		init_instance_stats();
+	}
+
+	void	init_instance_stats(){
+		sta_tot_inst = 0;
+		sta_consec = 0;
+		sta_load_tm = 0.0;
+		sta_saved_targets = 0.0;
+		sta_old_hits = 0.0;
+		sta_old_sub_hits = 0.0;
+		sta_new_hits = 0.0;
+		sta_new_sub_hits = 0.0;
+	}
+
+};
+
+//=================================================================
+// dbg_inst_info
+
+class dbg_inst_info {
+public:
+	
+	long	dbg_before_retract_lv;
+	long	dbg_last_recoil_lv;
+	
+	bool	dbg_ic_active;
+	bool	dbg_ic_after;
+	bool	dbg_just_read;
+	bool	dbg_clean_code;
+	
+	bj_big_int_t	dbg_canon_find_id;
+
+	dbg_inst_info(){
+		init_dbg_inst_info();
+	}
+
+	void	init_dbg_inst_info(){
+		dbg_ic_active = false;
+		dbg_ic_after = false;
+		dbg_just_read = false;
+		dbg_clean_code = false;
+		
+		dbg_canon_find_id = 0;
+	}
+
+};
+
+//=================================================================
+// funcs
+
 
 inline
 bj_ostream& 	

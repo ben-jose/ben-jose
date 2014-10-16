@@ -96,12 +96,10 @@ bool	dbg_print_cond_func(bool prm,
 
 //--end_of_def
 
-#define DEBUG_CK(prm) \
+#define DBG_BJ_LIB_CK(prm) \
 	DBG_CK(dbg_print_cond_func((! (prm)), true, __FILE__, __LINE__, #prm)); \
 
 // end_of_def
-
-#define SUPPORT_CK(prm) DEBUG_CK(prm)
 
 
 #define DBG_SLOW(prm)

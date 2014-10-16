@@ -135,7 +135,7 @@ brain::in_edge_of_target_lv(deduction& dct){
 
 void
 brain::reverse(){
-	DBG_CK_DEDUC(deduction dct2);
+	DEDUC_DBG(deduction dct2);
 	//long dbg_old_lv = level();
 
 	BRAIN_CK(! has_psignals());
@@ -183,9 +183,9 @@ brain::reverse(){
 	if(found_conflict()){
 		neuron& cfl = *br_conflict_found;
 
-		br_dbg_before_retract_lv = level();
+		BRAIN_DBG(br_dbg.dbg_before_retract_lv = level());
 
-		DBG_CK_DEDUC(br_deducer.dbg_find_dct_of(cfl, dct2));
+		DEDUC_DBG(br_deducer.dbg_find_dct_of(cfl, dct2));
 
 		mpp0.ma_confl = &cfl;
 		mpp0.ma_before_retract_tk.update_ticket(&brn);
@@ -223,6 +223,7 @@ brain::reverse(){
 
 	quanton* chosen_qua = NULL_PT;
 	bool has_in_mem = false;
+	MARK_USED(has_in_mem);
 
 	while(true){
 		BRAIN_CK(! mpp0.ma_active);
@@ -241,7 +242,7 @@ brain::reverse(){
 				BRAIN_CK(mpp0.ck_last_szs());
 				BRAIN_CK(! mpp0.ma_dotted.is_empty());
 
-				br_dbg_find_id++; skg_dbg_canon_find_id = br_dbg_find_id;
+				DBG(br_dbg_find_id++; skg_dbg_canon_find_id = br_dbg_find_id;)
 
 				in_mm = mpp0.map_find(brn);
 			}
@@ -479,11 +480,11 @@ brain::reverse(){
 
 	} // true
 
-	br_dbg_last_recoil_lv = dct.dt_target_level;
+	BRAIN_DBG(br_dbg.dbg_last_recoil_lv = dct.dt_target_level);
 
 	//BRAIN_CK(! has_in_mem);	// DBG purposes
 	
-	DBG_CK_DEDUC(has_in_mem || dbg_ck_deducs(dct, dct2));
+	DEDUC_DBG(has_in_mem || dbg_ck_deducs(dct, dct2));
 	DBG(long rr_lv = br_charge_trail.last_qlevel());
 	BRAIN_CK((level() == ROOT_LEVEL) || ((rr_lv + 1) == dct.dt_target_level));
 	BRAIN_CK((level() == ROOT_LEVEL) || (level() == dct.dt_target_level));
@@ -1367,7 +1368,10 @@ dbg_find_not_in_rr1(brain& brn, row<neuron*>& rr1, row<neuron*>& rr2, row<neuron
 }
 
 void
-dbg_find_diff_tauto_vs_simple_neus(brain& brn, row<neuron*>& not_in_tauto, row<neuron*>& not_in_simple){
+dbg_find_diff_tauto_vs_simple_neus(brain& brn, row<neuron*>& not_in_tauto, 
+								   row<neuron*>& not_in_simple)
+{
+#ifdef FULL_DEBUG
 	row<neuron*>& dbg_simple_neus = brn.br_dbg_simple_neus;
 
 	row<neuron*> dbg_tauto_neus;
@@ -1375,10 +1379,12 @@ dbg_find_diff_tauto_vs_simple_neus(brain& brn, row<neuron*>& not_in_tauto, row<n
 
 	dbg_find_not_in_rr1(brn, dbg_tauto_neus, dbg_simple_neus, not_in_tauto);
 	dbg_find_not_in_rr1(brn, dbg_simple_neus, dbg_tauto_neus, not_in_simple);
+#endif
 }
 
 bool
 dbg_prt_diff_tauto_vs_simple_neus(bj_ostream& os, brain& brn){
+#ifdef FULL_DEBUG
 	row<neuron*> not_in_tauto;
 	row<neuron*> not_in_simple;
 
@@ -1389,6 +1395,7 @@ dbg_prt_diff_tauto_vs_simple_neus(bj_ostream& os, brain& brn){
 	os << "not_in_simple=" << bj_eol;
 	os << not_in_simple << bj_eol;
 
+#endif
 	return true;
 }
 
@@ -1648,7 +1655,7 @@ memap::map_dbg_print(bj_ostream& os, mem_op_t mm, brain& brn){
 	os << tmp_guide_cnf << bj_eol;
 
 	os << bj_eol;
-	os << " RECOIL_LV=" << brn.br_dbg_last_recoil_lv;
+	BRAIN_DBG(os << " RECOIL_LV=" << brn.br_dbg.dbg_last_recoil_lv);
 
 	os << bj_eol;
 	os << brn.get_my_inst().get_f_nam() << bj_eol;

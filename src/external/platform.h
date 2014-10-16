@@ -52,9 +52,7 @@ to make the code more clear.
 #ifndef PLATFORM_H
 #define PLATFORM_H
 
-#ifndef MARK_USED
 #define MARK_USED(X)  ((void)(&(X)))
-#endif // MARK_USED
 
 #ifdef WIN32
 #define WIN32_COD(prm)	prm

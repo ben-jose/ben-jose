@@ -49,8 +49,7 @@ call_solve_instance(){
 	instance_info& inst_info = GLB().get_curr_inst();
 	
 	brain the_brain(the_skl, inst_info);
-	the_brain.load_it();
-	the_brain.solve_it();
+	the_brain.solve_instance();
 
 	GLB().count_instance(inst_info);
 }

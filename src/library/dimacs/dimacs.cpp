@@ -365,7 +365,8 @@ dimacs_loader::verif_num_ccls(ch_string& f_nam, long num_decl_ccls, long num_rea
 }
 
 void
-dimacs_loader::load_file(){
+dimacs_loader::load_file(ch_string& f_nam){
+	ld_file_name = f_nam;
 	// loads the full file into ld_content
 	read_file(ld_file_name, ld_content);
 
@@ -531,14 +532,30 @@ dimacs_loader::parse_all_ccls(row<long>& inst_ccls)
 }
 
 void
-dimacs_loader::parse_file(ch_string& f_nam, row<long>& inst_ccls)
-{
-	ld_file_name = f_nam;
+dimacs_loader::finish_parse(row<long>& inst_ccls){
+	verif_num_ccls(ld_file_name, ld_decl_ccls, ld_parsed_ccls);
 
-	load_file();
+	DIMACS_CK(ld_as_3cnf || (ld_nud_added_ccls == 0));
+	DIMACS_CK(ld_as_3cnf || (ld_nud_added_vars == 0));
+	DIMACS_CK(ld_as_3cnf || (ld_nud_added_lits == 0));
+	DIMACS_CK(ld_as_3cnf || (ld_nud_added_twolits == 0));
 
+	ld_num_ccls = ld_decl_ccls + ld_nud_added_ccls;
+	ld_num_vars = ld_decl_vars + ld_nud_added_vars;
+	ld_tot_lits = ld_parsed_lits + ld_nud_added_lits;
+	ld_tot_twolits = ld_parsed_twolits + ld_nud_added_twolits;
+}
+
+void
+dimacs_loader::parse_content(row<long>& inst_ccls){
 	parse_all_ccls(inst_ccls);
 	finish_parse(inst_ccls);
+}
+
+void
+dimacs_loader::parse_file(ch_string& f_nam, row<long>& inst_ccls){
+	load_file(f_nam);
+	parse_content(inst_ccls);
 }
 
 void
@@ -576,21 +593,5 @@ dimacs_loader::calc_f_lit_equal_and(long d_lit, row<long>& and_lits,
 	}
 
 	and_lits.clear();
-}
-
-void
-dimacs_loader::finish_parse(row<long>& inst_ccls)
-{
-	verif_num_ccls(ld_file_name, ld_decl_ccls, ld_parsed_ccls);
-
-	DIMACS_CK(ld_as_3cnf || (ld_nud_added_ccls == 0));
-	DIMACS_CK(ld_as_3cnf || (ld_nud_added_vars == 0));
-	DIMACS_CK(ld_as_3cnf || (ld_nud_added_lits == 0));
-	DIMACS_CK(ld_as_3cnf || (ld_nud_added_twolits == 0));
-
-	ld_num_ccls = ld_decl_ccls + ld_nud_added_ccls;
-	ld_num_vars = ld_decl_vars + ld_nud_added_vars;
-	ld_tot_lits = ld_parsed_lits + ld_nud_added_lits;
-	ld_tot_twolits = ld_parsed_twolits + ld_nud_added_twolits;
 }
 

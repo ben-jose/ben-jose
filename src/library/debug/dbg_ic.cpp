@@ -82,7 +82,7 @@ brain::dbg_ic_print(row<quanton*>& the_trail){
 	ch_string f_nam = dbg_name(DBG_PREF_IC, GLB().dbg_ic_seq, f_suf);
 
 	ff.open(f_nam.c_str());
-	dbg_ic_prt_dotty_file(ff, the_trail, DBG_IC_SUBGRAPHS);
+	DBG(dbg_ic_prt_dotty_file(ff, the_trail, DBG_IC_SUBGRAPHS));
 	ff.close();
 
 	if(GLB().dbg_ic_gen_jpg){
@@ -178,8 +178,8 @@ brain::dbg_ic_prt_dotty_file(bj_ostream& os, row<quanton*>& the_trail, long styl
 			nodes.push(inv);
 		}
 
-		qua->qu_dbg_ic_trail_idx = ii;
-		inv->qu_dbg_ic_trail_idx = ii;
+		DBG(qua->qu_dbg_ic_trail_idx = ii);
+		DBG(inv->qu_dbg_ic_trail_idx = ii);
 	}
 	os << bj_eol << bj_eol;
 

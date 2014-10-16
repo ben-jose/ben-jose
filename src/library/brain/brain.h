@@ -37,6 +37,7 @@ Declarations of classes and that implement the neural network.
 
 #include "tools.h"
 #include "ben_jose.h"
+#include "instance_info.h"
 #include "sortor.h"
 #include "dbg_prt.h"
 
@@ -45,21 +46,15 @@ Declarations of classes and that implement the neural network.
 
 #define BRAIN_DBG(prm) DBG(prm)
 
-#define BRAIN_CK(prm) DEBUG_CK(prm)
+#define BRAIN_CK(prm) DBG_BJ_LIB_CK(prm)
 
-//define BRAIN_CK_0(prm)	;
-#define BRAIN_CK_0(prm)	BRAIN_CK(prm)
+#define BRAIN_CK_0(prm)	DBG_BJ_LIB_CK(prm)
 
-#define BRAIN_CK_1(prm)	;
-//define BRAIN_CK_1(prm)	BRAIN_CK(prm)
+#define BRAIN_CK_1(prm)  /**/
 
-#define BRAIN_CK_2(prm)	;
-//define BRAIN_CK_2(prm)	BRAIN_CK(prm)
+#define BRAIN_CK_2(prm)  /**/
 
-//define DBG_SOURCES(cod)	DBG(cod)
-
-//define DBG_CK_DEDUC(cod)	;
-#define DBG_CK_DEDUC(cod)	DBG(cod)
+#define DEDUC_DBG(cod)	DBG(cod)
 
 //=============================================================================
 // MAIN CLASSES
@@ -100,8 +95,10 @@ enum action_t {
 //=============================================================================
 // decl
 
-class instance_info;
 class skeleton_glb;
+class instance_info;
+class instance_stats;
+class dbg_inst_info;
 
 class ticket;
 class quanton;
@@ -378,7 +375,7 @@ class quanton {
 		brain*		qu_pt_brn;
 	)
 
-	long			qu_dbg_ic_trail_idx;	// idx in trail
+	DBG(long		qu_dbg_ic_trail_idx);	// idx in trail
 
 	// id attributes
 	long			qu_id;		// my long number id
@@ -418,14 +415,15 @@ class quanton {
 
 	// finder data
 
-	long			qu_dbg_tee_ti;
+	DBG(long		qu_dbg_tee_ti);
+	
 	sortee			qu_tee;
 	sortrel			qu_reltee;
 
 	// dbg attributes
 	
-	bj_big_int_t	qu_dbg_fst_lap_cho;
-	bj_big_int_t	qu_dbg_num_laps_cho;
+	DBG(bj_big_int_t	qu_dbg_fst_lap_cho);
+	DBG(bj_big_int_t	qu_dbg_num_laps_cho);
 
 	// methods
 
@@ -462,7 +460,7 @@ class quanton {
 	void	init_quanton(brain* brn, charge_t spn, long ii, quanton* inv){
 		BRAIN_DBG(qu_pt_brn = brn);
 
-		qu_dbg_ic_trail_idx = INVALID_IDX;
+		DBG(qu_dbg_ic_trail_idx = INVALID_IDX);
 
 		qu_id = (spn == cg_positive)?(ii + 1):(-(ii + 1));
 		if(spn == cg_neutral){ qu_id = 0; }
@@ -492,7 +490,7 @@ class quanton {
 
 		qu_curr_map = NULL_PT;
 
-		qu_dbg_tee_ti = INVALID_NATURAL;
+		DBG(qu_dbg_tee_ti = INVALID_NATURAL);
 
 		qu_tee.init_sortee(true);
 		qu_reltee.init_sortrel(true);
@@ -508,8 +506,8 @@ class quanton {
 			qu_reltee.so_opposite = &(oppt);
 		}
 
-		qu_dbg_fst_lap_cho = 0;
-		qu_dbg_num_laps_cho = 0;
+		DBG(qu_dbg_fst_lap_cho = 0);
+		DBG(qu_dbg_num_laps_cho = 0);
 	}
 
 	void	init_tees_ccl_id(){
@@ -628,7 +626,7 @@ class quanton {
 
 		os << "<";
 		os << qlevel();
-		os << "_" << qu_dbg_ic_trail_idx;
+		DBG(os << "_" << qu_dbg_ic_trail_idx);
 		os << ">";
 		os << "\"";
 		return os;
@@ -677,9 +675,11 @@ class neuron {
 
 	bool			ne_spot;
 
-	canon_clause		ne_dbg_ccl;
-	bool			ne_dbg_in_used;
-	ticket			ne_dbg_filled_tk;	// all filled updated a filled time
+	DBG(
+		canon_clause	ne_dbg_ccl;
+		bool			ne_dbg_in_used;
+		ticket			ne_dbg_filled_tk;	// all filled updated a filled time
+	)
 
 	// methods
 
@@ -730,9 +730,11 @@ class neuron {
 	
 		ne_spot = false;
 
-		ne_dbg_ccl.cc_me = this;
-		ne_dbg_in_used = false;
-		ne_dbg_filled_tk.init_ticket();
+		DBG(
+			ne_dbg_ccl.cc_me = this;
+			ne_dbg_in_used = false;
+			ne_dbg_filled_tk.init_ticket();
+		)
 	}
 
 
@@ -906,7 +908,8 @@ class neuron {
 	bool	has_qua(quanton& tg_qua);
 
 	void	map_set_dbg_ccl(mem_op_t mm, brain& brn);
-	void	add_dbg_ccl(brain& brn, row<canon_clause*>& the_ccls, row<neuron*>& the_neus, dima_dims& dims);
+	void	add_dbg_ccl(brain& brn, row<canon_clause*>& the_ccls, 
+						row<neuron*>& the_neus, dima_dims& dims);
 
 	sorset*	get_sorset(){
 		return ne_tee.so_vessel;
@@ -1245,8 +1248,8 @@ class memap {
 
 	void	map_replace_with(brain& brn, memap& mpp, dbg_call_id dbg_id);
 
-	void	map_set_dbg_cnf(mem_op_t mm, brain& brn, row<canon_clause*>& the_ccls, row<neuron*>& the_neus,
-				dima_dims& dims);
+	void	map_set_dbg_cnf(mem_op_t mm, brain& brn, row<canon_clause*>& the_ccls,
+							row<neuron*>& the_neus, dima_dims& dims);
 
 	bool	map_ck_simple_no_satisf(mem_op_t mm, brain& brn);
 	void	dbg_prepare_used_dbg_cnf(mem_op_t mm, brain& brn, row<canon_clause*>& the_ccls);
@@ -1772,17 +1775,18 @@ class brain {
 
 	skeleton_glb*	br_pt_skl;
 	instance_info*	br_pt_inst;
+	
+	instance_stats 	br_stats;
+	
+	BRAIN_DBG(dbg_inst_info  	br_dbg);
+	
 	timer			br_prt_timer;
 
 	double 			br_start_load_tm;
 
-	// debug attributes
-
-	long			br_dbg_before_retract_lv;
-	long			br_dbg_last_recoil_lv;
-
 	// temporal attributes
 	row<quanton*>		br_tmp_fixing_quantons;
+	row<quanton*>		br_tmp_load_quantons;
 
 	row<quanton*>		br_tmp_motives;
 	row<quanton*>		br_tmp_edge;
@@ -1843,14 +1847,17 @@ class brain {
 	canon_cnf		br_tmp_wrt_diff_cnf;
 	canon_cnf		br_tmp_wrt_guide_cnf;
 
-	row<neuron*>	 	br_dbg_simple_neus;
-	row<neuron*>	 	br_dbg_used_neus;
-	row<canon_clause*> 	br_dbg_ccls;
-	canon_cnf		br_dbg_cnf;
-	bj_big_int_t	br_dbg_find_id;
-	bj_big_int_t	br_dbg_save_id;
+	DBG(
+		row<neuron*>	 	br_dbg_simple_neus;
+		row<neuron*>	 	br_dbg_used_neus;
+		row<canon_clause*> 	br_dbg_ccls;
+		canon_cnf		br_dbg_cnf;
+		bj_big_int_t	br_dbg_find_id;
+		bj_big_int_t	br_dbg_save_id;
 
-	row<neuron*>	 	br_dbg_original_used;
+		row<neuron*>	 	br_dbg_original_used;
+		row<quanton*>		br_dbg_all_chosen;
+	)
 
 	//long			br_conflict_tier;
 	//row<neuron*> 		br_conflicts;
@@ -1893,8 +1900,6 @@ class brain {
 	row<quanton*>		br_tmp_stab_quas;
 	row<quanton*>		br_tmp_sorted_quas;
 
-	row<quanton*>		br_dbg_all_chosen;
-
 	long			br_qu_tot_note0;
 	long			br_qu_tot_note1;
 	long			br_qu_tot_note2;
@@ -1924,6 +1929,8 @@ class brain {
 	void	release_brain();
 
 	skeleton_glb& 	get_skeleton();
+	instance_info&	get_my_inst();
+	//instance_stats&	get_my_stats();
 
 	// core methods
 
@@ -2068,18 +2075,7 @@ class brain {
 	neuron*	add_neuron(row<quanton*>& quans, quanton*& forced_qua, bool orig);
 	void	learn_mots(row<quanton*>& the_mots, quanton& forced_qua, long the_tier);
 
-	quanton*	get_quanton(long q_id){
-		quanton* qua = NULL;
-		BRAIN_CK_0(q_id != 0);
-		if(q_id < 0){ 
-			qua = &(br_negatons[-q_id - 1]);
-		} else {
-			BRAIN_CK_0(q_id > 0);
-			qua =  &(br_positons[q_id - 1]);
-		}
-		BRAIN_CK_0(qua->qu_id == q_id);
-		return qua;
-	}
+	quanton*	get_quanton(long q_id);
 	
 	recoil_counter_t	recoil(){
 		return br_current_ticket.tk_recoil;
@@ -2203,12 +2199,12 @@ class brain {
 	bool	brn_compute_dots(row<neuron*>& neus);
 	bool	brn_compute_dots_of(row<neuron*>& neus, row<quanton*>& assig);
 
-	void		get_quantons_from_lits(row_long_t& all_lits, long first, long last, row<quanton*>& neu_quas);
-	void		add_neuron_from_lits(row_long_t& all_lits, long first, long last);
-	void		load_instance(long num_neu, long num_var, row_long_t& load_ccls);
-
-	void		load_it();
-	void		solve_it();
+	void		read_cnf(dimacs_loader& ldr);
+	void		parse_cnf(dimacs_loader& ldr, row<long>& all_ccls);
+	void		load_neuron(row<quanton*>& neu_quas);
+	bool		load_brain(long num_neu, long num_var, row_long_t& load_ccls);
+	bool		load_instance();
+	void		solve_instance();
 
 	memap*	get_last_upper_map(){
 		memap* up_dom = NULL_PT;
@@ -2225,7 +2221,6 @@ class brain {
 	void		check_timeout();
 	void		check_sat_assig();
 
-	instance_info&	get_my_inst();
 	void		set_result(satisf_val re);
 	satisf_val	get_result();
 
@@ -2497,17 +2492,21 @@ comparison	cmp_qtier(quanton* const & qua1, quanton* const & qua2){
 	return cmp_long(qtier2, qtier1);
 }
 
+/*
 inline
 comparison	cmp_dbg_fst_lap_cho(quanton* const & qua1, quanton* const & qua2){
 	BRAIN_CK(qua1 != NULL_PT);
 	BRAIN_CK(qua2 != NULL_PT);
-	bj_big_int_t lap1 = qua1->qu_dbg_fst_lap_cho;
-	bj_big_int_t lap2 = qua2->qu_dbg_fst_lap_cho;
+	DBG(
+		bj_big_int_t lap1 = qua1->qu_dbg_fst_lap_cho;
+		bj_big_int_t lap2 = qua2->qu_dbg_fst_lap_cho;
 
-	if(lap1 < lap1){ return -1; }
-	if(lap1 > lap1){ return 1; }
+		if(lap1 < lap1){ return -1; }
+		if(lap1 > lap1){ return 1; }
+	)
 	return 0;
 }
+*/
 
 inline
 charge_t negate_trinary(charge_t val){

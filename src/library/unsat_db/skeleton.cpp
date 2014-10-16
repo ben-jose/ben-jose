@@ -44,21 +44,8 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 bj_big_int_t	skg_dbg_canon_find_id = 0;
 bj_big_int_t	skg_dbg_canon_save_id = 0;
 
-#define SKELETON_CK(prm) 	DEBUG_CK(prm)
-#define SKELETON_CK_1(prm) 	DEBUG_CK_1(prm)
+#define SKELETON_CK(prm) 	DBG_BJ_LIB_CK(prm)
 
-// '\0'
-//define END_OF_SEC	0
-
-/*
-ch_string
-long_to_str(long val){
-	bj_ostr_stream ss_val;
-	ss_val << val;
-	TOOLS_CK(! ss_val.str().empty());
-	return ss_val.str();
-}
-*/
 
 bool
 not_skl_path(ch_string the_pth){
@@ -873,16 +860,18 @@ canon_clause::~canon_clause(){
 canon_clause&
 skeleton_glb::get_new_clause(){
 	canon_clause* pt_ccl = NULL_PT;
-	long cond_side = 0;
+	DBG(long cond_side = 0);
+	//DBG_MARK_USED(cond_side);
+	
 	if(! kg_free_clauses.is_empty()){
-		cond_side = 1;
+		DBG(cond_side = 1);
 		pt_ccl = kg_free_clauses.pop();
 		DBG_PRT(82, os << "POPPED ccl=" << (void*)pt_ccl);
 		SKELETON_CK(pt_ccl != NULL_PT);
 		SKELETON_CK(pt_ccl->cc_in_free);
 		DBG(pt_ccl->cc_in_free = false);
 	} else {
-		cond_side = 2;
+		DBG(cond_side = 2);
 		pt_ccl = &(kg_clauses.inc_sz());
 	}
 	canon_clause& ccl = *pt_ccl;
@@ -1959,11 +1948,11 @@ canon_cnf::save_cnf(skeleton_glb& skg, ch_string sv_pth){
 	ch_string pth2 = cf_phdat.pd_ref2_nam;
 
 	ch_string sv_name = skg.as_full_path(sv_pth);
-	bool existed = false;
+	DBG(bool existed = false);
 	bool sv_ok = canon_save(sv_name, cf_chars);
 	if(! sv_ok){
 		sv_ok = canon_equal(sv_name, cf_chars);
-		existed = sv_ok;
+		DBG(existed = sv_ok);
 		if(! sv_ok){
 			skg.report_err(sv_pth, skg.kg_collisions_path);
 		}
