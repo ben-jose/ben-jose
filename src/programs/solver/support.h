@@ -87,10 +87,9 @@ Declaration of classes that support and assist the system.
 
 #define PRT_OUT(lev, comm) \
 	DO_PRINTS( \
-		if(OUT_COND(GLB().out_lev, lev, \
-				(GLB().out_os != NULL_PT))) \
+		if(OUT_COND(GLB().out_lev, lev, true)) \
 		{ \
-			bj_ostream& os = *(GLB().out_os); \
+			bj_ostream& os = bj_out; \
 			comm; \
 			os.flush(); \
 		} \
@@ -112,32 +111,6 @@ typedef	int	location;
 #define INVALID_LAYER		-1
 
 #define OUT_NUM_LEVS 10
-
-
-//=================================================================
-// debug_entry
-
-class debug_entry {
-	public:
-	long		dbg_round;
-	long		dbg_id;
-
-	debug_entry(){
-		dbg_round = -1;
-		dbg_id = -1;
-	}
-
-	~debug_entry(){
-	}
-
-	bj_ostream& 	print_debug_entry(bj_ostream& os);
-
-};
-
-inline
-comparison	cmp_dbg_entries(debug_entry const & e1, debug_entry const & e2){
-	return cmp_long(e1.dbg_round, e2.dbg_round);
-}
 
 //=================================================================
 // global_data
@@ -191,9 +164,6 @@ public:
 
 	runoptions		gg_options;
 
-	row<quanton*>		final_assig;
-
-
 	row<long>		final_trail_ids;
 	row<long>		final_chosen_ids;
 
@@ -206,21 +176,8 @@ public:
 	//std::ofstream	dbg_file;
 
 	bool			dbg_skip_print_info;
-
-	row<long>		dbg_config_line;
-	row<debug_entry>	dbg_start_dbg_entries;
-	row<debug_entry>	dbg_stop_dbg_entries;
-
-	long			dbg_current_start_entry;
-	long			dbg_current_stop_entry;
-
+	
 	long			dbg_num_laps;
-
-	bool			dbg_ic_active;
-	long			dbg_ic_max_seq;
-	long			dbg_ic_seq;
-	bool			dbg_ic_after;
-	bool			dbg_ic_gen_jpg;
 
 	bj_ostr_stream	error_stm;
 	long			error_cod;
@@ -296,13 +253,13 @@ public:
 		if(batch_instances.is_empty()){
 			return 0;
 		}
-		instance_info& inst_info = GLB().get_curr_inst();
-		return inst_info.ist_num_laps;
+		instance_info& inst_info = get_curr_inst();
+		return inst_info.ist_out.iot_num_laps;
 	}
 
 	satisf_val&	result(){
-		instance_info& the_ans = get_curr_inst();
-		return the_ans.ist_result;
+		instance_info& inst_info = get_curr_inst();
+		return inst_info.ist_out.iot_result;
 	}
 
 	void		init_paths();
@@ -377,21 +334,6 @@ public:
 	void		print_batch_consec();
 
 };
-
-//=================================================================
-// FUNCTION
-
-inline
-bj_ostream& 	
-debug_entry::print_debug_entry(bj_ostream& os){
-	os << "dbg(p=" << dbg_round << ", i=" << dbg_id << ")";
-	return os;
-}
-
-inline
-bj_ostream& operator << (bj_ostream& os, debug_entry& dbg_ety){
-	return dbg_ety.print_debug_entry(os);
-}
 
 //=================================================================
 // global functions

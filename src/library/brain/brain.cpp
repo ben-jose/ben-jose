@@ -38,6 +38,7 @@ Classes and that implement the neural network.
 #include "dbg_run_satex.h"
 #include "dbg_prt.h"
 #include "dbg_ic.h"
+#include "config.h"
 
 DEFINE_NI_FLAG_FUNCS(qu_flags, note0, br_qu_tot_note0, true);
 DEFINE_NI_FLAG_FUNCS(qu_flags, note1, br_qu_tot_note1, true);
@@ -116,7 +117,7 @@ brain::ck_trail(){
 	bj_ostream& os = bj_dbg;
 	brain& brn = *this;
 
-	row<quanton*>& the_trl = br_tmp_trail;
+	row_quanton_t& the_trl = br_tmp_trail;
 	br_charge_trail.get_all_ordered_motives(the_trl);
 
 	long num_null_src = 0;
@@ -251,7 +252,7 @@ memap::print_memap(bj_ostream& os, bool from_pt){
 
 void
 brain::print_trail(bj_ostream& os, bool no_src_only){
-	row<quanton*>& the_trl = br_tmp_trail;
+	row_quanton_t& the_trl = br_tmp_trail;
 	br_charge_trail.get_all_ordered_motives(the_trl);
 	os << "TRAIL=[";
 	for(long kk = 0; kk < the_trl.size(); kk++){
@@ -341,7 +342,7 @@ long	reset_spots_of(brain& brn, row<neuron*>& neus){
 	return num_neu;
 }
 
-long	set_dots_of(brain& brn, row<quanton*>& quans){
+long	set_dots_of(brain& brn, row_quanton_t& quans){
 	long num_qua = 0;
 	for(long ii = 0; ii < quans.size(); ii++){
 		quanton* qua = quans[ii];
@@ -356,7 +357,7 @@ long	set_dots_of(brain& brn, row<quanton*>& quans){
 	return num_qua;
 }
 
-long	reset_dots_of(brain& brn, row<quanton*>& quans){
+long	reset_dots_of(brain& brn, row_quanton_t& quans){
 	long resetted = 0;
 	for(long ii = 0; ii < quans.size(); ii++){
 		quanton* qua = quans[ii];
@@ -476,7 +477,7 @@ brain::brn_compute_dots(row<neuron*>& neus){
 
 //for IS_SAT_CK
 bool
-brain::brn_compute_dots_of(row<neuron*>& neus, row<quanton*>& assig){
+brain::brn_compute_dots_of(row<neuron*>& neus, row_quanton_t& assig){
 	brain& brn = *this;
 	BRAIN_CK(br_tot_qu_dots == 0);
 	set_dots_of(brn, assig);
@@ -597,7 +598,7 @@ quanton::print_quanton(bj_ostream& os, bool from_pt){
 // neuron methods
 
 quanton*
-neuron::update_fibres(row<quanton*>& synps, bool orig){
+neuron::update_fibres(row_quanton_t& synps, bool orig){
 	long num_neutral = 0;
 	long num_neg_chgs = 0;
 
@@ -1006,6 +1007,7 @@ brain::init_brain(skeleton_glb& the_skl, instance_info& inst){
 		br_dbg.dbg_find_id = 0;
 		br_dbg.dbg_save_id = 0;
 		br_dbg.dbg_all_chosen.clear();
+		dbg_init_dbg_conf(*this);
 	)
 }
 
@@ -1328,7 +1330,7 @@ brain::init_loading(long num_qua, long num_neu){
 }
 
 void
-brain::learn_mots(row<quanton*>& the_mots, quanton& forced_qua, long the_tier){
+brain::learn_mots(row_quanton_t& the_mots, quanton& forced_qua, long the_tier){
 	DBG_PRT(23, os << "**LEARNING** mots=" << the_mots << " forced=" << &forced_qua << " tier=" << the_tier);
 
 	neuron* the_neu = NULL_PT;
@@ -1361,15 +1363,17 @@ brain::learn_mots(row<quanton*>& the_mots, quanton& forced_qua, long the_tier){
 		send_psignal(forced_qua, the_neu, nxt_tir);
 	}
 
-	if(GLB().dbg_ic_active && GLB().dbg_ic_after){
-		row<quanton*>& the_trl = br_tmp_trail;
-		br_charge_trail.get_all_ordered_motives(the_trl);
-		dbg_ic_print(the_trl);
-	}
+	DBG(
+		if(br_dbg.dbg_ic_active && br_dbg.dbg_ic_after){
+			row_quanton_t& the_trl = br_tmp_trail;
+			br_charge_trail.get_all_ordered_motives(the_trl);
+			dbg_ic_print(*this, the_trl);
+		}
+	)
 }
 
 neuron*
-brain::add_neuron(row<quanton*>& quans, quanton*& forced_qua, bool orig){
+brain::add_neuron(row_quanton_t& quans, quanton*& forced_qua, bool orig){
 	brain& brn = *this;
 	neuron& neu = locate_neuron();
 	neu.ne_original = orig;
@@ -1436,7 +1440,7 @@ brain::config_brain(ch_string f_nam){
 	}
 	set_file_name_in_ic(f_nam);
 
-	dbg_reset_ic_files();
+	dbg_reset_ic_files(*this);
 }
 
 void
@@ -1473,7 +1477,10 @@ brain::parse_cnf(dimacs_loader& ldr, row<long>& all_ccls){
 	
 	inst_info.ist_num_ccls = ldr.ld_num_ccls;
 	inst_info.ist_num_vars = ldr.ld_num_vars;
-	inst_info.ist_num_lits = ldr.ld_tot_lits;
+	
+	inst_info.ist_out.iot_num_ccls = ldr.ld_num_ccls;
+	inst_info.ist_out.iot_num_vars = ldr.ld_num_vars;
+	inst_info.ist_out.iot_num_lits = ldr.ld_tot_lits;
 }
 
 bool
@@ -1505,7 +1512,7 @@ brain::get_my_inst(){
 void
 brain::set_result(satisf_val re){
 	instance_info& inst_info = get_my_inst();
-	satisf_val& the_result = inst_info.ist_result;
+	satisf_val& the_result = inst_info.ist_out.iot_result;
 
 	BRAIN_CK(re != k_unknown_satisf);
 	BRAIN_CK((the_result != k_yes_satisf) || (re != k_no_satisf));
@@ -1521,13 +1528,13 @@ brain::set_result(satisf_val re){
 satisf_val
 brain::get_result(){
 	instance_info& inst_info = get_my_inst();
-	satisf_val the_result = inst_info.ist_result;
+	satisf_val the_result = inst_info.ist_out.iot_result;
 
 	return the_result;
 }
 
 void
-brain::load_neuron(row<quanton*>& neu_quas){
+brain::load_neuron(row_quanton_t& neu_quas){
 	DBG_PRT(29, os << "ADDING NEU=" << neu_quas);
 
 	BRAIN_CK_0(neu_quas.size() > 0);
@@ -1609,7 +1616,7 @@ brain::load_brain(long num_neu, long num_var, row_long_t& load_ccls){
 	//long ii = 0;
 	//long first = 0;
 	
-	row<quanton*>& neu_quas = br_tmp_load_quantons;
+	row_quanton_t& neu_quas = br_tmp_load_quantons;
 	neu_quas.clear();
 	
 	for(long ii = 0; ii < load_ccls.size(); ii++){
@@ -1631,7 +1638,7 @@ brain::load_brain(long num_neu, long num_var, row_long_t& load_ccls){
 			}
 
 			load_neuron(neu_quas);
-			if(inst_info.ist_result != k_unknown_satisf){ 
+			if(inst_info.ist_out.iot_result != k_unknown_satisf){ 
 				break; 
 			}
 
@@ -1647,30 +1654,29 @@ brain::load_brain(long num_neu, long num_var, row_long_t& load_ccls){
 
 	double end_load_tm = run_time();
 	double ld_tm = (end_load_tm - br_start_load_tm);
-	GLB().batch_stat_load_tm.add_val(ld_tm);
+	
+	inst_info.ist_out.iot_load_tm = ld_tm;
 
 	ch_string f_nam = inst_info.get_f_nam();
-	PRT_OUT(1,
-	os << bj_eol;
-	os << "***********************************************";
-	os << bj_eol;
-	os << "LOADED " << f_nam <<
-		" " << GLB().batch_consec << " of " << GLB().batch_num_files <<
-		bj_eol;
-	);
 	return true;
 }
 
 void	due_periodic_prt(void* pm, double curr_secs){
-	MARK_USED(pm);
-	if(GLB().out_os != NULL_PT){
-		PRT_OUT(0, GLB().print_stats(*(GLB().out_os), curr_secs));
+#ifdef FULL_DEBUG
+	bj_out << "due_periodic_prt=" << curr_secs << bj_eol;
+	bj_out.flush();
+	
+	brain& brn = *((brain*)pm);
+	if(brn.br_dbg.dbg_periodic_prt){
+		instance_info& inst_info = brn.get_my_inst();
+		bj_out << inst_info << bj_eol;
 	}
+#endif
 }
 
 void
 brain::check_timeout(){
-	if(br_prt_timer.check_period(due_periodic_prt)){
+	if(br_prt_timer.check_period(due_periodic_prt, this)){
 		set_result(k_timeout);
 	}
 }
@@ -1700,17 +1706,18 @@ brain::fill_with_origs(row<neuron*>& neus){
 
 void
 brain::check_sat_assig(){
+	row_quanton_t the_assig;
+	br_charge_trail.get_all_ordered_motives(the_assig);
+	
+	instance_info& inst_info = get_my_inst();
+	get_ids_of(the_assig, inst_info.ist_out.iot_final_assig);
+	
 	row<neuron*>& neus = br_tmp_ck_sat_neus;
 	fill_with_origs(neus);
 
 	if(! brn_compute_binary(neus)){
 		abort_func(1, "FATAL ERROR 001. Wrong is_sat answer !");
 	}
-
-	row<quanton*>& the_assig = GLB().final_assig;
-	the_assig.clear();
-
-	br_charge_trail.get_all_ordered_motives(the_assig);
 
 	if(! brn_compute_dots_of(neus, the_assig)){
 		abort_func(1, "FATAL ERROR 002. Wrong is_sat answer !");
@@ -1733,19 +1740,18 @@ brain::solve_instance(){
 
 	get_skeleton().kg_instance_file_nam = inst_info.get_f_nam() + "\n";
 	
-	if(inst_info.ist_result != k_unknown_satisf){ 
+	if(inst_info.ist_out.iot_result != k_unknown_satisf){ 
 		return;
 	}
 
-	if(GLB().op_just_read){
-		set_result(k_timeout);
-		return;
-	} 
+	DBG(
+		if(br_dbg.dbg_just_read){
+			set_result(k_timeout);
+			return;
+		} 
+	)
 
-
-	//BRAIN_CK(! GLB().is_finishing());
-
-	inst_info.ist_solve_time = run_time();
+	inst_info.ist_out.iot_solve_time = run_time();
 
 	ch_string f_nam = inst_info.get_f_nam();
 
@@ -1753,13 +1759,13 @@ brain::solve_instance(){
 	br_choice_spin = cg_negative;
 	br_choice_order = k_right_order;
 
-	while(inst_info.ist_result == k_unknown_satisf){
+	while(inst_info.ist_out.iot_result == k_unknown_satisf){
 		pulsate();
 	}
 
-	GLB().batch_stat_saved_targets.add_val(br_num_memo);
+	inst_info.ist_out.iot_saved_targets = br_num_memo;
 
-	BRAIN_CK(recoil() == (inst_info.ist_num_laps + 1));
+	BRAIN_CK(recoil() == (inst_info.ist_out.iot_num_laps + 1));
 
 	DBG(
 		DBG_PRT(116, dbg_prt_all_cho(*this));
@@ -1769,7 +1775,7 @@ brain::solve_instance(){
 
 		br_final_msg << f_nam << " ";
 
-		satisf_val resp_solv = inst_info.ist_result;
+		satisf_val resp_solv = inst_info.ist_out.iot_result;
 		if(resp_solv == k_yes_satisf){
 			check_sat_assig();
 			br_final_msg << "IS_SAT_INSTANCE";
@@ -1791,10 +1797,10 @@ brain::solve_instance(){
 		//bj_out << bj_eol;
 		//bj_out << ".";
 
-		if(GLB().dbg_ic_active){
-			row<quanton*>& the_trl = br_tmp_trail;
+		if(br_dbg.dbg_ic_active){
+			row_quanton_t& the_trl = br_tmp_trail;
 			br_charge_trail.get_all_ordered_motives(the_trl);
-			dbg_ic_print(the_trl);
+			dbg_ic_print(*this, the_trl);
 		}
 	);
 
@@ -1814,7 +1820,7 @@ brain::solve_instance(){
 }
 
 quanton*
-notekeeper::set_motive_notes(row<quanton*>& rr_qua, long from, long until){
+notekeeper::set_motive_notes(row_quanton_t& rr_qua, long from, long until){
 	BRAIN_CK(ck_funcs());
 	BRAIN_CK(dk_tot_noted >= 0);
 	BRAIN_CK(dk_num_noted_in_layer >= 0);
@@ -1951,7 +1957,7 @@ deducer::deduc_find_next_source(){
 			de_all_original = false;
 		}
 
-		row<quanton*>& causes = de_nxt_src->ne_fibres;
+		row_quanton_t& causes = de_nxt_src->ne_fibres;
 		long from = (is_first)?(0):(1);
 		long until = causes.size();
 		//quanton* max_qua = 
@@ -1982,7 +1988,7 @@ deducer::deduc_find_next_source(){
 }
 
 bool
-ck_motives(brain& brn, row<quanton*>& mots){
+ck_motives(brain& brn, row_quanton_t& mots){
 	for(long ii = 0; ii < mots.size(); ii++){
 		quanton* mot = mots[ii];
 		MARK_USED(mot);
@@ -2026,7 +2032,7 @@ deducer::dbg_find_dct_of(neuron& confl, deduction& dct){
 
 	long trail_sz = get_trail().size();
 
-	DBG(row<quanton*> tmp_mots);
+	DBG(row_quanton_t tmp_mots);
 	DBG(de_noteke.get_all_motives(tmp_mots));
 	BRAIN_CK(tmp_mots.is_empty());
 
@@ -2226,7 +2232,7 @@ neuron::set_motives(brain& brn, notekeeper& nke, bool is_first){
 
 	DBG(brn.dbg_add_to_used(neu));
 
-	row<quanton*>& causes = ne_fibres;
+	row_quanton_t& causes = ne_fibres;
 	BRAIN_CK(! causes.is_empty());
 
 	long from = (is_first)?(0):(1);
@@ -2691,13 +2697,13 @@ neuron::is_filled_of_marks(quanton& nxt_qua){
 }
 
 void
-notekeeper::restart_with(brain& brn, row<quanton*>& bak_upper){
+notekeeper::restart_with(brain& brn, row_quanton_t& bak_upper){
 	BRAIN_CK(dk_num_noted_in_layer == 0);
 	BRAIN_CK(get_layer_motives(dk_note_layer).is_empty());
 	BRAIN_CK(dk_note_layer >= brn.level());
 	BRAIN_CK(dk_has_note_fn == &quanton::has_note0);
 
-	row<quanton*> rr_upper;
+	row_quanton_t rr_upper;
 	get_all_motives(rr_upper);
 	BRAIN_CK(ck_motives(brn, rr_upper));
 	set_all_note3(brn, rr_upper);
@@ -3444,7 +3450,7 @@ memap::get_filled_sz(mem_op_t mm){
 
 /*
 void
-brain::dbg_get_all_chosen(row<quanton*>& all_cho){
+brain::dbg_get_all_chosen(row_quanton_t& all_cho){
 	all_cho.clear();
 
 	for(long ii = 0; ii < br_positons.size(); ii++){
@@ -3472,4 +3478,10 @@ dbg_inst_info::init_dbg_inst_info(){
 	dbg_clean_code = false;
 	
 	dbg_canon_find_id = 0;
+	dbg_periodic_prt = true;
+
+	dbg_ic_max_seq = -1;
+	dbg_ic_seq = 0;
+	dbg_ic_gen_jpg = false;
+	
 }

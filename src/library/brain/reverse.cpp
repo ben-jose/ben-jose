@@ -35,6 +35,7 @@ funcs that implement reverse func.
 #include "dimacs.h"
 #include "brain.h"
 #include "dbg_run_satex.h"
+#include "config.h"
 
 bool
 memap::map_find(brain& brn){
@@ -316,7 +317,7 @@ brain::reverse(){
 				BRAIN_CK(mpp0.is_ma_virgin());
 				BRAIN_CK(level() > dct.dt_target_level);
 
-				row<quanton*>& bak_upper = data_level().ld_upper_quas;
+				row_quanton_t& bak_upper = data_level().ld_upper_quas;
 				nke0.restart_with(brn, bak_upper);
 
 				mpp0.reset_memap(brn);
@@ -503,7 +504,7 @@ brain::reverse(){
 
 	// update notes3
 
-	row<quanton*>& rr_upper = data_level().ld_upper_quas;
+	row_quanton_t& rr_upper = data_level().ld_upper_quas;
 	nke0.get_all_motives(rr_upper);
 	BRAIN_CK(ck_motives(brn, rr_upper));
 	set_all_note3(brn, rr_upper);
@@ -544,9 +545,9 @@ brain::reverse(){
 	inc_recoil();
 
 	instance_info& inst_info = get_my_inst();
-	inst_info.ist_num_laps++;
+	inst_info.ist_out.iot_num_laps++;
 	DBG(
-		GLB().dbg_update_config_entries();
+		dbg_update_config_entries(*this);
 	);
 	check_timeout();
 
@@ -663,7 +664,7 @@ void
 coloring::load_colors_into(brain& brn, sort_glb& neus_srg, sort_glb& quas_srg, dima_dims& dims){
 	BRAIN_CK(ck_cols());
 
-	row<quanton*>&	all_quas = co_quas;
+	row_quanton_t&	all_quas = co_quas;
 	row<long>&	qua_colors = co_qua_colors;
 
 	row<neuron*>&	all_neus = co_neus;
@@ -733,9 +734,9 @@ coloring::add_coloring(brain& brn, coloring& clr){
 	BRAIN_CK(ck_cols());
 	BRAIN_CK(clr.ck_cols());
 
-	row<quanton*>&	all_quas1 = co_quas;
+	row_quanton_t&	all_quas1 = co_quas;
 	row<long>&	qua_colors1 = co_qua_colors;
-	row<quanton*>&	all_quas2 = clr.co_quas;
+	row_quanton_t&	all_quas2 = clr.co_quas;
 	row<long>&	qua_colors2 = clr.co_qua_colors;
 
 	long qua_col = 0;
@@ -800,7 +801,7 @@ memap::get_initial_guide_coloring(brain& brn, coloring& clr, long idx_szs){
 
 	clr.init_coloring();
 
-	row<quanton*>&	all_quas = clr.co_quas;
+	row_quanton_t&	all_quas = clr.co_quas;
 	row<long>&	qua_colors = clr.co_qua_colors;
 
 	row<neuron*>&	all_neus = clr.co_neus;
@@ -871,7 +872,7 @@ memap::map_record_szs(){
 }
 
 void
-memap::map_get_layer_quas(brain& brn, row<quanton*>& all_quas, long lyr_idx1, long lyr_idx2){
+memap::map_get_layer_quas(brain& brn, row_quanton_t& all_quas, long lyr_idx1, long lyr_idx2){
 	BRAIN_CK(ck_last_szs());
 	BRAIN_CK(lyr_idx1 < lyr_idx2);
 	BRAIN_CK((lyr_idx1 == INVALID_IDX) || ma_szs_dotted.is_valid_idx(lyr_idx1));
@@ -1030,7 +1031,7 @@ memap::get_initial_anchor_coloring(brain& brn, coloring& ini_anc_clr, long lst_i
 
 	ini_anc_clr.init_coloring();
 
-	row<quanton*>&	all_quas = ini_anc_clr.co_quas;
+	row_quanton_t&	all_quas = ini_anc_clr.co_quas;
 	row<long>&	qua_colors = ini_anc_clr.co_qua_colors;
 
 	row<neuron*>&	all_neus = ini_anc_clr.co_neus;
@@ -1054,7 +1055,7 @@ void
 coloring::calc_dims(brain& brn, dima_dims& dims){
 	BRAIN_CK(ck_cols());
 
-	row<quanton*>&	all_quas = co_quas;
+	row_quanton_t&	all_quas = co_quas;
 	row<long>&	qua_colors = co_qua_colors;
 
 	row<neuron*>&	all_neus = co_neus;
@@ -1249,15 +1250,15 @@ coloring::get_initial_sorting_coloring(brain& brn, coloring& ini_clr, bool fill_
 
 	ini_clr.init_coloring();
 
-	row<quanton*>&	my_quas = co_quas;
+	row_quanton_t&	my_quas = co_quas;
 
-	row<quanton*>&	all_quas = ini_clr.co_quas;
+	row_quanton_t&	all_quas = ini_clr.co_quas;
 	row<long>&	qua_colors = ini_clr.co_qua_colors;
 
 	row<neuron*>&	all_neus = ini_clr.co_neus;
 	row<long>&	neu_colors = ini_clr.co_neu_colors;
 
-	row<quanton*>	all_opp;
+	row_quanton_t	all_opp;
 
 	BRAIN_CK(ck_cols());
 	BRAIN_CK(all_quas.is_empty());
@@ -1401,6 +1402,8 @@ dbg_prt_diff_tauto_vs_simple_neus(bj_ostream& os, brain& brn){
 
 bool
 memap::map_prepare_mem_oper(mem_op_t mm, brain& brn){
+	instance_info& inst_info = brn.get_my_inst();
+	
 	DBG_PRT(110, os << "map_mem_oper=" << ((void*)this));
 	BRAIN_CK(ck_map_guides(dbg_call_1));
 	DBG_PRT(110, os << "map_mem_oper=" << this);
@@ -1490,7 +1493,9 @@ memap::map_prepare_mem_oper(mem_op_t mm, brain& brn){
 		ch_string pth1 = skg.as_full_path(find_ref);
 		bool found1 = skg.find_path(pth1);
 		if(! found1){ return false; }
-		else { GLB().batch_stat_equ_hits.add_val(1); }
+		else { 
+			inst_info.ist_out.iot_old_hits++;
+		}
 	}
 
 	neus_srg.stab_mutual_unique(quas_srg);
@@ -1664,6 +1669,7 @@ memap::map_dbg_print(bj_ostream& os, mem_op_t mm, brain& brn){
 
 bool
 memap::map_oper(mem_op_t mm, brain& brn){
+	instance_info& inst_info = brn.get_my_inst();
 
 	brn.init_mem_tmps();
 
@@ -1700,17 +1706,17 @@ memap::map_oper(mem_op_t mm, brain& brn){
 
 		///////  start of debug of NO DEBUG
 
-		if(GLB().op_debug_clean_code && (skg_dbg_canon_find_id == 10)){
-			bj_ostream& os = bj_dbg;
+		DBG(
+			if(brn.br_dbg.dbg_clean_code && (skg_dbg_canon_find_id == 10)){
+				bj_ostream& os = bj_dbg;
 
-			os << "TRYING to find cnf=" << bj_eol << tmp_diff_cnf << bj_eol
-				<< "SHAS=" << bj_eol << tmp_diff_cnf.cf_dbg_shas << bj_eol
-				//<< "fst_vpth='" << fst_vpth << "'" << bj_eol
-				<< "fst_idx= " << fst_idx << bj_eol
-				<< "find_id= " << skg_dbg_canon_find_id << bj_eol;
-
-			GLB().print_stats(os);
-		}
+				os << "TRYING to find cnf=" << bj_eol << tmp_diff_cnf << bj_eol
+					<< "SHAS=" << bj_eol << tmp_diff_cnf.cf_dbg_shas << bj_eol
+					//<< "fst_vpth='" << fst_vpth << "'" << bj_eol
+					<< "fst_idx= " << fst_idx << bj_eol
+					<< "find_id= " << skg_dbg_canon_find_id << bj_eol;
+			}
+		)
 
 		///////  end of debug of NO DEBUG
 
@@ -1723,7 +1729,7 @@ memap::map_oper(mem_op_t mm, brain& brn){
 				<< "find_id= " << skg_dbg_canon_find_id);
 			DBG_COMMAND(115, getchar());
 
-			GLB().batch_stat_sub_hits.add_val(1);
+			inst_info.ist_out.iot_old_sub_hits++;
 
 			row<neuron*>& all_tmp_found = brn.br_tmp_found_neus;
 			all_tmp_found.clear();

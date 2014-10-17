@@ -70,22 +70,9 @@ instance_info::parse_instance(ch_string str_ln, long line){
 	const char* pt_in = str_ln.c_str();
 	ist_file_path = parse_field(pt_in);
 	ch_string r_fi = parse_field(pt_in);
-	ist_result = as_satisf(r_fi);
+	ist_out.iot_result = as_satisf(r_fi);
 
 	DBG_PRT(30, os << "read inst=" << *this);
-
-	/*
-	parse_field(pt_in); // double
-
-	ist_num_vars = parse_int(pt_in, line);
-	parse_field(pt_in); // sep
-
-	ist_num_ccls = parse_int(pt_in, line);
-	parse_field(pt_in); // sep
-
-	ist_num_lits = parse_int(pt_in, line);
-	parse_field(pt_in); // sep
-	*/
 }
 
 

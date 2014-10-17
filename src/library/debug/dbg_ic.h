@@ -33,9 +33,14 @@ funcs to dbg_ic.
 #ifndef DBG_IC_H
 #define DBG_IC_H
 
-class brain;
+#include "bj_stream.h"
 
-void	dbg_reset_ic_files();
+class brain;
+class quanton;
+
+void	dbg_reset_ic_files(brain& brn);
+void	dbg_ic_print(brain& brn, row<quanton*>& the_trail);
+
 
 #endif		// DBG_IC_H
 

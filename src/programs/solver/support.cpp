@@ -124,43 +124,6 @@ GLB(){
 }
 
 void
-global_data::dbg_update_config_entries(){
-	if(! dbg_has_lv_arr()){
-		return;
-	}
-	row<bool>& dbg_arr = dbg_get_lv_arr();
-	
-	bj_ostream& os = bj_out;
-	MARK_USED(os);
-
-	consecutive_t curr_round = get_curr_lap();
-
-	long& start_idx = dbg_current_start_entry;
-	long& stop_idx = dbg_current_stop_entry;
-
-	row<debug_entry>& start_lst = dbg_start_dbg_entries;
-	row<debug_entry>& stop_lst = dbg_stop_dbg_entries;
-
-	while(	(start_idx < start_lst.size()) && 
-		(start_lst[start_idx].dbg_round <= curr_round))
-	{
-		long start_dbg_id = start_lst[start_idx].dbg_id;
-		SUPPORT_CK(dbg_arr.is_valid_idx(start_dbg_id));
-		dbg_arr[start_dbg_id] = true;
-		start_idx++;
-	} 
-
-	while(	(stop_idx < stop_lst.size()) && 
-		(stop_lst[stop_idx].dbg_round < curr_round))
-	{
-		long stop_dbg_id = stop_lst[stop_idx].dbg_id;
-		SUPPORT_CK(dbg_arr.is_valid_idx(stop_dbg_id));
-		dbg_arr[stop_dbg_id] = false;
-		stop_idx++;
-	} 
-}
-
-void
 global_data::init_global_data(){
 
 	using_mem_ctrl = false;
@@ -203,12 +166,6 @@ global_data::init_global_data(){
 	dbg_skip_print_info = false;
 
 	dbg_num_laps = 0;
-
-	dbg_ic_active = false;
-	dbg_ic_max_seq = -1;
-	dbg_ic_seq = 0;
-	dbg_ic_after = false;
-	dbg_ic_gen_jpg = false;
 
 	reset_err_msg();
 
@@ -261,29 +218,12 @@ global_data::init_global_data(){
 
 void
 global_data::finish_global_data(){
-	/*
-	final_assig.clear(true, true);
-	final_trail_ids.clear(true, true);
-	final_chosen_ids.clear(true, true);
-	*/
 	out_lev.clear(true, true);
-	/*
-	dbg_config_line.clear(true, true);
-	dbg_start_dbg_entries.clear(true, true);
-	dbg_stop_dbg_entries.clear(true, true);
-	batch_instances.clear(true, true);
-	*/
 }
 
 void	
 global_data::set_active_out_levs(){
-
-	//search PRT_OUT(val
-	// max lev == 9
-
 	out_lev[0] = true;	// batch data
-	//out_lev[1] = true;	// file data
-
 }
 
 bj_ostream&
@@ -300,7 +240,7 @@ global_data::print_totals(bj_ostream& os, double curr_tm){
 	os << bj_eol;
 	if(in_valid_inst()){
 		instance_info& inst_info = get_curr_inst();
-		os << "CURR_LAPS=" << inst_info.ist_num_laps << " ";
+		os << "CURR_LAPS=" << inst_info.ist_out.iot_num_laps << " ";
 	}
 	os << "YES_SAT=" << batch_num_yes_satisf << " ";
 	os << "NO_SAT=" << batch_num_no_satisf << " ";
@@ -389,6 +329,7 @@ global_data::print_final_assig(){
 
 	instance_info& inst_info = get_curr_inst();
 	ch_string f_nam = inst_info.get_f_nam();
+	row_long_t& ff_assg = inst_info.ist_out.iot_final_assig;
 
 	const char* f_nm = GLB().batch_answer_name.c_str();
 	std::ofstream log_stm;
@@ -398,7 +339,7 @@ global_data::print_final_assig(){
 		log_stm << "c " << f_nam << bj_eol;
 		final_chosen_ids.print_row_data(log_stm, false, " ", -1, -1, false, 20);
 		log_stm << " 0" << bj_eol;
-		final_assig.print_row_data(log_stm, false, " ", -1, -1, false, 20);
+		ff_assg.print_row_data(log_stm, false, " ", -1, -1, false, 20);
 		log_stm << " 0" << bj_eol;
 	}
 	log_stm.close();
@@ -406,10 +347,12 @@ global_data::print_final_assig(){
 
 void
 global_data::count_instance(instance_info& inst_info){
+	row_long_t& ff_assg = inst_info.ist_out.iot_final_assig;
+	
 	double end_time = run_time();
-	double full_tm = end_time - inst_info.ist_solve_time;
+	double full_tm = end_time - inst_info.ist_out.iot_solve_time;
 
-	batch_stat_laps.add_val(inst_info.ist_num_laps);
+	batch_stat_laps.add_val(inst_info.ist_out.iot_num_laps);
 	batch_stat_solve_tm.add_val(full_tm);
 
 	/*
@@ -443,7 +386,7 @@ global_data::count_instance(instance_info& inst_info){
 	}
 
 	DBG_PRT(4, os << "FINAL_CHOSEN=" << final_chosen_ids << bj_eol
-		<< "FINAL_ASSIG=" << final_assig << bj_eol 
+		<< "FINAL_ASSIG=" << ff_assg << bj_eol 
 		<< bj_eol);
 
 	if(out_os != NULL_PT){
@@ -452,16 +395,15 @@ global_data::count_instance(instance_info& inst_info){
 
 	PRT_OUT(1, os << "FINISHING" << bj_eol);
 
-	inst_info.ist_solve_time = full_tm;
+	inst_info.ist_out.iot_solve_time = full_tm;
 
-	satisf_val inst_res = inst_info.ist_result;
+	satisf_val inst_res = inst_info.ist_out.iot_result;
 
 	if(inst_res == k_unknown_satisf){
 		batch_num_unknown_satisf++;
 	} else if(inst_res == k_yes_satisf){
-		//BRAIN_CK(! final_assig.is_empty());
 		PRT_OUT(1, print_final_assig());
-		final_assig.clear(true, true);	// So global memcheck says its OK.
+		ff_assg.clear(true, true);	// So global memcheck says its OK.
 		batch_num_yes_satisf++;
 	} else if(inst_res == k_no_satisf){
 		batch_num_no_satisf++;
@@ -644,8 +586,8 @@ all_results_batch_instances(ch_string file_nm, satisf_val r_val){
 	bool all_ok = true;
 
 	for(long aa = 0; aa < f_insts.size(); aa++){
-		instance_info& inst = f_insts[aa];
-		if(inst.ist_result != r_val){
+		instance_info& inst_info = f_insts[aa];
+		if(inst_info.ist_out.iot_result != r_val){
 			all_ok = false;
 		}
 	}
@@ -749,32 +691,6 @@ void	print_periodic_totals(void* pm, double curr_tm){
 void	get_enter(bj_ostream& os, ch_string msg){
 	os << "PRESS ENTER to continue. " << msg << bj_eol;
 	getchar();
-}
-
-void	init_dbg_conf(){
-	config_reader conf_rdr;
-	conf_rdr.read_config("yosoy.conf");
-
-	GLB().dbg_current_start_entry = 0;
-	GLB().dbg_current_stop_entry = 0;
-	GLB().dbg_update_config_entries();
-
-	DBG_COMMAND(37, os << "PRINT_FULL_INFO" << bj_eol; 
-		GLB().dbg_skip_print_info = true);
-
-	DBG_COMMAND(38, os << "SET IC ACTIVE" << bj_eol; 
-		GLB().dbg_ic_active = true);
-
-	DBG_COMMAND(39, os << "SET IC AFTER" << bj_eol; 
-		GLB().dbg_ic_after = true);
-
-	DBG_COMMAND(40, os << "SET IC GEN JPG" << bj_eol; 
-		GLB().dbg_ic_gen_jpg = true);
-
-	/*
-	dbg_ic_max_seq = -1;
-	dbg_ic_seq = 0;
-	*/
 }
 
 ch_string
@@ -998,15 +914,12 @@ int	solver_main(int argc, char** argv){
 
 	int resp = 0;
 
-	SUPPORT_CK(GLB().dbg_start_dbg_entries.get_cap() == 0);
-	SUPPORT_CK(GLB().dbg_stop_dbg_entries.get_cap() == 0);
-
 	MEM_CTRL(mem_size mem_in_u = mem_get_num_by_in_use());
 	MEM_CTRL(MARK_USED(mem_in_u));
 
 	mem_set_num_by_available(get_free_mem_kb() * NUM_BYTES_IN_KBYTE);
 
-	DBG(init_dbg_conf());
+	//DBG(init_dbg_conf());
 
 	bool args_ok = GLB().get_args(argc, argv);
 
@@ -1028,9 +941,6 @@ int	solver_main(int argc, char** argv){
 
 		PRT_OUT(1, os << ".ENDING AT " << run_time() << bj_eol);
 	}
-
-	GLB().dbg_start_dbg_entries.clear(true, true);
-	GLB().dbg_stop_dbg_entries.clear(true, true);
 
 	SUPPORT_CK(mem_in_u == mem_get_num_by_in_use());
 

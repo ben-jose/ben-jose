@@ -52,7 +52,6 @@ all info to keep or return of an instance cnf to solve.
 // decl
 	
 class instance_info;
-class quanton;
 
 DECLARE_PRINT_FUNCS(instance_info)
 
@@ -76,7 +75,7 @@ public:
 };
 
 //=================================================================
-// instance_info
+// aux funcs
 
 #define RES_UNKNOWN_STR "unknown"
 #define RES_YES_SATISF_STR "yes_satisf"
@@ -132,6 +131,64 @@ as_satisf_str(satisf_val vv){
 	return sf_str;
 }
 
+//=================================================================
+// inst_out_info
+
+class inst_out_info {
+public:
+	satisf_val		iot_result;
+	double			iot_solve_time;
+	long			iot_num_vars;
+	long			iot_num_ccls;
+	long			iot_num_lits;
+	consecutive_t	iot_num_laps;
+
+	
+	double			iot_load_tm;
+	double			iot_saved_targets;
+	double			iot_old_hits;
+	double			iot_old_sub_hits;
+	double			iot_new_hits;
+	double			iot_new_sub_hits;
+	
+	row<long>		iot_final_assig;
+
+	inst_out_info(){
+		init_inst_out_info();
+	}
+
+	void	init_inst_out_info(){
+		iot_result = k_unknown_satisf;
+		iot_solve_time = 0.0;
+		iot_num_vars = 0;
+		iot_num_ccls = 0;
+		iot_num_lits = 0;
+		iot_num_laps = 0;
+		
+		iot_load_tm = 0.0;
+		iot_saved_targets = 0.0;
+		iot_old_hits = 0.0;
+		iot_old_sub_hits = 0.0;
+		iot_new_hits = 0.0;
+		iot_new_sub_hits = 0.0;
+	}
+
+	bj_ostream& 	
+	print_inst_out_info(bj_ostream& os, bool from_pt){
+		ch_string sep = RESULT_FIELD_SEP;
+		os << as_satisf_str(iot_result) << sep;
+		os << iot_solve_time << sep;
+		os << iot_num_vars << sep;
+		os << iot_num_ccls << sep;
+		os << iot_num_lits << sep;
+		os << iot_num_laps << sep;
+		return os;
+	}
+};
+
+//=================================================================
+// instance_info
+
 class instance_info {
 private:
 	instance_info&  operator = (instance_info& other){
@@ -152,41 +209,34 @@ private:
 	}
 	
 public:
+	long			ist_group_id;
+	long			ist_id;
+	
 	ch_string		ist_file_path;
-	satisf_val		ist_result;
-	double			ist_solve_time;
-	long			ist_num_vars;
-	long			ist_num_ccls;
-	long			ist_num_lits;
-	consecutive_t	ist_num_laps;
 
 	row<char> 		ist_data;
+
+	long			ist_num_vars;
+	long			ist_num_ccls;
 	row<long> 		ist_ccls;
+	
+	inst_out_info	ist_out;
 	
 	instance_info(){
 		init_instance_info();
 	}
 
-	/*
-	instance_info&  operator = (instance_info& other) { 
-		OBJECT_COPY_ERROR; 
-	}
-
-	instance_info(instance_info& other){ 
-		OBJECT_COPY_ERROR; 
-	}*/
-
 	void	init_instance_info(){
+		ist_group_id = -1;
+		ist_id = -1;
+	
 		ist_file_path = "Unknown path";
-		ist_result = k_unknown_satisf;
-		ist_solve_time = 0.0;
+
+		ist_data.clear();
+		
 		ist_num_vars = 0;
 		ist_num_ccls = 0;
-		ist_num_lits = 0;
-		ist_num_laps = 0;
-		
-		ist_data.clear();
-		ist_ccls.clear();
+		ist_ccls.clear();		
 	}
 	
 	ch_string&	get_f_nam(){
@@ -214,39 +264,6 @@ public:
 	ch_string	parse_field(const char*& pt_in);
 };
 
-//=================================================================
-// instance_stats
-
-class instance_stats {
-public:
-	
-	long			sta_tot_inst;
-	long			sta_consec;
-	double			sta_load_tm;
-	double			sta_saved_targets;
-	double			sta_old_hits;
-	double			sta_old_sub_hits;
-	double			sta_new_hits;
-	double			sta_new_sub_hits;
-	
-	row<quanton*>	sta_final_assig;
-
-	instance_stats(){
-		init_instance_stats();
-	}
-
-	void	init_instance_stats(){
-		sta_tot_inst = 0;
-		sta_consec = 0;
-		sta_load_tm = 0.0;
-		sta_saved_targets = 0.0;
-		sta_old_hits = 0.0;
-		sta_old_sub_hits = 0.0;
-		sta_new_hits = 0.0;
-		sta_new_sub_hits = 0.0;
-	}
-
-};
 
 //=================================================================
 // funcs
@@ -271,16 +288,17 @@ bj_ostream&
 instance_info::print_instance_info(bj_ostream& os, bool from_pt){
 	ch_string sep = RESULT_FIELD_SEP;
 	os << ist_file_path << sep;
-	os << as_satisf_str(ist_result) << sep;
-	os << ist_solve_time << sep;
-	os << ist_num_vars << sep;
-	os << ist_num_ccls << sep;
-	os << ist_num_lits << sep;
-	os << ist_num_laps << sep;
+	os << as_satisf_str(ist_out.iot_result) << sep;
+	os << ist_out.iot_solve_time << sep;
+	os << ist_out.iot_num_vars << sep;
+	os << ist_out.iot_num_ccls << sep;
+	os << ist_out.iot_num_lits << sep;
+	os << ist_out.iot_num_laps << sep;
 	return os;
 }
 
 DEFINE_PRINT_FUNCS(instance_info)
+
 
 #endif		// INSTANCE_INF_H
 

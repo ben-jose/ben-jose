@@ -63,93 +63,36 @@ ch_string	dbg_name(ch_string pref, long seq, ch_string suf){
 	return nm;
 }
 
-void
-brain::dbg_ic_print(row<quanton*>& the_trail){
-	if((GLB().dbg_ic_seq >= GLB().dbg_ic_max_seq) && (GLB().dbg_ic_max_seq >= 0)){
-		return;
-	}
-	DBG_PRT(30, os << "**IC_PRT**");
-	DBG_PRT(31, os << "THE BRAIN=" << bj_eol;
-		print_brain(os);
-		os << "Type ENTER to print the IC: " << bj_eol;
-		DO_GETCHAR;
-	);
-
-	std::ofstream ff;
-	GLB().dbg_ic_seq++;
-
-	ch_string f_suf = DBG_SUFI_DOT;
-	ch_string f_nam = dbg_name(DBG_PREF_IC, GLB().dbg_ic_seq, f_suf);
-
-	ff.open(f_nam.c_str());
-	DBG(dbg_ic_prt_dotty_file(ff, the_trail, DBG_IC_SUBGRAPHS));
-	ff.close();
-
-	if(GLB().dbg_ic_gen_jpg){
-		//long ancho = 3;
-		//char ch_cero = '0';
-
-		bj_ostr_stream o_str;
-		o_str << "echo dot -Tjpg -o ";
-
-		ch_string jpg_suf = ".jpg";
-		ch_string nm_jpg = dbg_name(DBG_PREF_IC, GLB().dbg_ic_seq, jpg_suf);
-
-		o_str << nm_jpg << " " << f_nam;
-
-		/*
-		o_str << DBG_DIR << DBG_PREF_IC;
-		o_str.width(ancho);
-		o_str.fill(ch_cero);
-		o_str << GLB().dbg_ic_seq << ".jpg ";
-
-		o_str << DBG_DIR << DBG_PREF_IC;
-		o_str.width(ancho);
-		o_str.fill(ch_cero);
-		o_str << GLB().dbg_ic_seq << f_suf;
-		*/
-
-		o_str << " >> " << DBG_DIR << "all_dot_to_jpg.bat";
-
-		ch_string comm = o_str.str();
-		system_exec(comm);
-	}
-
-	if(recoil() == 1){
-		f_suf = DBG_SUFI_NEU;
-		f_nam = dbg_name(DBG_PREF_NEU, 0, f_suf);
-
-		ff.open(f_nam.c_str());
-		print_all_original(ff);
-		ff.close();
-	}
-}
-
 bj_ostream& 	
-brain::dbg_ic_prt_dotty_label(bj_ostream& os){
+dbg_ic_prt_dotty_label(brain& brn, bj_ostream& os){
+#ifdef FULL_DEBUG
 	//stats.print_info(os, this, 0.0, true, true);
 	os << "\\n \\" << bj_eol;
 	//os << "i#n " << stats.num_start_neu << " ";
 	//os << "#n " << stats.num_neurons << " ";
 	os << "\\n \\" << bj_eol;
-	os << br_final_msg << " ";
-	os << "recoil " << recoil() << "  ";	
+	os << brn.br_final_msg << " ";
+	os << "recoil " << brn.recoil() << "  ";	
 	//os << "excited_level " << br_excited_level << "  ";
 	os << "\\n \\" << bj_eol;
 	os << "Quantons: ";
-	print_all_quantons(os, 10, "\\n\\\n");
+	brn.print_all_quantons(os, 10, "\\n\\\n");
 	os << "\\n \\" << bj_eol;
 
 	os << "Reasons learned: ";
 	os << "\\n \\" << bj_eol;
 	//br_reasons.print_row_data(os, true, "\\n\\\n");
+#endif
 	return os;
 }
 
 bj_ostream& 	
-brain::dbg_ic_prt_dotty_file(bj_ostream& os, row<quanton*>& the_trail, long style){
+dbg_ic_prt_dotty_file(brain& brn, bj_ostream& os, row_quanton_t& the_trail, 
+							 long style){
+#ifdef FULL_DEBUG
+	//dbg_inst_info& dbg_info = brn.br_dbg;
 	long ii;
-	row<quanton*> nodes;
+	row_quanton_t nodes;
 
 	os << "digraph \"ic_graph\" {" << bj_eol;
 	//os << "node [style=filled,fontsize=20];" << bj_eol;
@@ -159,10 +102,10 @@ brain::dbg_ic_prt_dotty_file(bj_ostream& os, row<quanton*>& the_trail, long styl
 	os << "compound=true" << bj_eol;
 
 	os << "subgraph cluster0 {" << bj_eol;
-	os << "\"" << br_file_name_in_ic << "\" [shape=box];" << bj_eol;
+	os << "\"" << brn.br_file_name_in_ic << "\" [shape=box];" << bj_eol;
 	os << bj_eol << bj_eol;
 	os << "label = \"";
-	dbg_ic_prt_dotty_label(os);
+	dbg_ic_prt_dotty_label(brn, os);
 	os << "\";" << bj_eol;
 	os << "}" << bj_eol << bj_eol;
 
@@ -186,7 +129,7 @@ brain::dbg_ic_prt_dotty_file(bj_ostream& os, row<quanton*>& the_trail, long styl
 	long clus = 1;
 	long q_lv_old = -1;
 	long q_lv = q_lv_old;
-	long lev = level();
+	long lev = brn.level();
 
 	long edg_id = 0;
 	MARK_USED(edg_id);
@@ -268,24 +211,93 @@ brain::dbg_ic_prt_dotty_file(bj_ostream& os, row<quanton*>& the_trail, long styl
 
 	os << "}" << bj_eol;
 
+#endif
 	return os;
 }
 
 
-void	dbg_reset_ic_files(){
+void	dbg_reset_ic_files(brain& brn){
+#ifdef FULL_DEBUG
+	dbg_inst_info& dbg_info = brn.br_dbg;
 	ch_string rm_str = "rm ";
 	ch_string dd_str = DBG_DIR;
-	if(GLB().dbg_ic_active){
+	if(brn.br_dbg.dbg_ic_active){
 		ch_string tg_str = "*.dot";
 		ch_string o_str = rm_str + dd_str + tg_str;
 		system_exec(o_str);
 	}
 
-	if(GLB().dbg_ic_gen_jpg){
+	if(dbg_info.dbg_ic_gen_jpg){
 		ch_string tg_str = "all_dot_to_jpg.bat";
 		ch_string o_str = rm_str + dd_str + tg_str;
 		system_exec(o_str);
 	}
+#endif
+}
+
+void
+dbg_ic_print(brain& brn, row_quanton_t& the_trail){
+#ifdef FULL_DEBUG
+	dbg_inst_info& dbg_info = brn.br_dbg;
+	if((dbg_info.dbg_ic_seq >= dbg_info.dbg_ic_max_seq) && (dbg_info.dbg_ic_max_seq >= 0)){
+		return;
+	}
+	DBG_PRT(30, os << "**IC_PRT**");
+	DBG_PRT(31, os << "THE BRAIN=" << bj_eol;
+		brn.print_brain(os);
+		os << "Type ENTER to print the IC: " << bj_eol;
+		DO_GETCHAR;
+	);
+
+	std::ofstream ff;
+	dbg_info.dbg_ic_seq++;
+
+	ch_string f_suf = DBG_SUFI_DOT;
+	ch_string f_nam = dbg_name(DBG_PREF_IC, dbg_info.dbg_ic_seq, f_suf);
+
+	ff.open(f_nam.c_str());
+	DBG(dbg_ic_prt_dotty_file(brn, ff, the_trail, DBG_IC_SUBGRAPHS));
+	ff.close();
+
+	if(dbg_info.dbg_ic_gen_jpg){
+		//long ancho = 3;
+		//char ch_cero = '0';
+
+		bj_ostr_stream o_str;
+		o_str << "echo dot -Tjpg -o ";
+
+		ch_string jpg_suf = ".jpg";
+		ch_string nm_jpg = dbg_name(DBG_PREF_IC, dbg_info.dbg_ic_seq, jpg_suf);
+
+		o_str << nm_jpg << " " << f_nam;
+
+		/*
+		o_str << DBG_DIR << DBG_PREF_IC;
+		o_str.width(ancho);
+		o_str.fill(ch_cero);
+		o_str << dbg_info.dbg_ic_seq << ".jpg ";
+
+		o_str << DBG_DIR << DBG_PREF_IC;
+		o_str.width(ancho);
+		o_str.fill(ch_cero);
+		o_str << dbg_info.dbg_ic_seq << f_suf;
+		*/
+
+		o_str << " >> " << DBG_DIR << "all_dot_to_jpg.bat";
+
+		ch_string comm = o_str.str();
+		system_exec(comm);
+	}
+
+	if(brn.recoil() == 1){
+		f_suf = DBG_SUFI_NEU;
+		f_nam = dbg_name(DBG_PREF_NEU, 0, f_suf);
+
+		ff.open(f_nam.c_str());
+		brn.print_all_original(ff);
+		ff.close();
+	}
+#endif
 }
 
 
