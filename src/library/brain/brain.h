@@ -1765,6 +1765,40 @@ class leveldat {
 	}
 };
 
+//=================================================================
+// dbg_inst_info
+
+class dbg_inst_info {
+public:
+	
+	long	dbg_before_retract_lv;
+	long	dbg_last_recoil_lv;
+	
+	row<neuron*>	 	dbg_simple_neus;
+	row<neuron*>	 	dbg_used_neus;
+	row<canon_clause*> 	dbg_ccls;
+	canon_cnf		dbg_cnf;
+	bj_big_int_t	dbg_find_id;
+	bj_big_int_t	dbg_save_id;
+
+	row<neuron*>	 	dbg_original_used;
+	row<quanton*>		dbg_all_chosen;
+	
+	bool	dbg_ic_active;
+	bool	dbg_ic_after;
+	bool	dbg_just_read;
+	bool	dbg_clean_code;
+	
+	bj_big_int_t	dbg_canon_find_id;
+
+	dbg_inst_info(){
+		init_dbg_inst_info();
+	}
+
+	void	init_dbg_inst_info();
+
+};
+
 //=============================================================================
 // brain
 
@@ -1847,20 +1881,6 @@ class brain {
 	canon_cnf		br_tmp_wrt_diff_cnf;
 	canon_cnf		br_tmp_wrt_guide_cnf;
 
-	DBG(
-		row<neuron*>	 	br_dbg_simple_neus;
-		row<neuron*>	 	br_dbg_used_neus;
-		row<canon_clause*> 	br_dbg_ccls;
-		canon_cnf		br_dbg_cnf;
-		bj_big_int_t	br_dbg_find_id;
-		bj_big_int_t	br_dbg_save_id;
-
-		row<neuron*>	 	br_dbg_original_used;
-		row<quanton*>		br_dbg_all_chosen;
-	)
-
-	//long			br_conflict_tier;
-	//row<neuron*> 		br_conflicts;
 	neuron* 		br_conflict_found;
 
 	row<memap*>		br_maps_active;

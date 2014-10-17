@@ -249,37 +249,6 @@ public:
 };
 
 //=================================================================
-// dbg_inst_info
-
-class dbg_inst_info {
-public:
-	
-	long	dbg_before_retract_lv;
-	long	dbg_last_recoil_lv;
-	
-	bool	dbg_ic_active;
-	bool	dbg_ic_after;
-	bool	dbg_just_read;
-	bool	dbg_clean_code;
-	
-	bj_big_int_t	dbg_canon_find_id;
-
-	dbg_inst_info(){
-		init_dbg_inst_info();
-	}
-
-	void	init_dbg_inst_info(){
-		dbg_ic_active = false;
-		dbg_ic_after = false;
-		dbg_just_read = false;
-		dbg_clean_code = false;
-		
-		dbg_canon_find_id = 0;
-	}
-
-};
-
-//=================================================================
 // funcs
 
 

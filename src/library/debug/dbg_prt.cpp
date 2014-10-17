@@ -83,9 +83,9 @@ dbg_prt_all_cho(brain& brn){
 		abort_func(1, msg.c_str());
 	}
 
-	//dbg_get_all_chosen(br_dbg_all_chosen);
+	//dbg_get_all_chosen(br_dbg.dbg_all_chosen);
 
-	log_stm << brn.br_dbg_all_chosen;
+	log_stm << brn.br_dbg.dbg_all_chosen;
 	log_stm << bj_eol; 
 	log_stm.close();
 #endif

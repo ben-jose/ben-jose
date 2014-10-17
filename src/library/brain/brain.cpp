@@ -1003,9 +1003,9 @@ brain::init_brain(skeleton_glb& the_skl, instance_info& inst){
 	init_tots_notes();
 
 	DBG(
-		br_dbg_find_id = 0;
-		br_dbg_save_id = 0;
-		br_dbg_all_chosen.clear();
+		br_dbg.dbg_find_id = 0;
+		br_dbg.dbg_save_id = 0;
+		br_dbg.dbg_all_chosen.clear();
 	)
 }
 
@@ -1323,7 +1323,7 @@ brain::init_loading(long num_qua, long num_neu){
 	init_tots_notes();
 
 	DBG(
-		br_dbg_all_chosen.clear();
+		br_dbg.dbg_all_chosen.clear();
 	)
 }
 
@@ -2870,7 +2870,7 @@ brain::pulsate(){
 			cho->set_note5(brn); 
 			DBG(
 				cho->qu_dbg_fst_lap_cho = brn.br_current_ticket.tk_recoil;
-				br_dbg_all_chosen.push(cho);
+				br_dbg.dbg_all_chosen.push(cho);
 			)
 		}
 		if(cho->opposite().is_note5()){ 
@@ -3211,10 +3211,10 @@ memap::map_ck_simple_no_satisf(mem_op_t mm, brain& brn){
 	//long tot_vars = brn.br_positons.size();
 	//long tot_lits = 0;
 	//long tot_twolits = 0;
-	row<neuron*>& dbg_neus = brn.br_dbg_simple_neus;
-	row<canon_clause*>& dbg_ccls = brn.br_dbg_ccls;
+	row<neuron*>& dbg_neus = brn.br_dbg.dbg_simple_neus;
+	row<canon_clause*>& dbg_ccls = brn.br_dbg.dbg_ccls;
 	skeleton_glb& skg = brn.get_skeleton();
-	canon_cnf& dbg_cnf = brn.br_dbg_cnf;
+	canon_cnf& dbg_cnf = brn.br_dbg.dbg_cnf;
 
 	dima_dims dbg_dims;
 
@@ -3282,7 +3282,7 @@ memap::dbg_prepare_used_dbg_cnf(mem_op_t mm, brain& brn, row<canon_clause*>& the
 
 	the_ccls.clear();
 
-	row<neuron*>& all_orig = brn.br_dbg_original_used;
+	row<neuron*>& all_orig = brn.br_dbg.dbg_original_used;
 
 	for(long aa = 0; aa < all_orig.size(); aa++){
 		BRAIN_CK(all_orig[aa] != NULL_PT);
@@ -3305,9 +3305,9 @@ memap::dbg_prepare_used_dbg_cnf(mem_op_t mm, brain& brn, row<canon_clause*>& the
 bool
 memap::dbg_ck_used_simple_no_satisf(mem_op_t mm, brain& brn){
 #ifdef FULL_DEBUG
-	row<canon_clause*>& dbg_ccls = brn.br_dbg_ccls;
+	row<canon_clause*>& dbg_ccls = brn.br_dbg.dbg_ccls;
 	skeleton_glb& skg = brn.get_skeleton();
-	canon_cnf& dbg_cnf = brn.br_dbg_cnf;
+	canon_cnf& dbg_cnf = brn.br_dbg.dbg_cnf;
 
 	dbg_prepare_used_dbg_cnf(mm, brn, dbg_ccls);
 
@@ -3343,7 +3343,7 @@ brain::dbg_add_to_used(neuron& neu){
 	if(! neu.ne_dbg_in_used){
 		neu.ne_dbg_in_used = true;
 		if(neu.ne_original){
-			br_dbg_original_used.push(&neu);
+			br_dbg.dbg_original_used.push(&neu);
 		} 
 	}
 #endif
@@ -3464,3 +3464,12 @@ brain::dbg_get_all_chosen(row<quanton*>& all_cho){
 */
 
 
+void
+dbg_inst_info::init_dbg_inst_info(){
+	dbg_ic_active = false;
+	dbg_ic_after = false;
+	dbg_just_read = false;
+	dbg_clean_code = false;
+	
+	dbg_canon_find_id = 0;
+}

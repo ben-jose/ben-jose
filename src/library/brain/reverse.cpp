@@ -242,7 +242,7 @@ brain::reverse(){
 				BRAIN_CK(mpp0.ck_last_szs());
 				BRAIN_CK(! mpp0.ma_dotted.is_empty());
 
-				DBG(br_dbg_find_id++; skg_dbg_canon_find_id = br_dbg_find_id;)
+				DBG(br_dbg.dbg_find_id++; skg_dbg_canon_find_id = br_dbg.dbg_find_id;)
 
 				in_mm = mpp0.map_find(brn);
 			}
@@ -288,7 +288,7 @@ brain::reverse(){
 	
 					//brn.init_forced_sorter();
 
-					DBG(br_dbg_save_id++; skg_dbg_canon_save_id = br_dbg_save_id);
+					DBG(br_dbg.dbg_save_id++; skg_dbg_canon_save_id = br_dbg.dbg_save_id);
 					
 					BRAIN_CK(lv_map0.dbg_ck_used_simple_no_satisf(mo_save, brn));
 					BRAIN_CK(lv_map0.map_ck_simple_no_satisf(mo_save, brn));
@@ -1372,7 +1372,7 @@ dbg_find_diff_tauto_vs_simple_neus(brain& brn, row<neuron*>& not_in_tauto,
 								   row<neuron*>& not_in_simple)
 {
 #ifdef FULL_DEBUG
-	row<neuron*>& dbg_simple_neus = brn.br_dbg_simple_neus;
+	row<neuron*>& dbg_simple_neus = brn.br_dbg.dbg_simple_neus;
 
 	row<neuron*> dbg_tauto_neus;
 	srt_row_as<neuron>(brn.br_tauto_neus_srg.sg_step_sortees, dbg_tauto_neus);
