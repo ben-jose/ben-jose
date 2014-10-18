@@ -540,7 +540,6 @@ get_nftw_flag_str(long ff){
 	case FTW_SLN:		out_str = "FTW_SLN";		break;
 	case FTW_DP:		out_str = "FTW_DP";		break;
 	};
-	//DBG_PRT(83, os << out_str);
 	return out_str;
 }
 
@@ -566,7 +565,6 @@ get_errno_str(long val_errno){
 	case EROFS:		out_str = "EROFS";		break;
 	case EXDEV:		out_str = "EXDEV";		break;
 	};
-	//DBG_PRT(83, os << out_str);
 	return out_str;
 }
 
@@ -576,7 +574,6 @@ delete_dir_entry(const char *fpath, const struct stat *sb,
 {
 	MARK_USED(sb);
 	MARK_USED(ftwbuf);
-	//DBG_PRT(95, os << "deleting entry " << fpath);
 
 	switch (tflag) {
 	case FTW_D:
@@ -613,8 +610,6 @@ delete_directory(ch_string& dir_nm){
 	if(dir_nm[lst_pos] == '/'){
 		dir_nm = dir_nm.substr(0, lst_pos);
 	}
-
-	//DBG_PRT(74, os << "deleting directory " << dir_nm);
 
 	nftw(dir_nm.c_str(), delete_dir_entry, max_depth, FTW_DEPTH | FTW_PHYS);
 }

@@ -585,7 +585,7 @@ memap::map_inc_stab_guide(brain& brn, coloring& guide_col){
 
 	sort_glb& neus_srg = brn.br_guide_neus_srg;
 	sort_glb& quas_srg = brn.br_guide_quas_srg;
-	coloring ini_guide_col;
+	coloring ini_guide_col(&brn);
 	dima_dims dims0;
 
 	long nxt_idx = lst_idx + 1;
@@ -1026,7 +1026,9 @@ memap::ck_guide_idx(coloring& guide_col, dbg_call_id dbg_id){
 }
 
 void
-memap::get_initial_anchor_coloring(brain& brn, coloring& ini_anc_clr, long lst_idx, long nxt_idx){
+memap::get_initial_anchor_coloring(brain& brn, coloring& ini_anc_clr, long lst_idx, 
+								   long nxt_idx)
+{
 	BRAIN_CK(ck_map_guides(dbg_call_1));
 
 	ini_anc_clr.init_coloring();
@@ -1172,7 +1174,9 @@ coloring::copy_co_to(coloring& col2){
 }
 
 void
-memap::get_initial_tauto_coloring(brain& brn, coloring& stab_guide_clr, coloring& base_tauto_clr, bool ck_tks){
+memap::get_initial_tauto_coloring(brain& brn, coloring& stab_guide_clr, 
+								  coloring& base_tauto_clr, bool ck_tks)
+{
 	BRAIN_CK(&stab_guide_clr != &base_tauto_clr);
 
 	base_tauto_clr.init_coloring();
@@ -1491,7 +1495,7 @@ memap::map_prepare_mem_oper(mem_op_t mm, brain& brn){
 	if(do_quick_finds){
 		ch_string find_ref = phd.pd_ref1_nam;
 		ch_string pth1 = skg.as_full_path(find_ref);
-		bool found1 = skg.find_path(pth1);
+		bool found1 = skg.find_path(pth1, &(inst_info.ist_out));
 		if(! found1){ return false; }
 		else { 
 			inst_info.ist_out.iot_old_hits++;
@@ -1501,7 +1505,7 @@ memap::map_prepare_mem_oper(mem_op_t mm, brain& brn){
 	neus_srg.stab_mutual_unique(quas_srg);
 	//canon_cnf& cnf2 = neus_srg.stab_mutual_get_cnf(skg, PHASE_2_COMMENT, false);
 
-	coloring uni_guide_col;
+	coloring uni_guide_col(&brn);
 	uni_guide_col.save_colors_from(neus_srg, quas_srg);
 	BRAIN_CK(uni_guide_col.co_all_qua_consec);
 	BRAIN_CK(uni_guide_col.co_all_neu_consec);
@@ -1517,7 +1521,7 @@ memap::map_prepare_mem_oper(mem_op_t mm, brain& brn){
 	// stab uni_colors
 
 	dima_dims dims1;
-	coloring ini_tau_col;
+	coloring ini_tau_col(&brn);
 
 	sort_glb& fnl_ne_srg = brn.br_tauto_neus_srg;
 	sort_glb& fnl_qu_srg = brn.br_tauto_quas_srg;

@@ -60,22 +60,10 @@ do_cnf_file()
 	instance_info& the_ans = GLB().get_curr_inst();
 	MARK_USED(the_ans);
 
-	DBG_PRT(0, os << "STARTING. batch_count=" 
-		<< GLB().batch_consec << " of " 
-		<< GLB().batch_num_files);
-
 	ch_string f_nam = the_ans.get_f_nam();
 	SUPPORT_CK(f_nam.size() > 0);
-	DBG_PRT(0, os << "FILE=" << f_nam << bj_eol);
 
 	call_and_handle_exceptions(call_solve_instance);
-
-	DBG_PRT(0, os << "FINISHING. batch_count="
-		<< GLB().batch_consec << " of " 
-		<< GLB().batch_num_files << bj_eol;
-		the_ans.print_headers(os);
-		os << bj_eol << the_ans;
-	);
 }
 
 

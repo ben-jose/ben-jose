@@ -34,6 +34,7 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 #include "stack_trace.h"
 #include "file_funcs.h"
 #include "util_funcs.h"
+#include "instance_info.h"
 #include "support.h"
 #include "skeleton.h"
 #include "dimacs.h"
@@ -554,14 +555,14 @@ cmp_canon_ids(const long& id1, const long& id2){
 
 comparison
 cmp_lit_rows(row_long_t& trl1, row_long_t& trl2){
-	DBG_PRT_COND(DBG_ALL_LVS, ! (trl1.is_sorted(cmp_canon_ids)),
+	DBG_COND_COMM(! (trl1.is_sorted(cmp_canon_ids)),
 		os << "ABORTING_DATA " << bj_eol;
 		os << " trl1=" << trl1 << bj_eol;
 		os << " trl2=" << trl2 << bj_eol;
 		os << "END_OF_aborting_data" << bj_eol;
 	);
 	SKELETON_CK(trl1.is_sorted(cmp_canon_ids));
-	DBG_PRT_COND(DBG_ALL_LVS, ! (trl2.is_sorted(cmp_canon_ids)),
+	DBG_COND_COMM(! (trl2.is_sorted(cmp_canon_ids)),
 		os << "ABORTING_DATA " << bj_eol;
 		os << " trl1=" << trl1 << bj_eol;
 		os << " trl2=" << trl2 << bj_eol;
@@ -879,7 +880,7 @@ skeleton_glb::get_new_clause(){
 	SKELETON_CK(! ccl.cc_can_release);
 	DBG(ccl.cc_can_release = true);
 
-	DBG_PRT_COND(DBG_ALL_LVS, ! (ccl.is_cc_virgin()),
+	DBG_COND_COMM(! (ccl.is_cc_virgin()),
 		os << "ABORTING_DATA " << bj_eol;
 		os << " side=" << cond_side << bj_eol;
 		os << " ccl=";
@@ -1315,7 +1316,7 @@ canon_cnf::load_from(skeleton_glb& skg, ch_string& f_nam){
 
 	DBG(ch_string ck_sha_str);
 	DBG(calc_sha_in(ck_sha_str));
-	DBG_PRT_COND(DBG_ALL_LVS, ! (cf_sha_str == ck_sha_str),
+	DBG_COND_COMM(! (cf_sha_str == ck_sha_str),
 		os << "ABORTING_DATA " << bj_eol;
 		os << "CLAUSES" << bj_eol;
 		cf_clauses.print_row_data(os, true, "\n");
@@ -1481,7 +1482,7 @@ canon_cnf::i_sub_of_vnt(skeleton_glb& skg, ch_string& vpth, bool& are_eq){
 }
 
 bool
-skeleton_glb::find_path(ch_string pth_to_find){
+skeleton_glb::find_path(ch_string pth_to_find, inst_out_info* out_info){
 	if(! kg_find_cnn_pth){
 		DBG_PRT(109, os << "NOT finding 1 pth=" << pth_to_find);
 		return false;
@@ -1499,8 +1500,8 @@ skeleton_glb::find_path(ch_string pth_to_find){
 
 	//bool found_it = (all_found.find(pth_to_find) != all_found.end());
 	bool found_it = all_found.search(pth_to_find);
-	if(found_it){
-		GLB().batch_stat_direct_hits.add_val(1);
+	if(found_it && (out_info != NULL)){
+		out_info->iot_new_hits++;
 	}
 
 	if(kg_local_verifying || kg_only_save){
@@ -1829,7 +1830,7 @@ canon_cnf::ck_vnts(skeleton_glb& skg){
 	long aa = 0;
 	for(aa = 0; aa < num_vnts; aa++){
 		ch_string vpth = get_variant_path(skg, aa);
-		DBG_PRT_COND(DBG_ALL_LVS, ! (vpth != ""),
+		DBG_COND_COMM(! (vpth != ""),
 			os << "ABORTING_DATA case1" << bj_eol;
 			os << " num_vnts=" << num_vnts << bj_eol;
 			os << " aa=" << aa << bj_eol;
@@ -1841,7 +1842,7 @@ canon_cnf::ck_vnts(skeleton_glb& skg){
 	if(aa == num_vnts){
 		for(; aa < SKG_MAX_NUM_VARIANT; aa++){
 			ch_string vpth = get_variant_path(skg, aa, true);
-			DBG_PRT_COND(DBG_ALL_LVS, ! (vpth == ""),
+			DBG_COND_COMM(! (vpth == ""),
 				os << "ABORTING_DATA case2" << bj_eol;
 				os << " num_vnts=" << num_vnts << bj_eol;
 				os << " aa=" << aa << bj_eol;
@@ -1959,7 +1960,7 @@ canon_cnf::save_cnf(skeleton_glb& skg, ch_string sv_pth){
 		//DBG_PRT_COND(106, sv_ok, os << "SAVING_EQU");
 		DBG(
 			if(existed && has_phases){
-				DBG_PRT_COND(DBG_ALL_LVS, ! ((pth1 == "") || skg.ref_exists(pth1)),
+				DBG_COND_COMM(! ((pth1 == "") || skg.ref_exists(pth1)),
 					os << "ABORTING_DATA " << bj_eol;
 					os << " cnf=" << this << bj_eol;
 					os << " cf_phdat=" << cf_phdat << bj_eol;
@@ -2087,7 +2088,7 @@ skeleton_glb::ref_vnt_name(ch_string vpth, ch_string sub_nm){
 
 	DBG(ch_string vfull = as_full_path(vpth));
 	DBG(bool ck1 = (! ref_exists(vpth) || (vfull == (path_to_absolute_path(vfull) + '/'))));
-	DBG_PRT_COND(DBG_ALL_LVS, ! ck1,
+	DBG_COND_COMM(! ck1,
 		os << "ABORTING_DATA " << bj_eol;
 		os << " vpth=" << vpth << bj_eol;
 		os << " vfull=" << vfull << bj_eol;
@@ -2118,14 +2119,14 @@ canon_cnf::init_with(skeleton_glb& skg, row<canon_clause*>& all_ccls,
 		if(! need_to_calc){ 
 			long dbg_tot_vars; long dbg_tot_lits; long dbg_tot_twolits;
 			canon_count_tots(all_ccls, dbg_tot_vars, dbg_tot_lits, dbg_tot_twolits); 
-			DBG_PRT_COND(DBG_ALL_LVS, ! (tot_vars == dbg_tot_vars),
+			DBG_COND_COMM(! (tot_vars == dbg_tot_vars),
 				os << "ABORTING_DATA " << bj_eol;
 				os << " dbg_tot_vars=" << dbg_tot_vars << bj_eol;
 				os << " tot_vars=" << tot_vars << bj_eol;
 				os << "END_OF_aborting_data" << bj_eol;
 			);
 			SKELETON_CK(tot_vars == dbg_tot_vars);
-			DBG_PRT_COND(DBG_ALL_LVS, ! (tot_lits == dbg_tot_lits),
+			DBG_COND_COMM(! (tot_lits == dbg_tot_lits),
 				os << "ABORTING_DATA " << bj_eol;
 				os << " all_ccls=" << bj_eol;
 				all_ccls.print_row_data(os, true, "\n");

@@ -878,7 +878,7 @@ void	test_open_unlink(int argc, char** argv){
 
 int
 load_entry(const char *fpath, const struct stat *sb, int tflag, struct FTW *ftwbuf){
-	//bj_ostream& os = bj_out;
+	bj_ostream& os = bj_out;
 
 	MARK_USED(sb);
 	MARK_USED(ftwbuf);
@@ -894,16 +894,16 @@ load_entry(const char *fpath, const struct stat *sb, int tflag, struct FTW *ftwb
 			if(path_ends_with(full_pth, cnn_nm)){
 				canon_cnf the_cnf;
 
-				DBG_PRT(108, os << full_pth);
+				os << full_pth;
 
 				the_cnf.release_and_init(GSKE, true);
 				bool all_ok = the_cnf.load_from(GSKE, full_pth);
 				if(all_ok){
-					DBG_PRT(108, os << "LOAD OK");
+					os << "LOAD OK";
 					//os << "LOAD OK";
 					//the_cnf.print_canon_cnf(os);
 				} else {
-					DBG_PRT(108, os << os << "LOAD OF " << full_pth << " FAILED !!");
+					os << "LOAD OF " << full_pth << " FAILED !!";
 				}
 				//os << bj_eol;
 				the_cnf.release_and_init(GSKE, true);
@@ -942,12 +942,10 @@ update_elap_entry(const char *fpath, const struct stat *sb, int tflag, struct FT
 				long upd_it = gg.gen_rand_int32_ie(0, 2);
 				if(upd_it > 0){
 					ch_string full_pth = path_get_directory(pth_str) + '/';
-					//DBG_PRT(108, os << "full_pth in update= " << full_pth);
 
 					ch_string elp_nm = full_pth + SKG_ELAPSED_NAME;
 					update_elapsed(elp_nm);
 
-					//DBG_PRT(108, os << "UPDATING " << elp_nm);
 				}
 			}
 		}
@@ -1075,11 +1073,9 @@ test_skl(){
 			BRAIN_CK(f_idx != INVALID_NATURAL);
 
 		} else {
-			DBG_PRT(108, 
-				os << bj_eol;
-				os << bj_eol;
-				os << "!!! SKIPED num_test=" << aa;
-			);
+			os << bj_eol;
+			os << bj_eol;
+			os << "!!! SKIPED num_test=" << aa;
 		}
 
 		the_cnf.release_and_init(GSKE, true);

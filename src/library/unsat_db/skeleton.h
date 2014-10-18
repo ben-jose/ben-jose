@@ -48,6 +48,7 @@ enum charge_t {
 };
 
 
+class inst_out_info;
 class canon_clause;
 class variant;
 class canon_cnf;
@@ -625,7 +626,7 @@ public:
 	void	init_paths();
 	void	report_err(ch_string pth, ch_string err_pth);
 
-	bool	find_path(ch_string the_pth);
+	bool	find_path(ch_string the_pth, inst_out_info* out_info = NULL);
 
 	bool	in_skl(ch_string a_dir){
 		ch_string skl_pth = as_full_path(SKG_SKELETON_DIR);

@@ -44,7 +44,7 @@ char* sorset::CL_NAME = as_pt_char("{sorset}");
 sortee&
 as_sortee(binder* bdr){
 	SORTER_CK_1(bdr != NULL_PT);
-	DBG_PRT_COND(DBG_ALL_LVS, ! (bdr->get_cls_name() == sortee::CL_NAME) ,
+	DBG_COND_COMM(! (bdr->get_cls_name() == sortee::CL_NAME) ,
 		os << "ABORTING_DATA " << bj_eol;
 		os << "bdr->get_cls_name()=" << bdr->get_cls_name() << bj_eol;
 		os << "sortee::CL_NAME=" << sortee::CL_NAME << bj_eol;
@@ -317,7 +317,7 @@ sortee::sort_from(sort_glb& srg, sort_id_t curr_id, void* id_src){
 	DBG_SORTOR_PRT(66, os << "sort from srt=" << this << " ID=" << curr_id);
 
 	SORTER_CK(curr_id > 0);
-	DBG_PRT_COND(DBG_ALL_LVS, ! (curr_id >= srg.sg_dbg_last_id) ,
+	DBG_COND_COMM(! (curr_id >= srg.sg_dbg_last_id) ,
 		os << "ABORTING_DATA " << bj_eol;
 		os << "curr_id=" << curr_id << bj_eol;
 		os << "srg.sg_dbg_last_id=" << srg.sg_dbg_last_id << bj_eol;
@@ -492,7 +492,7 @@ sorset::is_ss_virgin(bool ck_items){
 
 	bool is_vir = (c1 && c2 && c3 && c4 && c5 && c6 && c7);
 
-	DBG_PRT_COND(DBG_ALL_LVS, ! is_vir,
+	DBG_COND_COMM(! is_vir,
 		os << "ABORTING_DATA " << bj_eol;
 		os << "  c1=" << c1 << "  c2=" << c2 << "  c3=" << c3 << "  c4=" << c4;
 		os << "  c5=" << c5 << "  c6=" << c6 << "  c7=" << c7;
@@ -983,7 +983,9 @@ sort_glb::stab_mutual(sort_glb& srg2){
 	srg1.sg_tot_stab_steps = 0;
 	srg2.sg_tot_stab_steps = 0;
 
-	DBG_PRT(61, os << " STAB_MUTUAL srg1=" << ((void*)(&srg1)) << " srg2=" << ((void*)(&srg2)));
+	DBG_PRT(61, 
+			os << " STAB_MUTUAL srg1=" << ((void*)(&srg1)) << " srg2=" << ((void*)(&srg2))
+	);
 
 	bool has_diff = true;
 	while(has_diff){
@@ -1068,7 +1070,9 @@ sort_glb::stab_mutual_unique(sort_glb& srg2){
 	SORTER_CK(! srg1.sg_step_has_diff);
 	SORTER_CK(! srg2.sg_step_has_diff);
 
-	DBG_PRT(62, os << " UNIQUE cnf=" << bj_eol; sg_cnf_clauses.print_row_data(os, true, "\n"););
+	DBG_PRT(62, 
+			os << " UNIQUE cnf=" << bj_eol; sg_cnf_clauses.print_row_data(os, true, "\n");
+	);
 }
 
 canon_cnf&

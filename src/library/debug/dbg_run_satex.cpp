@@ -50,7 +50,7 @@ dbg_run_satex_on(brain& brn, ch_string f_nam){
 		bool is_no_sat = all_results_batch_instances(lg_nm, k_no_satisf);
 		MARK_USED(is_no_sat);
 
-		DBG_PRT_COND(DBG_ALL_LVS, ! is_no_sat ,
+		DBG_COND_COMM(! is_no_sat ,
 			os << "ABORTING_DATA " << bj_eol;
 			//os << "mmap_before_tk=" << ma_before_retract_tk << bj_eol;
 			//os << "mmap_after_tks=" << ma_after_retract_tks << bj_eol;

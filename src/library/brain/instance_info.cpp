@@ -65,14 +65,10 @@ void
 instance_info::parse_instance(ch_string str_ln, long line){
 	init_instance_info();
 
-	DBG_PRT(30, os << "LINE inst=" << str_ln);
-
 	const char* pt_in = str_ln.c_str();
 	ist_file_path = parse_field(pt_in);
 	ch_string r_fi = parse_field(pt_in);
 	ist_out.iot_result = as_satisf(r_fi);
-
-	DBG_PRT(30, os << "read inst=" << *this);
 }
 
 

@@ -33,6 +33,7 @@ Global classes and functions that support and assist the system.
 #include <fstream>
 
 #include "top_exception.h"
+#include "file_funcs.h"
 #include "stack_trace.h"
 #include "support.h"
 #include "brain.h"
@@ -95,17 +96,6 @@ get_free_mem_kb(){
 	}
 	return free_mem_kb;
 }
-
-//======================================================================
-// file_exception
-
-class file_exception : public top_exception {
-public:
-	file_exception(char* descr = as_pt_char("undefined file exception")){
-		ex_nm = descr;
-		ex_id = 0;
-	}
-};
 
 //============================================================
 // global_data
@@ -385,10 +375,6 @@ global_data::count_instance(instance_info& inst_info){
 		*/
 	}
 
-	DBG_PRT(4, os << "FINAL_CHOSEN=" << final_chosen_ids << bj_eol
-		<< "FINAL_ASSIG=" << ff_assg << bj_eol 
-		<< bj_eol);
-
 	if(out_os != NULL_PT){
 		PRT_OUT(1, print_stats(*out_os));
 	}
@@ -599,7 +585,6 @@ void	call_and_handle_exceptions(core_func_t the_func){
 	bj_ostr_stream msg_err;
 	try{
 		(*the_func)();
-		DBG_PRT(6, os << "AFTER THE_FUNC in call_and_handle_exceptions");
 	} catch (top_exception& ex1){
 		bj_err << ex1.get_str() << bj_eol;
 		log_message(ex1.get_str());
@@ -611,8 +596,6 @@ void	call_and_handle_exceptions(core_func_t the_func){
 		bj_out.flush();
 		abort_func(0);
 	}
-
-	DBG_PRT(6, os << "AFTER try_catch in call_and_handle_exceptions");
 
 	GLB().reset_global();
 }
@@ -756,9 +739,7 @@ void	do_all_instances(){
 
 			do_cnf_file();
 
-			DBG_PRT(6, os << "AFTER do_cnf_file");
-
-			DBG_PRT_COND(DBG_ALL_LVS, ! (mem_in_u == mem_get_num_by_in_use()) ,
+			DBG_COND_COMM(! (mem_in_u == mem_get_num_by_in_use()) ,
 				os << "ABORTING_DATA " << bj_eol;
 				os << "mem_in_u=" << mem_in_u << bj_eol;
 				os << "mem_get_num_by_in_use()=" << mem_get_num_by_in_use() << bj_eol;

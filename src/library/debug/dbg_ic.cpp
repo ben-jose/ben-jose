@@ -242,12 +242,6 @@ dbg_ic_print(brain& brn, row_quanton_t& the_trail){
 	if((dbg_info.dbg_ic_seq >= dbg_info.dbg_ic_max_seq) && (dbg_info.dbg_ic_max_seq >= 0)){
 		return;
 	}
-	DBG_PRT(30, os << "**IC_PRT**");
-	DBG_PRT(31, os << "THE BRAIN=" << bj_eol;
-		brn.print_brain(os);
-		os << "Type ENTER to print the IC: " << bj_eol;
-		DO_GETCHAR;
-	);
 
 	std::ofstream ff;
 	dbg_info.dbg_ic_seq++;

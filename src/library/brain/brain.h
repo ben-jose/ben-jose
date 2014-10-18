@@ -217,6 +217,11 @@ class ticket {
 		tk_level = INVALID_LEVEL;
 	}
 
+	brain*	get_dbg_brn(){
+		brain* the_brn = NULL;
+		return the_brn;
+	}
+	
 	bool	is_valid(){
 		return ((tk_recoil != INVALID_RECOIL) && (tk_level != INVALID_LEVEL));
 	}
@@ -389,8 +394,8 @@ class quanton {
 
 	t_1byte			qu_flags;
 
-	charge_t		qu_dot;		// symetric. to dot quantons during learning and neuron creation
-	charge_t		qu_mark;	// symetric. to mark quantons during learning and neuron creation
+	charge_t		qu_dot;		// symetric. during learning and neuron creation
+	charge_t		qu_mark;	// symetric. during learning and neuron creation
 	long			qu_mark_idx;	// in dotted_trace idx when marking
 
 	charge_t		qu_charge;	// symetric. current charge
@@ -647,6 +652,10 @@ class neuron {
 		return neuron::CL_NAME;
 	}
 
+	BRAIN_DBG(
+		brain*		ne_pt_brn;
+	)
+
 	//static 
 	//long			NE_TOT_SPOTS;
 
@@ -693,7 +702,15 @@ class neuron {
 		init_neuron();
 	}
 
+	brain*	get_dbg_brn(){
+		brain* the_brn = NULL;
+		BRAIN_DBG(the_brn = ne_pt_brn);
+		return the_brn;
+	}
+
 	void	init_neuron(){
+		BRAIN_DBG(ne_pt_brn = NULL);
+		
 		//if(fib_sz() > 0){
 		if(fib_sz() > 1){
 			row_quanton_t empty;
@@ -822,7 +839,8 @@ class neuron {
 	void		neu_tunnel_signals(brain& brn, quanton& r_qua);
 
 	quanton*	update_fibres(row_quanton_t& synps, bool orig);
-	//quanton*	get_prt_fibres(row_quanton_t& tmp_fibres, bool sort_them = true);	// sorted by id 
+	//quanton*	get_prt_fibres(row_quanton_t& tmp_fibres, bool sort_them = true);	
+	// sorted by id 
 
 	bool		is_partner_fib(quanton& qua){
 		BRAIN_CK(fib_sz() > 1);
@@ -916,7 +934,8 @@ class neuron {
 		return ne_tee.so_vessel;
 	}
 
-	bj_ostream& 	print_neu_base(bj_ostream& os, bool detail, bool prt_src, bool sort_fib);
+	bj_ostream& 	print_neu_base(bj_ostream& os, bool detail, bool prt_src, 
+								   bool sort_fib);
 	bj_ostream&	print_neuron(bj_ostream& os, bool from_pt = false);
 };
 
@@ -934,7 +953,9 @@ class prop_signal {
 		init_prop_signal();
 	}
 
-	void	init_prop_signal(quanton* qua = NULL_PT, neuron* the_src = NULL_PT, long the_tier = INVALID_TIER){
+	void	init_prop_signal(quanton* qua = NULL_PT, neuron* the_src = NULL_PT, 
+							 long the_tier = INVALID_TIER)
+	{
 		ps_quanton = qua;
 		ps_source = the_src;
 		ps_tier = the_tier;
@@ -946,6 +967,12 @@ class prop_signal {
 
 	~prop_signal(){
 		init_prop_signal();
+	}
+
+	brain*	get_dbg_brn(){
+		brain* the_brn = NULL;
+		BRAIN_DBG(if(ps_quanton != NULL){ the_brn = ps_quanton->get_dbg_brn(); });
+		return the_brn;
 	}
 
 	bj_ostream& 	print_prop_signal(bj_ostream& os, bool from_pt = false){
@@ -985,9 +1012,7 @@ class deduction {
 	}
 
 	~deduction(){
-		DBG_PRT(6, os << "releasing deduction 0");
 		init_deduction();
-		DBG_PRT(6, os << "RELEASING deduction 1");
 	}
 
 	void	init_deduction(){
@@ -996,6 +1021,12 @@ class deduction {
 		dt_target_level = INVALID_LEVEL;
 		dt_target_tier = INVALID_TIER;
 		dt_forced_level = INVALID_LEVEL;
+	}
+
+	brain*	get_dbg_brn(){
+		brain* the_brn = NULL;
+		BRAIN_DBG(if(dt_forced != NULL){ the_brn = dt_forced->get_dbg_brn(); });
+		return the_brn;
 	}
 
 	bool	is_dt_virgin(){
@@ -1051,10 +1082,10 @@ class deduction {
 // coloring
 
 class coloring {
-
-
-
 	public:
+		
+	brain*			co_brn;
+		
 	row_quanton_t	co_quas;
 	row<long>		co_qua_colors;
 	bool			co_all_qua_consec;
@@ -1065,18 +1096,17 @@ class coloring {
 
 	long			co_szs_idx;
 
-	coloring(){
-		init_coloring();
+	coloring(brain* pt_brn = NULL_PT){
+		init_coloring(pt_brn);
 	}
 
 	~coloring(){
-		DBG_PRT(6, os << "releasing coloring 0");
 		init_coloring();
-		DBG_PRT(6, os << "RELEASING coloring 1");
 	}
 
-	void	init_coloring(){
-
+	void	init_coloring(brain* pt_brn = NULL){
+		co_brn = pt_brn;
+		
 		co_quas.clear();
 		co_qua_colors.clear();
 		co_all_qua_consec = false;
@@ -1086,6 +1116,12 @@ class coloring {
 		co_all_neu_consec = false;
 
 		co_szs_idx = INVALID_IDX;
+	}
+
+	brain*	get_dbg_brn(){
+		brain* the_brn = NULL;
+		BRAIN_DBG(the_brn = co_brn);
+		return the_brn;
 	}
 
 	bool	is_co_virgin(){
@@ -1144,6 +1180,8 @@ class coloring {
 
 class memap {
 	public:
+		
+	brain*			ma_brn;
 
 	quanton* 		ma_dual;
 	ticket			ma_before_retract_tk;
@@ -1168,19 +1206,19 @@ class memap {
 
 	bool			ma_active;
 
-	memap(){
+	memap() {
 		ma_active = false;
 		init_memap();
 	}
 
 	~memap(){
-		DBG_PRT(6, os << "releasing memap 0");
 		init_memap();
-		DBG_PRT(6, os << "RELEASING memap 1");
 	}
 
-	void	init_memap(){
+	void	init_memap(brain* pt_brn = NULL){
 		BRAIN_CK(! ma_active);
+		
+		ma_brn = pt_brn;
 
 		ma_dual = NULL_PT;
 		ma_before_retract_tk.init_ticket();
@@ -1195,13 +1233,19 @@ class memap {
 		ma_fll_in_lv.clear();
 		ma_discarded.clear();
 
-		ma_save_guide_col.init_coloring();
-		ma_find_guide_col.init_coloring();
+		ma_save_guide_col.init_coloring(pt_brn);
+		ma_find_guide_col.init_coloring(pt_brn);
 
-		ma_anchor_col.init_coloring();
+		ma_anchor_col.init_coloring(pt_brn);
 		ma_anchor_idx = INVALID_IDX;
 
 		ma_active = false;
+	}
+
+	brain*	get_dbg_brn(){
+		brain* the_brn = NULL;
+		BRAIN_DBG(the_brn = ma_brn);
+		return the_brn;
 	}
 
 	void	reset_memap(brain& brn);
@@ -1228,7 +1272,8 @@ class memap {
 
 		bool c14 = (ma_active == false);
 
-		bool is_vg = (c1 && c2 && c3 && c4 && c5 && c6 && c7 && c8 && c9 && c10 && c11 && c12 && c13 && c14);
+		bool is_vg = (c1 && c2 && c3 && c4 && c5 && c6 && c7 && 
+			c8 && c9 && c10 && c11 && c12 && c13 && c14);
 	
 		return is_vg;
 	}
@@ -1275,7 +1320,6 @@ class memap {
 	bool	map_oper(mem_op_t mm, brain& brn);
 	bool	map_ck_contained_in(brain& brn, coloring& colr, dbg_call_id dbg_id);
 
-	//void	map_dbg_prt(bj_ostream& os, mem_op_t mm, brain& brn);
 	void	map_dbg_print(bj_ostream& os, mem_op_t mm, brain& brn);
 
 	void	map_set_all_qu_curr_dom(brain& brn);
@@ -1290,14 +1334,18 @@ class memap {
 	void	map_activate(brain& brn);
 	void	map_deactivate(brain& brn);
 
-	void	map_get_layer_quas(brain& brn, row_quanton_t& quas, long lyr_idx1, long lyr_idx2);
-	void	map_get_layer_neus(row<neuron*>& neus, long lyr_idx1, long lyr_idx2, bool ck_tks);
+	void	map_get_layer_quas(brain& brn, row_quanton_t& quas, long lyr_idx1, 
+							   long lyr_idx2);
+	void	map_get_layer_neus(row<neuron*>& neus, long lyr_idx1, long lyr_idx2, 
+							   bool ck_tks);
 
 	quanton*	map_choose_quanton(brain& brn);
 
 	void	get_initial_guide_coloring(brain& brn, coloring& clr, long idx_szs);
-	void	get_initial_tauto_coloring(brain& brn, coloring& stab_guide_clr, coloring& base_final_clr, bool ck_tks);
-	void	get_initial_anchor_coloring(brain& brn, coloring& clr, long lst_idx, long nxt_idx);
+	void	get_initial_tauto_coloring(brain& brn, coloring& stab_guide_clr, 
+									   coloring& base_final_clr, bool ck_tks);
+	void	get_initial_anchor_coloring(brain& brn, coloring& clr, long lst_idx, 
+										long nxt_idx);
 
 	//bool 	ck_sorted_quas();
 
@@ -1387,9 +1435,7 @@ class notekeeper {
 	}
 
 	~notekeeper(){
-		DBG_PRT(6, os << "releasing_notekeeper 0");
 		init_notekeeper();
-		DBG_PRT(6, os << "RELEASING notekeeper 2");
 	}
 
 	void	init_notekeeper(brain* brn = NULL_PT, long tg_lv = INVALID_LEVEL)
@@ -1406,8 +1452,15 @@ class notekeeper {
 		init_notes(tg_lv);
 	}
 
-	void	init_funcs(long* cnter, has_fn_pt_t has_note, do_fn_pt_t set_note, do_fn_pt_t reset_note, 
-			do_row_fn_pt_t set_all,	do_row_fn_pt_t reset_all_its)
+	brain*	get_dbg_brn(){
+		brain* the_brn = NULL;
+		BRAIN_DBG(the_brn = dk_brain);
+		return the_brn;
+	}
+
+	void	init_funcs(long* cnter, has_fn_pt_t has_note, do_fn_pt_t set_note, 
+					   do_fn_pt_t reset_note, do_row_fn_pt_t set_all,	
+				 do_row_fn_pt_t reset_all_its)
 	{
 		dk_note_counter = cnter;
 		dk_has_note_fn = has_note;
@@ -1682,12 +1735,17 @@ class deducer {
 	}
 
 	~deducer(){
-		DBG_PRT(6, os << "releasing_deducer 0");
 		init_deducer();
-		DBG_PRT(6, os << "RELEASING deducer 1");
 	}
 
-	void	init_deducer(brain* brn = NULL_PT, neuron* confl = NULL_PT, long tg_lv = INVALID_LEVEL);
+	void	init_deducer(brain* brn = NULL_PT, neuron* confl = NULL_PT, 
+						 long tg_lv = INVALID_LEVEL);
+
+	brain*	get_dbg_brn(){
+		brain* the_brn = NULL;
+		BRAIN_DBG(the_brn = de_brain);
+		return the_brn;
+	}
 
 	neuron*&		tg_confl(){ return de_target_confl; }
 	row_quanton_t&	tg_motives(){ return de_target_dct.dt_motives; }
@@ -1711,6 +1769,9 @@ class deducer {
 
 class leveldat {
 	public:
+	
+	brain*			ld_brn;
+		
 	memap			ld_map0;
 	row<prop_signal>	ld_pre_sigs;
 	row<neuron*>		ld_learned;
@@ -1721,16 +1782,17 @@ class leveldat {
 
 	quanton*		ld_first_learned;
 
-	leveldat(){
-		init_leveldat();
+	leveldat(brain* pt_brn = NULL) {
+		init_leveldat(pt_brn);
 	}
 
 	~leveldat(){
 		init_leveldat();
 	}
 
-	void	init_leveldat(){
-		ld_map0.init_memap();
+	void	init_leveldat(brain* pt_brn = NULL){
+		ld_brn = pt_brn;
+		ld_map0.init_memap(pt_brn);
 		ld_pre_sigs.clear();
 		ld_learned.clear();
 		ld_chosen = NULL_PT;
@@ -1740,7 +1802,28 @@ class leveldat {
 
 		ld_first_learned = NULL_PT;
 	}
+	
+	brain*	get_dbg_brn(){
+		brain* the_brn = NULL;
+		BRAIN_DBG(the_brn = ld_brn);
+		return the_brn;
+	}
+	
+	static
+	leveldat* create_leveldat(brain* pt_brn = NULL){
+		leveldat* lv = tpl_malloc<leveldat>();
+		new (lv) leveldat();
+		lv->ld_brn = pt_brn;
+		return lv;
+	}
 
+	static
+	void release_leveldat(leveldat* lv){
+		BRAIN_CK(lv != NULL_PT);
+		lv->~leveldat();
+		tpl_free<leveldat>(lv);
+	}
+	
 	bool 	has_learned(){
 		return ! ld_learned.is_empty();
 	}
@@ -1748,8 +1831,6 @@ class leveldat {
 	long 	num_learned(){
 		return ld_learned.size();
 	}
-
-
 	
 	void	reset_semi_monos(brain& brn);
 	void	release_learned(brain& brn);
@@ -1836,7 +1917,8 @@ class brain {
 	row_quanton_t		br_tmp_motives;
 	row_quanton_t		br_tmp_edge;
 
-	k_row<leveldat>		br_data_levels;
+	row<leveldat*>		br_data_levels;
+	//k_row<leveldat>		br_data_levels;
 
 	// config attributes
 	ch_string		br_file_name;
@@ -1949,6 +2031,12 @@ class brain {
 
 	void	init_brain(skeleton_glb& the_skl, instance_info& inst);
 
+	brain*	get_dbg_brn(){
+		brain* the_brn = NULL;
+		BRAIN_DBG(the_brn = this);
+		return the_brn;
+	}
+	
 	void	all_mutual_init(){
 		br_guide_neus_srg.stab_mutual_init();
 		br_guide_quas_srg.stab_mutual_init();
@@ -2076,6 +2164,8 @@ class brain {
 		neuron& neu = *pt_neu;
 		BRAIN_CK(neu.ne_index != INVALID_IDX);
 		BRAIN_CK(neu.is_ne_virgin());
+		
+		BRAIN_DBG(neu.ne_pt_brn = this);
 
 		br_num_active_neurons++;
 		return neu;
@@ -2122,12 +2212,26 @@ class brain {
 
 	leveldat&	data_level(){
 		BRAIN_CK(! br_data_levels.is_empty());
-		return br_data_levels.last();
+		//return br_data_levels.last();
+		leveldat* pt_lv = br_data_levels.last();
+		BRAIN_CK(pt_lv != NULL);
+		return *pt_lv;
 	}
 
+	leveldat&	inc_data_levels(){
+		leveldat* pt_lv = leveldat::create_leveldat(this);
+		BRAIN_CK(pt_lv != NULL);
+		br_data_levels.push(pt_lv);
+		leveldat& dat_lv = *pt_lv;
+		return dat_lv;
+	}
+	
 	void	inc_level(quanton& qua){
 		(br_current_ticket.tk_level)++;
-		leveldat& dat_lv = br_data_levels.inc_sz();
+		
+		//leveldat& dat_lv = br_data_levels.inc_sz();
+		leveldat& dat_lv = inc_data_levels();
+		
 		dat_lv.ld_chosen = &qua;
 	}
 
@@ -2141,8 +2245,12 @@ class brain {
 
 
 	quanton*	curr_choice(){
-		leveldat& dat_lv = br_data_levels.last();
-		return dat_lv.ld_chosen;
+		//leveldat& dat_lv = br_data_levels.last();
+		//return dat_lv.ld_chosen;
+		
+		leveldat* lv = br_data_levels.last();
+		BRAIN_CK(lv != NULL);
+		return lv->ld_chosen;
 	}
 
 	bool 	lv_has_learned(){
@@ -2165,13 +2273,13 @@ class brain {
 		data_level().reset_semi_monos(brn);
 		data_level().release_learned(brn);
 
-		br_data_levels.dec_sz();
+		//br_data_levels.dec_sz();
+		leveldat* lv = br_data_levels.pop();
+		leveldat::release_leveldat(lv);
 	}
 
 	void	update_semi_monos();
 
-	//void	recoil_to_lv(long tg_lvl, long tg_tir, row<prop_signal>& bak_sgnls, neuron* confl, quanton* forced_qua);
-	//void	retract();
 	void	retract_choice();
 	void	retract_all();
 	void	reverse();

@@ -35,7 +35,9 @@ Declaration of functions to read and parse dimacs files.
 
 #include "bj_stream.h"
 #include "print_macros.h"
+#include "top_exception.h"
 
+class brain;
 class dima_dims;
 
 #define DIMACS_DBG(prm)	DBG(prm)
@@ -56,6 +58,17 @@ DECLARE_PRINT_FUNCS(dima_dims)
 
 void read_problem_decl(const char*& pt_in, long& num_var, long& num_ccl, long& line);
 //void print_dimacs_of(bj_ostream& os, row<long>& all_lits, long num_cla, long num_var);
+
+//=================================================================
+// dimacs_exception
+
+class dimacs_exception : public top_exception{
+public:
+	dimacs_exception(char* descr = as_pt_char("undefined dimacs exception")){
+		ex_nm = descr;
+		ex_id = 0;
+	}
+};
 
 //=================================================================
 // dima_dims
@@ -245,8 +258,28 @@ enum fix_kind {
 #define EMPTY_CNF_COMMENT	"c the cnf is empty\n"
 
 class dimacs_loader {
+private:
+	dimacs_loader&  operator = (dimacs_loader& other){
+		char* dimcs_bad_eq_op = as_pt_char("operator = not allowed in dimacs_loader");
+		DBG_THROW_CK(dimcs_bad_eq_op != dimcs_bad_eq_op);
+		throw dimacs_exception(dimcs_bad_eq_op);
+		abort_func(0, dimcs_bad_eq_op);
+		return (*this);
+	}
+
+	dimacs_loader(dimacs_loader& other){ 
+		char* dimcs_bad_creat = as_pt_char("copy creator dimacs_loader not allowed");
+		DBG_THROW_CK(dimcs_bad_creat != dimcs_bad_creat);
+		throw dimacs_exception(dimcs_bad_creat);
+		abort_func(0, dimcs_bad_creat);
+	}
+	
 public:
 	typedef std::istream::pos_type ld_pos_t;
+
+	DBG(
+		brain*		ld_pt_brn;
+	)
 
 	ch_string		ld_file_name;
 
@@ -297,14 +330,11 @@ public:
 		init_dimacs_loader();
 	}
 
-	/*
-	dimacs_loader&  operator = (dimacs_loader& other) { 
-		OBJECT_COPY_ERROR; 
+	brain*	get_dbg_brn(){
+		brain* the_brn = NULL;
+		DBG(the_brn = ld_pt_brn);
+		return the_brn;
 	}
-
-	dimacs_loader(dimacs_loader& other){ 
-		OBJECT_COPY_ERROR; 
-	}*/
 
 	void	init_parse();
 	void	init_dimacs_loader();

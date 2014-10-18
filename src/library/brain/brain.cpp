@@ -924,7 +924,7 @@ neuron::print_neu_base(bj_ostream& os, bool detail, bool prt_src, bool sort_fib)
 //============================================================
 // brain methods
 
-brain::brain(skeleton_glb& the_skl, instance_info& inst){
+brain::brain(skeleton_glb& the_skl, instance_info& inst) {
 	init_brain(the_skl, inst);
 }
 
@@ -981,13 +981,26 @@ brain::init_brain(skeleton_glb& the_skl, instance_info& inst){
 
 
 	br_retract_nke0.init_notekeeper(this);
-	br_retract_nke0.init_funcs(&br_qu_tot_note0, &quanton::has_note0, &quanton::set_note0, &quanton::reset_its_note0, 
-		&set_all_note0, &reset_all_its_note0);
+	br_retract_nke0.init_funcs(&br_qu_tot_note0, &quanton::has_note0, 
+							   &quanton::set_note0, &quanton::reset_its_note0, 
+								&set_all_note0, &reset_all_its_note0);
 
+	br_retract_map0.init_memap(this);
+	
 	br_retract_is_first_lv = false;
 
 	br_conflict_found = NULL_PT;
 
+	DBG(
+		br_forced_srg.dbg_init_brn_sortor(this);
+		br_filled_srg.dbg_init_brn_sortor(this);
+		br_guide_neus_srg.dbg_init_brn_sortor(this);
+		br_guide_quas_srg.dbg_init_brn_sortor(this);
+		br_tauto_neus_srg.dbg_init_brn_sortor(this);
+		br_tauto_quas_srg.dbg_init_brn_sortor(this);
+		br_clls_srg.dbg_init_brn_sortor(this);
+	);
+	
 	br_num_memo = 0;
 
 	br_conflict_quanton.init_quanton(this, cg_neutral, INVALID_IDX, NULL);
@@ -1017,6 +1030,10 @@ brain::release_brain(){
 	if(level() != ROOT_LEVEL){
 		retract_all();
 	}
+	while(! br_data_levels.is_empty()){
+		dec_level();
+	}
+	BRAIN_CK(br_data_levels.is_empty());
 
 	// reset neurons
 	br_neurons.clear(true);
@@ -1312,8 +1329,10 @@ brain::init_loading(long num_qua, long num_neu){
 	br_current_ticket.tk_recoil = 1;
 	br_current_ticket.tk_level = 0;
 
-	br_data_levels.clear(true, true);
-	br_data_levels.inc_sz();
+	//br_data_levels.clear(true, true);
+	//br_data_levels.inc_sz();
+	BRAIN_CK(br_data_levels.is_empty());
+	inc_data_levels();
 
 	br_conflict_quanton.qu_charge_tk.update_ticket(this);
 	br_top_block.qu_charge_tk.update_ticket(this);

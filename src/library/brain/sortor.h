@@ -53,6 +53,7 @@ classes to implement a sortor.
 #define FINAL_COMMENT	"final\n"
 #define MUTUAL_COMMENT	"mutual_stab\n"
 
+class brain;
 class skeleton_glb;
 
 class binder;
@@ -655,7 +656,8 @@ public:
 	}
 
 	bool		can_sort_in_me(){
-		bool ok = (! has_subsets() || (one_subset() && (first_subset().ss_curr_id == ss_curr_id)));
+		bool ok = (! has_subsets() || 
+				(one_subset() && (first_subset().ss_curr_id == ss_curr_id)));
 		return ok;
 	}
 
@@ -804,6 +806,11 @@ enum step_mutual_op_t {
 
 class sort_glb {
 public:
+
+	DBG(
+		brain*	sg_pt_brn;
+	)
+
 	ch_string	sg_name;
 
 	bool		sg_quick_find;
@@ -882,6 +889,16 @@ public:
 		release_all();
 	}
 
+	brain*	get_dbg_brn(){
+		brain* the_brn = NULL;
+		DBG(the_brn = sg_pt_brn);
+		return the_brn;
+	}
+
+	void	dbg_init_brn_sortor(brain* the_brn){
+		DBG(sg_pt_brn = the_brn);
+	}
+	
 	void	init_sort_glb(){
 		sg_name = "INVALID_SG_NAM";
 		
@@ -943,7 +960,8 @@ public:
 	//void	start_sort_glb(long aprox_srs);
 
 	void	sort_all_from(row<sortee*>& tees, sort_id_t curr_id, 
-			bool add_ccl_id = false, long ccl_id = 0, bool sort_opps = false, tgt_ccl_t tgt = tc_none);
+			bool add_ccl_id = false, long ccl_id = 0, bool sort_opps = false, 
+			tgt_ccl_t tgt = tc_none);
 
 	bool	has_head(){
 		return (sg_head != NULL_PT);
@@ -993,10 +1011,11 @@ public:
 
 	sortee&		get_sortee_of_ccl_id(long ccl_id);
 
-	void		build_cnf(skeleton_glb& skg, canon_cnf& the_cnf, row<canon_clause*>& the_ccls, 
-				ch_string ph_str, bool sorted_cnf);
+	void		build_cnf(skeleton_glb& skg, canon_cnf& the_cnf, 
+					row<canon_clause*>& the_ccls, ch_string ph_str, bool sorted_cnf);
 	
-	void		step_build_cnf(skeleton_glb& skg, ch_string ph_str = "", bool sorted_cnf = true);
+	void		step_build_cnf(skeleton_glb& skg, ch_string ph_str = "", 
+							   bool sorted_cnf = true);
 
 	void		stab_choose_one();
 	void		stab_release_all_sorsets();
@@ -1096,21 +1115,6 @@ grip::fill_rcps_as(row<obj_t1*>& rr){
 // INLINE DEFS
 
 sortee&	as_sortee(binder* bdr);
-
-/*
-inline
-sortee&
-as_sortee(binder* bdr){
-	SORTER_CK_1(bdr != NULL_PT);
-	DBG_PRT_COND(DBG_ALL_LVS, ! (bdr->get_cls_name() == sortee::CL_NAME) ,
-		os << "ABORTING_DATA " << bj_eol;
-		os << "bdr->get_cls_name()=" << bdr->get_cls_name() << bj_eol;
-		os << "sortee::CL_NAME=" << sortee::CL_NAME << bj_eol;
-		os << "END_OF_aborting_data" << bj_eol;
-	);
-	SORTER_CK_1(bdr->get_cls_name() == sortee::CL_NAME);
-	return *((sortee*)(bdr));
-}*/
 
 template<class obj_t1>
 obj_t1&
