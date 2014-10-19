@@ -70,16 +70,19 @@ void	dbg_prt_all_cho(brain& brn);
 
 #define INVALID_DBG_LV 		-123
 
-bool	dbg_print_cond_func(bool prm,
-		bool is_ck = false,
-		const ch_string fnam = "NO_NAME",
-		int lnum = 0,
-		const ch_string prm_str = "NO_PRM",
-		long dbg_lv = INVALID_DBG_LV);
+bool	dbg_print_cond_func(
+	brain* pt_brn,
+	bool prm,
+	bool is_ck = false,
+	const ch_string fnam = "NO_NAME",
+	int lnum = 0,
+	const ch_string prm_str = "NO_PRM",
+	long dbg_lv = INVALID_DBG_LV);
 
 #define	DBG_PRT_COND(lev, cond, comm)	\
 	DBG_COND_COMM(DBG_COND(lev, cond), \
-		dbg_print_cond_func(DBG_COND(lev, cond), false, "NO_NAME", 0, #cond, lev); \
+		dbg_print_cond_func(get_dbg_brn(), DBG_COND(lev, cond), \
+			false, "NO_NAME", 0, #cond, lev); \
 		comm; \
 	) \
 
@@ -97,7 +100,7 @@ bool	dbg_print_cond_func(bool prm,
 //--end_of_def
 
 #define DBG_BJ_LIB_CK(prm) \
-	DBG_CK(dbg_print_cond_func((! (prm)), true, __FILE__, __LINE__, #prm)); \
+	DBG_CK(dbg_print_cond_func(NULL, (! (prm)), true, __FILE__, __LINE__, #prm)); \
 
 // end_of_def
 

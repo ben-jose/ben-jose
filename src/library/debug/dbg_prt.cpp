@@ -70,8 +70,8 @@ dbg_init_lv_arr(row<bool>& nw_lv_arr){
 void 
 dbg_prt_all_cho(brain& brn){
 #ifdef FULL_DEBUG
-	bool is_batch = false;
-	ch_string f_nam = GLB().get_file_name(is_batch);
+	//bool is_batch = false;
+	ch_string f_nam = brn.get_my_inst().get_f_nam();
 	ch_string cho_nam = f_nam + "_chosen.log";
 
 	const char* log_nm = cho_nam.c_str();
@@ -91,7 +91,7 @@ dbg_prt_all_cho(brain& brn){
 #endif
 }
 
-bool	dbg_print_cond_func(bool prm, bool is_ck, const ch_string fnam, int lnum,
+bool	dbg_print_cond_func(brain* brn, bool prm, bool is_ck, const ch_string fnam, int lnum,
 		const ch_string prm_str, long dbg_lv)
 {
 	bool resp = true;
@@ -108,19 +108,28 @@ bool	dbg_print_cond_func(bool prm, bool is_ck, const ch_string fnam, int lnum,
 				os << "ck" << dbg_lv << ".";
 			}
 		}
-		if(GLB().batch_num_files > 1){
-			os << "#" << GLB().batch_consec << ".";
+		
+		ch_string f_nam = "UNKNOWN_FILE_NAME";
+		if(brn != NULL){
+			
+			instance_info& inst_info = brn->get_my_inst();
+			if(inst_info.ist_group_id > 1){
+				os << "#" << inst_info.ist_id << ".";
+			}
+
+			f_nam = inst_info.ist_file_path;
+			
+			consecutive_t the_lap = brn->recoil();
+			if(the_lap > 0){
+				if(is_ck){ os << "LAP="; }
+				os << the_lap << ".";
+			}
 		}
 
-		consecutive_t the_lap = GLB().get_curr_lap();
-		if(the_lap > 0){
-			if(is_ck){ os << "LAP="; }
-			os << the_lap << ".";
-		}
 
 		if(is_ck){
 			os << "ASSERT '" << prm_str << "' FAILED (";
-			os << GLB().get_curr_f_nam();
+			os << f_nam;
 			os << ")";
 			os << " in " << fnam << " at " << lnum;
 			os << bj_eol;

@@ -419,7 +419,7 @@ global_data::print_mini_stats(bj_ostream& os){
 
 	os << CARRIAGE_RETURN;
 	os << "'" << f_nam << "'";
-	dbg_print_cond_func(true, false, "NO_NAME", 0, "true", INVALID_DBG_LV);
+	dbg_print_cond_func(NULL, true, false, "NO_NAME", 0, "true", INVALID_DBG_LV);
 	return os; 
 }
 
@@ -442,7 +442,7 @@ global_data::print_stats(bj_ostream& os, double current_secs){
 	os << bj_eol;
 	os << "file_name: '" << f_nam << "'" << bj_eol;
 	
-	DBG( dbg_print_cond_func(true, false, "NO_NAME", 0, "true", INVALID_DBG_LV) );
+	DBG( dbg_print_cond_func(NULL, true, false, "NO_NAME", 0, "true", INVALID_DBG_LV) );
 
 	print_totals(os, current_secs);
 	os << bj_eol << bj_eol;

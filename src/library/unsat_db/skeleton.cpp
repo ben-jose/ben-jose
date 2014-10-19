@@ -205,7 +205,7 @@ path_delete(ch_string full_pth, ch_string up_to){
 	}
 
 	delete_directory(sub_pth);
-	DBG_PRT(95, os << "DEL DIR=" << sub_pth);
+	//DBG_PRT(95, os << "DEL DIR=" << sub_pth);
 
 	str_pos_t pos_sep = 0;
 	for(	pos_sep = sub_pth.rfind('/');
@@ -213,7 +213,7 @@ path_delete(ch_string full_pth, ch_string up_to){
 		pos_sep = sub_pth.rfind('/'))
 	{
 		sub_pth = sub_pth.substr(0, pos_sep);
-		DBG_PRT(95, os << "REM DIR=" << sub_pth);
+		//DBG_PRT(95, os << "REM DIR=" << sub_pth);
 
 		if(sub_pth == up_to){ break; }
 		int resp = rmdir(sub_pth.c_str());
@@ -226,9 +226,9 @@ path_delete(ch_string full_pth, ch_string up_to){
 bool
 path_create(ch_string n_pth){
 	SKELETON_CK(not_skl_path(n_pth));
-	DBG_PRT(77, os << "CREATING " << n_pth);
-	DBG_PRT(77, os << "HIT RETURN TO CONTINUE...");
-	DBG_COMMAND(16, getchar());
+	//DBG_PRT(77, os << "CREATING " << n_pth);
+	//DBG_PRT(77, os << "HIT RETURN TO CONTINUE...");
+	//DBG_COMMAND(16, getchar());
 
 	//long resp = true;
 	int eos = (int)ch_string::npos;
@@ -279,13 +279,14 @@ canon_sha(row<char>& cnn, ch_string& sha_txt){
 
 	SKELETON_CK((uchar_t*)(cnn.get_c_array()) == to_sha);
 
+	/*
 	DBG_PRT(94, os << "canon sha CNN=" << bj_eol;
 		os << ">>>>>>" << bj_eol;
 		canon_print(os, cnn);
 		os << "<<<<<<" << bj_eol;
 		os << "SZ_to_SHA=" << to_sha_sz << bj_eol;
 		os << "SHA=" << sha_txt;
-	);
+	);*/
 }
 
 bool
@@ -293,15 +294,15 @@ canon_save(ch_string& the_pth, row<char>& cnn, bool write_once){
 	// this function should never be modified because the 
 	// whole skeleton is based on shas of this function
 
-	DBG_PRT(78, os << "saving " << the_pth);
-	DBG_PRT(78, os << "HIT RETURN TO CONTINUE..." << " dbg_id=" << skg_dbg_canon_save_id);
-	DBG_COMMAND(78, getchar());
+	//DBG_PRT(78, os << "saving " << the_pth);
+	//DBG_PRT(78, os << "HIT RETURN TO CONTINUE..." << " dbg_id=" << skg_dbg_canon_save_id);
+	//DBG_COMMAND(78, getchar());
 
 	SKELETON_CK(not_skl_path(the_pth));
 	
 	bool ok = write_file(the_pth, cnn, write_once);
 	
-	DBG_PRT(78, os << "SAVED " << the_pth << " dbg_id=" << skg_dbg_canon_save_id);
+	//DBG_PRT(78, os << "SAVED " << the_pth << " dbg_id=" << skg_dbg_canon_save_id);
 	return ok;
 }
 
@@ -328,6 +329,7 @@ canon_equal(ch_string& the_pth, row<char>& cnn){
 		cnn_eq = cnn2.equal_to_diff(cnn, diff1);
 		//cnn_eq = cnn2.equal_to(cnn);
 	}
+	/*
 	DBG_PRT_COND(92, ! cnn_eq, os << "CNN_TEST=" << bj_eol;
 		os << ">>>>>" << bj_eol;	
 		canon_print(os, cnn);
@@ -344,7 +346,7 @@ canon_equal(ch_string& the_pth, row<char>& cnn){
 		os << "cnn_eq=" << cnn_eq << bj_eol;
 		os << "cnn_sz=" << cnn.size() << bj_eol;
 		os << "cnn2_sz=" << cnn2.size() << bj_eol;
-	);
+	);*/
 	return cnn_eq;
 }
 
@@ -642,11 +644,12 @@ cmp_clauses(canon_clause* const& ccl1, canon_clause* const& ccl2){
 
 	comparison v_cc = 0;
 	v_cc = cmp_lit_rows(trl1, trl2);
+	/*
 	DBG_PRT_COND(71, (v_cc > 0), os << "cmp ccl trails" << bj_eol
 		<< "trl1" << trl1 << bj_eol
 		<< "trl2" << trl2 << bj_eol
 		<< "cmp_1=" << (int)v_cc;
-	);
+	);*/
 
 	if(v_cc == 0){
 		ccl1->cc_spot = true;
@@ -880,6 +883,8 @@ skeleton_glb::get_new_clause(){
 	SKELETON_CK(! ccl.cc_can_release);
 	DBG(ccl.cc_can_release = true);
 
+	SKELETON_DBG(ccl.set_dbg_brn(get_dbg_brn()));
+	
 	DBG_COND_COMM(! (ccl.is_cc_virgin()),
 		os << "ABORTING_DATA " << bj_eol;
 		os << " side=" << cond_side << bj_eol;
@@ -970,7 +975,10 @@ canon_cnf::add_clauses_as_chars_to(row<canon_clause*>& all_ccl, row<char>& cnn){
 	ch_string hh_str = canon_header(cn_hd_str, all_ccl.size(), cf_dims.dd_tot_vars);
 	canon_string_append(cnn, hh_str);
 
-	DBG_PRT(70, os << "add_clauses_as_chars=" << bj_eol; all_ccl.print_row_data(os, true, "\n"));
+	DBG_PRT(70, 
+		os << "add_clauses_as_chars=" << bj_eol; 
+		all_ccl.print_row_data(os, true, "\n");
+	);
 	SKELETON_CK(! cf_sorted || all_ccl.is_sorted(cmp_clauses));
 
 	for(long ii = 0; ii < all_ccl.size(); ii++){
@@ -1180,7 +1188,8 @@ canon_purge_clauses(skeleton_glb& skg, row<canon_clause*>& all_ccl, long& tot_li
 long
 canon_cnf::purge_clauses(skeleton_glb& skg){
 	row<canon_clause*>& all_ccl = cf_clauses;
-	cf_num_purged = canon_purge_clauses(skg, all_ccl, cf_dims.dd_tot_lits, cf_dims.dd_tot_twolits);
+	cf_num_purged = canon_purge_clauses(skg, all_ccl, cf_dims.dd_tot_lits, 
+										cf_dims.dd_tot_twolits);
 	return cf_num_purged;
 }
 
@@ -1332,7 +1341,9 @@ canon_cnf::load_from(skeleton_glb& skg, ch_string& f_nam){
 }
 
 void
-canon_cnf::load_lits(skeleton_glb& skg, row_long_t& all_lits, long& tot_lits, long& tot_twolits){
+canon_cnf::load_lits(skeleton_glb& skg, row_long_t& all_lits, 
+					 long& tot_lits, long& tot_twolits)
+{
 	tot_lits = 0;
 	tot_twolits = 0;
 
@@ -1697,11 +1708,12 @@ choose_variant(row<variant>& all_vnt, bj_big_float_t& avg_szs, bool in_dbg){
 		bj_big_int_t& n_avg_sz = nxt_avg.sz;
 
 		if(n_avg_sz < 0){
-			DBG_PRT_COND(73, in_dbg, os << "n_avg_sz=" << n_avg_sz);
+			//DBG_PRT_COND(73, in_dbg, os << "n_avg_sz=" << n_avg_sz);
 			continue;
 		}
 		if(n_avg_sz > avg_szs){
-			DBG_PRT_COND(73, in_dbg, os << "n_avg_sz=" << n_avg_sz << " avg_szs=" << avg_szs);
+			//DBG_PRT_COND(73, in_dbg, os << "n_avg_sz=" << n_avg_sz 
+			//	<< " avg_szs=" << avg_szs);
 			continue;
 		}
 

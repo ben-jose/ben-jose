@@ -48,11 +48,14 @@ enum charge_t {
 };
 
 
+class brain;
 class inst_out_info;
 class canon_clause;
 class variant;
 class canon_cnf;
 class skeleton_glb;
+
+#define SKELETON_DBG(prm) DBG(prm)
 
 //=================================================================
 // defines
@@ -236,7 +239,8 @@ public:
 
 class canon_clause : private row_long_t {
 public:
-	DBG(
+	SKELETON_DBG(
+		brain*	cc_pt_brn;
 		bool	cc_can_release;
 		bool	cc_in_free;
 	);
@@ -247,6 +251,16 @@ public:
 	canon_clause();
 	~canon_clause();
 
+	brain*	get_dbg_brn(){
+		brain* the_brn = NULL;
+		SKELETON_DBG(the_brn = cc_pt_brn);
+		return the_brn;
+	}
+
+	void	set_dbg_brn(brain* pt_brn){
+		SKELETON_DBG(cc_pt_brn = pt_brn);
+	}
+	
 	bool	is_cc_virgin(){
 		bool c1 = is_empty();
 		return c1;
@@ -384,6 +398,8 @@ cmp_variant(variant const & vnt1, variant const & vnt2);
 
 class canon_cnf {
 public:
+	SKELETON_DBG(brain*		cf_pt_brn;)
+	
 	bool			cf_sorted;
 
 	dima_dims		cf_dims;
@@ -411,6 +427,16 @@ public:
 	~canon_cnf(){
 	}
 
+	brain*	get_dbg_brn(){
+		brain* the_brn = NULL;
+		SKELETON_DBG(the_brn = cf_pt_brn);
+		return the_brn;
+	}
+
+	void	set_dbg_brn(brain* pt_brn){
+		SKELETON_DBG(cf_pt_brn = pt_brn);
+	}
+	
 	void init_canon_cnf(bool free_mem = false){
 		cf_sorted = true;
 	
@@ -526,7 +552,8 @@ public:
 	void	add_comment_chars_to(skeleton_glb& skg, row<char>& cnn, ch_string sv_ref_pth);
 	void	add_clauses_as_chars_to(row<canon_clause*>& all_ccl, row<char>& cnn);
 
-	void	load_lits(skeleton_glb& skg, row_long_t& all_lits, long& tot_lits, long& tot_twolits);
+	void	load_lits(skeleton_glb& skg, row_long_t& all_lits, long& tot_lits, 
+					  long& tot_twolits);
 	void	calc_sha_in(ch_string& sha_str);
 
 	long	purge_clauses(skeleton_glb& skg);
@@ -565,6 +592,8 @@ public:
 
 class skeleton_glb {
 public:
+	SKELETON_DBG(brain* 		kg_pt_brn;)
+	
 	k_row<canon_clause>	kg_clauses;
 	row<canon_clause*>	kg_free_clauses;
 
@@ -608,6 +637,19 @@ public:
 	~skeleton_glb(){
 	}
 
+	brain*	get_dbg_brn(){
+		brain* the_brn = NULL;
+		SKELETON_DBG(the_brn = kg_pt_brn);
+		return the_brn;
+	}
+
+	void	set_dbg_brn(brain* pt_brn){
+		SKELETON_DBG(
+			kg_pt_brn = pt_brn;
+			kg_tmp_cnf.set_dbg_brn(pt_brn);
+		);
+	}
+		
 	ch_string	as_full_path(ch_string sklroute){
 		DIMACS_H_CK(kg_root_path != "");
 		DIMACS_H_CK(path_begins_with(sklroute, SKG_SKELETON_DIR));

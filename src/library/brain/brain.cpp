@@ -944,6 +944,7 @@ brain::get_skeleton(){
 
 void
 brain::init_brain(skeleton_glb& the_skl, instance_info& inst){
+	the_skl.set_dbg_brn(this);
 	br_pt_skl = &the_skl;
 	
 	br_pt_inst = &inst;
@@ -972,12 +973,12 @@ brain::init_brain(skeleton_glb& the_skl, instance_info& inst){
 	br_deducer.de_brain = this;
 
 	br_deducer.de_noteke.init_notekeeper(this);
-	br_deducer.de_noteke.init_funcs(&br_tot_qu_dots, &quanton::has_dot, &quanton::set_dot, &quanton::reset_dot, 
-		&set_dots_of, &reset_dots_of);
+	br_deducer.de_noteke.init_funcs(&br_tot_qu_dots, &quanton::has_dot, &quanton::set_dot, 
+					&quanton::reset_dot, &set_dots_of, &reset_dots_of);
 
 	br_noteke.init_notekeeper(this);
-	br_noteke.init_funcs(&br_tot_qu_dots, &quanton::has_dot, &quanton::set_dot, &quanton::reset_dot, 
-		&set_dots_of, &reset_dots_of);
+	br_noteke.init_funcs(&br_tot_qu_dots, &quanton::has_dot, &quanton::set_dot, 
+						 &quanton::reset_dot, &set_dots_of, &reset_dots_of);
 
 
 	br_retract_nke0.init_notekeeper(this);
@@ -992,13 +993,18 @@ brain::init_brain(skeleton_glb& the_skl, instance_info& inst){
 	br_conflict_found = NULL_PT;
 
 	DBG(
-		br_forced_srg.dbg_init_brn_sortor(this);
-		br_filled_srg.dbg_init_brn_sortor(this);
-		br_guide_neus_srg.dbg_init_brn_sortor(this);
-		br_guide_quas_srg.dbg_init_brn_sortor(this);
-		br_tauto_neus_srg.dbg_init_brn_sortor(this);
-		br_tauto_quas_srg.dbg_init_brn_sortor(this);
-		br_clls_srg.dbg_init_brn_sortor(this);
+		br_forced_srg.set_dbg_brn(this);
+		br_filled_srg.set_dbg_brn(this);
+		br_guide_neus_srg.set_dbg_brn(this);
+		br_guide_quas_srg.set_dbg_brn(this);
+		br_tauto_neus_srg.set_dbg_brn(this);
+		br_tauto_quas_srg.set_dbg_brn(this);
+		br_clls_srg.set_dbg_brn(this);
+		
+		br_dbg.dbg_cnf.set_dbg_brn(this);
+		br_tmp_wrt_tauto_cnf.set_dbg_brn(this);
+		br_tmp_wrt_diff_cnf.set_dbg_brn(this);
+		br_tmp_wrt_guide_cnf.set_dbg_brn(this);
 	);
 	
 	br_num_memo = 0;
@@ -1035,6 +1041,8 @@ brain::release_brain(){
 	}
 	BRAIN_CK(br_data_levels.is_empty());
 
+	get_skeleton().set_dbg_brn(NULL);
+	
 	// reset neurons
 	br_neurons.clear(true);
 
@@ -2015,7 +2023,7 @@ ck_motives(brain& brn, row_quanton_t& mots){
 		BRAIN_CK(mot->qlevel() <= brn.level());
 		BRAIN_CK(mot->qlevel() < brn.br_dbg.dbg_before_retract_lv);
 
-		DBG_PRT_COND(DBG_ALL_LVS, ! (mot->get_charge() == cg_negative) ,
+		DBG_COND_COMM(! (mot->get_charge() == cg_negative) ,
 			os << "ABORTING_DATA " << bj_eol;
 			os << "mots=" << mots << bj_eol;
 			os << "mot=" << mot << bj_eol;

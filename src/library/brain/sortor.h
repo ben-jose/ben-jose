@@ -895,8 +895,11 @@ public:
 		return the_brn;
 	}
 
-	void	dbg_init_brn_sortor(brain* the_brn){
-		DBG(sg_pt_brn = the_brn);
+	void	set_dbg_brn(brain* the_brn){
+		DBG(
+			sg_pt_brn = the_brn;
+			sg_cnf_step.set_dbg_brn(the_brn);
+		);
 	}
 	
 	void	init_sort_glb(){
