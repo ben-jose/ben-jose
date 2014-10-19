@@ -32,7 +32,6 @@ Classes and that implement a sortor.
 
 #include "skeleton.h"
 #include "sortor.h"
-#include "support.h"
 
 #include "brain.h"	// only needed for print_sortee
 

@@ -43,7 +43,7 @@ class brain;
 //=================================================================
 // parser funcs
 
-bj_ostr_stream& parse_err_msg(ch_string hd_msg, long num_line, char ch_err, ch_string msg);
+ch_string parse_err_msg(ch_string hd_msg, long num_line, char ch_err, ch_string msg);
 
 void skip_whitespace(const char*& pt_in, long& line);
 void skip_line(const char*& pt_in, long& line);

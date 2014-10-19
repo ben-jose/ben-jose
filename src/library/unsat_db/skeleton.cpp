@@ -35,9 +35,9 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 #include "file_funcs.h"
 #include "util_funcs.h"
 #include "instance_info.h"
-#include "support.h"
 #include "skeleton.h"
 #include "dimacs.h"
+#include "dbg_prt.h"
 
 #define NUM_BYTES_SHA2	32	// 256 bits
 

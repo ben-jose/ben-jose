@@ -30,13 +30,60 @@ dbg_run_satex func.
 
 --------------------------------------------------------------*/
 
+#include <fstream>
+
 
 #include "bj_stream.h"
 #include "ch_string.h"
 #include "file_funcs.h"
 #include "brain.h"
-#include "support.h"
 #include "dbg_run_satex.h"
+
+void
+read_batch_instances(ch_string file_nm, row<instance_info>& f_insts){
+	bj_ostream& os = bj_out;
+
+	std::ifstream in_stm;
+
+	in_stm.open(file_nm.c_str(), std::ios::binary);
+	if(! in_stm.good() || ! in_stm.is_open()){
+		os << "NO " << file_nm << " FILE FOUND." << bj_eol;
+		return;
+	}
+
+	ch_string str_ln;
+	long num_ln = 0;
+
+	f_insts.clear();
+
+	while(! in_stm.eof()){
+		std::getline(in_stm, str_ln);
+		num_ln++;
+
+		if(! str_ln.empty()){
+			instance_info& n_inst = f_insts.inc_sz();
+		
+			//os << "Lei:<<" << str_ln << ">>" << bj_eol;
+			n_inst.parse_instance(str_ln, num_ln);
+		}
+	}
+	in_stm.close();
+}
+
+bool
+all_results_batch_instances(ch_string file_nm, satisf_val r_val){
+	row<instance_info> f_insts;
+	read_batch_instances(file_nm, f_insts);
+	bool all_ok = true;
+
+	for(long aa = 0; aa < f_insts.size(); aa++){
+		instance_info& inst_info = f_insts[aa];
+		if(inst_info.ist_out.iot_result != r_val){
+			all_ok = false;
+		}
+	}
+	return all_ok;
+}
 
 bool
 dbg_run_satex_on(brain& brn, ch_string f_nam){

@@ -34,8 +34,7 @@ Functions to read and parse dimacs files.
 #include "dimacs.h"
 #include "config.h"
 #include "file_funcs.h"
-
-#include "support.h"
+#include "dbg_prt.h"
 
 #define DIMACS_CK(prm) 	DBG_CK(prm)
 
@@ -49,11 +48,15 @@ ch_string	k_dimacs_header_str =
 		"c Id (cedula): 79523732 de Bogota.\n";
 
 
-bj_ostr_stream& dimacs_err_msg(long num_line, char ch_err, ch_string msg){
-	return parse_err_msg("DIMACS ERROR. ", num_line, ch_err, msg);
+bj_ostr_stream& 
+dimacs_loader::dimacs_err_msg(long num_line, char ch_err, ch_string msg){
+	ld_err_msg.clear();
+	ld_err_msg << parse_err_msg("DIMACS ERROR. ", num_line, ch_err, msg);
+	return ld_err_msg;
 }
 
-void skip_cnf_decl(const char*& pt_in, long line){
+void 
+dimacs_loader::skip_cnf_decl(const char*& pt_in, long line){
 	if(*pt_in == 0){
 		bj_ostr_stream& msg =
 			dimacs_err_msg(line, -1, "Expecting 'cnf' declaration line.");
@@ -80,7 +83,10 @@ void skip_cnf_decl(const char*& pt_in, long line){
 	pt_in += cnf_str_sz;
 }
 
-void read_problem_decl(const char*& pt_in, long& num_var, long& num_ccl, long& line){
+void 
+dimacs_loader::read_problem_decl(const char*& pt_in, long& num_var, long& num_ccl, 
+								 long& line)
+{
 	num_var = 0;
 	num_ccl = 0;
 

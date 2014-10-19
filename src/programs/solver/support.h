@@ -37,21 +37,13 @@ Declaration of classes that support and assist the system.
 // configuration defs
 
 //define DO_GETCHAR	
-#define DO_GETCHAR			getchar();
 #define DO_FINAL_GETCHAR
 //define DO_FINAL_GETCHAR		DO_GETCHAR
 //define SOLVING_TIMEOUT		10.5	// 0.0 if no timeout
-#define SOLVING_TIMEOUT			0.0		// 0.0 if no timeout
 #define RECEIVE_TIMEOUT			10.0	// for timed_receive
 #define PRINT_PROGRESS			true	// or if (SOLVING_TIMEOUT > 1.0)
-#define PRINT_PERIOD			4.0
 #define PRINT_TOTALS_PERIOD 		10.0
 //define MAX_CONFLICTS			0		// all
-
-#define LOG_NM_ERROR	"error.log"
-#define LOG_NM_RESULTS	"results.log"
-#define LOG_NM_STATS	"stats.log"
-#define LOG_NM_ASSIGS	"assigs.log"
 
 //=================================================================
 
@@ -106,9 +98,6 @@ class brain;
 typedef	int	location;
 
 //define INVALID_NION_ID		0
-#define INVALID_QUANTON_ID	0
-#define INVALID_POLARITY	0
-#define INVALID_LAYER		-1
 
 #define OUT_NUM_LEVS 10
 
@@ -340,16 +329,12 @@ public:
 
 typedef void (*core_func_t)(void);
 
-ch_string	get_log_name(ch_string f_nam, ch_string sufix);
-
 void	init_dbg_conf();
 void	log_message(const ch_string& msg_log);
 void	log_batch_info();
 void	call_and_handle_exceptions(core_func_t the_func);
 void	chomp_string(ch_string& s1);
 void	read_batch_file(row<ch_string*>& names);
-void	read_batch_instances(ch_string file_nm, row<instance_info>& f_insts);
-bool	all_results_batch_instances(ch_string file_nm, satisf_val r_val);
 void	get_enter(bj_ostream& os, ch_string msg);
 void	do_all_instances();
 int		tests_main_(int argc, char** argv);

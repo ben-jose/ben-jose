@@ -57,6 +57,7 @@ Declarations of classes and that implement the neural network.
 
 #define DEDUC_DBG(cod)	DBG(cod)
 
+
 //=============================================================================
 // MAIN CLASSES
 

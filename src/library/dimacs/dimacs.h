@@ -35,6 +35,7 @@ Declaration of functions to read and parse dimacs files.
 
 #include "bj_stream.h"
 #include "print_macros.h"
+#include "tools.h"
 #include "top_exception.h"
 
 class brain;
@@ -56,7 +57,6 @@ DECLARE_PRINT_FUNCS(dima_dims)
 //=================================================================
 // funtion declarations
 
-void read_problem_decl(const char*& pt_in, long& num_var, long& num_ccl, long& line);
 //void print_dimacs_of(bj_ostream& os, row<long>& all_lits, long num_cla, long num_var);
 
 //=================================================================
@@ -282,6 +282,8 @@ public:
 	)
 
 	ch_string		ld_file_name;
+	
+	bj_ostr_stream	ld_err_msg;
 
 	bool			ld_as_3cnf;
 
@@ -338,6 +340,11 @@ public:
 
 	void	init_parse();
 	void	init_dimacs_loader();
+	
+	bj_ostr_stream& dimacs_err_msg(long num_line, char ch_err, ch_string msg);
+	
+	void 	read_problem_decl(const char*& pt_in, long& num_var, long& num_ccl, long& line);
+	void 	skip_cnf_decl(const char*& pt_in, long line);
 
 	void	parse_header();
 	bool	parse_clause(row<integer>& lits);

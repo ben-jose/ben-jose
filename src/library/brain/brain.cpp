@@ -31,7 +31,6 @@ Classes and that implement the neural network.
 --------------------------------------------------------------*/
 
 #include "stack_trace.h"
-#include "support.h"
 #include "sortor.h"
 #include "brain.h"
 #include "dimacs.h"
@@ -54,6 +53,9 @@ DEFINE_NI_FLAG_ALL_FUNCS(note3);
 DEFINE_NI_FLAG_ALL_FUNCS(note4);
 DEFINE_NI_FLAG_ALL_FUNCS(note5);
 
+
+#define PRINT_PERIOD			4.0
+#define SOLVING_TIMEOUT			0.0		// 0.0 if no timeout
 
 //============================================================
 // static vars

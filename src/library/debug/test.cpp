@@ -37,7 +37,6 @@ file for test and debugging purposes.
 
 #include "file_tree.h"
 #include "ch_string.h"
-#include "support.h"
 #include "config.h"
 
 #include "brain.h"
@@ -49,6 +48,8 @@ file for test and debugging purposes.
 
 skeleton_glb 	GSKE;
 tak_mak*	glb_test_tak_mak = NULL_PT;
+
+#define TEST_CK(prm) DBG_BJ_LIB_CK(prm)
 
 #define TEST_ROOT_PATH "/home/jose/devel/tmp/solver/dbg"
 
@@ -511,7 +512,7 @@ gen_sub_cnf(tak_mak& gg, canon_cnf& src_cnf, canon_cnf& dst_cnf){
 	long tot_twolits = 0;
 
 	for(long dd = 0; dd < all_ccl.size(); dd++){
-		SUPPORT_CK(all_ccl[dd] != NULL_PT);
+		TEST_CK(all_ccl[dd] != NULL_PT);
 		canon_clause& src_ccl = *(all_ccl[dd]);
 		long add_it = gg.gen_rand_int32_ie(0, 2);
 		if(add_it > 0){
@@ -1235,21 +1236,21 @@ void	test_sorted_ops2(){
 			os << "diff_rr=" << diff_rr << bj_eol;
 			os << "tmp_rr=" << tmp_rr << bj_eol;
 		}
-		SUPPORT_CK(eq_sh);
+		TEST_CK(eq_sh);
 
 		DBG(
 			bool r_eq = false;
 			cmp_is_sub cmp_val;
 
 			cmp_val = cmp_sorted_rows<long>(to_red, orig_rr, cmp_canon_ids, r_eq);
-			SUPPORT_CK(cmp_val == k_lft_is_sub);
+			TEST_CK(cmp_val == k_lft_is_sub);
 
 			cmp_val = cmp_sorted_rows<long>(diff_rr, orig_rr, cmp_canon_ids, r_eq);
-			SUPPORT_CK(cmp_val == k_lft_is_sub);
+			TEST_CK(cmp_val == k_lft_is_sub);
 		);
 
 		diff_rr.sorted_set_shared(shrd_rr, to_red, cmp_canon_ids);
-		SUPPORT_CK(shrd_rr.is_empty());
+		TEST_CK(shrd_rr.is_empty());
 		
 		//os << "AFTER" << bj_eol;
 		//os << "rr1=" << rr1 << bj_eol;

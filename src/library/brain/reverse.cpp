@@ -31,11 +31,11 @@ funcs that implement reverse func.
 --------------------------------------------------------------*/
 
 #include "stack_trace.h"
-#include "support.h"
 #include "dimacs.h"
 #include "brain.h"
 #include "dbg_run_satex.h"
 #include "config.h"
+#include "dbg_prt.h"
 
 bool
 memap::map_find(brain& brn){
@@ -563,7 +563,7 @@ brain::reverse(){
 		os << "dct=" << bj_eol;
 		os << dct;
 		os << "AFTER_REVERSE. Type ENTER to continue..." << bj_eol;
-		DO_GETCHAR
+		DO_GETCHAR();
 	);
 	DBG_PRT(110, os << "AFTER_REVERSE " << br_current_ticket << bj_eol;
 		print_trail(os);

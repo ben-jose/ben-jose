@@ -44,6 +44,10 @@ all info to keep or return of an instance cnf to solve.
 
 #define INSTANCE_CK(prm) DBG_CK(prm)
 
+#define LOG_NM_ERROR	"error.log"
+#define LOG_NM_RESULTS	"results.log"
+#define LOG_NM_STATS	"stats.log"
+#define LOG_NM_ASSIGS	"assigs.log"
 
 #define RESULT_FIELD_SEP		"|"
 #define RESULT_FIELD_SEP_CHAR		'|'
@@ -63,6 +67,10 @@ typedef bj_big_int_t 	consecutive_t;
 
 #define INVALID_CONSECUTIVE	-1
 
+#define INVALID_QUANTON_ID	0
+#define INVALID_POLARITY	0
+#define INVALID_LAYER		-1
+
 //======================================================================
 // instance_exception
 
@@ -76,6 +84,13 @@ public:
 
 //=================================================================
 // aux funcs
+
+inline
+ch_string
+get_log_name(ch_string f_nam, ch_string sufix){
+	ch_string lg_nm = f_nam + "_" + sufix;
+	return lg_nm;
+}
 
 #define RES_UNKNOWN_STR "unknown"
 #define RES_YES_SATISF_STR "yes_satisf"

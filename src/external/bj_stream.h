@@ -37,6 +37,8 @@ Wrapper for ostream class.
 #include <iostream>
 #include <sstream>
 
+#define DO_GETCHAR()			getchar()
+
 #define CARRIAGE_RETURN		((char)13)
 
 #define bj_eol std::endl

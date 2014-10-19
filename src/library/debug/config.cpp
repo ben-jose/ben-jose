@@ -34,7 +34,6 @@ Functions to read and parse config files.
 
 #include "file_funcs.h"
 #include "config.h"
-#include "support.h"
 #include "brain.h"
 
 
@@ -52,10 +51,9 @@ public:
 //======================================================================
 // parse funcs
 
-bj_ostr_stream& parse_err_msg(ch_string hd_msg, long num_line, char ch_err, ch_string msg)
+ch_string parse_err_msg(ch_string hd_msg, long num_line, char ch_err, ch_string msg)
 {
-	GLB().reset_err_msg();
-	bj_ostr_stream& err_msg = GLB().error_stm;
+	bj_ostr_stream err_msg;
 
 	err_msg << hd_msg;
 	if(num_line >= 0){
@@ -65,7 +63,7 @@ bj_ostr_stream& parse_err_msg(ch_string hd_msg, long num_line, char ch_err, ch_s
 		err_msg << "invalid character '" << ch_err << "'. ";
 	}
 	err_msg << msg;
-	return err_msg;
+	return err_msg.str();
 }
 
 void skip_whitespace(const char*& pt_in, long& line){
@@ -104,7 +102,7 @@ read_text_line(const char*& pt_in, long& line){
 				the_ln = pt_0;
 				(*pt_1) = '\n';
 			}
-			SUPPORT_CK((*pt_in) == '\n');
+			CONFIG_CK((*pt_in) == '\n');
 
 			line++; 
 			pt_in++; 
@@ -126,11 +124,11 @@ integer parse_int(const char*& pt_in, long line) {
 	else if(*pt_in == '+'){ pt_in++; }
 
 	if( ! isdigit(*pt_in)){
-		bj_ostr_stream& msg = 
-			parse_err_msg("PARSE ERROR. ", line, (char)(*pt_in), "");
+		ch_string msg = 
+			parse_err_msg("PARSE ERROR. ", line, (char)(*pt_in), ". bad integer.");
 		MARK_USED(msg);
 
-		char* parse_bad_int = as_pt_char("parsing exception. bad integer.");
+		char* parse_bad_int = (char*)msg.c_str();
 		DBG_THROW_CK(parse_bad_int != parse_bad_int);
 		throw parse_exception(parse_bad_int);
 		abort_func(1, parse_bad_int);
@@ -202,9 +200,9 @@ config_reader::read_config(brain& brn, const char* file_nm){
 	bj_ostream& os = bj_out;
 	CONFIG_CK(file_nm != NULL_PT);
 
-	SUPPORT_CK(dbg_info.dbg_start_dbg_entries.is_empty());
-	SUPPORT_CK(dbg_info.dbg_stop_dbg_entries.is_empty());
-	SUPPORT_CK(dbg_config_line.is_empty());
+	CONFIG_CK(dbg_info.dbg_start_dbg_entries.is_empty());
+	CONFIG_CK(dbg_info.dbg_stop_dbg_entries.is_empty());
+	CONFIG_CK(dbg_config_line.is_empty());
 
 	//mini_test();
 
@@ -283,7 +281,7 @@ dbg_update_config_entries(brain& brn){
 		(start_lst[start_idx].dbg_round <= curr_round))
 	{
 		long start_dbg_id = start_lst[start_idx].dbg_id;
-		SUPPORT_CK(dbg_arr.is_valid_idx(start_dbg_id));
+		CONFIG_CK(dbg_arr.is_valid_idx(start_dbg_id));
 		dbg_arr[start_dbg_id] = true;
 		start_idx++;
 	} 
@@ -292,7 +290,7 @@ dbg_update_config_entries(brain& brn){
 		(stop_lst[stop_idx].dbg_round < curr_round))
 	{
 		long stop_dbg_id = stop_lst[stop_idx].dbg_id;
-		SUPPORT_CK(dbg_arr.is_valid_idx(stop_dbg_id));
+		CONFIG_CK(dbg_arr.is_valid_idx(stop_dbg_id));
 		dbg_arr[stop_dbg_id] = false;
 		stop_idx++;
 	} 
