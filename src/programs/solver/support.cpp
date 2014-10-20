@@ -253,9 +253,10 @@ global_data::print_totals(bj_ostream& os, double curr_tm){
 		os << batch_stat_mem_used;
 	}
 
+	/*
 	DBG_COMMAND(33, 
 		os << batch_stat_laps;
-	);
+	);*/
 
 	os << bj_eol;
 	return os;
@@ -293,7 +294,7 @@ global_data::print_final_totals(bj_ostream& os){
 
 void			
 global_data::print_batch_consec(){
-	DBG_COMMAND(34, return);
+	//DBG_COMMAND(34, return);
 
 	double perc = 0.0;
 	if(batch_num_files > 0){
@@ -425,12 +426,12 @@ global_data::print_mini_stats(bj_ostream& os){
 
 bj_ostream&
 global_data::print_stats(bj_ostream& os, double current_secs){
-	DBG_COMMAND(35, return os);
+	//DBG_COMMAND(35, return os);
 
-	DBG_COMMAND(36,
+	/*DBG_COMMAND(36,
 		print_mini_stats(os);
 		return os;
-	);
+	);*/
 
 	if(current_secs == 0.0){
 		current_secs = run_time();

@@ -109,7 +109,8 @@ void	test_long_to_pth(int argc, char** argv){
 
 void	test_dims_to_path(int argc, char** argv){
 	bj_ostream& os = bj_out;
-	row<bool>& dbg_arr = dbg_get_lv_arr();
+	row<bool> dbg_arr;
+	dbg_arr.fill(false, DBG_NUM_LEVS);
 
 	dbg_arr[96] = true;
 
@@ -346,7 +347,8 @@ test_nfwt(int argc, char** argv)
 	bj_ostream& os = bj_out;
 	MARK_USED(os);
 	
-	row<bool>& dbg_arr = dbg_get_lv_arr();
+	row<bool> dbg_arr;
+	dbg_arr.fill(false, DBG_NUM_LEVS);
 
 	dbg_arr[2] = true;
 	dbg_arr[78] = true;
@@ -569,7 +571,8 @@ test_subsets(){
 
 	MARK_USED(os);
 
-	row<bool>& dbg_arr = dbg_get_lv_arr();
+	row<bool> dbg_arr;
+	dbg_arr.fill(false, DBG_NUM_LEVS);
 	
 	dbg_arr[2] = true;
 
@@ -991,7 +994,8 @@ gen_phases(tak_mak& gg, ref_strs& the_ph){
 
 void
 test_skl(){
-	row<bool>& dbg_arr = dbg_get_lv_arr();
+	row<bool> dbg_arr;
+	dbg_arr.fill(false, DBG_NUM_LEVS);
 	
 	dbg_arr[2] = true;
 	//dbg_arr[95] = true;
@@ -1312,9 +1316,6 @@ int	tests_main_(int argc, char** argv){
 	MARK_USED(argc);
 	MARK_USED(argv);
 	bj_ostream& os = bj_out;
-	
-	row<bool> dbg_arr;
-	dbg_init_lv_arr(dbg_arr);
 	
 	//test_realpath(argc, argv);
 	//test_subsets();

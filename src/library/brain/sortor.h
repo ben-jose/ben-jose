@@ -903,6 +903,8 @@ public:
 	}
 	
 	void	init_sort_glb(){
+		DBG(sg_pt_brn = NULL);
+		
 		sg_name = "INVALID_SG_NAM";
 		
 		sg_quick_find = true;

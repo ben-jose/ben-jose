@@ -324,8 +324,8 @@ public:
 	long			ld_tot_lits;
 	long			ld_tot_twolits;
 
-	dimacs_loader(){
-		init_dimacs_loader();
+	dimacs_loader(brain* the_brn){
+		init_dimacs_loader(the_brn);
 	}
 
 	~dimacs_loader(){
@@ -338,8 +338,12 @@ public:
 		return the_brn;
 	}
 
+	void	set_dbg_brn(brain* the_brn){
+		DBG(ld_pt_brn = the_brn);
+	}
+	
 	void	init_parse();
-	void	init_dimacs_loader();
+	void	init_dimacs_loader(brain* the_brn = NULL);
 	
 	bj_ostr_stream& dimacs_err_msg(long num_line, char ch_err, ch_string msg);
 	

@@ -345,7 +345,8 @@ dimacs_loader::init_parse(){
 }
 
 void
-dimacs_loader::init_dimacs_loader(){
+dimacs_loader::init_dimacs_loader(brain* the_brn){
+	DBG(ld_pt_brn = the_brn);
 
 	ld_file_name = "";
 

@@ -378,7 +378,7 @@ void	set_marks_of(brain& brn, row<prop_signal>& trace, long first_idx, long last
 
 	BRAIN_CK(first_idx <= last_idx);
 	BRAIN_CK(trace.is_valid_idx(first_idx));
-	BRAIN_CK((last_idx == trace.size()) || trace.is_valid_idx(last_idx))
+	BRAIN_CK((last_idx == trace.size()) || trace.is_valid_idx(last_idx));
 
 	for(long ii = first_idx; ii < last_idx; ii++){
 		prop_signal& q_sig = trace[ii];
@@ -412,7 +412,7 @@ void	reset_marks_of(brain& brn, row<prop_signal>& trace, long first_idx, long la
 
 	BRAIN_CK(first_idx <= last_idx);
 	BRAIN_CK(trace.is_valid_idx(first_idx));
-	BRAIN_CK((last_idx == trace.size()) || trace.is_valid_idx(last_idx))
+	BRAIN_CK((last_idx == trace.size()) || trace.is_valid_idx(last_idx));
 
 	for(long ii = first_idx; ii < last_idx; ii++){
 		prop_signal& q_sig = trace[ii];
@@ -946,7 +946,7 @@ brain::get_skeleton(){
 
 void
 brain::init_brain(skeleton_glb& the_skl, instance_info& inst){
-	the_skl.set_dbg_brn(this);
+	BRAIN_DBG(br_pt_brn = NULL);
 	br_pt_skl = &the_skl;
 	
 	br_pt_inst = &inst;
@@ -956,7 +956,7 @@ brain::init_brain(skeleton_glb& the_skl, instance_info& inst){
 
 	// debug attributes
 
-	BRAIN_DBG(br_dbg.dbg_last_recoil_lv = INVALID_LEVEL);
+	DBG(br_dbg.dbg_last_recoil_lv = INVALID_LEVEL);
 
 	// temp attributes
 
@@ -994,28 +994,13 @@ brain::init_brain(skeleton_glb& the_skl, instance_info& inst){
 
 	br_conflict_found = NULL_PT;
 
-	DBG(
-		br_forced_srg.set_dbg_brn(this);
-		br_filled_srg.set_dbg_brn(this);
-		br_guide_neus_srg.set_dbg_brn(this);
-		br_guide_quas_srg.set_dbg_brn(this);
-		br_tauto_neus_srg.set_dbg_brn(this);
-		br_tauto_quas_srg.set_dbg_brn(this);
-		br_clls_srg.set_dbg_brn(this);
-		
-		br_dbg.dbg_cnf.set_dbg_brn(this);
-		br_tmp_wrt_tauto_cnf.set_dbg_brn(this);
-		br_tmp_wrt_diff_cnf.set_dbg_brn(this);
-		br_tmp_wrt_guide_cnf.set_dbg_brn(this);
-	);
-	
 	br_num_memo = 0;
 
 	br_conflict_quanton.init_quanton(this, cg_neutral, INVALID_IDX, NULL);
 	br_top_block.init_quanton(this, cg_neutral, INVALID_IDX, NULL);
 	
-	BRAIN_CK(br_conflict_quanton.qu_tee.is_alone());
-	BRAIN_CK(br_top_block.qu_tee.is_alone());
+	DBG_CK(br_conflict_quanton.qu_tee.is_alone());
+	DBG_CK(br_top_block.qu_tee.is_alone());
 
 	//br_tot_qu_spot0 = 0;
 	br_tot_qu_dots = 0;
@@ -1028,12 +1013,38 @@ brain::init_brain(skeleton_glb& the_skl, instance_info& inst){
 		br_dbg.dbg_find_id = 0;
 		br_dbg.dbg_save_id = 0;
 		br_dbg.dbg_all_chosen.clear();
-		dbg_init_dbg_conf(*this);
-	)
+		
+		init_all_dbg_brn();  // sets br_pt_brn indicating it is readi for DBG_PRT
+		
+		dbg_init_dbg_conf(*this);	
+	);
+}
+
+void
+brain::init_all_dbg_brn(){
+#ifdef FULL_DEBUG
+	br_forced_srg.set_dbg_brn(this);
+	br_filled_srg.set_dbg_brn(this);
+	br_guide_neus_srg.set_dbg_brn(this);
+	br_guide_quas_srg.set_dbg_brn(this);
+	br_tauto_neus_srg.set_dbg_brn(this);
+	br_tauto_quas_srg.set_dbg_brn(this);
+	br_clls_srg.set_dbg_brn(this);
+	
+	br_dbg.dbg_cnf.set_dbg_brn(this);
+	br_tmp_wrt_tauto_cnf.set_dbg_brn(this);
+	br_tmp_wrt_diff_cnf.set_dbg_brn(this);
+	br_tmp_wrt_guide_cnf.set_dbg_brn(this);
+	
+	get_skeleton().set_dbg_brn(this);
+	br_pt_brn = this; // this tells all dbg funcs that brain is ready for dbg.
+#endif
 }
 
 void
 brain::release_brain(){
+	BRAIN_DBG(br_pt_brn = NULL);
+	get_skeleton().set_dbg_brn(NULL);
 
 	if(level() != ROOT_LEVEL){
 		retract_all();
@@ -1043,8 +1054,6 @@ brain::release_brain(){
 	}
 	BRAIN_CK(br_data_levels.is_empty());
 
-	get_skeleton().set_dbg_brn(NULL);
-	
 	// reset neurons
 	br_neurons.clear(true);
 
@@ -1516,7 +1525,7 @@ bool
 brain::load_instance(){
 	br_start_load_tm = run_time();
 	
-	dimacs_loader	the_loader;
+	dimacs_loader	the_loader(this);
 	row<long> all_ccls;
 	
 	read_cnf(the_loader);
@@ -1881,7 +1890,7 @@ notekeeper::set_motive_notes(row_quanton_t& rr_qua, long from, long until){
 			dk_tot_noted++;
 			(qua.*dk_set_note_fn)(brn);
 
-			BRAIN_CK(dk_note_layer != INVALID_LEVEL)
+			BRAIN_CK(dk_note_layer != INVALID_LEVEL);
 			DBG(ch_string dbg_msg = "");
 			long q_lv = qua.qlevel();
 
@@ -2314,7 +2323,7 @@ brain::dbg_ck_deducs(deduction& dct1, deduction& dct2){
 	MARK_USED(c3);
 	MARK_USED(c4);
 
-	DBG_PRT_COND(DBG_ALL_LVS, ! (c1 && c2 && c3 && c4) ,
+	DBG_COND_COMM(! (c1 && c2 && c3 && c4) ,
 		os << "ABORTING_DATA " << bj_eol;
 		os << "  c1=" << c1 << "  c2=" << c2 << "  c3=" << c3 << "  c4=" << c4 << bj_eol;
 		os << "dct1=" << dct1 << bj_eol;
@@ -2599,7 +2608,7 @@ memap::map_ck_all_ne_dominated(brain& brn){
 		if(fll_neu.ne_original){
 			MARK_USED(fll_neu);
 
-			DBG_PRT_COND(DBG_ALL_LVS, ! (fll_neu.in_ne_dominated(brn)) ,
+			DBG_COND_COMM(! (fll_neu.in_ne_dominated(brn)) ,
 				os << "ABORTING_DATA " << bj_eol;
 				os << " br_maps_active=" << brn.br_maps_active << bj_eol;
 				os << " THIS_MEMAP=" << this << bj_eol;
@@ -3037,7 +3046,7 @@ quanton::ck_uncharged_tunnel(){
 	if(neu == NULL_PT){
 		long uch_idx = find_uncharged_tunnel();
 
-		DBG_PRT_COND(DBG_ALL_LVS, ! (uch_idx == INVALID_IDX) ,
+		DBG_COND_COMM(! (uch_idx == INVALID_IDX) ,
 			os << "ABORTING_DATA " << bj_eol;
 			os << "qua=" << &qua << bj_eol;
 			neuron* tnn = qu_tunnels[uch_idx];
@@ -3059,7 +3068,7 @@ quanton::ck_uncharged_tunnel(){
 	BRAIN_CK(neu->ne_original);
 	BRAIN_CK(neu == qu_uncharged_tunnel);
 
-	DBG_PRT_COND(DBG_ALL_LVS, ! (neu->is_partner_fib(qua)),
+	DBG_COND_COMM(! (neu->is_partner_fib(qua)),
 		os << "ABORTING_DATA x1 " << bj_eol;
 		os << "qua=" << &qua << bj_eol;
 		os << "neu=" << qu_uncharged_tunnel << bj_eol;
@@ -3083,7 +3092,7 @@ quanton::ck_uncharged_tunnel(){
 
 neuron*
 quanton::get_uncharged_tunnel(dbg_call_id dbg_call){
-	DBG_PRT_COND(DBG_ALL_LVS, 
+	DBG_COND_COMM(
 		! ((qu_uncharged_tunnel == NULL_PT) || qu_uncharged_tunnel->has_qua(*this)),
 		os << "ABORTING_DATA " << bj_eol;
 		os << "dbg_call=" << dbg_call << bj_eol;
@@ -3512,5 +3521,7 @@ dbg_inst_info::init_dbg_inst_info(){
 	dbg_ic_max_seq = -1;
 	dbg_ic_seq = 0;
 	dbg_ic_gen_jpg = false;
-	
+
+	dbg_bad_cycle1 = false;
+	dbg_levs_arr.fill(false, DBG_NUM_LEVS);
 }

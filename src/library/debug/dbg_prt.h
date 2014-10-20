@@ -37,14 +37,10 @@ funcs to print debug info.
 
 class brain;
 
-extern row<bool>* dbg_lv_arr;
-extern bool	dbg_bad_cycle1;
-
-bool	dbg_has_lv_arr();
-row<bool>&	dbg_get_lv_arr();
-void	dbg_init_lv_arr(row<bool>& nw_lv_arr);
-
 void	dbg_prt_all_cho(brain& brn);
+
+bool	dbg_check_lev(brain* brn, long lev);
+
 
 //=================================================================
 // debug defs
@@ -58,15 +54,7 @@ void	dbg_prt_all_cho(brain& brn);
 
 #define DO_PRINTS(prm)		prm
 
-#define	DBG_COND(lev, cond)	\
-	(	dbg_has_lv_arr() && \
-		(	(lev < 0) || \
-			((lev >= 0) && dbg_get_lv_arr()[lev]) \
-		) && \
-		(cond) \
-	) \
-
-//--end_of_def
+#define	DBG_COND(lev, cond)	(dbg_check_lev(get_dbg_brn(), lev) && (cond))
 
 #define INVALID_DBG_LV 		-123
 
@@ -99,11 +87,7 @@ bool	dbg_print_cond_func(
 
 //--end_of_def
 
-#define DBG_BJ_LIB_CK(prm) \
-	DBG_CK(dbg_print_cond_func(NULL, (! (prm)), true, __FILE__, __LINE__, #prm)); \
-
-// end_of_def
-
+#define DBG_BJ_LIB_CK(prm) DBG_CK(prm) 
 
 #define DBG_SLOW(prm)
 //define DBG_SLOW(prm)	DBG(prm)

@@ -267,7 +267,10 @@ public:
 	}
 
 	void	init_canon_clause(bool free_mem){
-		DBG(cc_in_free = false);
+		SKELETON_DBG(
+			cc_pt_brn = NULL;
+			cc_in_free = false;
+		)
 
 		cc_me = NULL_PT;
 		cc_spot = false;
@@ -438,6 +441,8 @@ public:
 	}
 	
 	void init_canon_cnf(bool free_mem = false){
+		SKELETON_DBG(cf_pt_brn = NULL);
+		
 		cf_sorted = true;
 	
 		cf_dims.init_dima_dims(INVALID_NATURAL);

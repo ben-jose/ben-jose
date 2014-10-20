@@ -39,31 +39,19 @@ dbg_prt_brn funcs.
 #include "dbg_prt.h"
 #include "dbg_run_satex.h"
 
-row<bool>* dbg_lv_arr = NULL_PT;
-bool	dbg_bad_cycle1 = false;		// dbg_print_cond_func
-
 bool
-dbg_has_lv_arr(){
-	return (dbg_lv_arr != NULL_PT);
-}
-
-row<bool>&
-dbg_get_lv_arr(){
-	if(! dbg_has_lv_arr()){
-		abort_func(0, "ASKING FOR NULL dbg_lv_arr");
-	}
-	return (*dbg_lv_arr);
-}
-
-void
-dbg_init_lv_arr(row<bool>& nw_lv_arr){
-	dbg_lv_arr = &nw_lv_arr;
-	
-	long num_levs = DBG_NUM_LEVS;
-	nw_lv_arr.set_cap(num_levs);
-	for(int ii = 0; ii < num_levs; ii++){
-		nw_lv_arr.inc_sz() = false;
-	}
+dbg_check_lev(brain* brn, long lev){
+	bool lv_ok = false;
+#ifdef FULL_DEBUG
+	if(brn == NULL){ return false; }
+	brain* pt_b = brn->get_dbg_brn();
+	if(pt_b == NULL){ return false; }
+	if(lev < 0){ return true; }
+	row<bool>& lvs_arr = pt_b->br_dbg.dbg_levs_arr;
+	if(! lvs_arr.is_valid_idx(lev)){ return false; }
+	lv_ok = lvs_arr[lev];
+#endif
+	return lv_ok;
 }
 
 void 
@@ -95,8 +83,13 @@ bool	dbg_print_cond_func(brain* brn, bool prm, bool is_ck, const ch_string fnam,
 {
 	bool resp = true;
 #ifdef FULL_DEBUG
-	DBG_CK(! dbg_bad_cycle1);
-	dbg_bad_cycle1 = true;
+	if(brn == NULL){
+		return false;
+	}
+	bool& bad_cy = brn->br_dbg.dbg_bad_cycle1;
+	
+	DBG_CK(! bad_cy);
+	bad_cy = true;
 
 	if(prm){
 		bj_ostream& os = bj_dbg;
@@ -137,7 +130,7 @@ bool	dbg_print_cond_func(brain* brn, bool prm, bool is_ck, const ch_string fnam,
 		resp = (! is_ck);
 	}
 
-	dbg_bad_cycle1 = false;
+	bad_cy = false;
 #endif
 	return resp;
 }

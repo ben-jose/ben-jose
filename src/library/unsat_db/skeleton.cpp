@@ -671,6 +671,8 @@ cmp_variant(variant const & vnt1, variant const & vnt2){
 
 void
 skeleton_glb::init_skeleton_glb(){
+	SKELETON_DBG(kg_pt_brn = NULL);
+	
 	kg_clauses.clear(true, true);
 	kg_free_clauses.clear(true, true);;
 
@@ -1267,7 +1269,7 @@ canon_cnf::load_from(skeleton_glb& skg, ch_string& f_nam){
 	all_lits.clear();
 
 	bool load_ok = true;
-	dimacs_loader	the_loader;
+	dimacs_loader	the_loader(get_dbg_brn());
 	try{
 		the_loader.parse_file(f_nam, all_lits);
 	} catch (const top_exception& ex1){

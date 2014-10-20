@@ -87,7 +87,7 @@ enum action_t {
 #define MAX_LAYERS 1000
 
 //=============================================================================
-// extern vars
+// defs
 
 #define DBG_DIR "./dbg_ic_output/"
 #define DBG_PREF "brain"
@@ -219,8 +219,7 @@ class ticket {
 	}
 
 	brain*	get_dbg_brn(){
-		brain* the_brn = NULL;
-		return the_brn;
+		return NULL;
 	}
 	
 	bool	is_valid(){
@@ -1886,6 +1885,9 @@ public:
 	long			dbg_current_start_entry;
 	long			dbg_current_stop_entry;
 	
+	bool 		dbg_bad_cycle1;
+	row<bool>	dbg_levs_arr;
+	
 	dbg_inst_info(){
 		init_dbg_inst_info();
 	}
@@ -1902,11 +1904,14 @@ void		due_periodic_prt(void* pm, double curr_secs);
 class brain {
 	public:
 
+	BRAIN_DBG(
+		dbg_inst_info  	br_dbg;
+		brain*			br_pt_brn;
+	)
+	
 	skeleton_glb*	br_pt_skl;
 	instance_info*	br_pt_inst;
 		
-	BRAIN_DBG(dbg_inst_info  	br_dbg);
-	
 	timer			br_prt_timer;
 
 	double 			br_start_load_tm;
@@ -2032,9 +2037,11 @@ class brain {
 
 	void	init_brain(skeleton_glb& the_skl, instance_info& inst);
 
+	void	init_all_dbg_brn();
+	
 	brain*	get_dbg_brn(){
 		brain* the_brn = NULL;
-		BRAIN_DBG(the_brn = this);
+		BRAIN_DBG(the_brn = br_pt_brn);
 		return the_brn;
 	}
 	

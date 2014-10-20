@@ -261,10 +261,8 @@ void
 dbg_update_config_entries(brain& brn){
 #ifdef FULL_DEBUG
 	instance_info& inst_info = brn.get_my_inst();
-	if(! dbg_has_lv_arr()){
-		return;
-	}
-	row<bool>& dbg_arr = dbg_get_lv_arr();
+	
+	row<bool>& dbg_arr = brn.br_dbg.dbg_levs_arr;
 	
 	bj_ostream& os = bj_out;
 	MARK_USED(os);
