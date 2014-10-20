@@ -37,13 +37,10 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 #include "instance_info.h"
 #include "skeleton.h"
 #include "dimacs.h"
+#include "brain.h"
 #include "dbg_prt.h"
 
-#define NUM_BYTES_SHA2	32	// 256 bits
-
-//long canon_cnf::CF_NUM_CNFS = 0;
-bj_big_int_t	skg_dbg_canon_find_id = 0;
-bj_big_int_t	skg_dbg_canon_save_id = 0;
+//define NUM_BYTES_SHA2	32	// 256 bits
 
 #define SKELETON_CK(prm) 	DBG_BJ_LIB_CK(prm)
 
@@ -294,15 +291,10 @@ canon_save(ch_string& the_pth, row<char>& cnn, bool write_once){
 	// this function should never be modified because the 
 	// whole skeleton is based on shas of this function
 
-	//DBG_PRT(78, os << "saving " << the_pth);
-	//DBG_PRT(78, os << "HIT RETURN TO CONTINUE..." << " dbg_id=" << skg_dbg_canon_save_id);
-	//DBG_COMMAND(78, getchar());
-
 	SKELETON_CK(not_skl_path(the_pth));
 	
 	bool ok = write_file(the_pth, cnn, write_once);
 	
-	//DBG_PRT(78, os << "SAVED " << the_pth << " dbg_id=" << skg_dbg_canon_save_id);
 	return ok;
 }
 
@@ -2030,10 +2022,11 @@ canon_cnf::save_cnf(skeleton_glb& skg, ch_string sv_pth){
 		skg.ref_touch(sv_dir);
 	}
 
-	DBG_PRT(76, os << "AFTER save_cnf'" << sv_pth << "' ok=" << sv_ok << " existed=" << existed
-		<< " dbg_id=" << skg_dbg_canon_save_id << bj_eol << bj_eol);
-	//DBG_PRT(76, os << "HIT RETURN TO CONTINUE..." << " dbg_id=" << skg_dbg_canon_save_id);
-	//DBG_COMMAND(76, getchar());
+	DBG_PRT(76, 
+		dbg_inst_info& dbg_inf = skg.get_dbg_brn()->br_dbg;
+		os << "AFTER save_cnf'" << sv_pth 
+		<< "' ok=" << sv_ok << " existed=" << existed
+		<< " dbg_id=" << dbg_inf.dbg_canon_save_id << bj_eol << bj_eol);
 
 	return sv_ok;
 }

@@ -44,6 +44,8 @@ sha2 hash func spec.
 extern "C" {
 #endif
 
+#define NUM_BYTES_SHA2 32	/* 256 bits */
+
 /**
  * \brief          SHA-256 context structure
  */

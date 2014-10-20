@@ -87,6 +87,7 @@ all_results_batch_instances(ch_string file_nm, satisf_val r_val){
 
 bool
 dbg_run_satex_on(brain& brn, ch_string f_nam){
+#ifdef FULL_DEBUG
 	if(file_exists(f_nam)){
 		ch_string o_str = "satex -s " + f_nam;
 
@@ -104,11 +105,12 @@ dbg_run_satex_on(brain& brn, ch_string f_nam){
 			os << " brn_tk=" << brn.br_current_ticket << bj_eol;
 			os << "	LV=" << brn.level() << bj_eol;
 			os << " f_nam=" << f_nam << bj_eol;
-			os << " save_consec=" << skg_dbg_canon_save_id << bj_eol;
+			os << " save_consec=" << brn.br_dbg.dbg_canon_save_id << bj_eol;
 			os << "END_OF_aborting_data" << bj_eol;
 		);
 		BRAIN_CK(is_no_sat);
 	}
+#endif
 	return true;
 }
 

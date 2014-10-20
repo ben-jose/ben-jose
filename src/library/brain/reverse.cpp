@@ -243,7 +243,7 @@ brain::reverse(){
 				BRAIN_CK(mpp0.ck_last_szs());
 				BRAIN_CK(! mpp0.ma_dotted.is_empty());
 
-				DBG(br_dbg.dbg_find_id++; skg_dbg_canon_find_id = br_dbg.dbg_find_id;)
+				DBG(br_dbg.dbg_find_id++; br_dbg.dbg_canon_find_id = br_dbg.dbg_find_id;)
 
 				in_mm = mpp0.map_find(brn);
 			}
@@ -289,7 +289,7 @@ brain::reverse(){
 	
 					//brn.init_forced_sorter();
 
-					DBG(br_dbg.dbg_save_id++; skg_dbg_canon_save_id = br_dbg.dbg_save_id);
+					DBG(br_dbg.dbg_save_id++; br_dbg.dbg_canon_save_id = br_dbg.dbg_save_id);
 					
 					BRAIN_CK(lv_map0.dbg_ck_used_simple_no_satisf(mo_save, brn));
 					BRAIN_CK(lv_map0.map_ck_simple_no_satisf(mo_save, brn));
@@ -932,9 +932,6 @@ memap::map_get_layer_neus(row<neuron*>& neus, long lyr_idx1, long lyr_idx2, bool
 		bool ck_val = true;
 		if(ck_tks){ 
 			ck_val = neu.recoiled_in_or_after(ma_before_retract_tk); 
-			//DBG_PRT_COND(115, ! ck_val && (skg_dbg_canon_save_id == 21), 
-			//	os << "SKIPPING NEU=" << &neu;
-			//);
 		}
 
 		if(ck_val){ neus.push(&neu); }
@@ -1539,7 +1536,7 @@ memap::map_prepare_mem_oper(mem_op_t mm, brain& brn){
 	canon_cnf& tauto_cnf = fnl_ne_srg.stab_mutual_get_cnf(skg, FINAL_COMMENT, true);
 
 	/*
-	DBG_PRT_COND(115, (skg_dbg_canon_save_id == 21), 
+	DBG_PRT_COND(115, (brn.br_dbg.dbg_canon_save_id == 21), 
 		sort_glb& dbg_ne_srg1 = brn.br_tauto_neus_srg;
 		sort_glb& dbg_qu_srg1 = brn.br_tauto_quas_srg;
 		os << " QUAS_STEP_SORTEES (after step)=" << bj_eol;
@@ -1551,7 +1548,8 @@ memap::map_prepare_mem_oper(mem_op_t mm, brain& brn){
 			os << *(dbg_ne_srg1.sg_step_sortees[aa]) << bj_eol;
 		}
 		os << " tauto=" << bj_eol << tauto_cnf << bj_eol 
-		<< "<<<< sha=" << bj_eol << tauto_cnf.cf_sha_str << " sv_id" << skg_dbg_canon_save_id << bj_eol;
+		<< "<<<< sha=" << bj_eol << tauto_cnf.cf_sha_str << " sv_id" 
+		<< brn.br_dbg.dbg_canon_save_id << bj_eol;
 		os << "phd=" << phd << bj_eol << " dbg_shas=" << dbg_shas << bj_eol;
 		dbg_prt_diff_tauto_vs_simple_neus(os, brn);
 	);
@@ -1711,14 +1709,14 @@ memap::map_oper(mem_op_t mm, brain& brn){
 		///////  start of debug of NO DEBUG
 
 		DBG(
-			if(brn.br_dbg.dbg_clean_code && (skg_dbg_canon_find_id == 10)){
+			if(brn.br_dbg.dbg_clean_code && (brn.br_dbg.dbg_canon_find_id == 10)){
 				bj_ostream& os = bj_dbg;
 
 				os << "TRYING to find cnf=" << bj_eol << tmp_diff_cnf << bj_eol
 					<< "SHAS=" << bj_eol << tmp_diff_cnf.cf_dbg_shas << bj_eol
 					//<< "fst_vpth='" << fst_vpth << "'" << bj_eol
 					<< "fst_idx= " << fst_idx << bj_eol
-					<< "find_id= " << skg_dbg_canon_find_id << bj_eol;
+					<< "find_id= " << brn.br_dbg.dbg_canon_find_id << bj_eol;
 			}
 		)
 
@@ -1727,10 +1725,11 @@ memap::map_oper(mem_op_t mm, brain& brn){
 		oper_ok = (fst_idx != INVALID_NATURAL);
 		if(oper_ok){
 			ch_string fst_vpth = tmp_diff_cnf.get_variant_path(skg, fst_idx, skg.in_verif());
-			DBG_PRT(115, os << "found cnf=" << bj_eol << tmp_diff_cnf << "FOUND CNF" << bj_eol
+			DBG_PRT(115, 
+				os << "found cnf=" << bj_eol << tmp_diff_cnf << "FOUND CNF" << bj_eol
 				<< "SHAS=" << bj_eol << tmp_diff_cnf.cf_dbg_shas << bj_eol
 				<< "fst_vpth='" << fst_vpth << "'" << bj_eol
-				<< "find_id= " << skg_dbg_canon_find_id);
+				<< "find_id= " << brn.br_dbg.dbg_canon_find_id);
 			DBG_COMMAND(115, getchar());
 
 			inst_info.ist_out.iot_old_sub_hits++;

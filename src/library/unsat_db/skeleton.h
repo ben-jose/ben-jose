@@ -89,12 +89,6 @@ typedef mem_redblack<ch_string>						string_set_t;
 typedef mem_redblack<ch_string>::rbt_nod_ref_t 		string_set_nd_ref_t;
 
 //=================================================================
-// global dbg declarations
-
-extern bj_big_int_t skg_dbg_canon_find_id;
-extern bj_big_int_t skg_dbg_canon_save_id;
-
-//=================================================================
 // skeleton defines
 
 //define SKG_APROX_SHA_PTH_SZ	70

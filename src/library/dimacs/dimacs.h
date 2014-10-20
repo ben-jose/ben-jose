@@ -47,7 +47,7 @@ class dima_dims;
 
 #define MAX_DIMACS_HEADER_SZ 4096
 
-extern ch_string	k_dimacs_header_str;
+extern const ch_string	k_dimacs_header_str;
 
 //=================================================================
 // print funtion declarations

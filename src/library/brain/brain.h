@@ -1861,8 +1861,11 @@ public:
 	row<neuron*>	 	dbg_used_neus;
 	row<canon_clause*> 	dbg_ccls;
 	canon_cnf		dbg_cnf;
+	
 	bj_big_int_t	dbg_find_id;
 	bj_big_int_t	dbg_save_id;
+	bj_big_int_t	dbg_canon_find_id;
+	bj_big_int_t	dbg_canon_save_id;
 
 	row<neuron*>	 	dbg_original_used;
 	row_quanton_t		dbg_all_chosen;
@@ -1876,8 +1879,6 @@ public:
 	bool	dbg_just_read;
 	bool	dbg_clean_code;
 	
-	bj_big_int_t	dbg_canon_find_id;
-
 	bool	dbg_periodic_prt;
 	
 	row<debug_entry>	dbg_start_dbg_entries;

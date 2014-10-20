@@ -1010,12 +1010,7 @@ brain::init_brain(skeleton_glb& the_skl, instance_info& inst){
 	init_tots_notes();
 
 	DBG(
-		br_dbg.dbg_find_id = 0;
-		br_dbg.dbg_save_id = 0;
-		br_dbg.dbg_all_chosen.clear();
-		
 		init_all_dbg_brn();  // sets br_pt_brn indicating it is readi for DBG_PRT
-		
 		dbg_init_dbg_conf(*this);	
 	);
 }
@@ -2260,7 +2255,8 @@ neuron::set_motives(brain& brn, notekeeper& nke, bool is_first){
 				<< " ne_curr_map=" << ne_curr_map << bj_eol
 				<< " br_maps_active=" << brn.br_maps_active
 			);
-			DBG_PRT(112, os << "HIT RETURN TO CONTINUE..." << " dbg_id=" << skg_dbg_canon_save_id);
+			DBG_PRT(112, os << "HIT RETURN TO CONTINUE..." << " dbg_id=" 
+				<< brn.br_dbg.dbg_canon_save_id);
 			DBG_COMMAND(112, getchar());
 
 			brn.deactivate_last_map();
@@ -3266,11 +3262,6 @@ memap::map_ck_simple_no_satisf(mem_op_t mm, brain& brn){
 	//dbg_cnf.init_with(skg, dbg_ccls, INVALID_NATURAL, INVALID_NATURAL, INVALID_NATURAL, false);
 	dbg_cnf.init_with(skg, dbg_ccls, INVALID_NATURAL, INVALID_NATURAL, INVALID_NATURAL);
 
-	//DBG_PRT_COND(115, false, 
-	//	os << " dbg_simple_cnf=" << bj_eol << dbg_cnf << bj_eol 
-	//	<< "<<<<<<<<<<" << bj_eol << dbg_cnf.cf_sha_str << " sv_id" << skg_dbg_canon_save_id
-	//);
-
 	BRAIN_CK(dbg_cnf.cf_dims.dd_tot_ccls == dbg_cnf.cf_clauses.size());
 
 	//DBG_PRT(106, os << "MAP NEURONS=" << bj_eol; dbg_print_ccls_neus(os, dbg_cnf.cf_clauses));
@@ -3360,13 +3351,6 @@ memap::dbg_ck_used_simple_no_satisf(mem_op_t mm, brain& brn){
 	}
 
 	dbg_cnf.init_with(skg, dbg_ccls, INVALID_NATURAL, INVALID_NATURAL, INVALID_NATURAL, false);
-
-	//DBG_PRT(106, os << "USED NEURONS=" << bj_eol; dbg_print_ccls_neus(os, dbg_cnf.cf_clauses));
-
-	//DBG_PRT_COND(115, ((skg_dbg_canon_save_id == 2) || (skg_dbg_canon_save_id == 22)), 
-	//	os << " dbg_used_cnf=" << bj_eol << dbg_cnf << bj_eol 
-	//	<< "<<<<<<<<<<" << bj_eol << dbg_cnf.cf_sha_str << " sv_id" << skg_dbg_canon_save_id
-	//);
 
 	ch_string dbg_cnf_nm = skg.kg_running_path + "/DBG_CNF_CK_USED.yos";
 	canon_save(dbg_cnf_nm, dbg_cnf.cf_chars, false);
@@ -3515,12 +3499,18 @@ dbg_inst_info::init_dbg_inst_info(){
 	dbg_just_read = false;
 	dbg_clean_code = false;
 	
+	dbg_find_id = 0;
+	dbg_save_id = 0;
 	dbg_canon_find_id = 0;
+	dbg_canon_save_id = 0;
+	
 	dbg_periodic_prt = true;
 
 	dbg_ic_max_seq = -1;
 	dbg_ic_seq = 0;
 	dbg_ic_gen_jpg = false;
+	
+	dbg_all_chosen.clear();
 
 	dbg_bad_cycle1 = false;
 	dbg_levs_arr.fill(false, DBG_NUM_LEVS);

@@ -41,8 +41,8 @@ Functions to read and parse dimacs files.
 // '\0'
 
 
-ch_string	k_dimacs_header_str =
-		"c (C) 2010. QUIROGA BELTRAN, Jose Luis. Bogota - Colombia.\n"
+const ch_string k_dimacs_header_str =
+		"c (C) 2014. QUIROGA BELTRAN, Jose Luis. Bogota - Colombia.\n"
 		"c Date of birth: December 28 of 1970.\n"
 		"c Place of birth: Bogota - Colombia - Southamerica.\n"
 		"c Id (cedula): 79523732 de Bogota.\n";
