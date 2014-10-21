@@ -42,10 +42,10 @@ Functions to read and parse config files.
 
 class parse_exception : public top_exception {
 public:
-	parse_exception(char* descr = as_pt_char("undefined parse exception")){
-		ex_nm = descr;
-		ex_id = 0;
-	}
+	parse_exception(char* descr = as_pt_char("undefined parse exception"), 
+					 long the_id = 0) :
+		top_exception(descr, the_id)
+	{}
 };
 
 //======================================================================

@@ -76,10 +76,10 @@ typedef bj_big_int_t 	consecutive_t;
 
 class instance_exception : public top_exception {
 public:
-	instance_exception(char* descr = as_pt_char("undefined instance exception")){
-		ex_nm = descr;
-		ex_id = 0;
-	}
+	instance_exception(char* descr = as_pt_char("undefined instance exception"), 
+					 long the_id = 0) :
+		top_exception(descr, the_id)
+	{}
 };
 
 //=================================================================

@@ -1346,10 +1346,10 @@ int	tests_main_(int argc, char** argv){
 
 class sub_excep : public top_exception {
 public:
-	sub_excep(){
-		ex_nm = as_pt_char("THE_SUB_EXCEP");
-		ex_id = 0;
-	}
+	sub_excep(char* descr = as_pt_char("THE_SUB_EXCEP"), 
+					 long the_id = 0) :
+		top_exception(descr, the_id)
+	{}
 };
 
 void th_excep(){

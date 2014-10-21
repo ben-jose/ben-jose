@@ -36,14 +36,8 @@ Declaration of classes that support and assist the system.
 //=================================================================
 // configuration defs
 
-//define DO_GETCHAR	
 #define DO_FINAL_GETCHAR
-//define DO_FINAL_GETCHAR		DO_GETCHAR
-//define SOLVING_TIMEOUT		10.5	// 0.0 if no timeout
-#define RECEIVE_TIMEOUT			10.0	// for timed_receive
-#define PRINT_PROGRESS			true	// or if (SOLVING_TIMEOUT > 1.0)
 #define PRINT_TOTALS_PERIOD 		10.0
-//define MAX_CONFLICTS			0		// all
 
 //=================================================================
 
@@ -57,16 +51,8 @@ Declaration of classes that support and assist the system.
 
 #define SUPPORT_CK(prm) DBG_CK(prm)
 
-
 //=================================================================
 // pre-configuration decl
-
-#define init_nams(nams, fst_idx, lst_idx) \
-	for(long nams##kk = fst_idx; nams##kk < lst_idx; nams##kk++){ \
-		nams[nams##kk] = "invalid_name !!!"; \
-	} \
-
-// end_define
 
 #define	OUT_COND(lv_arr, lev, cond)	\
 	(	(	(lev < 0) || \
@@ -93,17 +79,12 @@ Declaration of classes that support and assist the system.
 //=================================================================
 // typedefs and defines
 
-class brain;
-
-typedef	int	location;
-
-//define INVALID_NION_ID		0
-
 #define OUT_NUM_LEVS 10
 
 //=================================================================
 // global_data
 
+class brain;
 class quanton;
 class global_data;
 
@@ -112,34 +93,6 @@ extern global_data*	GLB_DATA_PT;
 global_data&	GLB();
 void		glb_set_memout();
 long		get_free_mem_kb();
-
-//typedef	void 	(global_data::*dbg_info_fn_t)();
-
-class runoptions {
-public:
-	bool	ro_just_read;
-	bool	ro_local_verifying;
-	bool	ro_only_save;
-	bool	ro_keep_skeleton;
-
-	ch_string	ro_skeleton_root_path;
-
-	runoptions(){
-		init_runoptions();
-	}
-
-	~runoptions(){
-	}
-
-	void	init_runoptions(){
-		ro_just_read = false;
-		ro_local_verifying = false;
-		ro_only_save = false;
-		ro_keep_skeleton = false;
-
-		ro_skeleton_root_path = "";
-	}
-};
 
 class global_data {
 public:
@@ -150,8 +103,6 @@ public:
 
 	bool			op_debug_clean_code;
 	bool			op_just_read;
-
-	runoptions		gg_options;
 
 	row<long>		final_trail_ids;
 	row<long>		final_chosen_ids;
@@ -255,11 +206,6 @@ public:
 
 	bool		is_finishing(){
 		return (result() != k_unknown_satisf);
-	}
-
-	bool	is_here(location rk){
-		MARK_USED(rk);
-		return true;
 	}
 
 	ch_string	init_log_name(ch_string sufix);

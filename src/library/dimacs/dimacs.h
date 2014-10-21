@@ -64,10 +64,10 @@ DECLARE_PRINT_FUNCS(dima_dims)
 
 class dimacs_exception : public top_exception{
 public:
-	dimacs_exception(char* descr = as_pt_char("undefined dimacs exception")){
-		ex_nm = descr;
-		ex_id = 0;
-	}
+	dimacs_exception(char* descr = as_pt_char("undefined dimacs exception"), 
+					 long the_id = 0) :
+		top_exception(descr, the_id)
+	{}
 };
 
 //=================================================================

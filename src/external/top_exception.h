@@ -34,21 +34,27 @@ Top exception class.
 #ifndef TOP_EXCEPTION_H
 #define TOP_EXCEPTION_H
 
-
 #define as_pt_char(the_str) (const_cast<char *>(the_str))
 
 class top_exception {
 public:
 	char* 	ex_nm;
 	long	ex_id;
+	char* 	ex_stk;
 	
-	top_exception(char* descr = as_pt_char("undefined top exception")){
-		ex_nm = descr;
-		ex_id = 0;
+	top_exception(char* descr = as_pt_char("undefined top exception"), long the_id = 0);
+	
+	~top_exception(){
 	}
+	
+	void release_strings();
 	
 	char* get_str(){
 		return ex_nm;
+	}
+
+	char* get_stk(){
+		return ex_stk;
 	}
 };
 

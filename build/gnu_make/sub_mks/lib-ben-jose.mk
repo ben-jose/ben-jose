@@ -6,6 +6,7 @@ SRC_BASE_DIR := ../../../src
 SOURCES := \
 	$(SRC_BASE_DIR)/external/bj_mem.cpp \
 	$(SRC_BASE_DIR)/external/stack_trace.cpp \
+	$(SRC_BASE_DIR)/external/top_exception.cpp \
 	$(SRC_BASE_DIR)/library/brain/instance_info.cpp \
 	$(SRC_BASE_DIR)/library/brain/brain.cpp \
 	$(SRC_BASE_DIR)/library/brain/sortor.cpp \

@@ -50,10 +50,9 @@ file funcs.
 
 class file_exception : public top_exception {
 public:
-	file_exception(char* descr = as_pt_char("undefined file exception")){
-		ex_nm = descr;
-		ex_id = 0;
-	}
+	file_exception(char* descr = as_pt_char("undefined file exception"), long the_id = 0) :
+		top_exception(descr, the_id)
+	{}
 };
 
 void

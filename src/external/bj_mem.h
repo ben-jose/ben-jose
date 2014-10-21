@@ -39,10 +39,18 @@ Declaration of mem trace funcs and other.
 #include "platform.h"
 #include "top_exception.h"
 #include "bj_stream.h"
-#include "stack_trace.h"
 
-#define DBG_TPL_ALLOC	false
 
+/*
+include "stack_trace.h"
+define DBG_TPL_ALLOC() \
+	DBG_COND_COMM(true, os << STACK_STR << "the_size=" << the_size << bj_eol)
+
+end_of_def
+*/
+
+#define DBG_TPL_ALLOC() /**/
+	
 #define NULL_PT		NULL
 
 //define MEM_PT_DIR(prm)	prm
@@ -159,10 +167,9 @@ typedef t_4byte			t_dword;
 
 class mem_exception : public top_exception {
 public:
-	mem_exception(char* descr = as_pt_char("undefined mem exception")){
-		ex_nm = descr;
-		ex_id = 0;
-	}
+	mem_exception(char* descr = as_pt_char("undefined mem exception"), long the_id = 0) :
+		top_exception(descr, the_id)
+	{}
 };
 
 //======================================================================
@@ -285,7 +292,7 @@ mem_set_memout_fn(memout_func_t ff){
 
 template<class obj_t> static inline obj_t* 
 tpl_malloc(size_t the_size = 1){
-	DBG_COND_COMM(DBG_TPL_ALLOC, os << STACK_STR << "the_size=" << the_size << bj_eol);
+	DBG_TPL_ALLOC();
 	mem_size mem_sz = the_size * sizeof(obj_t);
 	MEM_CTRL(
 		MEM_CK((MAX_MEM_SZ - mem_sz) > mem_get_num_by_in_use());
@@ -319,7 +326,7 @@ tpl_malloc(size_t the_size = 1){
 
 template<class obj_t> static inline obj_t* 
 tpl_secure_realloc(obj_t* ptr, size_t old_size, size_t the_size){
-	DBG_COND_COMM(DBG_TPL_ALLOC, os << STACK_STR << "the_size=" << the_size << bj_eol);
+	DBG_TPL_ALLOC();
 	MEM_CK(the_size > old_size);
 
 	mem_size mem_sz = the_size * sizeof(obj_t);
@@ -344,7 +351,7 @@ tpl_secure_realloc(obj_t* ptr, size_t old_size, size_t the_size){
 
 template<class obj_t> static inline obj_t* 
 tpl_realloc(obj_t* ptr, size_t old_size, size_t the_size){
-	DBG_COND_COMM(DBG_TPL_ALLOC, os << STACK_STR << "the_size=" << the_size << bj_eol);
+	DBG_TPL_ALLOC();
 	mem_size mem_sz = the_size * sizeof(obj_t);
 	MEM_CTRL(
 		mem_size old_mem_sz = old_size * sizeof(obj_t);
@@ -381,7 +388,7 @@ tpl_realloc(obj_t* ptr, size_t old_size, size_t the_size){
 
 template<class obj_t> static inline void 
 tpl_free(obj_t*& ptr, size_t the_size = 1){
-	DBG_COND_COMM(DBG_TPL_ALLOC, os << STACK_STR << "the_size=" << the_size << bj_eol);
+	DBG_TPL_ALLOC();
 	if(ptr != NULL_PT){ 
 		MEM_SRTY(
 			mem_size s_old_mem_sz = the_size * sizeof(obj_t);

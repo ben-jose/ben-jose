@@ -79,10 +79,10 @@ typedef long		bit_rw_idx;
 
 class bit_rw_exception : public top_exception {
 public:
-	bit_rw_exception(char* descr = as_pt_char("undefined bit_row exception")){
-		ex_nm = descr;
-		ex_id = 0;
-	}
+	bit_rw_exception(char* descr = as_pt_char("undefined bit_row exception"), 
+					 long the_id = 0) :
+		top_exception(descr, the_id)
+	{}
 };
 
 //======================================================================

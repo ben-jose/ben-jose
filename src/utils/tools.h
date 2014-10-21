@@ -120,10 +120,10 @@ enum	cmp_is_sub {
 
 class row_exception : public top_exception {
 public:
-	row_exception(char* descr = as_pt_char("undefined row exception")){
-		ex_nm = descr;
-		ex_id = 0;
-	}
+	row_exception(char* descr = as_pt_char("undefined row exception"), 
+					 long the_id = 0) :
+		top_exception(descr, the_id)
+	{}
 };
 
 //======================================================================

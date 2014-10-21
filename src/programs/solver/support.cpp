@@ -218,8 +218,8 @@ global_data::set_active_out_levs(){
 
 bj_ostream&
 global_data::print_mem_used(bj_ostream& os){
-	if(GLB().using_mem_ctrl){
-		os << GLB().batch_stat_mem_used;
+	if(using_mem_ctrl){
+		os << batch_stat_mem_used;
 	}
 	return os;
 }
@@ -249,7 +249,7 @@ global_data::print_totals(bj_ostream& os, double curr_tm){
 
 	os << bj_eol;
 	os << batch_stat_solve_tm;
-	if(GLB().using_mem_ctrl){
+	if(using_mem_ctrl){
 		os << batch_stat_mem_used;
 	}
 
@@ -268,26 +268,26 @@ global_data::print_final_totals(bj_ostream& os){
 	//os << bj_fixed;
 	//os.precision(2);
 
-	os << GLB().batch_stat_choices;
-	os << GLB().batch_stat_laps;
-	os << GLB().batch_stat_load_tm;
-	os << GLB().batch_stat_solve_tm;
-	os << GLB().batch_stat_mem_used;
+	os << batch_stat_choices;
+	os << batch_stat_laps;
+	os << batch_stat_load_tm;
+	os << batch_stat_solve_tm;
+	os << batch_stat_mem_used;
 
-	os << GLB().batch_stat_direct_hits;
-	os << GLB().batch_stat_equ_hits;
-	os << GLB().batch_stat_sub_hits;
-	os << GLB().batch_stat_saved_targets;
-	os << GLB().batch_stat_conflicts;
+	os << batch_stat_direct_hits;
+	os << batch_stat_equ_hits;
+	os << batch_stat_sub_hits;
+	os << batch_stat_saved_targets;
+	os << batch_stat_conflicts;
 
 	/*
 	os << "AVERAGE SOLVE TIME = " <<
-		GLB().batch_avg_solve_time.avg << bj_eol;
+		batch_avg_solve_time.avg << bj_eol;
 	os << "TOTAL SOLVE TIME = " << 
-		GLB().batch_total_solve_time << bj_eol;
+		batch_total_solve_time << bj_eol;
 	*/
 
-	double tot_tm = GLB().batch_end_time - GLB().batch_start_time;
+	double tot_tm = batch_end_time - batch_start_time;
 	os << "TOTAL TIME = " << tot_tm << bj_eol;
 	return os;
 }
@@ -314,7 +314,7 @@ global_data::print_batch_consec(){
 
 void
 global_data::print_final_assig(){
-	if(GLB().batch_answer_name.size() == 0){
+	if(batch_answer_name.size() == 0){
 		return;
 	}
 
@@ -322,7 +322,7 @@ global_data::print_final_assig(){
 	ch_string f_nam = inst_info.get_f_nam();
 	row_long_t& ff_assg = inst_info.ist_out.iot_final_assig;
 
-	const char* f_nm = GLB().batch_answer_name.c_str();
+	const char* f_nm = batch_answer_name.c_str();
 	std::ofstream log_stm;
 	log_stm.open(f_nm, std::ios::app);
 	if(log_stm.good() && log_stm.is_open()){
@@ -461,9 +461,9 @@ void	err_header(bj_ostr_stream& msg_err){
 	msg_err.clear();
 	//msg_err = "";
 	msg_err.flush();
-	msg_err << "file(" << GLB().batch_consec << "/"
-		<< GLB().batch_num_files << ")='"
-		<< GLB().get_curr_f_nam() << "'";
+	msg_err << "file(" << batch_consec << "/"
+		<< batch_num_files << ")='"
+		<< get_curr_f_nam() << "'";
 	//msg_err << bj_eol;
 }
 */
@@ -541,8 +541,15 @@ void	call_and_handle_exceptions(core_func_t the_func){
 	try{
 		(*the_func)();
 	} catch (top_exception& ex1){
-		bj_err << ex1.get_str() << bj_eol;
-		log_message(ex1.get_str());
+		ch_string ex_msg = ex1.get_str();
+		DBG(
+			ch_string ex_stk = ex1.get_stk();
+			ex_msg += "\n" + ex_stk;
+		)
+		ex1.release_strings();
+		
+		bj_err << ex_msg << bj_eol;
+		log_message(ex_msg);
 		abort_func(0);
 	}
 	catch (...) {
@@ -634,7 +641,7 @@ void	get_enter(bj_ostream& os, ch_string msg){
 ch_string
 global_data::init_log_name(ch_string sufix){
 	bool is_batch = false;
-	ch_string f_nam = GLB().get_file_name(is_batch);
+	ch_string f_nam = get_file_name(is_batch);
 	ch_string log_nm = get_log_name(f_nam, sufix);
 
 	/*
