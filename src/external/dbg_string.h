@@ -24,40 +24,21 @@ email: joseluisquirogabeltran@gmail.com
 
 ------------------------------------------------------------
 
-top_exception.h
+ch_string.h
 
-Top exception class.
+Wrapper for string class.
 
 --------------------------------------------------------------*/
 
 
-#ifndef TOP_EXCEPTION_H
-#define TOP_EXCEPTION_H
+#ifndef DBG_STRING_H
+#define DBG_STRING_H
 
-#include "platform.h"
-#include "dbg_string.h"
+#ifdef FULL_DEBUG
+#include <string>
+typedef std::string dbg_string;
+#endif
 
-#define as_pt_char(the_str) (const_cast<char *>(the_str))
-
-void abort_func(long val, const char* msg = as_pt_char("Aborting."));
-
-class top_exception {
-private:
-	top_exception&  operator = (top_exception& other){
-		abort_func(0);
-		return (*this);
-	}
-	
-public:
-	long			ex_id;
-	DBG(dbg_string 	ex_stk);
-	
-	top_exception(long the_id = 0);
-	
-	~top_exception(){
-	}
-};
-
-#endif // TOP_EXCEPTION_H
+#endif // CH_STRING_H
 
 

@@ -52,6 +52,12 @@ to make the code more clear.
 #ifndef PLATFORM_H
 #define PLATFORM_H
 
+#ifdef FULL_DEBUG
+#define DBG(prm) prm
+#else
+#define DBG(prm) /**/ 
+#endif
+
 #define MARK_USED(X)  ((void)(&(X)))
 
 #ifdef WIN32

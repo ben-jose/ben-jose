@@ -77,11 +77,14 @@ typedef long		bit_rw_idx;
 //======================================================================
 // bit_rw_exception
 
+typedef enum {
+	brx_bad_eq_op,
+	brx_bad_creat
+} br_ex_cod_t;
+
 class bit_rw_exception : public top_exception {
 public:
-	bit_rw_exception(char* descr = as_pt_char("undefined bit_row exception"), 
-					 long the_id = 0) :
-		top_exception(descr, the_id)
+	bit_rw_exception(long the_id = 0) : top_exception(the_id)
 	{}
 };
 
@@ -118,20 +121,11 @@ bit_row&	operator << (bit_row& rr1, bit_row& rr2);
 class bit_row {
 private:
 	bit_row&  operator = (bit_row& other){
-		MARK_USED(other);
-		char* bit_rw_bad_eq_op = as_pt_char("operator = not allowed in bit_row");
-		DBG_THROW_CK(bit_rw_bad_eq_op != bit_rw_bad_eq_op);
-		throw bit_rw_exception(bit_rw_bad_eq_op);
-		abort_func(0, bit_rw_bad_eq_op);
-		return (*this);
+		throw bit_rw_exception(brx_bad_eq_op);
 	}
 
 	bit_row(bit_row& other){ 
-		MARK_USED(other);
-		char* bit_rw_bad_creat = as_pt_char("creator bit_row with bit_row not allowed");
-		DBG_THROW_CK(bit_rw_bad_creat != bit_rw_bad_creat);
-		throw bit_rw_exception(bit_rw_bad_creat);
-		abort_func(0, bit_rw_bad_creat);
+		throw bit_rw_exception(brx_bad_creat);
 	}
 	
 

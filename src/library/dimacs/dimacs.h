@@ -62,12 +62,45 @@ DECLARE_PRINT_FUNCS(dima_dims)
 //=================================================================
 // dimacs_exception
 
+#define first_char(pt_ch_in) (*((char*)pt_ch_in))
+
+typedef enum {
+	dix_bad_eq_op,
+	dix_bad_creat,
+	dix_no_cnf_decl_1,
+	dix_no_cnf_decl_2,
+	dix_no_cnf_decl_3,
+	dix_bad_num_cls,
+	dix_bad_format,
+	dix_zero_vars,
+	dix_zero_cls,
+	dix_bad_lit,
+	dix_cls_too_long
+} di_ex_cod_t;
+
 class dimacs_exception : public top_exception{
 public:
-	dimacs_exception(char* descr = as_pt_char("undefined dimacs exception"), 
-					 long the_id = 0) :
-		top_exception(descr, the_id)
-	{}
+	char val;
+	long line;
+	long pt_pos;
+	
+	long num_decl_cls;
+	long num_decl_vars;
+	long num_read_cls;
+	long bad_lit;
+	
+	dimacs_exception(long the_id, char vv = 0, long ll = -1, long pp = -1) : 
+			top_exception(the_id)
+	{
+		val = vv;
+		line = ll;
+		pt_pos = pp;
+
+		num_decl_cls = 0;
+		num_decl_vars = 0;
+		num_read_cls = 0;
+		bad_lit = 0;
+	}
 };
 
 //=================================================================
@@ -260,18 +293,11 @@ enum fix_kind {
 class dimacs_loader {
 private:
 	dimacs_loader&  operator = (dimacs_loader& other){
-		char* dimcs_bad_eq_op = as_pt_char("operator = not allowed in dimacs_loader");
-		DBG_THROW_CK(dimcs_bad_eq_op != dimcs_bad_eq_op);
-		throw dimacs_exception(dimcs_bad_eq_op);
-		abort_func(0, dimcs_bad_eq_op);
-		return (*this);
+		throw dimacs_exception(dix_bad_eq_op);
 	}
 
 	dimacs_loader(dimacs_loader& other){ 
-		char* dimcs_bad_creat = as_pt_char("copy creator dimacs_loader not allowed");
-		DBG_THROW_CK(dimcs_bad_creat != dimcs_bad_creat);
-		throw dimacs_exception(dimcs_bad_creat);
-		abort_func(0, dimcs_bad_creat);
+		throw dimacs_exception(dix_bad_creat);
 	}
 	
 public:

@@ -1369,7 +1369,7 @@ public:
 class sub_excep : public top_exception {
 public:
 	sub_excep(char* descr = as_pt_char("THE_SUB_EXCEP")) :
-		top_exception(descr, 0)
+		top_exception(0)
 	{
 		bj_out << "creating sub_excep" << bj_eol;
 		bj_out.flush();
@@ -1395,9 +1395,7 @@ void test_thrw_obj(){
 	try {
 		th_sub_excep();
 	} catch (top_exception& ex1){
-		os << "GOT TOP EXCEP=" << ex1.ex_nm << bj_eol;
-		DBG(os << "DBG_STACK=" << ex1.get_stk() << bj_eol);
-		ex1.release_strings();
+		DBG(os << "DBG_STACK=" << ex1.ex_stk << bj_eol);
 		os << "AFTER_RELEASE" << bj_eol;
 		os.flush();
 		//delete ex1;

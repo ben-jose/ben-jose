@@ -140,8 +140,6 @@ bool		not_skl_path(ch_string pth);
 ch_string	nam_subset_resp(cmp_is_sub rr);
 void		string_replace_char(ch_string& src_str, char orig, char repl);
 
-ch_string	path_get_running_path();
-
 bool		path_is_dead_lock(ch_string the_pth);
 void		path_delete(ch_string full_pth, ch_string up_to);
 bool		path_create(ch_string n_pth);

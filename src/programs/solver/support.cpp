@@ -539,12 +539,11 @@ void	call_and_handle_exceptions(core_func_t the_func){
 	try{
 		(*the_func)();
 	} catch (top_exception& ex1){
-		ch_string ex_msg = ex1.get_str();
+		ch_string ex_msg = "got top_exception.";
 		DBG(
-			ch_string ex_stk = ex1.get_stk();
+			ch_string ex_stk = ex1.ex_stk;
 			ex_msg += "\n" + ex_stk;
 		)
-		ex1.release_strings();
 		
 		bj_err << ex_msg << bj_eol;
 		log_message(ex_msg);
@@ -577,13 +576,7 @@ void	read_batch_file(row<instance_info>& names){
 	in_stm.open(GLB().batch_name.c_str());
 
 	if(! in_stm.good() || ! in_stm.is_open()){
-		GLB().reset_err_msg();
-		GLB().error_stm << "Could not open file " << GLB().batch_name << ".";
-
-		char* file_cannot_open = as_pt_char("Cannot open file exception");
-		DBG_THROW_CK(file_cannot_open != file_cannot_open);
-		throw file_exception(file_cannot_open);
-		abort_func(1, file_cannot_open);
+		throw file_exception(flx_cannot_open, GLB().batch_name);
 	}
 
 	names.set_cap(1000);

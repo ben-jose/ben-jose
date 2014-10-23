@@ -67,12 +67,11 @@ do_cnf_file()
 		GLB().count_instance(inst_info);
 		
 	} catch (top_exception& ex1){
-		ch_string ex_msg = ex1.get_str();
+		ch_string ex_msg = "got top_exception.";
 		DBG(
-			ch_string ex_stk = ex1.get_stk();
+			ch_string ex_stk = ex1.ex_stk;
 			ex_msg += "\n" + ex_stk;
 		)
-		ex1.release_strings();
 		
 		DBG(
 			bj_err << ex_msg << bj_eol;

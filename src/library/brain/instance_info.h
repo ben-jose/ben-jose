@@ -74,11 +74,14 @@ typedef bj_big_int_t 	consecutive_t;
 //======================================================================
 // instance_exception
 
+typedef enum {
+	inx_bad_eq_op,
+	inx_bad_creat
+} in_ex_cod_t;
+
 class instance_exception : public top_exception {
 public:
-	instance_exception(char* descr = as_pt_char("undefined instance exception"), 
-					 long the_id = 0) :
-		top_exception(descr, the_id)
+	instance_exception(long the_id = 0) : top_exception(the_id)
 	{}
 };
 
@@ -207,20 +210,11 @@ public:
 class instance_info {
 private:
 	instance_info&  operator = (instance_info& other){
-		MARK_USED(other);
-		char* inst_bad_eq_op = as_pt_char("operator = not allowed in instance_info");
-		DBG_THROW_CK(inst_bad_eq_op != inst_bad_eq_op);
-		throw instance_exception(inst_bad_eq_op);
-		abort_func(0, inst_bad_eq_op);
-		return (*this);
+		throw instance_exception(inx_bad_eq_op);
 	}
 
 	instance_info(instance_info& other){ 
-		MARK_USED(other);
-		char* inst_bad_creat = as_pt_char("copy creator instance_info not allowed");
-		DBG_THROW_CK(inst_bad_creat != inst_bad_creat);
-		throw instance_exception(inst_bad_creat);
-		abort_func(0, inst_bad_creat);
+		throw instance_exception(inx_bad_creat);
 	}
 	
 public:

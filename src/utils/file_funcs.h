@@ -48,11 +48,19 @@ file funcs.
 
 #define END_OF_SEC	0
 
+typedef enum {
+	flx_cannot_open,
+	flx_cannot_calc_size,
+	flx_cannot_fit_in_mem
+} fl_ex_cod_t;
+
 class file_exception : public top_exception {
 public:
-	file_exception(char* descr = as_pt_char("undefined file exception"), long the_id = 0) :
-		top_exception(descr, the_id)
-	{}
+	ch_string f_nm;
+	file_exception(long the_id = 0, ch_string ff = "unknow_file") : top_exception(the_id)
+	{
+		f_nm = ff;
+	}
 };
 
 void
@@ -111,6 +119,9 @@ path_verify(ch_string the_pth);
 
 bool
 make_dir(ch_string the_pth, mode_t mod);
+
+ch_string
+path_get_running_path();
 
 #endif		// FILE_FUNCS_H
 

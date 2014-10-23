@@ -36,65 +36,13 @@ top_exception impl.
 #include "stack_trace.h"
 #include "top_exception.h"
 
-#define MAX_STR_SZ 30000
-
 void abort_func(long val, const char* msg){
 	bj_err << bj_eol << "ABORTING! " << msg << bj_eol; 
 	exit(val);
 }
 
-// the idea is not to depend on ch_string. except with STACK_STR.
-
-long
-c_str_sz(const char *src){
-	if(src == NULL){
-		return -1;
-	}
-	long aa = 0;
-	for(aa = 0; (aa < MAX_STR_SZ) && (src[aa] != '\0'); aa++){}
-	if(aa == MAX_STR_SZ){
-		return -1;
-	}
-	return aa;
-}
-
-char*
-malloc_copy_c_str(const char* src)
-{
-	if(src == NULL){
-		return NULL;
-	}
-	long src_sz = c_str_sz(src);
-	if(src_sz == -1){
-		return NULL;
-	}
-	char* dest = (char*)malloc(sizeof(char) * (src_sz + 1));
-	
-	long aa;
-	for (aa = 0; aa < src_sz; aa++){
-		dest[aa] = src[aa];
-	}
-	dest[src_sz] = '\0';
-
-	return dest;
-}
-
-top_exception::top_exception(char* descr, long the_id){
-	ex_nm = malloc_copy_c_str(descr);
-	ex_id = 0;
-	const char* val_stk = STACK_STR.c_str();
-	ex_stk = malloc_copy_c_str(val_stk);
-}
-
-void
-top_exception::release_strings(){
-	if(ex_nm != NULL){
-		free(ex_nm);
-		ex_nm = NULL;
-	}
-	if(ex_stk != NULL){
-		free(ex_stk);
-		ex_stk = NULL;
-	}
+top_exception::top_exception(long the_id){
+	ex_id = the_id;
+	DBG(ex_stk = STACK_STR);
 }
 

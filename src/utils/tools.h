@@ -118,11 +118,16 @@ enum	cmp_is_sub {
 //======================================================================
 // row_exception
 
+typedef enum {
+	rwx_bad_pt,
+	rwx_bad_call_set_cap,
+	rwx_bad_call_clear,
+	rwx_bad_call_pos
+} rw_ex_cod_t;
+
 class row_exception : public top_exception {
 public:
-	row_exception(char* descr = as_pt_char("undefined row exception"), 
-					 long the_id = 0) :
-		top_exception(descr, the_id)
+	row_exception(long the_id = 0) : top_exception(the_id)
 	{}
 };
 
@@ -338,38 +343,20 @@ public:
 	}
 
 	virtual bool	ck_valid_pt(obj_t* pt_obj){ 
-		MARK_USED(pt_obj);
-		char* row_bad_pt = as_pt_char("invalid pointer exception row_data::ck_valid_pt");
-		DBG_THROW_CK(row_bad_pt != row_bad_pt);
-		throw row_exception(row_bad_pt);
-		abort_func(0, row_bad_pt); 
+		throw row_exception(rwx_bad_pt);
 	}
 
 	virtual void	set_cap(row_index min_cap){ 
-		MARK_USED(min_cap);
-		char* row_bad_call_set_cap = as_pt_char("invalid call exception row_data::set_cap");
-		DBG_THROW_CK(row_bad_call_set_cap != row_bad_call_set_cap);
-		throw row_exception(row_bad_call_set_cap);
-		abort_func(0, row_bad_call_set_cap); 
+		throw row_exception(rwx_bad_call_set_cap);
 	}
 
 	virtual void	clear(bool destroy = false, bool dealloc = false, row_index from = 0){ 
-		MARK_USED(destroy);
-		MARK_USED(dealloc);
-		MARK_USED(from);
-		char* row_bad_call_clear = as_pt_char("invalid call exception row_data::clear");
-		DBG_THROW_CK(row_bad_call_clear != row_bad_call_clear);
-		throw row_exception(row_bad_call_clear);
-		abort_func(0, row_bad_call_clear); 
+		throw row_exception(rwx_bad_call_clear);
 	}
 
 	virtual obj_t&		pos(row_index idx){ 
-		MARK_USED(idx);
-		char* row_bad_call_pos = as_pt_char("invalid call exception row_data::pos");
-		DBG_THROW_CK(row_bad_call_pos != row_bad_call_pos);
-		throw row_exception(row_bad_call_pos);
-		abort_func(0, row_bad_call_pos); 
-		return *((obj_t*)NULL_PT);
+		throw row_exception(rwx_bad_call_pos);
+		//return *((obj_t*)NULL_PT);
 	}
 
 	row_index	sz_in_bytes(){

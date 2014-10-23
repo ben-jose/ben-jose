@@ -161,14 +161,6 @@ nam_subset_resp(cmp_is_sub rr){
 }
 
 ch_string
-path_get_running_path(){
-	char exepath[BJ_PATH_MAX] = {0};
-	readlink("/proc/self/exe", exepath, sizeof(exepath) - 1);
-	ch_string the_pth = exepath;
-	return the_pth;
-}
-
-ch_string
 path_get_directory(ch_string the_pth){
 	long pos = (long)the_pth.rfind('/');
 	ch_string the_dir = the_pth.substr(0, pos);

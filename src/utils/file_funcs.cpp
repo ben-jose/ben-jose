@@ -63,15 +63,7 @@ read_file(ch_string f_nam, row<char>& f_data){
 	std::ifstream istm;
 	istm.open(ff_nn, std::ios::binary);
 	if(! istm.good() || ! istm.is_open()){
-		//bj_ostr_stream& msg = file_err_msg(0, -1, "Could not open file ");
-		//msg << "'" << f_nam << "'.";
-
-		//DBG_THROW(bj_out << msg.str() << bj_eol);
-
-		char* file_cannot_open = as_pt_char("Cannot open file exception");
-		DBG_THROW_CK(file_cannot_open != file_cannot_open);
-		throw file_exception(file_cannot_open);
-		abort_func(1, file_cannot_open);
+		throw file_exception(flx_cannot_open, f_nam);
 	}
 
 	// get size of file:
@@ -80,14 +72,7 @@ read_file(ch_string f_nam, row<char>& f_data){
 	istm.seekg (0, std::ios::beg);
 
 	if(file_sz < 0){
-		//bj_ostr_stream& msg = file_err_msg(0, -1,
-		//	"Could not compute file size. ");
-		//msg << "'" << f_nam << "'.";
-
-		char* file_cannot_size = as_pt_char("Cannot compute file size exception");
-		DBG_THROW_CK(file_cannot_size != file_cannot_size);
-		throw file_exception(file_cannot_size);
-		abort_func(1, file_cannot_size);
+		throw file_exception(flx_cannot_calc_size, f_nam);
 	}
 
 	DBG_CK(sizeof(char) == 1);
@@ -98,14 +83,7 @@ read_file(ch_string f_nam, row<char>& f_data){
 	if(num_read != file_sz){
 		tpl_free<char>(file_content, file_sz + 1);
 
-		//bj_ostr_stream& msg = file_err_msg(0, -1,
-		//	"Could not read full file into memory. ");
-		//msg << "'" << f_nam << "'.";
-
-		char* file_cannot_fit = as_pt_char("Cannot fit file in memory exception");
-		DBG_THROW_CK(file_cannot_fit != file_cannot_fit);
-		throw file_exception(file_cannot_fit);
-		abort_func(1, file_cannot_fit);
+		throw file_exception(flx_cannot_fit_in_mem, f_nam);
 	}
 	file_content[file_sz] = END_OF_SEC;
 
@@ -694,3 +672,12 @@ make_dir(ch_string the_pth, mode_t mod){
 	int resp = mkdir(the_pth.c_str(), mod);
 	return (resp == 0);
 }
+
+ch_string
+path_get_running_path(){
+	char exepath[BJ_PATH_MAX] = {0};
+	readlink("/proc/self/exe", exepath, sizeof(exepath) - 1);
+	ch_string the_pth = exepath;
+	return the_pth;
+}
+

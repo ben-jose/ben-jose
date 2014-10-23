@@ -40,12 +40,19 @@ Functions to read and parse config files.
 //======================================================================
 // parse_exception
 
+typedef enum {
+	pax_bad_int
+} pa_ex_cod_t;
+
 class parse_exception : public top_exception {
 public:
-	parse_exception(char* descr = as_pt_char("undefined parse exception"), 
-					 long the_id = 0) :
-		top_exception(descr, the_id)
-	{}
+	char	val;
+	long 	line;
+	parse_exception(long the_id = 0, char vv = 0, long ll = 0) : top_exception(the_id)
+	{
+		val = vv;
+		line = ll;
+	}
 };
 
 //======================================================================
@@ -124,14 +131,7 @@ integer parse_int(const char*& pt_in, long line) {
 	else if(*pt_in == '+'){ pt_in++; }
 
 	if( ! isdigit(*pt_in)){
-		ch_string msg = 
-			parse_err_msg("PARSE ERROR. ", line, (char)(*pt_in), ". bad integer.");
-		MARK_USED(msg);
-
-		char* parse_bad_int = (char*)msg.c_str();
-		DBG_THROW_CK(parse_bad_int != parse_bad_int);
-		throw parse_exception(parse_bad_int);
-		abort_func(1, parse_bad_int);
+		throw parse_exception(pax_bad_int, (char)(*pt_in), line);
 	}
 	while(isdigit(*pt_in)){
 		val = val*10 + (*pt_in - '0');

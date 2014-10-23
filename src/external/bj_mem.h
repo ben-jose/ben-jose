@@ -41,16 +41,6 @@ Declaration of mem trace funcs and other.
 #include "bj_stream.h"
 
 
-/*
-include "stack_trace.h"
-define DBG_TPL_ALLOC() \
-	DBG_COND_COMM(true, os << STACK_STR << "the_size=" << the_size << bj_eol)
-
-end_of_def
-*/
-
-#define DBG_TPL_ALLOC() /**/
-	
 #define NULL_PT		NULL
 
 //define MEM_PT_DIR(prm)	prm
@@ -86,15 +76,7 @@ void* bj_memset(void *s, int c, size_t n){
 #define glb_assert_2(vv, ostmsg) \
 	call_assert(vv, as_pt_char(__FILE__), __LINE__, as_pt_char(#vv), (ostmsg))
 
-#ifdef FULL_DEBUG
-#define DBG(prm) prm
-#else
-#define DBG(prm) /**/ \
-
-// end_of_def
-#endif
-
-#define DBG_MARK_USED(X)  DBG(MARK_USED(X))
+//--end_of_def
 
 #define	DBG_COND_COMM(cond, comm)	\
 	DBG( \
@@ -136,6 +118,16 @@ void* bj_memset(void *s, int c, size_t n){
 #define MEM_SRTY(prm) ;
 #endif
 
+/*
+include "stack_trace.h"
+define DBG_TPL_ALLOC() \
+	DBG_COND_COMM(true, os << STACK_STR << "the_size=" << the_size << bj_eol)
+
+end_of_def
+*/
+
+#define DBG_TPL_ALLOC() /**/
+	
 enum dbg_call_id { 
 	dbg_call_1 = 201,
 	dbg_call_2,
@@ -163,10 +155,18 @@ typedef t_4byte			t_dword;
 //======================================================================
 // mem_exception
 
+typedef enum {
+	mex_memout_in_mem_alloc_1,
+	mex_memout_in_mem_alloc_2,
+	mex_memout_in_mem_sec_re_alloc_1,
+	mex_memout_in_mem_re_alloc_1,
+	mex_memout_in_mem_re_alloc_2
+} mem_ex_cod_t;
+
+
 class mem_exception : public top_exception {
 public:
-	mem_exception(char* descr = as_pt_char("undefined mem exception"), long the_id = 0) :
-		top_exception(descr, the_id)
+	mem_exception(long the_id = 0) : top_exception(the_id)
 	{}
 };
 
@@ -303,20 +303,14 @@ tpl_malloc(size_t the_size = 1){
 			if(mof != NULL_PT){
 				(*mof)();
 			} else {
-				char* mem_out_in_mem_alloc = as_pt_char("Memory exhausted in tpl-mem-alloc");
-				DBG_THROW_CK(mem_out_in_mem_alloc != mem_out_in_mem_alloc);
-				throw mem_exception(mem_out_in_mem_alloc);
-				abort_func(0, mem_out_in_mem_alloc);
+				throw mem_exception(mex_memout_in_mem_alloc_1);
 			}
 		}
 	);
 
 	obj_t*   tmp = (obj_t*)malloc(mem_sz);
 	if((tmp == NULL_PT) && (the_size != 0)){
-		char* mem_out_in_mem_alloc_2 = as_pt_char("Memory exhausted in tpl-mem-alloc case 2");
-		DBG_THROW_CK(mem_out_in_mem_alloc_2 != mem_out_in_mem_alloc_2);
-		throw mem_exception(mem_out_in_mem_alloc_2);
-		abort_func(0, mem_out_in_mem_alloc_2);
+		throw mem_exception(mex_memout_in_mem_alloc_2);
 	}
 	MEM_PT_DIR(dbg_add_to_ptdir(tmp));
 	return tmp; 
@@ -330,10 +324,7 @@ tpl_secure_realloc(obj_t* ptr, size_t old_size, size_t the_size){
 	mem_size mem_sz = the_size * sizeof(obj_t);
 	obj_t*   tmp = (obj_t*)malloc(mem_sz);
 	if((tmp == NULL_PT) && (the_size != 0)){
-		char* memout_in_sec_re_alloc = as_pt_char("Memory exhausted in tpl-sec-re-alloc");
-		DBG_THROW_CK(memout_in_sec_re_alloc != memout_in_sec_re_alloc);
-		throw mem_exception(memout_in_sec_re_alloc);
-		abort_func(0, memout_in_sec_re_alloc);
+		throw mem_exception(mex_memout_in_mem_sec_re_alloc_1);
 	}
 	MEM_PT_DIR(dbg_add_to_ptdir(tmp));
 
@@ -365,20 +356,14 @@ tpl_realloc(obj_t* ptr, size_t old_size, size_t the_size){
 			if(mof != NULL_PT){
 				(*mof)();
 			} else {
-				char* mem_out_in_re_alloc = as_pt_char("Memory exhausted in tpl-re-alloc");
-				DBG_THROW_CK(mem_out_in_re_alloc != mem_out_in_re_alloc);
-				throw mem_exception(mem_out_in_re_alloc);
-				abort_func(0, mem_out_in_re_alloc);
+				throw mem_exception(mex_memout_in_mem_re_alloc_1);
 			}
 		}
 	);
 	MEM_PT_DIR(dbg_del_from_ptdir(ptr));
 	obj_t*   tmp = (obj_t*)realloc((void*)ptr, mem_sz);
 	if((tmp == NULL_PT) && (the_size != 0)){
-		char* mem_out_in_re_alloc_2 = as_pt_char("Memory exhausted in tpl-re-alloc case 2");
-		DBG_THROW_CK(mem_out_in_re_alloc_2 != mem_out_in_re_alloc_2);
-		throw mem_exception(mem_out_in_re_alloc_2);
-		abort_func(0, mem_out_in_re_alloc_2);
+		throw mem_exception(mex_memout_in_mem_re_alloc_2);
 	}
 	MEM_PT_DIR(dbg_add_to_ptdir(tmp));
 	return tmp; 
