@@ -408,6 +408,8 @@ public:
 	void	parse_content(row<long>& inst_ccls);
 	
 	void	parse_file(ch_string& f_nam, row<long>& inst_ccls);
+	
+	long	get_cursor_pos();
 };
 
 //=================================================================

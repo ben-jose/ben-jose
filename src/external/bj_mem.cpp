@@ -31,20 +31,23 @@ mem trace funcs and other.
 --------------------------------------------------------------*/
 
 #include <cassert>
-#include <map>
 
 #include "bj_mem.h"
 #include "bj_stream.h"
 #include "ch_string.h"
 #include "stack_trace.h"
 
+
+//======================================================================
+// Using debug with pt_dir
+
+#ifdef DBG_USING_PT_DIR
+
+#include <map>
 typedef std::map<long, ch_string> dbg_ptdir_t;
 
 bool		dbg_keeping_ptdir = false;
 dbg_ptdir_t	DBG_MEM_PTDIR;
-
-glb_mem_data* glb_pt_mem_stat = NULL_PT;
-glb_mem_data 	MEM_STATS;
 
 void
 dbg_add_to_ptdir(void* pt_val){
@@ -72,6 +75,18 @@ dbg_print_ptdir(){
 	}
 	bj_out << "]" << bj_eol;
 }
+#endif
+
+//======================================================================
+// Debug mem use. (DO NOT USE in concurrent apps
+
+#if defined(FULL_DEBUG) && defined(DBG_GLB_MEM_USE)
+glb_mem_data* glb_pt_mem_stat = NULL_PT;
+glb_mem_data 	MEM_STATS;
+#endif
+
+//======================================================================
+// Assert 
 
 bool 
 call_assert(bool vv_ck, const char* file, int line, 

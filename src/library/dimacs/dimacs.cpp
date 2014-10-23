@@ -58,13 +58,13 @@ dimacs_loader::dimacs_err_msg(long num_line, char ch_err, ch_string msg){
 void 
 dimacs_loader::skip_cnf_decl(const char*& pt_in, long line){
 	if(*pt_in == 0){
-		throw dimacs_exception(dix_no_cnf_decl_1, 0, line);
+		throw dimacs_exception(dix_no_cnf_decl_1, 0, line, get_cursor_pos());
 	}
 
 	const char* cnf_str = "cnf";
 	const int cnf_str_sz = 3;
 	if(memcmp(pt_in, cnf_str, cnf_str_sz) != 0){
-		throw dimacs_exception(dix_no_cnf_decl_2, *pt_in, line);
+		throw dimacs_exception(dix_no_cnf_decl_2, *pt_in, line, get_cursor_pos());
 	}
 	pt_in += cnf_str_sz;
 }
@@ -344,7 +344,7 @@ dimacs_loader::init_dimacs_loader(brain* the_brn){
 void
 dimacs_loader::verif_num_ccls(ch_string& f_nam, long num_decl_ccls, long num_read_ccls){
 	if(num_read_ccls != num_decl_ccls){
-		dimacs_exception ex1(dix_bad_num_cls);
+		dimacs_exception ex1(dix_bad_num_cls, 0, -1, get_cursor_pos());
 		ex1.num_decl_cls = num_decl_ccls;
 		ex1.num_read_cls = num_read_ccls;
 		throw ex1;
@@ -358,6 +358,13 @@ dimacs_loader::load_file(ch_string& f_nam){
 	read_file(ld_file_name, ld_content);
 
 	DBG_PRT(11, os << " ld_content=" << ld_content.print_row_data(os, true, ""));
+}
+
+long
+dimacs_loader::get_cursor_pos(){
+	const char* pt_base = ld_content.get_c_array();
+	const char* pt_in = ld_cursor;
+	return (pt_in - pt_base);
 }
 
 void
@@ -379,7 +386,7 @@ dimacs_loader::parse_header(){
 	for(;;){
 		skip_whitespace(pt_in, ld_num_line);
 		if(*pt_in == 0){
-			throw dimacs_exception(dix_no_cnf_decl_3, 0, ld_num_line);
+			throw dimacs_exception(dix_no_cnf_decl_3, 0, ld_num_line, get_cursor_pos());
 			break;
 		} else if(*pt_in == 'c'){
 			skip_line(pt_in, ld_num_line);
@@ -387,17 +394,17 @@ dimacs_loader::parse_header(){
 			read_problem_decl(pt_in, num_var, num_ccl, ld_num_line);
 			break;
 		} else {
-			throw dimacs_exception(dix_bad_format, *pt_in, ld_num_line);
+			throw dimacs_exception(dix_bad_format, *pt_in, ld_num_line, get_cursor_pos());
 			break;
 		}
 	}
 
 	if(num_var == 0){
-		throw dimacs_exception(dix_zero_vars, 0, ld_num_line);
+		throw dimacs_exception(dix_zero_vars, 0, ld_num_line, get_cursor_pos());
 	}
 
 	if(num_ccl == 0){
-		throw dimacs_exception(dix_zero_cls, 0, ld_num_line);
+		throw dimacs_exception(dix_zero_cls, 0, ld_num_line, get_cursor_pos());
 	}
 }
 
@@ -425,7 +432,7 @@ dimacs_loader::parse_clause(row<integer>& lits){
 		parsed_lit = parse_int(pt_in, ld_num_line);
 		if(parsed_lit == 0){ break; }
 		if(get_var(parsed_lit) > ld_decl_vars){
-			dimacs_exception ex1(dix_bad_lit, *pt_in, ld_num_line);
+			dimacs_exception ex1(dix_bad_lit, *pt_in, ld_num_line, get_cursor_pos());
 			ex1.num_decl_vars = ld_decl_vars;
 			ex1.bad_lit = parsed_lit;
 			throw ex1;
@@ -434,7 +441,7 @@ dimacs_loader::parse_clause(row<integer>& lits){
 		lits.push(parsed_lit);
 		/*
 		if(lits.size() > MAX_CLAUSE_SZ){
-			throw dimacs_exception(dix_cls_too_long, *pt_in, ld_num_line);
+			throw dimacs_exception(dix_cls_too_long, *pt_in, ld_num_line, get_cursor_pos());
 		}
 		*/
 	}

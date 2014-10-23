@@ -91,7 +91,6 @@ class global_data;
 extern global_data*	GLB_DATA_PT;
 
 global_data&	GLB();
-void		glb_set_memout();
 long		get_free_mem_kb();
 
 class global_data {

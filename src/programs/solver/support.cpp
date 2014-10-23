@@ -40,10 +40,6 @@ Global classes and functions that support and assist the system.
 #include "config.h"
 #include "sortor.h"
 
-void	glb_set_memout(){
-	GLB().result() = k_memout;
-}
-
 long
 find_first_digit(ch_string& the_str, bool dig = true){
 	unsigned long aa = 0;
@@ -140,8 +136,6 @@ global_data::init_global_data(){
 	op_just_read = false;
 
 	MEM_CTRL(using_mem_ctrl = true);
-
-	mem_set_memout_fn(glb_set_memout);
 
 	out_os = &(bj_out);
 	long ii = 0;
@@ -353,26 +347,15 @@ global_data::count_instance(instance_info& inst_info){
 	}
 	*/
 
-	if(using_mem_ctrl){
-		long tot_byt = mem_get_num_by_available();
-		MARK_USED(tot_byt);
-		long by_in_use = mem_get_num_by_in_use();
+	MEM_CTRL(
+		if(using_mem_ctrl){
+			long tot_byt = mem_get_num_by_available();
+			MARK_USED(tot_byt);
+			long by_in_use = mem_get_num_by_in_use();
 
-		batch_stat_mem_used.add_val(by_in_use);
-
-		/*
-		if(by_in_use > batch_max_mem_used){
-			batch_max_mem_used = by_in_use;
+			batch_stat_mem_used.add_val(by_in_use);
 		}
-		batch_avg_mem_used.add_val(by_in_use);
-
-		double perc_mem_used = mem_percent_used();
-		if(perc_mem_used > batch_max_mem_used_perc){
-			batch_max_mem_used_perc = perc_mem_used;
-		}
-		batch_avg_mem_used_perc.add_val(perc_mem_used);
-		*/
-	}
+	)
 
 	if(out_os != NULL_PT){
 		PRT_OUT(1, print_stats(*out_os));
@@ -682,19 +665,21 @@ void	do_all_instances(){
 
 			MEM_CTRL(mem_size mem_in_u = mem_get_num_by_in_use());
 			MEM_CTRL(MARK_USED(mem_in_u));
-			MEM_CTRL(dbg_keeping_ptdir = true);
+			MEM_PT_DIR(dbg_keeping_ptdir = true);
 
 			do_cnf_file();
 
-			DBG_COND_COMM(! (mem_in_u == mem_get_num_by_in_use()) ,
-				os << "ABORTING_DATA " << bj_eol;
-				os << "mem_in_u=" << mem_in_u << bj_eol;
-				os << "mem_get_num_by_in_use()=" << mem_get_num_by_in_use() << bj_eol;
-				dbg_print_ptdir();
-				os << "END_OF_aborting_data" << bj_eol;
-			);
-			SUPPORT_CK(mem_in_u == mem_get_num_by_in_use());
-			MEM_CTRL(dbg_keeping_ptdir = false);
+			MEM_CTRL(
+				DBG_COND_COMM(! (mem_in_u == mem_get_num_by_in_use()) ,
+					os << "ABORTING_DATA " << bj_eol;
+					os << "mem_in_u=" << mem_in_u << bj_eol;
+					os << "mem_get_num_by_in_use()=" << mem_get_num_by_in_use() << bj_eol;
+					MEM_PT_DIR(dbg_print_ptdir());
+					os << "END_OF_aborting_data" << bj_eol;
+				)
+				SUPPORT_CK(mem_in_u == mem_get_num_by_in_use());
+			)
+			MEM_PT_DIR(dbg_keeping_ptdir = false);
 		}
 	}
 
@@ -785,9 +770,11 @@ global_data::get_args(int argc, char** argv)
 
 			long max_mem = atol(argv[kk_idx]);
 			max_mem = (max_mem * NUM_BYTES_IN_KBYTE);
-			if(max_mem > 0){
-				mem_set_num_by_available(max_mem);
-			}
+			MEM_CTRL(
+				if(max_mem > 0){
+					mem_set_num_by_available(max_mem);
+				}
+			)
 
 		} else if(input_file_nm.size() == 0){
 			input_file_nm = argv[ii];
@@ -832,6 +819,7 @@ int	solver_main(int argc, char** argv){
 		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
 	);
 	DBG(bj_out << "FULL_DEBUG is defined" << bj_eol);
+	MEM_CTRL(bj_out << "MEM_CONTROL is defined" << bj_eol);
 	BRAIN_CK((bj_out << "doing CKs (plain CKs)" << bj_eol) && true);
 	BRAIN_CK_0((bj_out << "doing CK_0s" << bj_eol) && true);
 	BRAIN_CK_1((bj_out << "doing CK_1s" << bj_eol) && true);
@@ -845,7 +833,7 @@ int	solver_main(int argc, char** argv){
 	MEM_CTRL(mem_size mem_in_u = mem_get_num_by_in_use());
 	MEM_CTRL(MARK_USED(mem_in_u));
 
-	mem_set_num_by_available(get_free_mem_kb() * NUM_BYTES_IN_KBYTE);
+	MEM_CTRL(mem_set_num_by_available(get_free_mem_kb() * NUM_BYTES_IN_KBYTE));
 
 	//DBG(init_dbg_conf());
 
@@ -857,12 +845,14 @@ int	solver_main(int argc, char** argv){
 	if(args_ok){
 		PRT_OUT(1, os << ".STARTING AT " << run_time() << bj_eol);
 
-		double tot_mem = (double)(mem_get_num_by_available());
-		GLB().batch_stat_mem_used.vs_max_val = tot_mem;
+		MEM_CTRL(
+			double tot_mem = (double)(mem_get_num_by_available());
+			GLB().batch_stat_mem_used.vs_max_val = tot_mem;
 
-		PRT_OUT(0, os << "Starting with "
-			<< mem_get_num_by_available() << " bytes available" 
-			<< bj_eol); 
+			PRT_OUT(0, os << "Starting with "
+				<< mem_get_num_by_available() << " bytes available" 
+				<< bj_eol); 
+		)
 		DBG(PRT_OUT(1, os << "DEBUG_BRAIN activated" 
 			<< bj_eol));
 		call_and_handle_exceptions(do_all_instances);
@@ -870,7 +860,7 @@ int	solver_main(int argc, char** argv){
 		PRT_OUT(1, os << ".ENDING AT " << run_time() << bj_eol);
 	}
 
-	SUPPORT_CK(mem_in_u == mem_get_num_by_in_use());
+	MEM_CTRL(SUPPORT_CK(mem_in_u == mem_get_num_by_in_use()));
 
 	double end_tm = 0.0;
 	MARK_USED(end_tm);
@@ -884,6 +874,7 @@ int	solver_main(int argc, char** argv){
 		DO_FINAL_GETCHAR;
 	}
 
+	MEM_CTRL(bj_out << "MEM_CONTROL is defined" << bj_eol);
 	DBG(bj_out << "FULL_DEBUG is defined" << bj_eol);
 	BRAIN_CK((bj_out << "doing CKs (plain CKs)" << bj_eol) && true);
 	BRAIN_CK_0((bj_out << "doing CK_0s" << bj_eol) && true);
@@ -896,10 +887,12 @@ int	solver_main(int argc, char** argv){
 		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
 	);
 
-	DBG_CK_2(GLB().dbg_mem_at_start == mem_get_num_by_in_use(), 
-		os << "dbg_mem_at_start=" << GLB().dbg_mem_at_start << bj_eol;
-		os << "mem_get_num_by_in_use()=" << mem_get_num_by_in_use() << bj_eol
-	);
+	MEM_CTRL(
+		DBG_CK_2(GLB().dbg_mem_at_start == mem_get_num_by_in_use(), 
+			os << "dbg_mem_at_start=" << GLB().dbg_mem_at_start << bj_eol;
+			os << "mem_get_num_by_in_use()=" << mem_get_num_by_in_use() << bj_eol
+		);
+	)
 	return resp;
 }
 

@@ -102,7 +102,13 @@ typedef struct {
 	long*		bjo_final_assig;
 
 	bj_error_t  bjo_error;
-	long		bjo_error_where;
+	char		bjo_err_char;
+	long 		bjo_err_line;
+	long 		bjo_err_pos;
+	long 		bjo_err_num_decl_cls;
+	long 		bjo_err_num_decl_vars;
+	long 		bjo_err_num_read_cls;
+	long 		bjo_err_bad_lit;
 } bj_output_t;
 
 typedef void*	bj_uns_db_t;

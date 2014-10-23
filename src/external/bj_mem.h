@@ -43,18 +43,33 @@ Declaration of mem trace funcs and other.
 
 #define NULL_PT		NULL
 
-//define MEM_PT_DIR(prm)	prm
-#define MEM_PT_DIR(prm)	;
-
 template <bool> struct ILLEGAL_USE_OF_OBJECT;
 template <> struct ILLEGAL_USE_OF_OBJECT<true>{};
 #define OBJECT_COPY_ERROR ILLEGAL_USE_OF_OBJECT<false>()
 
+//======================================================================
+// Using debug with pt_dir
+
+#if defined(FULL_DEBUG) && defined(DBG_GLB_MEM_USE) && defined(DBG_GLB_MEM_WITH_PT_DIR)
+#define DBG_USING_PT_DIR
+#endif
+
+#ifdef DBG_USING_PT_DIR
+#define MEM_PT_DIR(prm)	prm
+#else
+#define MEM_PT_DIR(prm)	/**/
+#endif
+
+#ifdef DBG_USING_PT_DIR
 extern 	bool	dbg_keeping_ptdir;
 
 void	dbg_add_to_ptdir(void* pt_val);
 void	dbg_del_from_ptdir(void* pt_val);
 void	dbg_print_ptdir();
+#endif
+
+//======================================================================
+// Assert related
 
 bool 
 call_assert(bool vv_ck, const char* file, int line, 
@@ -106,10 +121,15 @@ void* bj_memset(void *s, int c, size_t n){
 #define DBG_THROW_CK(prm) 	DBG_CK(prm)
 //define DBG_THROW_CK(prm) 	;
 
-#ifdef NO_MEM_CTRL
-#define MEM_CTRL(prm) ;
-#else
+//======================================================================
+// MEM_CTRL and SECURE_MEM
+
+// DO NOT use DBG_GLB_MEM_USE in concurrent apps
+
+#if defined(FULL_DEBUG) && defined(DBG_GLB_MEM_USE)
 #define MEM_CTRL(prm) prm
+#else
+#define MEM_CTRL(prm) /**/
 #endif
 
 #ifdef SECURE_MEM
@@ -128,6 +148,9 @@ end_of_def
 
 #define DBG_TPL_ALLOC() /**/
 	
+//======================================================================
+// other defs
+
 enum dbg_call_id { 
 	dbg_call_1 = 201,
 	dbg_call_2,
@@ -173,32 +196,29 @@ public:
 //======================================================================
 // glb_mem_data
 
+#define MEM_CK(prm) MEM_CTRL(if(glb_pt_mem_stat != NULL){DBG_CK(prm);})
+
+#if defined(FULL_DEBUG) && defined(DBG_GLB_MEM_USE)
 
 class glb_mem_data;
 
 extern glb_mem_data* glb_pt_mem_stat;
 extern glb_mem_data MEM_STATS;
 
-typedef void (*memout_func_t)();
-
 class glb_mem_data {
 public:
 
 	mem_size 		num_bytes_in_use;
 	mem_size 		num_bytes_available;
-	memout_func_t	set_memout_func;
 
 	glb_mem_data(){
 		num_bytes_in_use = 0;
 		num_bytes_available = 0;
-		set_memout_func = NULL_PT;
 	}
 
 	~glb_mem_data(){
 	}
 };
-
-#define MEM_CK(prm) DBG(if(glb_pt_mem_stat != NULL){DBG_CK(prm);})
 
 inline
 void
@@ -265,25 +285,7 @@ mem_set_num_by_available(mem_size val){
 	glb_pt_mem_stat->num_bytes_available = val;
 }
 
-inline
-memout_func_t
-mem_get_memout_fn(){
-	if(glb_pt_mem_stat == NULL_PT){
-		return NULL_PT;
-	}
-	return glb_pt_mem_stat->set_memout_func;
-}
-
-inline
-void
-mem_set_memout_fn(memout_func_t ff){
-	if(glb_pt_mem_stat == NULL_PT){
-		return;
-	}
-	glb_pt_mem_stat->set_memout_func = ff;
-}
-
-
+#endif
 
 //======================================================================
 // 'mem_alloc()'-style memory allocation -- never returns NULL_PT; aborts instead:
@@ -299,12 +301,7 @@ tpl_malloc(size_t the_size = 1){
 		if(	(mem_get_num_by_available() > 0) && 
 			(mem_get_num_by_in_use() > mem_get_num_by_available()) )
 		{
-			memout_func_t mof = mem_get_memout_fn();
-			if(mof != NULL_PT){
-				(*mof)();
-			} else {
-				throw mem_exception(mex_memout_in_mem_alloc_1);
-			}
+			throw mem_exception(mex_memout_in_mem_alloc_1);
 		}
 	);
 
@@ -352,12 +349,7 @@ tpl_realloc(obj_t* ptr, size_t old_size, size_t the_size){
 		if(	(mem_get_num_by_available() > 0) && 
 			(mem_get_num_by_in_use() > mem_get_num_by_available()) )
 		{
-			memout_func_t mof = mem_get_memout_fn();
-			if(mof != NULL_PT){
-				(*mof)();
-			} else {
-				throw mem_exception(mex_memout_in_mem_re_alloc_1);
-			}
+			throw mem_exception(mex_memout_in_mem_re_alloc_1);
 		}
 	);
 	MEM_PT_DIR(dbg_del_from_ptdir(ptr));
