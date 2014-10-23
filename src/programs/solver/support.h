@@ -197,12 +197,10 @@ public:
 		return inst_info.ist_out.iot_num_laps;
 	}
 
-	satisf_val&	result(){
+	bj_satisf_val_t&	result(){
 		instance_info& inst_info = get_curr_inst();
 		return inst_info.ist_out.iot_result;
 	}
-
-	void		init_paths();
 
 	bool		is_finishing(){
 		return (result() != k_unknown_satisf);

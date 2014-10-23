@@ -51,20 +51,40 @@ call_solve_instance(){
 	brain the_brain(the_skl, inst_info);
 	the_brain.solve_instance();
 
-	GLB().count_instance(inst_info);
 }
 
 void
 do_cnf_file()
 {
-	instance_info& the_ans = GLB().get_curr_inst();
-	MARK_USED(the_ans);
+	skeleton_glb& the_skl = GLB().gg_skeleton;
+	instance_info& inst_info = GLB().get_curr_inst();
 
-	ch_string f_nam = the_ans.get_f_nam();
-	SUPPORT_CK(f_nam.size() > 0);
-
-	call_and_handle_exceptions(call_solve_instance);
+	bj_ostr_stream msg_err;
+	try{
+		
+		brain the_brain(the_skl, inst_info);
+		the_brain.solve_instance();
+		GLB().count_instance(inst_info);
+		
+	} catch (top_exception& ex1){
+		ch_string ex_msg = ex1.get_str();
+		DBG(
+			ch_string ex_stk = ex1.get_stk();
+			ex_msg += "\n" + ex_stk;
+		)
+		ex1.release_strings();
+		
+		DBG(
+			bj_err << ex_msg << bj_eol;
+			abort_func(0);
+		)
+	}
+	catch (...) {
+		bj_out << "INTERNAL ERROR !!! (call_and_handle_exceptions)" << bj_eol;
+		bj_out << STACK_STR << bj_eol;
+		bj_out.flush();
+		abort_func(0);
+	}
 }
-
 
 

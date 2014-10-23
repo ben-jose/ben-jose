@@ -71,7 +71,7 @@ read_batch_instances(ch_string file_nm, row<instance_info>& f_insts){
 }
 
 bool
-all_results_batch_instances(ch_string file_nm, satisf_val r_val){
+all_results_batch_instances(ch_string file_nm, bj_satisf_val_t r_val){
 	row<instance_info> f_insts;
 	read_batch_instances(file_nm, f_insts);
 	bool all_ok = true;

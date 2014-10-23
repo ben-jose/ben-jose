@@ -1332,8 +1332,8 @@ int	tests_main_(int argc, char** argv){
 	//test_num1();
 	//test_skl();  // last before ben-jose
 	
-	//test_thrw_obj();
-	pru_hex_as_txt();
+	test_thrw_obj();
+	//pru_hex_as_txt();
 	
 	os.flush();
 
@@ -1344,12 +1344,40 @@ int	tests_main_(int argc, char** argv){
 	return 0;
 }
 
+class test_excep {
+private:
+	test_excep(test_excep& other){ 
+		char* te_ex_bad_creat = 
+			as_pt_char("creator test_excep with test_excep not allowed");
+		abort_func(0, te_ex_bad_creat);
+	}
+public:
+	ch_string ex_nm;
+	long ex_id;
+	test_excep(char* descr = as_pt_char("TEST_EXCEP"), long the_id = 0) {
+		ex_nm = descr;
+		ex_id = the_id;
+		bj_out << "creating test_excep" << bj_eol;
+		bj_out.flush();
+	}
+	~test_excep(){
+		bj_out << "releasing test_excep" << bj_eol;
+		bj_out.flush();
+	}
+};
+
 class sub_excep : public top_exception {
 public:
-	sub_excep(char* descr = as_pt_char("THE_SUB_EXCEP"), 
-					 long the_id = 0) :
-		top_exception(descr, the_id)
-	{}
+	sub_excep(char* descr = as_pt_char("THE_SUB_EXCEP")) :
+		top_exception(descr, 0)
+	{
+		bj_out << "creating sub_excep" << bj_eol;
+		bj_out.flush();
+	}
+	~sub_excep(){
+		bj_out << "releasing sub_excep" << bj_eol;
+		bj_out.flush();
+	}
 };
 
 void th_excep(){
@@ -1357,7 +1385,8 @@ void th_excep(){
 }
 
 void th_sub_excep(){
-	throw sub_excep();
+	sub_excep ex1(as_pt_char("hola SUB exception"));
+	throw ex1;
 }
 
 void test_thrw_obj(){
@@ -1365,8 +1394,16 @@ void test_thrw_obj(){
 	
 	try {
 		th_sub_excep();
-	} catch (const top_exception& ex1){
-		os << "GOT THE EXCEP=" << ex1.ex_nm << bj_eol;
+	} catch (top_exception& ex1){
+		os << "GOT TOP EXCEP=" << ex1.ex_nm << bj_eol;
+		DBG(os << "DBG_STACK=" << ex1.get_stk() << bj_eol);
+		ex1.release_strings();
+		os << "AFTER_RELEASE" << bj_eol;
+		os.flush();
+		//delete ex1;
+	} catch (test_excep& ex1){
+		os << "GOT TEST EXCEP=" << ex1.ex_nm << bj_eol;
+		os.flush();
 		//delete ex1;
 	}
 }

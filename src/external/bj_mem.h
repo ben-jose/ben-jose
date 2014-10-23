@@ -66,8 +66,6 @@ void	dbg_add_to_ptdir(void* pt_val);
 void	dbg_del_from_ptdir(void* pt_val);
 void	dbg_print_ptdir();
 
-void abort_func(long val, const char* msg = as_pt_char("<msg>"));
-
 bool 
 call_assert(bool vv_ck, const char* file, int line, 
 			const char* ck_str, const char* msg = NULL_PT);

@@ -100,9 +100,9 @@ get_log_name(ch_string f_nam, ch_string sufix){
 #define RES_ERROR_STR "error"
 
 inline
-satisf_val
+bj_satisf_val_t
 as_satisf(ch_string str_ln){
-	satisf_val the_val = k_unknown_satisf;
+	bj_satisf_val_t the_val = k_unknown_satisf;
 	if(str_ln == RES_UNKNOWN_STR){
 		the_val = k_unknown_satisf;
 	} else if(str_ln == RES_YES_SATISF_STR){
@@ -121,7 +121,7 @@ as_satisf(ch_string str_ln){
 
 inline
 ch_string
-as_satisf_str(satisf_val vv){
+as_satisf_str(bj_satisf_val_t vv){
 	ch_string sf_str = RES_UNKNOWN_STR;
 	switch(vv){
 		case k_unknown_satisf:
@@ -151,7 +151,7 @@ as_satisf_str(satisf_val vv){
 
 class inst_out_info {
 public:
-	satisf_val		iot_result;
+	bj_satisf_val_t	iot_result;
 	double			iot_solve_time;
 	long			iot_num_vars;
 	long			iot_num_ccls;

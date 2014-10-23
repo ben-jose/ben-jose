@@ -24,26 +24,14 @@ email: joseluisquirogabeltran@gmail.com
 
 ------------------------------------------------------------
 
-ben_jose.h
+ben_jose.cpp  
 
-ben_jose interfase.
+ben_jose interface impl.
 
 --------------------------------------------------------------*/
 
-#ifndef BEN_JOSE_H
-#define BEN_JOSE_H
-
-enum satisf_val {
-	k_unknown_satisf,
-	k_yes_satisf,
-	k_no_satisf,
-	k_timeout,
-	k_memout,
-	k_error
-};
-
-
-
-#endif		// BEN_JOSE_H
+#include "ben_jose.h"
+#include "brain.h"
+#include "dbg_prt.h"
 
 

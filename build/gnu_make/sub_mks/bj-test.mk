@@ -8,10 +8,13 @@ TGT_LDFLAGS := -L${TARGET_DIR}
 TGT_LDLIBS  := -lben-jose -lstdc++ -lgmpxx -lgmp 
 TGT_PREREQS := libben-jose.a 
 
-SOURCES := $(SRC_BASE_DIR)/programs/tests/test_main.cpp
+SOURCES := \
+	$(SRC_BASE_DIR)/programs/tests/test.cpp \
+	$(SRC_BASE_DIR)/programs/tests/test_main.cpp
 
 SRC_INCDIRS := \
 	$(SRC_BASE_DIR)/programs/solver \
+	$(SRC_BASE_DIR)/library/interface \
 	$(SRC_BASE_DIR)/library/brain \
 	$(SRC_BASE_DIR)/library/debug \
 	$(SRC_BASE_DIR)/library/dimacs \

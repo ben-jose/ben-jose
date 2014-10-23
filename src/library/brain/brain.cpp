@@ -1543,9 +1543,9 @@ brain::get_my_inst(){
 }
 
 void
-brain::set_result(satisf_val re){
+brain::set_result(bj_satisf_val_t re){
 	instance_info& inst_info = get_my_inst();
-	satisf_val& the_result = inst_info.ist_out.iot_result;
+	bj_satisf_val_t& the_result = inst_info.ist_out.iot_result;
 
 	BRAIN_CK(re != k_unknown_satisf);
 	BRAIN_CK((the_result != k_yes_satisf) || (re != k_no_satisf));
@@ -1558,10 +1558,10 @@ brain::set_result(satisf_val re){
 	DBG_COMMAND(28, getchar());
 }
 
-satisf_val
+bj_satisf_val_t
 brain::get_result(){
 	instance_info& inst_info = get_my_inst();
-	satisf_val the_result = inst_info.ist_out.iot_result;
+	bj_satisf_val_t the_result = inst_info.ist_out.iot_result;
 
 	return the_result;
 }
@@ -1808,7 +1808,7 @@ brain::solve_instance(){
 
 		br_final_msg << f_nam << " ";
 
-		satisf_val resp_solv = inst_info.ist_out.iot_result;
+		bj_satisf_val_t resp_solv = inst_info.ist_out.iot_result;
 		if(resp_solv == k_yes_satisf){
 			check_sat_assig();
 			br_final_msg << "IS_SAT_INSTANCE";
@@ -3267,7 +3267,7 @@ memap::map_ck_simple_no_satisf(mem_op_t mm, brain& brn){
 	//DBG_PRT(106, os << "MAP NEURONS=" << bj_eol; dbg_print_ccls_neus(os, dbg_cnf.cf_clauses));
 	//DBG_PRT(106, os << "tot_ccls=" << dbg_cnf.cf_dims.dd_tot_ccls);
 
-	ch_string dbg_cnf_nm = skg.kg_running_path + "/DBG_CNF_CK_SAVE.yos";
+	ch_string dbg_cnf_nm = skg.kg_root_path + "/DBG_CNF_CK_SAVE.yos";
 	canon_save(dbg_cnf_nm, dbg_cnf.cf_chars, false);
 
 	BRAIN_CK(dbg_cnf.cf_dims.dd_tot_ccls == dbg_cnf.cf_clauses.size());
@@ -3352,7 +3352,7 @@ memap::dbg_ck_used_simple_no_satisf(mem_op_t mm, brain& brn){
 
 	dbg_cnf.init_with(skg, dbg_ccls, INVALID_NATURAL, INVALID_NATURAL, INVALID_NATURAL, false);
 
-	ch_string dbg_cnf_nm = skg.kg_running_path + "/DBG_CNF_CK_USED.yos";
+	ch_string dbg_cnf_nm = skg.kg_root_path + "/DBG_CNF_CK_USED.yos";
 	canon_save(dbg_cnf_nm, dbg_cnf.cf_chars, false);
 
 	DBG_CHECK_SAVED(dbg_run_satex_on(brn, dbg_cnf_nm));

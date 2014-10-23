@@ -32,10 +32,16 @@ top_exception impl.
 
 #include <cstdlib>
 
+#include "bj_stream.h"
 #include "stack_trace.h"
 #include "top_exception.h"
 
 #define MAX_STR_SZ 30000
+
+void abort_func(long val, const char* msg){
+	bj_err << bj_eol << "ABORTING! " << msg << bj_eol; 
+	exit(val);
+}
 
 // the idea is not to depend on ch_string. except with STACK_STR.
 
@@ -84,9 +90,11 @@ void
 top_exception::release_strings(){
 	if(ex_nm != NULL){
 		free(ex_nm);
+		ex_nm = NULL;
 	}
 	if(ex_stk != NULL){
 		free(ex_stk);
+		ex_stk = NULL;
 	}
 }
 

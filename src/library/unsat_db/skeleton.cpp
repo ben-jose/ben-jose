@@ -693,7 +693,7 @@ skeleton_glb::init_skeleton_glb(){
 	kg_verify_path = "";
 	kg_verify_mtime = time(NULL_PT);
 
-	//init_paths(); // call it when starting
+	// nit_paths(); // call it when starting
 }
 
 bj_ostream&
@@ -802,15 +802,6 @@ skeleton_glb::init_paths(){
 			kg_verifying = false;
 			kg_local_verifying = false;
 		}
-		/*
-		struct stat sf1;
-		int ok1 = stat(kg_verify_path.c_str(), &sf1);
-		if(ok1 == 0){
-			kg_verify_mtime = sf1.st_mtime;
-		} else {
-			kg_verifying = false;
-			kg_local_verifying = false;
-		}*/
 	}
 
 	if(kg_only_save){

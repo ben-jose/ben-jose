@@ -2369,8 +2369,8 @@ class brain {
 	void		check_timeout();
 	void		check_sat_assig();
 
-	void		set_result(satisf_val re);
-	satisf_val	get_result();
+	void		set_result(bj_satisf_val_t re);
+	bj_satisf_val_t	get_result();
 
 	void		dbg_add_to_used(neuron& neu);
 

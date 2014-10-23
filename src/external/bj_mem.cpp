@@ -87,10 +87,3 @@ call_assert(bool vv_ck, const char* file, int line,
 	return vv_ck;
 }
 
-void abort_func(long val, const char* msg){
-	bj_err << bj_eol << "ABORTING! " << msg << bj_eol; 
-	//bj_err << "Type ENTER.\n";
-	//getchar();
-	exit(val);
-}
-

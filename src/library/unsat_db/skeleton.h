@@ -459,8 +459,10 @@ public:
 		cf_dbg_shas.clear(free_mem, free_mem);
 	}
 
-	void	init_with(skeleton_glb& skg, row<canon_clause*>& all_ccls, long tot_vars = INVALID_NATURAL, 
-				long tot_lits = INVALID_NATURAL, long tot_twolits = INVALID_NATURAL, 
+	void	init_with(skeleton_glb& skg, row<canon_clause*>& all_ccls, 
+				long tot_vars = INVALID_NATURAL, 
+				long tot_lits = INVALID_NATURAL, 
+				long tot_twolits = INVALID_NATURAL, 
 				bool sorted_cnf = true);
 
 	void	release_and_init(skeleton_glb& skg, bool free_mem = false){

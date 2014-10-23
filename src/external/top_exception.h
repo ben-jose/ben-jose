@@ -36,7 +36,16 @@ Top exception class.
 
 #define as_pt_char(the_str) (const_cast<char *>(the_str))
 
+void abort_func(long val, const char* msg = as_pt_char("Aborting."));
+
 class top_exception {
+private:
+	top_exception&  operator = (top_exception& other){
+		char* top_ex_bad_eq_op = as_pt_char("operator = not allowed in bit_row");
+		abort_func(0, top_ex_bad_eq_op);
+		return (*this);
+	}
+	
 public:
 	char* 	ex_nm;
 	long	ex_id;
@@ -46,7 +55,7 @@ public:
 	
 	~top_exception(){
 	}
-	
+		
 	void release_strings();
 	
 	char* get_str(){

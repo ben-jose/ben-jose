@@ -201,8 +201,6 @@ global_data::init_global_data(){
 
 	gg_file_name = "";
 
-	//gg_skeleton.init_paths();
-
 	set_active_out_levs();
 }
 
@@ -384,7 +382,7 @@ global_data::count_instance(instance_info& inst_info){
 
 	inst_info.ist_out.iot_solve_time = full_tm;
 
-	satisf_val inst_res = inst_info.ist_out.iot_result;
+	bj_satisf_val_t inst_res = inst_info.ist_out.iot_result;
 
 	if(inst_res == k_unknown_satisf){
 		batch_num_unknown_satisf++;
