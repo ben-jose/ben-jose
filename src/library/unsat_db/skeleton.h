@@ -40,6 +40,7 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 #include "dimacs.h"
 #include "sha2.h"
 #include "print_macros.h"
+#include "dbg_prt.h"
 
 enum charge_t {
 	cg_negative = -1,
@@ -49,13 +50,14 @@ enum charge_t {
 
 
 class brain;
-class inst_out_info;
 class canon_clause;
 class variant;
 class canon_cnf;
 class skeleton_glb;
 
 #define SKELETON_DBG(prm) DBG(prm)
+#define SKELETON_CK(prm) 	DBG_BJ_LIB_CK(prm)
+
 
 //=================================================================
 // defines
@@ -649,6 +651,21 @@ public:
 		);
 	}
 		
+	static
+	skeleton_glb* create_skeleton_glb(){
+		skeleton_glb* lv = tpl_malloc<skeleton_glb>();
+		new (lv) skeleton_glb();
+		return lv;
+	}
+
+	static
+	void release_skeleton_glb(skeleton_glb* lv){
+		SKELETON_CK(lv != NULL_PT);
+		lv->~skeleton_glb();
+		tpl_free<skeleton_glb>(lv);
+	}
+	
+		
 	ch_string	as_full_path(ch_string sklroute){
 		DIMACS_H_CK(kg_root_path != "");
 		DIMACS_H_CK(path_begins_with(sklroute, SKG_SKELETON_DIR));
@@ -667,7 +684,7 @@ public:
 	void	init_paths();
 	void	report_err(ch_string pth, ch_string err_pth);
 
-	bool	find_path(ch_string the_pth, inst_out_info* out_info = NULL);
+	bool	find_path(ch_string the_pth, void* out_info = NULL);
 
 	bool	in_skl(ch_string a_dir){
 		ch_string skl_pth = as_full_path(SKG_SKELETON_DIR);

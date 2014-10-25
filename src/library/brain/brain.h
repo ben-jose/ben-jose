@@ -190,6 +190,7 @@ long	reset_spots_of(brain& brn, row<neuron*>& neus);
 
 void	negate_quantons(row_quanton_t& qua_row);
 void	get_ids_of(row_quanton_t& quans, row_long_t& the_ids);
+void	get_c_arr_ids(row_quanton_t& quans, long& arr_sz, long*& arr_ids);
 void	elim_until_dominated(brain& brn, quanton& qua);
 void	find_max_level_and_tier(row_quanton_t& tmp_mots, long& max_lev, long& max_tier);
 
@@ -587,7 +588,7 @@ class quanton {
 	void	set_mark(brain& brn);
 	void	reset_mark(brain& brn);
 
-	recoil_counter_t	qrecoil(){ return qu_charge_tk.tk_recoil; }
+	//recoil_counter_t	qrecoil(){ return qu_charge_tk.tk_recoil; }
 	long			qlevel(){ return qu_charge_tk.tk_level; }
 
 	bool		ck_charge(brain& brn);
@@ -1920,6 +1921,7 @@ class brain {
 	// temporal attributes
 	row_quanton_t		br_tmp_fixing_quantons;
 	row_quanton_t		br_tmp_load_quantons;
+	row_quanton_t		br_tmp_assig_quantons;
 
 	row_quanton_t		br_tmp_motives;
 	row_quanton_t		br_tmp_edge;
@@ -2352,6 +2354,7 @@ class brain {
 	void		load_neuron(row_quanton_t& neu_quas);
 	bool		load_brain(long num_neu, long num_var, row_long_t& load_ccls);
 	bool		load_instance();
+	void		aux_solve_instance();
 	void		solve_instance();
 
 	memap*	get_last_upper_map(){
@@ -2691,12 +2694,6 @@ DEFINE_PRINT_FUNCS(prop_signal)
 DEFINE_PRINT_FUNCS(coloring)
 DEFINE_PRINT_FUNCS(memap)
 DEFINE_PRINT_FUNCS(leveldat)
-
-//=============================================================================
-// central.cpp funcs
-
-void		call_solve_instance();
-
 
 #endif		// BRAIN_H
 

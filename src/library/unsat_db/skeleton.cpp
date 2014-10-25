@@ -42,9 +42,6 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 
 //define NUM_BYTES_SHA2	32	// 256 bits
 
-#define SKELETON_CK(prm) 	DBG_BJ_LIB_CK(prm)
-
-
 bool
 not_skl_path(ch_string the_pth){
 	return ! path_begins_with(the_pth, SKG_SKELETON_DIR);
@@ -1470,7 +1467,9 @@ canon_cnf::i_sub_of_vnt(skeleton_glb& skg, ch_string& vpth, bool& are_eq){
 }
 
 bool
-skeleton_glb::find_path(ch_string pth_to_find, inst_out_info* out_info){
+skeleton_glb::find_path(ch_string pth_to_find, void* o_info){
+	bj_output_t* out_info = (bj_output_t*)o_info;
+	
 	if(! kg_find_cnn_pth){
 		DBG_PRT(109, os << "NOT finding 1 pth=" << pth_to_find);
 		return false;
@@ -1489,7 +1488,7 @@ skeleton_glb::find_path(ch_string pth_to_find, inst_out_info* out_info){
 	//bool found_it = (all_found.find(pth_to_find) != all_found.end());
 	bool found_it = all_found.search(pth_to_find);
 	if(found_it && (out_info != NULL)){
-		out_info->iot_new_hits++;
+		out_info->bjo_new_hits++;
 	}
 
 	if(kg_local_verifying || kg_only_save){

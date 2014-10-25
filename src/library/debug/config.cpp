@@ -33,27 +33,10 @@ Functions to read and parse config files.
 #include <fstream>
 
 #include "file_funcs.h"
+#include "parse_funcs.h"
 #include "config.h"
 #include "brain.h"
 
-
-//======================================================================
-// parse_exception
-
-typedef enum {
-	pax_bad_int
-} pa_ex_cod_t;
-
-class parse_exception : public top_exception {
-public:
-	char	val;
-	long 	line;
-	parse_exception(long the_id = 0, char vv = 0, long ll = 0) : top_exception(the_id)
-	{
-		val = vv;
-		line = ll;
-	}
-};
 
 //======================================================================
 // parse funcs
@@ -260,14 +243,13 @@ void	dbg_init_dbg_conf(brain& brn){
 void
 dbg_update_config_entries(brain& brn){
 #ifdef FULL_DEBUG
-	instance_info& inst_info = brn.get_my_inst();
 	
 	row<bool>& dbg_arr = brn.br_dbg.dbg_levs_arr;
 	
 	bj_ostream& os = bj_out;
 	MARK_USED(os);
 
-	consecutive_t curr_round = inst_info.ist_out.iot_num_laps;
+	recoil_counter_t curr_round = brn.recoil();
 
 	long& start_idx = brn.br_dbg.dbg_current_start_entry;
 	long& stop_idx = brn.br_dbg.dbg_current_stop_entry;

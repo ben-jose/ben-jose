@@ -188,17 +188,9 @@ public:
 		return (batch_instances.is_valid_idx(batch_idx));
 	}
 
-	consecutive_t	get_curr_lap(){
-		if(batch_instances.is_empty()){
-			return 0;
-		}
-		instance_info& inst_info = get_curr_inst();
-		return inst_info.ist_out.iot_num_laps;
-	}
-
 	bj_satisf_val_t&	result(){
 		instance_info& inst_info = get_curr_inst();
-		return inst_info.ist_out.iot_result;
+		return inst_info.ist_out.bjo_result;
 	}
 
 	bool		is_finishing(){
@@ -286,7 +278,6 @@ int		solver_main(int argc, char** argv);
 //=================================================================
 // implemented in brain.cpp
 
-void	print_op_cnf();
 void	do_cnf_file();
 
 #endif		// SUPPORT_H

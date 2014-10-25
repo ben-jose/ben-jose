@@ -33,6 +33,7 @@ wrapper of gmpxx.h
 #ifndef BJ_BIG_NUM_H
 #define BJ_BIG_NUM_H
 
+#include <climits>
 #include <gmpxx.h>
 
 typedef mpz_class bj_big_int_t;

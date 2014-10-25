@@ -5,7 +5,9 @@ SRC_BASE_DIR := ../../../src
 
 TGT_LDFLAGS := -L${TARGET_DIR}
 
-TGT_LDLIBS  := -lben-jose 
+TGT_LDLIBS  := -lben-jose -lstdc++ -lgmpxx -lgmp 
+# TGT_LDLIBS  := -lben-jose 
+
 TGT_PREREQS := libben-jose.a 
 
 SOURCES := $(SRC_BASE_DIR)/programs/tests/c_test.c

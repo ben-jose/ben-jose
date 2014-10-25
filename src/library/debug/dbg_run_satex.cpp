@@ -78,7 +78,7 @@ all_results_batch_instances(ch_string file_nm, bj_satisf_val_t r_val){
 
 	for(long aa = 0; aa < f_insts.size(); aa++){
 		instance_info& inst_info = f_insts[aa];
-		if(inst_info.ist_out.iot_result != r_val){
+		if(inst_info.ist_out.bjo_result != r_val){
 			all_ok = false;
 		}
 	}

@@ -222,7 +222,7 @@ global_data::print_totals(bj_ostream& os, double curr_tm){
 	os << bj_eol;
 	if(in_valid_inst()){
 		instance_info& inst_info = get_curr_inst();
-		os << "CURR_LAPS=" << inst_info.ist_out.iot_num_laps << " ";
+		os << "CURR_LAPS=" << inst_info.ist_out.bjo_num_laps << " ";
 	}
 	os << "YES_SAT=" << batch_num_yes_satisf << " ";
 	os << "NO_SAT=" << batch_num_no_satisf << " ";
@@ -312,7 +312,7 @@ global_data::print_final_assig(){
 
 	instance_info& inst_info = get_curr_inst();
 	ch_string f_nam = inst_info.get_f_nam();
-	row_long_t& ff_assg = inst_info.ist_out.iot_final_assig;
+	//row_long_t& ff_assg = inst_info.ist_out.bjo_final_assig;
 
 	const char* f_nm = batch_answer_name.c_str();
 	std::ofstream log_stm;
@@ -322,7 +322,7 @@ global_data::print_final_assig(){
 		log_stm << "c " << f_nam << bj_eol;
 		final_chosen_ids.print_row_data(log_stm, false, " ", -1, -1, false, 20);
 		log_stm << " 0" << bj_eol;
-		ff_assg.print_row_data(log_stm, false, " ", -1, -1, false, 20);
+		//ff_assg.print_row_data(log_stm, false, " ", -1, -1, false, 20);
 		log_stm << " 0" << bj_eol;
 	}
 	log_stm.close();
@@ -330,12 +330,10 @@ global_data::print_final_assig(){
 
 void
 global_data::count_instance(instance_info& inst_info){
-	row_long_t& ff_assg = inst_info.ist_out.iot_final_assig;
-	
 	double end_time = run_time();
-	double full_tm = end_time - inst_info.ist_out.iot_solve_time;
+	double full_tm = end_time - inst_info.ist_out.bjo_solve_time;
 
-	batch_stat_laps.add_val(inst_info.ist_out.iot_num_laps);
+	batch_stat_laps.add_val(inst_info.ist_out.bjo_num_laps);
 	batch_stat_solve_tm.add_val(full_tm);
 
 	/*
@@ -363,15 +361,14 @@ global_data::count_instance(instance_info& inst_info){
 
 	PRT_OUT(1, os << "FINISHING" << bj_eol);
 
-	inst_info.ist_out.iot_solve_time = full_tm;
+	inst_info.ist_out.bjo_solve_time = full_tm;
 
-	bj_satisf_val_t inst_res = inst_info.ist_out.iot_result;
+	bj_satisf_val_t inst_res = inst_info.ist_out.bjo_result;
 
 	if(inst_res == k_unknown_satisf){
 		batch_num_unknown_satisf++;
 	} else if(inst_res == k_yes_satisf){
 		PRT_OUT(1, print_final_assig());
-		ff_assg.clear(true, true);	// So global memcheck says its OK.
 		batch_num_yes_satisf++;
 	} else if(inst_res == k_no_satisf){
 		batch_num_no_satisf++;
@@ -651,8 +648,6 @@ void	do_all_instances(){
 
 	GLB().batch_num_files = all_insts.size();
 
-	print_op_cnf();
-
 	for(long ii = 0; ii < GLB().batch_num_files; ii++){
 		GLB().batch_consec = ii + 1;
 		ch_string inst_nam = all_insts[ii].ist_file_path;
@@ -682,8 +677,6 @@ void	do_all_instances(){
 			MEM_PT_DIR(dbg_keeping_ptdir = false);
 		}
 	}
-
-	print_op_cnf();
 
 	GLB().batch_end_time = run_time();
 

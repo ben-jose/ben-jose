@@ -111,7 +111,7 @@ bool	dbg_print_cond_func(brain* brn, bool prm, bool is_ck, const ch_string fnam,
 
 			f_nam = inst_info.ist_file_path;
 			
-			consecutive_t the_lap = brn->recoil();
+			recoil_counter_t the_lap = brn->recoil();
 			if(the_lap > 0){
 				if(is_ck){ os << "LAP="; }
 				os << the_lap << ".";

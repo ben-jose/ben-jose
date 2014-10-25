@@ -68,7 +68,7 @@ instance_info::parse_instance(ch_string str_ln, long line){
 	const char* pt_in = str_ln.c_str();
 	ist_file_path = parse_field(pt_in);
 	ch_string r_fi = parse_field(pt_in);
-	ist_out.iot_result = as_satisf(r_fi);
+	ist_out.bjo_result = as_satisf(r_fi);
 }
 
 

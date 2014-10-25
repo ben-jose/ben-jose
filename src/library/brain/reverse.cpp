@@ -544,8 +544,6 @@ brain::reverse(){
 
 	inc_recoil();
 
-	instance_info& inst_info = get_my_inst();
-	inst_info.ist_out.iot_num_laps++;
 	DBG(
 		dbg_update_config_entries(*this);
 	);
@@ -1495,7 +1493,7 @@ memap::map_prepare_mem_oper(mem_op_t mm, brain& brn){
 		bool found1 = skg.find_path(pth1, &(inst_info.ist_out));
 		if(! found1){ return false; }
 		else { 
-			inst_info.ist_out.iot_old_hits++;
+			inst_info.ist_out.bjo_old_hits++;
 		}
 	}
 
@@ -1732,7 +1730,7 @@ memap::map_oper(mem_op_t mm, brain& brn){
 				<< "find_id= " << brn.br_dbg.dbg_canon_find_id);
 			DBG_COMMAND(115, getchar());
 
-			inst_info.ist_out.iot_old_sub_hits++;
+			inst_info.ist_out.bjo_old_sub_hits++;
 
 			row<neuron*>& all_tmp_found = brn.br_tmp_found_neus;
 			all_tmp_found.clear();

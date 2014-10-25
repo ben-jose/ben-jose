@@ -76,7 +76,8 @@ typedef bj_big_int_t 	consecutive_t;
 
 typedef enum {
 	inx_bad_eq_op,
-	inx_bad_creat
+	inx_bad_creat,
+	inx_bad_lit
 } in_ex_cod_t;
 
 class instance_exception : public top_exception {
@@ -150,61 +151,6 @@ as_satisf_str(bj_satisf_val_t vv){
 }
 
 //=================================================================
-// inst_out_info
-
-class inst_out_info {
-public:
-	bj_satisf_val_t	iot_result;
-	double			iot_solve_time;
-	long			iot_num_vars;
-	long			iot_num_ccls;
-	long			iot_num_lits;
-	consecutive_t	iot_num_laps;
-
-	
-	double			iot_load_tm;
-	double			iot_saved_targets;
-	double			iot_old_hits;
-	double			iot_old_sub_hits;
-	double			iot_new_hits;
-	double			iot_new_sub_hits;
-	
-	row<long>		iot_final_assig;
-
-	inst_out_info(){
-		init_inst_out_info();
-	}
-
-	void	init_inst_out_info(){
-		iot_result = k_unknown_satisf;
-		iot_solve_time = 0.0;
-		iot_num_vars = 0;
-		iot_num_ccls = 0;
-		iot_num_lits = 0;
-		iot_num_laps = 0;
-		
-		iot_load_tm = 0.0;
-		iot_saved_targets = 0.0;
-		iot_old_hits = 0.0;
-		iot_old_sub_hits = 0.0;
-		iot_new_hits = 0.0;
-		iot_new_sub_hits = 0.0;
-	}
-
-	bj_ostream& 	
-	print_inst_out_info(bj_ostream& os, bool from_pt){
-		ch_string sep = RESULT_FIELD_SEP;
-		os << as_satisf_str(iot_result) << sep;
-		os << iot_solve_time << sep;
-		os << iot_num_vars << sep;
-		os << iot_num_ccls << sep;
-		os << iot_num_lits << sep;
-		os << iot_num_laps << sep;
-		return os;
-	}
-};
-
-//=================================================================
 // instance_info
 
 class instance_info {
@@ -218,6 +164,8 @@ private:
 	}
 	
 public:
+	bool			ist_with_assig;
+	
 	long			ist_group_id;
 	long			ist_id;
 	
@@ -229,13 +177,15 @@ public:
 	long			ist_num_ccls;
 	row<long> 		ist_ccls;
 	
-	inst_out_info	ist_out;
+	bj_output_t		ist_out;
 	
 	instance_info(){
 		init_instance_info();
 	}
 
 	void	init_instance_info(){
+		ist_with_assig = false;
+		
 		ist_group_id = -1;
 		ist_id = -1;
 	
@@ -245,9 +195,42 @@ public:
 		
 		ist_num_vars = 0;
 		ist_num_ccls = 0;
-		ist_ccls.clear();		
+		ist_ccls.clear();
+		
+		init_output(ist_out);
 	}
 	
+	static
+	void	init_output(bj_output_t& out){	
+		out.bjo_result = k_unknown_satisf;
+		
+		out.bjo_solve_time = 0.0;
+		out.bjo_num_vars = 0;
+		out.bjo_num_ccls = 0;
+		out.bjo_num_lits = 0;
+		
+		out.bjo_num_laps = 0.0;
+		
+		out.bjo_load_tm = 0.0;
+		out.bjo_saved_targets = 0.0;
+		out.bjo_old_hits = 0.0;
+		out.bjo_old_sub_hits = 0.0;
+		out.bjo_new_hits = 0.0;
+		out.bjo_new_sub_hits = 0.0;
+		
+		out.bjo_final_assig_sz = 0;
+		out.bjo_final_assig = NULL;
+
+		out.bjo_error = bje_no_error;
+		out.bjo_err_char = 0;
+		out.bjo_err_line = -1;
+		out.bjo_err_pos = -1;
+		out.bjo_err_num_decl_cls = -1;
+		out.bjo_err_num_decl_vars = -1;
+		out.bjo_err_num_read_cls = -1;
+		out.bjo_err_bad_lit = -1;
+	}
+
 	ch_string&	get_f_nam(){
 		return ist_file_path;
 	}
@@ -297,12 +280,12 @@ bj_ostream&
 instance_info::print_instance_info(bj_ostream& os, bool from_pt){
 	ch_string sep = RESULT_FIELD_SEP;
 	os << ist_file_path << sep;
-	os << as_satisf_str(ist_out.iot_result) << sep;
-	os << ist_out.iot_solve_time << sep;
-	os << ist_out.iot_num_vars << sep;
-	os << ist_out.iot_num_ccls << sep;
-	os << ist_out.iot_num_lits << sep;
-	os << ist_out.iot_num_laps << sep;
+	os << as_satisf_str(ist_out.bjo_result) << sep;
+	os << ist_out.bjo_solve_time << sep;
+	os << ist_out.bjo_num_vars << sep;
+	os << ist_out.bjo_num_ccls << sep;
+	os << ist_out.bjo_num_lits << sep;
+	os << ist_out.bjo_num_laps << sep;
 	return os;
 }
 

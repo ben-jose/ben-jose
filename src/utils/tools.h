@@ -980,6 +980,15 @@ public:
 		CAP_ATTRIB = tmp_cap;
 	}
 
+	virtual
+	bool copy_to_c(long c_arr_sz, obj_t* c_arr){ 
+		if(c_arr_sz != SZ_ATTRIB){
+			return false;
+		}
+		bj_memcpy(c_arr, data, row_data<obj_t>::sz_in_bytes());
+		return true;
+	}
+	
 	void mem_copy_to(row<obj_t>& r_cpy){ 
 		r_cpy.set_cap(SZ_ATTRIB);
 		bj_memcpy(r_cpy.data, data, row_data<obj_t>::sz_in_bytes());

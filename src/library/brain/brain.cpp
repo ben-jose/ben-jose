@@ -31,6 +31,8 @@ Classes and that implement the neural network.
 --------------------------------------------------------------*/
 
 #include "stack_trace.h"
+#include "file_funcs.h"
+#include "parse_funcs.h"
 #include "sortor.h"
 #include "brain.h"
 #include "dimacs.h"
@@ -1511,9 +1513,9 @@ brain::parse_cnf(dimacs_loader& ldr, row<long>& all_ccls){
 	inst_info.ist_num_ccls = ldr.ld_num_ccls;
 	inst_info.ist_num_vars = ldr.ld_num_vars;
 	
-	inst_info.ist_out.iot_num_ccls = ldr.ld_num_ccls;
-	inst_info.ist_out.iot_num_vars = ldr.ld_num_vars;
-	inst_info.ist_out.iot_num_lits = ldr.ld_tot_lits;
+	inst_info.ist_out.bjo_num_ccls = ldr.ld_num_ccls;
+	inst_info.ist_out.bjo_num_vars = ldr.ld_num_vars;
+	inst_info.ist_out.bjo_num_lits = ldr.ld_tot_lits;
 }
 
 bool
@@ -1545,7 +1547,7 @@ brain::get_my_inst(){
 void
 brain::set_result(bj_satisf_val_t re){
 	instance_info& inst_info = get_my_inst();
-	bj_satisf_val_t& the_result = inst_info.ist_out.iot_result;
+	bj_satisf_val_t& the_result = inst_info.ist_out.bjo_result;
 
 	BRAIN_CK(re != k_unknown_satisf);
 	BRAIN_CK((the_result != k_yes_satisf) || (re != k_no_satisf));
@@ -1561,7 +1563,7 @@ brain::set_result(bj_satisf_val_t re){
 bj_satisf_val_t
 brain::get_result(){
 	instance_info& inst_info = get_my_inst();
-	bj_satisf_val_t the_result = inst_info.ist_out.iot_result;
+	bj_satisf_val_t the_result = inst_info.ist_out.bjo_result;
 
 	return the_result;
 }
@@ -1671,7 +1673,7 @@ brain::load_brain(long num_neu, long num_var, row_long_t& load_ccls){
 			}
 
 			load_neuron(neu_quas);
-			if(inst_info.ist_out.iot_result != k_unknown_satisf){ 
+			if(inst_info.ist_out.bjo_result != k_unknown_satisf){ 
 				break; 
 			}
 
@@ -1688,7 +1690,7 @@ brain::load_brain(long num_neu, long num_var, row_long_t& load_ccls){
 	double end_load_tm = run_time();
 	double ld_tm = (end_load_tm - br_start_load_tm);
 	
-	inst_info.ist_out.iot_load_tm = ld_tm;
+	inst_info.ist_out.bjo_load_tm = ld_tm;
 
 	ch_string f_nam = inst_info.get_f_nam();
 	return true;
@@ -1739,11 +1741,10 @@ brain::fill_with_origs(row<neuron*>& neus){
 
 void
 brain::check_sat_assig(){
-	row_quanton_t the_assig;
-	br_charge_trail.get_all_ordered_motives(the_assig);
-	
-	instance_info& inst_info = get_my_inst();
-	get_ids_of(the_assig, inst_info.ist_out.iot_final_assig);
+	row_quanton_t& the_assig = br_tmp_assig_quantons;
+	if(the_assig.is_empty()){
+		br_charge_trail.get_all_ordered_motives(the_assig);
+	}
 	
 	row<neuron*>& neus = br_tmp_ck_sat_neus;
 	fill_with_origs(neus);
@@ -1762,18 +1763,30 @@ brain::check_sat_assig(){
 
 }
 
+void	get_c_arr_ids(row_quanton_t& quans, long& arr_sz, long*& arr_ids){
+	BRAIN_CK(arr_sz == 0);
+	BRAIN_CK(arr_ids == NULL);
+	
+	arr_sz = quans.size();	
+	arr_ids = tpl_malloc<long>(arr_sz);
+	
+	for(long kk = 0; kk < arr_sz; kk++){
+		quanton& qua = *(quans[kk]);
+		arr_ids[kk] = qua.qu_id;
+	}
+}
+
 void 
-brain::solve_instance(){
+brain::aux_solve_instance(){
 	instance_info& inst_info = get_my_inst();
 	bool all_ok = load_instance();
 	if(! all_ok){
-		// TODO: set an error here.
-		return;
+		throw instance_exception(inx_bad_lit);
 	}
 
 	get_skeleton().kg_instance_file_nam = inst_info.get_f_nam() + "\n";
 	
-	if(inst_info.ist_out.iot_result != k_unknown_satisf){ 
+	if(inst_info.ist_out.bjo_result != k_unknown_satisf){ 
 		return;
 	}
 
@@ -1784,7 +1797,7 @@ brain::solve_instance(){
 		} 
 	)
 
-	inst_info.ist_out.iot_solve_time = run_time();
+	inst_info.ist_out.bjo_solve_time = run_time();
 
 	ch_string f_nam = inst_info.get_f_nam();
 
@@ -1792,14 +1805,22 @@ brain::solve_instance(){
 	br_choice_spin = cg_negative;
 	br_choice_order = k_right_order;
 
-	while(inst_info.ist_out.iot_result == k_unknown_satisf){
+	while(inst_info.ist_out.bjo_result == k_unknown_satisf){
 		pulsate();
 	}
 
-	inst_info.ist_out.iot_saved_targets = br_num_memo;
+	inst_info.ist_out.bjo_saved_targets = br_num_memo;
+	
+	br_tmp_assig_quantons.clear();
 
-	BRAIN_CK(recoil() == (inst_info.ist_out.iot_num_laps + 1));
-
+	if(inst_info.ist_with_assig){
+		row_quanton_t& the_assig = br_tmp_assig_quantons;
+		br_charge_trail.get_all_ordered_motives(the_assig);
+		get_c_arr_ids(the_assig, 
+					  inst_info.ist_out.bjo_final_assig_sz, 
+					  inst_info.ist_out.bjo_final_assig); 
+	}
+	
 	DBG(
 		DBG_PRT(116, dbg_prt_all_cho(*this));
 		DBG_PRT(32, os << "BRAIN=" << bj_eol;
@@ -1808,7 +1829,7 @@ brain::solve_instance(){
 
 		br_final_msg << f_nam << " ";
 
-		bj_satisf_val_t resp_solv = inst_info.ist_out.iot_result;
+		bj_satisf_val_t resp_solv = inst_info.ist_out.bjo_result;
 		if(resp_solv == k_yes_satisf){
 			check_sat_assig();
 			br_final_msg << "IS_SAT_INSTANCE";
@@ -1818,17 +1839,8 @@ brain::solve_instance(){
 			br_final_msg << "HAS_TIMEOUT";
 		}
 
-		br_final_msg << " " << recoil();
-
 		bj_out << br_final_msg.str() << bj_eol; 
 		bj_out.flush();
-
-		//br_final_msg << " " << stats.num_start_syn;
-		//br_final_msg << " " << solve_time();
-		//bj_out << "recoils= " << recoil() << bj_eol; 
-		//bj_out << "num_batch_file= " << stats.batch_consec << bj_eol; 
-		//bj_out << bj_eol;
-		//bj_out << ".";
 
 		if(br_dbg.dbg_ic_active){
 			row_quanton_t& the_trl = br_tmp_trail;
@@ -3515,3 +3527,115 @@ dbg_inst_info::init_dbg_inst_info(){
 	dbg_bad_cycle1 = false;
 	dbg_levs_arr.fill(false, DBG_NUM_LEVS);
 }
+
+void 
+print_ex(top_exception& ex1){
+	DBG(
+		bj_err << "got top_exception.\n" << ex1.ex_stk << bj_eol;
+		abort_func(0);
+	)
+}
+
+void
+set_dimacs_err(dimacs_exception& dim_ex, bj_output_t& o_inf){
+	o_inf.bjo_err_char = dim_ex.val;
+	o_inf.bjo_err_line = dim_ex.line;
+	o_inf.bjo_err_pos = dim_ex.pt_pos;
+	
+	o_inf.bjo_err_num_decl_cls = dim_ex.num_decl_cls;
+	o_inf.bjo_err_num_decl_vars = dim_ex.num_decl_vars;
+	o_inf.bjo_err_num_read_cls = dim_ex.num_read_cls;
+	o_inf.bjo_err_bad_lit = dim_ex.bad_lit;
+	
+	switch(dim_ex.ex_id){
+	case dix_no_cnf_decl_1:
+	case dix_no_cnf_decl_2:
+	case dix_no_cnf_decl_3:
+		o_inf.bjo_error = bje_dimacs_no_cnf_declaration;
+		break;
+	case dix_bad_num_cls:
+		o_inf.bjo_error = bje_dimacs_bad_cls_num;
+		break;
+	case dix_bad_format:
+		o_inf.bjo_error = bje_dimacs_format_err;
+		break;
+	case dix_zero_vars:
+		o_inf.bjo_error = bje_dimacs_zero_vars;
+		break;
+	case dix_zero_cls:
+		o_inf.bjo_error = bje_dimacs_zero_clauses;
+		break;
+	case dix_bad_lit:
+		o_inf.bjo_error = bje_dimacs_bad_literal;
+		break;
+	case dix_cls_too_long:
+		o_inf.bjo_error = bje_dimacs_clause_too_long;
+		break;
+	};
+}
+
+void
+set_file_err(file_exception& fl_ex, bj_output_t& o_inf){
+	switch(fl_ex.ex_id){
+	case flx_cannot_open:
+		o_inf.bjo_error = bje_file_cannot_open;
+		break;
+	case flx_cannot_calc_size:
+		o_inf.bjo_error = bje_file_corrupted;
+		break;
+	case flx_cannot_fit_in_mem:
+		o_inf.bjo_error = bje_file_too_big;
+		break;
+	};
+}
+
+void 
+brain::solve_instance(){
+	bj_output_t& o_inf = get_my_inst().ist_out;
+	try{
+		aux_solve_instance();
+	} catch (file_exception& ex1){
+		print_ex(ex1);
+		o_inf.bjo_result = k_error;
+		set_file_err(ex1, o_inf);
+	} catch (parse_exception& ex1){
+		print_ex(ex1);
+		o_inf.bjo_result = k_error;
+		o_inf.bjo_error = bje_parse_bad_number;
+	} catch (dimacs_exception& ex1){
+		print_ex(ex1);
+		o_inf.bjo_result = k_error;
+		set_dimacs_err(ex1, o_inf);
+	} catch (instance_exception& ex1){
+		print_ex(ex1);
+		o_inf.bjo_result = k_error;
+		o_inf.bjo_error = bje_instance_cannot_load;
+	} catch (mem_exception& ex1){
+		print_ex(ex1);
+		o_inf.bjo_result = k_error;
+		o_inf.bjo_error = bje_memout;
+	} catch (top_exception& ex1){
+		print_ex(ex1);
+		o_inf.bjo_result = k_error;
+		o_inf.bjo_error = bje_internal_ex;
+	}
+	catch (...) {
+		DBG(
+			bj_out << "INTERNAL ERROR !!! (call_and_handle_exceptions)" << bj_eol;
+			bj_out << STACK_STR << bj_eol;
+			bj_out.flush();
+			abort_func(0);
+		)
+		o_inf.bjo_result = k_error;
+		o_inf.bjo_error = bje_internal;
+	}
+	
+	instance_info& inst_info = get_my_inst();
+	recoil_counter_t num_laps = recoil();
+	if(num_laps < ULONG_MAX){
+		inst_info.ist_out.bjo_num_laps = num_laps.get_ui();
+	} else {
+		inst_info.ist_out.bjo_num_laps = ULONG_MAX;
+	}
+}
+

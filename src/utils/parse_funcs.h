@@ -24,27 +24,36 @@ email: joseluisquirogabeltran@gmail.com
 
 ------------------------------------------------------------
 
-central.cpp  
+parse_funcs.h
 
-funcs that implement top level funcs.
+parse funcs.
 
 --------------------------------------------------------------*/
 
-#include "support.h"
-#include "dimacs.h"
-#include "brain.h"
+#ifndef PARSE_FUNCS_H
+#define PARSE_FUNCS_H
 
-//============================================================
-// code for support
+#include "top_exception.h"
 
-void
-do_cnf_file()
-{
-	skeleton_glb& the_skl = GLB().gg_skeleton;
-	instance_info& inst_info = GLB().get_curr_inst();
-	brain the_brain(the_skl, inst_info);
-	the_brain.solve_instance();
-	GLB().count_instance(inst_info);
-}
+//======================================================================
+// parse_exception
+
+typedef enum {
+	pax_bad_int
+} pa_ex_cod_t;
+
+class parse_exception : public top_exception {
+public:
+	char	val;
+	long 	line;
+	parse_exception(long the_id = 0, char vv = 0, long ll = 0) : top_exception(the_id)
+	{
+		val = vv;
+		line = ll;
+	}
+};
+
+
+#endif		// PARSE_FUNCS_H
 
 

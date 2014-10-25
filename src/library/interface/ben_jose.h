@@ -49,13 +49,17 @@ typedef enum {
 typedef enum {
 	bje_no_error,
 	bje_internal,
+	bje_internal_ex,
 	bje_memout,
 	bje_timeout,
+	bje_instance_cannot_load,
 	bje_file_cannot_open,
+	bje_file_corrupted,
 	bje_file_too_big,
 	bje_parse_bad_number,
 	bje_dimacs_no_cnf_declaration,
-	bje_dimacs_error,
+	bje_dimacs_bad_cls_num,
+	bje_dimacs_format_err,
 	bje_dimacs_zero_vars,
 	bje_dimacs_zero_clauses,
 	bje_dimacs_bad_literal,
@@ -63,6 +67,8 @@ typedef enum {
 } bj_error_t;
 
 typedef struct {
+	char	bji_with_assig;
+	
 	long	bji_group_id;
 	long	bji_id;
 	
@@ -114,6 +120,7 @@ typedef struct {
 typedef void*	bj_uns_db_t;
 
 void	bj_init_input(bj_input_t* in);
+void	bj_release_output_assig(bj_output_t* out);
 
 bj_uns_db_t bj_unsat_db_open(const char* bdb_dir_path);
 void 		bj_unsat_db_close(bj_uns_db_t bdb);
