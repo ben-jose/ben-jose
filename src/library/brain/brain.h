@@ -97,9 +97,9 @@ enum action_t {
 //=============================================================================
 // decl
 
+class solver;
 class skeleton_glb;
 class instance_info;
-class results_info;
 class dbg_inst_info;
 
 class ticket;
@@ -1904,15 +1904,23 @@ public:
 void		due_periodic_prt(void* pm, double curr_secs);
 
 class brain {
-	public:
+private:
+	brain&  operator = (brain& other){
+		throw instance_exception(inx_bad_eq_op);
+	}
+
+	brain(brain& other){ 
+		throw instance_exception(inx_bad_creat);
+	}
+	
+public:
 
 	BRAIN_DBG(
 		dbg_inst_info  	br_dbg;
 		brain*			br_pt_brn;
 	)
 	
-	skeleton_glb*	br_pt_skl;
-	instance_info*	br_pt_inst;
+	solver* 		br_pt_slvr;
 		
 	timer			br_prt_timer;
 
@@ -2035,10 +2043,10 @@ class brain {
 
 	// methods
 
-	brain(skeleton_glb& the_skl, instance_info& inst);
+	brain(solver& ss);
 	~brain();
 
-	void	init_brain(skeleton_glb& the_skl, instance_info& inst);
+	void	init_brain(solver& ss);
 
 	void	init_all_dbg_brn();
 	
@@ -2059,7 +2067,8 @@ class brain {
 	void	release_brain();
 
 	skeleton_glb& 	get_skeleton();
-	instance_info&	get_my_inst();
+	instance_info&	get_my_inst();	
+	bj_output_t&	get_out_info();
 
 	// core methods
 
@@ -2353,9 +2362,11 @@ class brain {
 	void		parse_cnf(dimacs_loader& ldr, row<long>& all_ccls);
 	void		load_neuron(row_quanton_t& neu_quas);
 	bool		load_brain(long num_neu, long num_var, row_long_t& load_ccls);
+	
 	bool		load_instance();
 	void		aux_solve_instance();
-	void		solve_instance();
+	
+	bj_satisf_val_t 	solve_instance();
 
 	memap*	get_last_upper_map(){
 		memap* up_dom = NULL_PT;

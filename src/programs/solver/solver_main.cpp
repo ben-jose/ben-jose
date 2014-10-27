@@ -24,13 +24,13 @@ email: joseluisquirogabeltran@gmail.com
 
 ------------------------------------------------------------
 
-support.cpp  
+solver_main.cpp  
 
-Global classes and functions that support and assist the system.
+Top main.
 
 --------------------------------------------------------------*/
 
-#include "support.h"
+#include "batch_solver.h"
  
 int	main(int argc, char** argv){
 	MEM_CTRL(mem_start_stats());

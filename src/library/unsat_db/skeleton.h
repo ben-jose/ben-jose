@@ -650,22 +650,7 @@ public:
 			kg_tmp_cnf.set_dbg_brn(pt_brn);
 		);
 	}
-		
-	static
-	skeleton_glb* create_skeleton_glb(){
-		skeleton_glb* lv = tpl_malloc<skeleton_glb>();
-		new (lv) skeleton_glb();
-		return lv;
-	}
-
-	static
-	void release_skeleton_glb(skeleton_glb* lv){
-		SKELETON_CK(lv != NULL_PT);
-		lv->~skeleton_glb();
-		tpl_free<skeleton_glb>(lv);
-	}
-	
-		
+				
 	ch_string	as_full_path(ch_string sklroute){
 		DIMACS_H_CK(kg_root_path != "");
 		DIMACS_H_CK(path_begins_with(sklroute, SKG_SKELETON_DIR));

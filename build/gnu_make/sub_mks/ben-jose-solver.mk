@@ -11,11 +11,11 @@ TGT_PREREQS := libben-jose.a
 SOURCES := $(SRC_BASE_DIR)/programs/solver/solver_main.cpp
 
 SRC_INCDIRS := \
-	$(SRC_BASE_DIR)/programs/solver \
-	$(SRC_BASE_DIR)/library/interface \
+	$(SRC_BASE_DIR)/library/batch \
 	$(SRC_BASE_DIR)/library/brain \
 	$(SRC_BASE_DIR)/library/debug \
 	$(SRC_BASE_DIR)/library/dimacs \
+	$(SRC_BASE_DIR)/library/interface \
 	$(SRC_BASE_DIR)/library/unsat_db \
 	$(SRC_BASE_DIR)/external \
 	$(SRC_BASE_DIR)/utils 

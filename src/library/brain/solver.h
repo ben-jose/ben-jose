@@ -24,27 +24,63 @@ email: joseluisquirogabeltran@gmail.com
 
 ------------------------------------------------------------
 
-central.cpp  
+solver.h
 
-funcs that implement top level funcs.
+the solver wrapper.
 
 --------------------------------------------------------------*/
 
-#include "support.h"
-#include "dimacs.h"
-#include "brain.h"
+#ifndef SOLVER_H
+#define SOLVER_H
 
-//============================================================
-// code for support
+#include "instance_info.h"
+#include "skeleton.h"
 
-void
-do_cnf_file()
-{
-	skeleton_glb& the_skl = GLB().gg_skeleton;
-	instance_info& inst_info = GLB().get_curr_inst();
-	brain the_brain(the_skl, inst_info);
-	the_brain.solve_instance();
-	GLB().count_instance(inst_info);
-}
+#define SOLVER_CK(prm) 	DBG_BJ_LIB_CK(prm)
+
+//=================================================================
+// solver
+
+class solver {
+private:
+	solver&  operator = (solver& other){
+		throw instance_exception(inx_bad_eq_op);
+	}
+
+	solver(solver& other){ 
+		throw instance_exception(inx_bad_creat);
+	}
+	
+public:
+	instance_info	slv_inst;
+	skeleton_glb	slv_skl;
+	
+	solver(){
+		init_solver();
+	}
+
+	~solver(){
+	}
+	
+	void	init_solver(){
+	}
+	
+	static
+	solver* create_solver(){
+		solver* lv = tpl_malloc<solver>();
+		new (lv) solver();
+		return lv;
+	}
+
+	static
+	void release_solver(solver* lv){
+		SOLVER_CK(lv != NULL_PT);
+		lv->~solver();
+		tpl_free<solver>(lv);
+	}
+	
+};
+
+#endif		// SOLVER_H
 
 

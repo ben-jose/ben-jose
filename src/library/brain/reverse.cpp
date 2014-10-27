@@ -930,6 +930,7 @@ memap::map_get_layer_neus(row<neuron*>& neus, long lyr_idx1, long lyr_idx2, bool
 		bool ck_val = true;
 		if(ck_tks){ 
 			ck_val = neu.recoiled_in_or_after(ma_before_retract_tk); 
+			//BRAIN_CK(ck_val); 
 		}
 
 		if(ck_val){ neus.push(&neu); }
@@ -1092,8 +1093,8 @@ memap::ck_map_guides(dbg_call_id dbg_id){
 void
 memap::map_replace_with(brain& brn, memap& mpp, dbg_call_id call_id){
 
-	DBG_PRT(113, os << "before_replace call_id=" << call_id << " tk=" << brn.br_current_ticket << bj_eol; 
-		//os << " mpp" << mpp
+	DBG_PRT(113, os << "before_replace call_id=" << call_id << 
+			" tk=" << brn.br_current_ticket << bj_eol; 
 	);
 	BRAIN_CK(mpp.ck_map_guides(dbg_call_1));
 	BRAIN_CK(is_ma_virgin());
@@ -1401,7 +1402,7 @@ dbg_prt_diff_tauto_vs_simple_neus(bj_ostream& os, brain& brn){
 
 bool
 memap::map_prepare_mem_oper(mem_op_t mm, brain& brn){
-	instance_info& inst_info = brn.get_my_inst();
+	bj_output_t& o_info = brn.get_out_info();
 	
 	DBG_PRT(110, os << "map_mem_oper=" << ((void*)this));
 	BRAIN_CK(ck_map_guides(dbg_call_1));
@@ -1490,10 +1491,10 @@ memap::map_prepare_mem_oper(mem_op_t mm, brain& brn){
 	if(do_quick_finds){
 		ch_string find_ref = phd.pd_ref1_nam;
 		ch_string pth1 = skg.as_full_path(find_ref);
-		bool found1 = skg.find_path(pth1, &(inst_info.ist_out));
+		bool found1 = skg.find_path(pth1, &(o_info));
 		if(! found1){ return false; }
 		else { 
-			inst_info.ist_out.bjo_old_hits++;
+			o_info.bjo_old_hits++;
 		}
 	}
 
@@ -1669,7 +1670,7 @@ memap::map_dbg_print(bj_ostream& os, mem_op_t mm, brain& brn){
 
 bool
 memap::map_oper(mem_op_t mm, brain& brn){
-	instance_info& inst_info = brn.get_my_inst();
+	bj_output_t& o_info = brn.get_out_info();
 
 	brn.init_mem_tmps();
 
@@ -1730,7 +1731,7 @@ memap::map_oper(mem_op_t mm, brain& brn){
 				<< "find_id= " << brn.br_dbg.dbg_canon_find_id);
 			DBG_COMMAND(115, getchar());
 
-			inst_info.ist_out.bjo_old_sub_hits++;
+			o_info.bjo_old_sub_hits++;
 
 			row<neuron*>& all_tmp_found = brn.br_tmp_found_neus;
 			all_tmp_found.clear();

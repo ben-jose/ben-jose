@@ -67,27 +67,6 @@ typedef enum {
 } bj_error_t;
 
 typedef struct {
-	char	bji_with_assig;
-	
-	long	bji_group_id;
-	long	bji_id;
-	
-	char*	bji_file_path;
-
-	long	bji_data_sz;
-	char* 	bji_data;
-
-	long	bji_num_vars;
-	long	bji_num_ccls;
-
-	long	bji_literals_sz;
-	long* 	bji_literals;
-	
-	double	bji_timeout;
-	double	bji_memout;
-} bj_input_t;
-
-typedef struct {
 	bj_satisf_val_t 	bjo_result;
 	
 	double		bjo_solve_time;
@@ -104,9 +83,6 @@ typedef struct {
 	double		bjo_new_hits;
 	double		bjo_new_sub_hits;
 	
-	long		bjo_final_assig_sz;
-	long*		bjo_final_assig;
-
 	bj_error_t  bjo_error;
 	char		bjo_err_char;
 	long 		bjo_err_line;
@@ -117,21 +93,24 @@ typedef struct {
 	long 		bjo_err_bad_lit;
 } bj_output_t;
 
-typedef void*	bj_uns_db_t;
+typedef void*	bj_solver_t;
 
-void	bj_init_input(bj_input_t* in);
-void	bj_release_output_assig(bj_output_t* out);
+bj_solver_t bj_solver_create(const char* bjs_dir_path);
+void 		bj_solver_release(bj_solver_t bjs);
 
-bj_uns_db_t bj_unsat_db_open(const char* bdb_dir_path);
-void 		bj_unsat_db_close(bj_uns_db_t bdb);
-const char* bj_unsat_db_path(bj_uns_db_t bdb);
-int 		bj_unsat_db_update(bj_uns_db_t dest, bj_uns_db_t src);
+int 		bj_update(bj_solver_t dest, bj_solver_t src);
 
-int 	bj_solve_file(bj_uns_db_t bdb, const char* f_path, bj_output_t* out);
-int 	bj_solve_data(bj_uns_db_t bdb, long dat_sz, char* dat, bj_output_t* out);
-int 	bj_solve_literals(bj_uns_db_t bdb, long num_vars, long num_cls, 
-						  long lits_sz, long* lits, bj_output_t* out);
-int 	bj_solve_input(bj_uns_db_t bdb, bj_input_t* in, bj_output_t* out);
+const char* bj_get_path(bj_solver_t bjs);
+const long* bj_get_assig(bj_solver_t bjs);
+
+bj_satisf_val_t 	bj_get_result(bj_solver_t bjs);
+bj_output_t 		bj_get_output(bj_solver_t bjs);
+void				bj_restart(bj_solver_t bjs);
+
+bj_satisf_val_t 	bj_solve_file(bj_solver_t bjs, const char* f_path);
+bj_satisf_val_t 	bj_solve_data(bj_solver_t bjs, long dat_sz, char* dat);
+bj_satisf_val_t 	bj_solve_literals(bj_solver_t bjs, long num_vars, long num_cls, 
+						  long lits_sz, long* lits);
 
 
 #ifdef __cplusplus

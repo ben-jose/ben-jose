@@ -24,14 +24,14 @@ email: joseluisquirogabeltran@gmail.com
 
 ------------------------------------------------------------
 
-support.h
+batch_solver.h
 
-Declaration of classes that support and assist the system.
+Declaration of classes that batch solving.
 
 --------------------------------------------------------------*/
 
-#ifndef SUPPORT_H
-#define SUPPORT_H
+#ifndef BATCH_SOLVER_H
+#define BATCH_SOLVER_H
 
 //=================================================================
 // configuration defs
@@ -45,27 +45,16 @@ Declaration of classes that support and assist the system.
 #include "util_funcs.h"
 
 #include "ben_jose.h"
-#include "instance_info.h"
 #include "dbg_prt.h"
-#include "skeleton.h"
+#include "solver.h"
 
-#define SUPPORT_CK(prm) DBG_CK(prm)
+#define BATCH_CK(prm) DBG_CK(prm)
 
 //=================================================================
 // pre-configuration decl
 
-#define	OUT_COND(lv_arr, lev, cond)	\
-	(	(	(lev < 0) || \
-			((lev >= 0) && lv_arr[lev]) \
-		) && \
-		(cond) \
-	) \
-
-//--end_of_def
-
-#define PRT_OUT(lev, comm) \
+#define PRT_OUT_0(comm) \
 	DO_PRINTS( \
-		if(OUT_COND(GLB().out_lev, lev, true)) \
 		{ \
 			bj_ostream& os = bj_out; \
 			comm; \
@@ -75,25 +64,18 @@ Declaration of classes that support and assist the system.
 			
 //--end_of_def
 
+#define PRT_OUT_1(comm) /**/
 
 //=================================================================
-// typedefs and defines
-
-#define OUT_NUM_LEVS 10
-
-//=================================================================
-// global_data
+// batch_solver
 
 class brain;
 class quanton;
-class global_data;
+class batch_solver;
 
-extern global_data*	GLB_DATA_PT;
-
-global_data&	GLB();
 long		get_free_mem_kb();
 
-class global_data {
+class batch_solver {
 public:
 	bool			using_mem_ctrl;
 
@@ -107,12 +89,8 @@ public:
 	row<long>		final_chosen_ids;
 
 	bj_ostream*		out_os;
-	row<bool>		out_lev;
 
 	mem_size 		dbg_mem_at_start;
-
-	//ch_string		dbg_file_name;
-	//std::ofstream	dbg_file;
 
 	bool			dbg_skip_print_info;
 	
@@ -160,13 +138,13 @@ public:
 
 	ch_string		gg_file_name;
 
-	skeleton_glb		gg_skeleton;
+	solver		gg_solver;
 
-	void 		init_global_data();
-	void 		finish_global_data();
+	void 		init_batch_solver();
+	void 		finish_batch_solver();
 
-	global_data();
-	~global_data();
+	batch_solver();
+	~batch_solver();
 
 	void		reset_global(){
 		reset_err_msg();
@@ -234,8 +212,6 @@ public:
 	}
 
 
-	void	set_active_out_levs();
-
 	void	reset_err_msg(){
 		error_stm.clear();
 		error_stm.str() = "";
@@ -257,6 +233,12 @@ public:
 	bj_ostream&	print_final_totals(bj_ostream& os);
 	void		print_batch_consec();
 
+	void	log_message(const ch_string& msg_log);
+	void	log_batch_info();
+	void	read_batch_file(row<instance_info>& names);
+	void	work_all_instances();
+	void	do_all_instances();
+	void	do_cnf_file();
 };
 
 //=================================================================
@@ -264,21 +246,13 @@ public:
 
 typedef void (*core_func_t)(void);
 
-void	init_dbg_conf();
-void	log_message(const ch_string& msg_log);
-void	log_batch_info();
+
 void	call_and_handle_exceptions(core_func_t the_func);
 void	chomp_string(ch_string& s1);
-void	read_batch_file(row<ch_string*>& names);
 void	get_enter(bj_ostream& os, ch_string msg);
-void	do_all_instances();
 int		tests_main_(int argc, char** argv);
 int		solver_main(int argc, char** argv);
 
-//=================================================================
-// implemented in brain.cpp
 
-void	do_cnf_file();
-
-#endif		// SUPPORT_H
+#endif		// BATCH_SOLVER_H
 

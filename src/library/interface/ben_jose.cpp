@@ -34,112 +34,77 @@ ben_jose interface impl.
 
 #include "ben_jose.h"
 #include "brain.h"
+#include "solver.h"
 #include "dbg_prt.h"
 
 
-void	bj_init_input(bj_input_t* in){
-	if(in == NULL){
-		return;
-	}
-	in->bji_with_assig = 0;
-	
-	in->bji_group_id = 0;
-	in->bji_id = 0;
-	
-	in->bji_file_path = NULL;
-
-	in->bji_data_sz = 0;
-	in->bji_data = NULL;
-
-	in->bji_num_vars = 0;
-	in->bji_num_ccls = 0;
-
-	in->bji_literals_sz = 0;
-	in->bji_literals = NULL;
-	
-	in->bji_timeout = 0.0;
-	in->bji_memout = 0.0;
-}
-
-void	bj_release_output_assig(bj_output_t* out){
-	if(out == NULL){
-		return;
-	}
-	
-	tpl_free<long>(out->bjo_final_assig, out->bjo_final_assig_sz);
-	
-	out->bjo_final_assig = NULL;
-	out->bjo_final_assig_sz = 0;
-}
-
-bj_uns_db_t bj_unsat_db_open(const char* bdb_dir_path){
-	if(bdb_dir_path == NULL){
+bj_solver_t bj_solver_create(const char* bjs_dir_path){
+	if(bjs_dir_path == NULL){
 		return NULL;
 	}
-	skeleton_glb* nw_skl = skeleton_glb::create_skeleton_glb();
-	if(nw_skl == NULL){
+	solver* nw_slv = solver::create_solver();
+	if(nw_slv == NULL){
 		return NULL;
 	}
-	nw_skl->kg_root_path = bdb_dir_path;
-	nw_skl->init_paths();
+	solver& the_slvr = *((solver*)nw_slv);
+	the_slvr.slv_skl.kg_root_path = bjs_dir_path;
+	the_slvr.slv_skl.init_paths();
 	
-	bj_uns_db_t udb = (bj_uns_db_t)nw_skl;
-	return udb;
+	bj_solver_t bjs = (bj_solver_t)nw_slv;
+	return bjs;
 }
 
-void 		bj_unsat_db_close(bj_uns_db_t bdb){
-	if(bdb == NULL){
+void 		bj_solver_release(bj_solver_t bjs){
+	if(bjs == NULL){
 		return;
 	}
-	skeleton_glb* the_skl = (skeleton_glb*)bdb;
-	skeleton_glb::release_skeleton_glb(the_skl);
+	solver* the_slvr = (solver*)bjs;
+	solver::release_solver(the_slvr);
 }
 
-const char* bj_unsat_db_path(bj_uns_db_t bdb){
-	if(bdb == NULL){
+int 	bj_update(bj_solver_t dest, bj_solver_t src){
+	return 0;
+}
+
+const char* bj_get_path(bj_solver_t bjs){
+	if(bjs == NULL){
 		return NULL;
 	}
-	skeleton_glb* the_skl = (skeleton_glb*)bdb;
-	const char* pth = the_skl->kg_root_path.c_str();
+	solver& the_slvr = *((solver*)bjs);
+	const char* pth = the_slvr.slv_skl.kg_root_path.c_str();
 	return pth;
 }
 
-int 	bj_unsat_db_update(bj_uns_db_t dest, bj_uns_db_t src){
-	return 0;
+const long* bj_get_assig(bj_solver_t bjs){
+	long* assig_arr = NULL;
+	return assig_arr;
 }
 
-int 	bj_solve_file(bj_uns_db_t bdb, const char* f_path, bj_output_t* out){
-	if(bdb == NULL){ return -1; }
-	if(f_path == NULL){ return -1; }
-	if(out == NULL){ return -1; }
+bj_satisf_val_t 	bj_solve_file(bj_solver_t bjs, const char* f_path){
+	if(bjs == NULL){ return k_error; }
+	if(f_path == NULL){ return k_error; }
 	
-	instance_info::init_output(*out);
+	solver& the_slvr = *((solver*)bjs);
 	
-	skeleton_glb* the_skl = (skeleton_glb*)bdb;
+	the_slvr.slv_inst.init_instance_info(false, false);	
+	the_slvr.slv_inst.ist_file_path = f_path;
 	
-	instance_info inst_info;
-	inst_info.ist_file_path = f_path;
+	brain the_brain(the_slvr);
+	bj_satisf_val_t res = the_brain.solve_instance();
 	
-	brain the_brain(*the_skl, inst_info);
-	the_brain.solve_instance();
-	
-	(*out) = inst_info.ist_out;
-	
-	instance_info::init_output(inst_info.ist_out);
-	return 0;
+	return res;
 }
 
-int 	bj_solve_data(bj_uns_db_t bdb, long dat_sz, char* dat, bj_output_t* out){
-	return 0;
+bj_satisf_val_t 	bj_solve_data(bj_solver_t bjs, long dat_sz, char* dat){
+	bj_satisf_val_t res = k_error;
+	return res;
 }
 
-int 	bj_solve_literals(bj_uns_db_t bdb, long num_vars, long num_cls, 
-						  long lits_sz, long* lits, bj_output_t* out)
+bj_satisf_val_t 	bj_solve_literals(bj_solver_t bjs, long num_vars, long num_cls, 
+						  long lits_sz, long* lits)
 {
-	return 0;
+	bj_satisf_val_t res = k_error;
+	return res;
 }
 
-int 	bj_solve_input(bj_uns_db_t bdb, bj_input_t* in, bj_output_t* out){
-	return 0;
-}
 

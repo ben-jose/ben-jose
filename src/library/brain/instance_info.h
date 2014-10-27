@@ -177,27 +177,39 @@ public:
 	long			ist_num_ccls;
 	row<long> 		ist_ccls;
 	
+	double			ist_in_timeout;
+	double			ist_in_memout;
+	
 	bj_output_t		ist_out;
+
+	row<long> 		ist_assig;
 	
 	instance_info(){
-		init_instance_info();
+		init_instance_info(true);
 	}
 
-	void	init_instance_info(){
+	void	init_instance_info(bool reset_lims = false, bool free_mem = true){
 		ist_with_assig = false;
 		
 		ist_group_id = -1;
 		ist_id = -1;
 	
-		ist_file_path = "Unknown path";
+		ist_file_path = "";
 
-		ist_data.clear();
+		ist_data.clear(free_mem, free_mem);
 		
 		ist_num_vars = 0;
 		ist_num_ccls = 0;
-		ist_ccls.clear();
+		ist_ccls.clear(free_mem, free_mem);
+		
+		if(reset_lims){
+			ist_in_timeout = -1;
+			ist_in_memout = -1;
+		}
 		
 		init_output(ist_out);
+
+		ist_assig.clear(free_mem, free_mem);
 	}
 	
 	static
@@ -218,9 +230,6 @@ public:
 		out.bjo_new_hits = 0.0;
 		out.bjo_new_sub_hits = 0.0;
 		
-		out.bjo_final_assig_sz = 0;
-		out.bjo_final_assig = NULL;
-
 		out.bjo_error = bje_no_error;
 		out.bjo_err_char = 0;
 		out.bjo_err_line = -1;
