@@ -785,12 +785,6 @@ srs_row_get_first_tees(row<sorset*>& rr1, row<sortee*>& rr2){
 //=================================================================
 // sort_glb
 
-enum mem_op_t {
-	mo_invalid = 0,
-	mo_save = 1,
-	mo_find = 2
-};
-
 enum step_op_t {
 	po_full = 0,
 	po_walk = 1,

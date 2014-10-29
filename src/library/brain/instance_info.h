@@ -36,6 +36,7 @@ all info to keep or return of an instance cnf to solve.
 #include "bj_big_number.h"
 #include "tools.h"
 #include "ch_string.h"
+#include "batch_log.h"
 #include "ben_jose.h"
 
 
@@ -43,14 +44,6 @@ all info to keep or return of an instance cnf to solve.
 // defs
 
 #define INSTANCE_CK(prm) DBG_CK(prm)
-
-#define LOG_NM_ERROR	"error.log"
-#define LOG_NM_RESULTS	"results.log"
-#define LOG_NM_STATS	"stats.log"
-#define LOG_NM_ASSIGS	"assigs.log"
-
-#define RESULT_FIELD_SEP		"|"
-#define RESULT_FIELD_SEP_CHAR		'|'
 
 //=================================================================
 // decl
@@ -85,70 +78,6 @@ public:
 	instance_exception(long the_id = 0) : top_exception(the_id)
 	{}
 };
-
-//=================================================================
-// aux funcs
-
-inline
-ch_string
-get_log_name(ch_string f_nam, ch_string sufix){
-	ch_string lg_nm = f_nam + "_" + sufix;
-	return lg_nm;
-}
-
-#define RES_UNKNOWN_STR "unknown"
-#define RES_YES_SATISF_STR "yes_satisf"
-#define RES_NO_SATISF_STR "no_satisf"
-#define RES_TIMEOUT_STR "timeout"
-#define RES_MEMOUT_STR "memout"
-#define RES_ERROR_STR "error"
-
-inline
-bj_satisf_val_t
-as_satisf(ch_string str_ln){
-	bj_satisf_val_t the_val = k_unknown_satisf;
-	if(str_ln == RES_UNKNOWN_STR){
-		the_val = k_unknown_satisf;
-	} else if(str_ln == RES_YES_SATISF_STR){
-		the_val = k_yes_satisf;
-	} else if(str_ln == RES_NO_SATISF_STR){
-		the_val = k_no_satisf;
-	} else if(str_ln == RES_TIMEOUT_STR){
-		the_val = k_timeout;
-	} else if(str_ln == RES_MEMOUT_STR){
-		the_val = k_memout;
-	} else if(str_ln == RES_ERROR_STR){
-		the_val = k_error;
-	}
-	return the_val;
-}
-
-inline
-ch_string
-as_satisf_str(bj_satisf_val_t vv){
-	ch_string sf_str = RES_UNKNOWN_STR;
-	switch(vv){
-		case k_unknown_satisf:
-			sf_str = RES_UNKNOWN_STR;
-			break;
-		case k_yes_satisf:
-			sf_str = RES_YES_SATISF_STR;
-			break;
-		case k_no_satisf:
-			sf_str = RES_NO_SATISF_STR;
-			break;
-		case k_timeout:
-			sf_str = RES_TIMEOUT_STR;
-			break;
-		case k_memout:
-			sf_str = RES_MEMOUT_STR;
-			break;
-		case k_error:
-			sf_str = RES_ERROR_STR;
-			break;
-	}
-	return sf_str;
-}
 
 //=================================================================
 // instance_info
@@ -214,7 +143,7 @@ public:
 	
 	static
 	void	init_output(bj_output_t& out){	
-		out.bjo_result = k_unknown_satisf;
+		out.bjo_result = bjr_unknown_satisf;
 		
 		out.bjo_solve_time = 0.0;
 		out.bjo_num_vars = 0;

@@ -37,6 +37,7 @@ dbg_run_satex func.
 #include "ch_string.h"
 #include "file_funcs.h"
 #include "brain.h"
+#include "batch_log.h"
 #include "dbg_run_satex.h"
 
 void
@@ -95,7 +96,7 @@ dbg_run_satex_on(brain& brn, ch_string f_nam){
 		ch_string lg_nm = get_log_name(f_nam, LOG_NM_RESULTS);
 
 		BRAIN_CK(file_exists(lg_nm));
-		bool is_no_sat = all_results_batch_instances(lg_nm, k_no_satisf);
+		bool is_no_sat = all_results_batch_instances(lg_nm, bjr_no_satisf);
 		MARK_USED(is_no_sat);
 
 		DBG_COND_COMM(! is_no_sat ,

@@ -37,6 +37,12 @@ ben_jose interface impl.
 #include "solver.h"
 #include "dbg_prt.h"
 
+void 		bj_init_output(bj_output_t* the_out){
+	if(the_out == NULL){
+		return;
+	}
+	instance_info::init_output(*the_out);
+}
 
 bj_solver_t bj_solver_create(const char* bjs_dir_path){
 	if(bjs_dir_path == NULL){
@@ -51,6 +57,11 @@ bj_solver_t bj_solver_create(const char* bjs_dir_path){
 	the_slvr.slv_skl.init_paths();
 	
 	bj_solver_t bjs = (bj_solver_t)nw_slv;
+
+	BRAIN_CK((bj_out << "doing CKs (plain CKs)" << bj_eol) && true);
+	BRAIN_CK_0((bj_out << "doing CK_0s" << bj_eol) && true);
+	BRAIN_CK_1((bj_out << "doing CK_1s" << bj_eol) && true);
+	BRAIN_CK_2((bj_out << "doing CK_2s" << bj_eol) && true);
 	return bjs;
 }
 
@@ -60,10 +71,11 @@ void 		bj_solver_release(bj_solver_t bjs){
 	}
 	solver* the_slvr = (solver*)bjs;
 	solver::release_solver(the_slvr);
-}
-
-int 	bj_update(bj_solver_t dest, bj_solver_t src){
-	return 0;
+	
+	BRAIN_CK((bj_out << "doing CKs (plain CKs)" << bj_eol) && true);
+	BRAIN_CK_0((bj_out << "doing CK_0s" << bj_eol) && true);
+	BRAIN_CK_1((bj_out << "doing CK_1s" << bj_eol) && true);
+	BRAIN_CK_2((bj_out << "doing CK_2s" << bj_eol) && true);
 }
 
 const char* bj_get_path(bj_solver_t bjs){
@@ -75,14 +87,9 @@ const char* bj_get_path(bj_solver_t bjs){
 	return pth;
 }
 
-const long* bj_get_assig(bj_solver_t bjs){
-	long* assig_arr = NULL;
-	return assig_arr;
-}
-
 bj_satisf_val_t 	bj_solve_file(bj_solver_t bjs, const char* f_path){
-	if(bjs == NULL){ return k_error; }
-	if(f_path == NULL){ return k_error; }
+	if(bjs == NULL){ return bjr_error; }
+	if(f_path == NULL){ return bjr_error; }
 	
 	solver& the_slvr = *((solver*)bjs);
 	
@@ -96,15 +103,61 @@ bj_satisf_val_t 	bj_solve_file(bj_solver_t bjs, const char* f_path){
 }
 
 bj_satisf_val_t 	bj_solve_data(bj_solver_t bjs, long dat_sz, char* dat){
-	bj_satisf_val_t res = k_error;
+	bj_satisf_val_t res = bjr_error;
 	return res;
 }
 
 bj_satisf_val_t 	bj_solve_literals(bj_solver_t bjs, long num_vars, long num_cls, 
 						  long lits_sz, long* lits)
 {
-	bj_satisf_val_t res = k_error;
+	bj_satisf_val_t res = bjr_error;
 	return res;
+}
+
+bj_satisf_val_t 	bj_get_result(bj_solver_t bjs){
+	if(bjs == NULL){
+		return bjr_error;
+	}
+	solver& the_slvr = *((solver*)bjs);
+	return the_slvr.slv_inst.ist_out.bjo_result;
+}
+
+bj_output_t 		bj_get_output(bj_solver_t bjs){
+	if(bjs == NULL){
+		bj_output_t oo;
+		instance_info::init_output(oo);
+		return oo;
+	}
+	solver& the_slvr = *((solver*)bjs);
+	return the_slvr.slv_inst.ist_out;
+}
+
+const long* bj_get_assig(bj_solver_t bjs){
+	if(bjs == NULL){
+		return NULL;
+	}
+	solver& the_slvr = *((solver*)bjs);
+	row<long>& assig = the_slvr.slv_inst.ist_assig;
+	if(assig.is_empty()){
+		return NULL;
+	}
+	if(assig.last() != 0){
+		return NULL;
+	}
+	const long* assig_arr = assig.get_c_array();
+	return assig_arr;
+}
+
+void				bj_restart(bj_solver_t bjs){
+	if(bjs == NULL){
+		return;
+	}
+	solver& the_slvr = *((solver*)bjs);
+	the_slvr.slv_inst.init_instance_info(true, true);
+}
+
+int 	bj_update(bj_solver_t dest, bj_solver_t src){
+	return 0;
 }
 
 

@@ -370,7 +370,8 @@ brain::reverse(){
 			qua.reset_its_note3(brn);
 			DBG(had_n3 = true);
 			while(! qua.in_qu_dominated(brn)){
-				DBG_PRT(112, os << "NOT dom (case 1) qua=" << &qua << " up_dom=" << get_last_upper_map());
+				DBG_PRT(112, os << "NOT dom (case 1) qua=" << &qua << 
+						" up_dom=" << get_last_upper_map());
 				DBG_PRT(54, os << "NOT dom (case 1) qua=" << &qua << bj_eol;
 					print_trail(os);
 
@@ -396,7 +397,8 @@ brain::reverse(){
 			qua.reset_its_note0(brn);
 			DBG(had_n0 = true);
 			while(! qua.in_qu_dominated(brn)){
-				DBG_PRT(112, os << "NOT dom (case 2) qua=" << &qua << " up_dom=" << get_last_upper_map());
+				DBG_PRT(112, os << "NOT dom (case 2) qua=" << &qua << 
+						" up_dom=" << get_last_upper_map());
 				DBG_PRT(54, os << "NOT dom (case 2) qua=" << &qua << bj_eol;
 					print_trail(os);
 					os << " up_dom=" << get_last_upper_map() 
@@ -418,7 +420,8 @@ brain::reverse(){
 				prop_signal& n_sig = mpp0.ma_dotted.inc_sz();
 				n_sig.init_qua_signal(qua);
 
-				BRAIN_CK(! qua.has_source() || (! src->ne_original) || has_neu(mpp0.ma_fll_in_lv, src));
+				BRAIN_CK(! qua.has_source() || (! src->ne_original) || 
+						has_neu(mpp0.ma_fll_in_lv, src));
 			}
 
 			if(nke0.dk_num_noted_in_layer == 0){
@@ -433,7 +436,8 @@ brain::reverse(){
 			BRAIN_CK(mpp0.is_ma_virgin() || (mpp0.ma_dotted.last().ps_quanton == &qua));
 
 			if(src != NULL_PT){
-				BRAIN_CK(mpp0.is_ma_virgin() || (! src->ne_original) || has_neu(mpp0.ma_fll_in_lv, src));
+				BRAIN_CK(mpp0.is_ma_virgin() || (! src->ne_original) || 
+						has_neu(mpp0.ma_fll_in_lv, src));
 				if(! src->ne_original){ 
 					mpp0.reset_memap(brn);
 					//all_src_orig = false; 
@@ -628,8 +632,10 @@ coloring::save_colors_from(sort_glb& neus_srg, sort_glb& quas_srg){
 	SORTER_CK(! neus_srg.sg_step_has_diff);
 	SORTER_CK(! quas_srg.sg_step_has_diff);
 
-	co_all_neu_consec = srt_row_as_colors<neuron>(neus_srg.sg_step_sortees, co_neus, co_neu_colors);
-	co_all_qua_consec = srt_row_as_colors<quanton>(quas_srg.sg_step_sortees, co_quas, co_qua_colors);
+	co_all_neu_consec = srt_row_as_colors<neuron>(neus_srg.sg_step_sortees, 
+												  co_neus, co_neu_colors);
+	co_all_qua_consec = srt_row_as_colors<quanton>(quas_srg.sg_step_sortees, 
+												   co_quas, co_qua_colors);
 
 	BRAIN_CK(ck_cols());
 }
@@ -930,7 +936,14 @@ memap::map_get_layer_neus(row<neuron*>& neus, long lyr_idx1, long lyr_idx2, bool
 		bool ck_val = true;
 		if(ck_tks){ 
 			ck_val = neu.recoiled_in_or_after(ma_before_retract_tk); 
-			//BRAIN_CK(ck_val); 
+			/*
+			DBG_COND_COMM(! ck_val && (neu.get_dbg_brn() != NULL) &&
+				(neu.ne_recoil_tk.tk_recoil != 0),
+				//((ma_before_retract_tk.tk_recoil + 1) != neu.get_dbg_brn()->recoil()), 
+					os << "tik_neu_lap=" << neu.ne_recoil_tk.tk_recoil << bj_eol;
+					os << "tik_bef_lap=" << ma_before_retract_tk.tk_recoil << bj_eol;
+					os << "tik_brn_lap=" << neu.get_dbg_brn()->recoil() << bj_eol;
+			)*/
 		}
 
 		if(ck_val){ neus.push(&neu); }
@@ -1131,7 +1144,8 @@ memap::map_replace_with(brain& brn, memap& mpp, dbg_call_id call_id){
 
 	mpp.reset_memap(brn);
 	BRAIN_CK(mpp.is_ma_virgin());
-	DBG_PRT(113, os << "AFTER_REPLACE call_id=" << call_id << " tk=" << brn.br_current_ticket << bj_eol; 
+	DBG_PRT(113, os << "AFTER_REPLACE call_id=" << call_id << 
+			" tk=" << brn.br_current_ticket << bj_eol; 
 		//os << " the_mpp" << *this
 	);
 	BRAIN_CK(ck_map_guides(dbg_call_2));
@@ -1605,7 +1619,8 @@ memap::map_prepare_mem_oper(mem_op_t mm, brain& brn){
 		ccls_diff_cnf.print_row_data(os, true, "\n");
 	);
 
-	//DBG_PRT_COND(76, (mm == mo_save), os << "prepare_oper diff phd " << tmp_diff_cnf.cf_phdat);
+	//DBG_PRT_COND(76, (mm == mo_save), os << 
+	//		"prepare_oper diff phd " << tmp_diff_cnf.cf_phdat);
 
 	DBG(
 		bool are_eq = false;
@@ -1697,8 +1712,10 @@ memap::map_oper(mem_op_t mm, brain& brn){
 
 	ref_strs& phd = tmp_diff_cnf.cf_phdat;
 
-	//DBG_PRT_COND(76, (mm == mo_save), os << "mem_oper diff_cnf phd " << tmp_diff_cnf.cf_phdat);
-	//DBG_PRT_COND(76, (mm == mo_save), os << "mem_oper tauto_cnf phd " << tmp_tauto_cnf.cf_phdat);
+	//DBG_PRT_COND(76, (mm == mo_save), os << 
+	//		"mem_oper diff_cnf phd " << tmp_diff_cnf.cf_phdat);
+	//DBG_PRT_COND(76, (mm == mo_save), os << 
+	//		"mem_oper tauto_cnf phd " << tmp_tauto_cnf.cf_phdat);
 
 	bool oper_ok = false;
 	if(mm == mo_find){

@@ -5,13 +5,35 @@
 
 #define MARK_USED(X)  ((void)(&(X)))
 
-int main(void)
+int main(int argc, char** argv)
 {
-	bj_satisf_val_t vv2 = k_yes_satisf;
-	bj_error_t verr1 = bje_file_cannot_open;
+	if(argc < 2){
+		printf("args: <cnf_file_path>\n");
+		return 1;
+	}
+	char* ff = argv[1];
 	
-	MARK_USED(vv2);
-	MARK_USED(verr1);
-    printf("Hola Jose L Quiroga 0\n");
+	bj_solver_t ss = bj_solver_create("");
+	
+	bj_satisf_val_t  vv = bj_solve_file(ss, ff);
+	switch(vv){
+		case bjr_yes_satisf:
+			printf("%s is SAT instance\n", ff);
+			break;
+		case bjr_no_satisf:
+			printf("%s is UNS instance\n", ff);
+			break;
+		case bjr_error:
+			printf("ERROR ! in %s\n", ff);
+			break;
+		default:
+			printf("FATAL ERROR ! in %s\n", ff);
+			break;
+	}
+	//bj_output_t 		bj_get_output(bj_solver_t bjs);
+	//const long* 		bj_get_assig(bj_solver_t bjs);
+	
+	bj_solver_release(ss);
+	return 0;
 }
 

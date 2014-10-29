@@ -751,9 +751,7 @@ skeleton_glb::init_paths(){
 		if(! kg_keep_skeleton){
 			ch_string skl_pth = kg_root_path + SKG_SKELETON_DIR;
 			delete_directory(skl_pth);
-			SKELETON_CK((bj_out << "DELETING SKELETON" << bj_eol) && true);
-			DBG_PRT(93, os << "DELETING SKELETON. Type return ...");
-			DBG_COMMAND(93, getchar());
+			SKELETON_DBG(bj_out << "DELETING_SKELETON" << bj_eol);
 		}
 	} else {
 		if(*(kg_root_path.rbegin()) == '/'){

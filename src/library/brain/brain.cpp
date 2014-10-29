@@ -1555,9 +1555,9 @@ void
 brain::set_result(bj_satisf_val_t re){
 	bj_satisf_val_t& the_result = get_out_info().bjo_result;
 
-	BRAIN_CK(re != k_unknown_satisf);
-	BRAIN_CK((the_result != k_yes_satisf) || (re != k_no_satisf));
-	BRAIN_CK((the_result != k_no_satisf) || (re != k_yes_satisf));
+	BRAIN_CK(re != bjr_unknown_satisf);
+	BRAIN_CK((the_result != bjr_yes_satisf) || (re != bjr_no_satisf));
+	BRAIN_CK((the_result != bjr_no_satisf) || (re != bjr_yes_satisf));
 
 	the_result = re;
 
@@ -1678,7 +1678,7 @@ brain::load_brain(long num_neu, long num_var, row_long_t& load_ccls){
 			}
 
 			load_neuron(neu_quas);
-			if(get_out_info().bjo_result != k_unknown_satisf){ 
+			if(get_out_info().bjo_result != bjr_unknown_satisf){ 
 				break; 
 			}
 
@@ -1716,9 +1716,11 @@ void	due_periodic_prt(void* pm, double curr_secs){
 
 void
 brain::check_timeout(){
+#ifdef FULL_DEBUG
 	if(br_prt_timer.check_period(due_periodic_prt, this)){
-		set_result(k_timeout);
+		throw timeout_exception();
 	}
+#endif
 }
 
 bj_ostream&
@@ -1793,13 +1795,13 @@ brain::aux_solve_instance(){
 
 	get_skeleton().kg_instance_file_nam = inst_info.get_f_nam() + "\n";
 	
-	if(o_info.bjo_result != k_unknown_satisf){ 
+	if(o_info.bjo_result != bjr_unknown_satisf){ 
 		return;
 	}
 
 	DBG(
 		if(br_dbg.dbg_just_read){
-			set_result(k_timeout);
+			set_result(bjr_error);
 			return;
 		} 
 	)
@@ -1812,7 +1814,7 @@ brain::aux_solve_instance(){
 	br_choice_spin = cg_negative;
 	br_choice_order = k_right_order;
 
-	while(o_info.bjo_result == k_unknown_satisf){
+	while(o_info.bjo_result == bjr_unknown_satisf){
 		pulsate();
 	}
 
@@ -1836,13 +1838,11 @@ brain::aux_solve_instance(){
 		br_final_msg << f_nam << " ";
 
 		bj_satisf_val_t resp_solv = o_info.bjo_result;
-		if(resp_solv == k_yes_satisf){
+		if(resp_solv == bjr_yes_satisf){
 			check_sat_assig();
 			br_final_msg << "IS_SAT_INSTANCE";
-		} else if(resp_solv == k_no_satisf){
+		} else if(resp_solv == bjr_no_satisf){
 			br_final_msg << "IS_UNS_INSTANCE";
-		} else if(resp_solv == k_timeout){
-			br_final_msg << "HAS_TIMEOUT";
 		}
 
 		bj_out << br_final_msg.str() << bj_eol; 
@@ -2898,7 +2898,7 @@ brain::pulsate(){
 
 	if(found_conflict()){
 		if(level() == ROOT_LEVEL){ 
-			set_result(k_no_satisf);
+			set_result(bjr_no_satisf);
 			return;
 		}
 		//retract();
@@ -2913,7 +2913,7 @@ brain::pulsate(){
 		quanton* pt_qua = NULL;
 		pt_qua = choose_quanton();
 		if(pt_qua == NULL){
-			set_result(k_yes_satisf);
+			set_result(bjr_yes_satisf);
 			return;
 		}
 
@@ -3602,27 +3602,27 @@ brain::solve_instance(){
 		aux_solve_instance();
 	} catch (file_exception& ex1){
 		print_ex(ex1);
-		o_info.bjo_result = k_error;
+		o_info.bjo_result = bjr_error;
 		set_file_err(ex1, o_info);
 	} catch (parse_exception& ex1){
 		print_ex(ex1);
-		o_info.bjo_result = k_error;
+		o_info.bjo_result = bjr_error;
 		o_info.bjo_error = bje_parse_bad_number;
 	} catch (dimacs_exception& ex1){
 		print_ex(ex1);
-		o_info.bjo_result = k_error;
+		o_info.bjo_result = bjr_error;
 		set_dimacs_err(ex1, o_info);
 	} catch (instance_exception& ex1){
 		print_ex(ex1);
-		o_info.bjo_result = k_error;
+		o_info.bjo_result = bjr_error;
 		o_info.bjo_error = bje_instance_cannot_load;
 	} catch (mem_exception& ex1){
 		print_ex(ex1);
-		o_info.bjo_result = k_error;
+		o_info.bjo_result = bjr_error;
 		o_info.bjo_error = bje_memout;
 	} catch (top_exception& ex1){
 		print_ex(ex1);
-		o_info.bjo_result = k_error;
+		o_info.bjo_result = bjr_error;
 		o_info.bjo_error = bje_internal_ex;
 	}
 	catch (...) {
@@ -3632,7 +3632,7 @@ brain::solve_instance(){
 			bj_out.flush();
 			abort_func(0);
 		)
-		o_info.bjo_result = k_error;
+		o_info.bjo_result = bjr_error;
 		o_info.bjo_error = bje_internal;
 	}
 	

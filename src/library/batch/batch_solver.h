@@ -44,9 +44,9 @@ Declaration of classes that batch solving.
 #include "tools.h"
 #include "util_funcs.h"
 
+#include "batch_log.h"
 #include "ben_jose.h"
 #include "dbg_prt.h"
-#include "solver.h"
 
 #define BATCH_CK(prm) DBG_CK(prm)
 
@@ -67,11 +67,33 @@ Declaration of classes that batch solving.
 #define PRT_OUT_1(comm) /**/
 
 //=================================================================
-// batch_solver
+// decl
+	
+class batch_entry;
 
-class brain;
-class quanton;
-class batch_solver;
+DECLARE_PRINT_FUNCS(batch_entry)
+
+//=================================================================
+// batch_entry
+
+class batch_entry {
+public:
+	ch_string	be_ff_nam;
+	bj_output_t	be_out;
+	
+	batch_entry(){
+		be_ff_nam = "";
+		bj_init_output(&be_out);
+	}
+	
+	~batch_entry(){
+	}
+	
+	bj_ostream& 	print_batch_entry(bj_ostream& os, bool from_pt = false);
+};
+
+//=================================================================
+// batch_solver
 
 long		get_free_mem_kb();
 
@@ -85,22 +107,14 @@ public:
 	bool			op_debug_clean_code;
 	bool			op_just_read;
 
-	row<long>		final_trail_ids;
-	row<long>		final_chosen_ids;
-
-	bj_ostream*		out_os;
-
 	mem_size 		dbg_mem_at_start;
 
 	bool			dbg_skip_print_info;
 	
-	long			dbg_num_laps;
-
 	bj_ostr_stream	error_stm;
 	long			error_cod;
 
 	ch_string		input_file_nm;
-	//ch_string		output_file_nm;
 
 	bool			batch_log_on;
 	ch_string		batch_name;
@@ -134,11 +148,12 @@ public:
 	double			batch_end_time;
 	timer			batch_prt_totals_timer;
 
-	row<instance_info>	batch_instances;
+	row<batch_entry>	batch_instances;
 
 	ch_string		gg_file_name;
 
-	solver		gg_solver;
+	ch_string 		bc_slvr_path;
+	bj_solver_t 	bc_solver;
 
 	void 		init_batch_solver();
 	void 		finish_batch_solver();
@@ -154,10 +169,10 @@ public:
 	bool		get_args(int argc, char** argv);
 	void		set_input_name();
 
-	instance_info&	get_curr_inst(){
+	batch_entry&	get_curr_inst(){
 		long batch_idx = batch_consec - 1;
 		DBG_CK(batch_instances.is_valid_idx(batch_idx));
-		instance_info& the_ans = batch_instances[batch_idx];
+		batch_entry& the_ans = batch_instances[batch_idx];
 		return the_ans;
 	}
 
@@ -166,33 +181,7 @@ public:
 		return (batch_instances.is_valid_idx(batch_idx));
 	}
 
-	bj_satisf_val_t&	result(){
-		instance_info& inst_info = get_curr_inst();
-		return inst_info.ist_out.bjo_result;
-	}
-
-	bool		is_finishing(){
-		return (result() != k_unknown_satisf);
-	}
-
 	ch_string	init_log_name(ch_string sufix);
-
-	void 	dbg_update_config_entries();
-
-	void	dbg_default_info(){
-		bj_ostream& os = bj_dbg;
-	
-		os << "NO DBG INFO AVAILABLE " << 
-		"(define a func for this error code)" << bj_eol; 
-	}
-
-	ch_string	get_curr_f_nam(){
-		if(batch_instances.is_empty()){
-			return "UKNOWN FILE NAME";
-		}
-		instance_info& inst_info = get_curr_inst();
-		return inst_info.get_f_nam();
-	}
 
 	ch_string	get_file_name(bool& is_batch){
 		ch_string f_nam = gg_file_name;
@@ -204,14 +193,6 @@ public:
 		return f_nam;
 	}
 
-	bj_ostream&	get_os(){
-		if(out_os != NULL_PT){
-			return *out_os;
-		}
-		return bj_out;
-	}
-
-
 	void	reset_err_msg(){
 		error_stm.clear();
 		error_stm.str() = "";
@@ -221,9 +202,7 @@ public:
 	double	mem_percent_used();
 
 	void	print_final_assig();
-	void	count_instance(instance_info& inst_info);
-
-	//int	walk_neuron_tree(ch_string& dir_nm);
+	void	count_instance(batch_entry& inst_info);
 
 	bj_ostream&	print_mini_stats(bj_ostream& os);
 	bj_ostream& 	print_stats(bj_ostream& os, double current_secs = 0.0);
@@ -235,21 +214,35 @@ public:
 
 	void	log_message(const ch_string& msg_log);
 	void	log_batch_info();
-	void	read_batch_file(row<instance_info>& names);
+	void	read_batch_file(row<batch_entry>& names);
 	void	work_all_instances();
 	void	do_all_instances();
 	void	do_cnf_file();
 };
 
 //=================================================================
+// print functions
+
+inline
+bj_ostream& 	
+batch_entry::print_batch_entry(bj_ostream& os, bool from_pt){
+	ch_string sep = RESULT_FIELD_SEP;
+	os << be_ff_nam << sep;
+	os << as_satisf_str(be_out.bjo_result) << sep;
+	os << be_out.bjo_solve_time << sep;
+	os << be_out.bjo_num_vars << sep;
+	os << be_out.bjo_num_ccls << sep;
+	os << be_out.bjo_num_lits << sep;
+	os << be_out.bjo_num_laps << sep;
+	return os;
+}
+
+DEFINE_PRINT_FUNCS(batch_entry)
+
+//=================================================================
 // global functions
 
-typedef void (*core_func_t)(void);
-
-
-void	call_and_handle_exceptions(core_func_t the_func);
 void	chomp_string(ch_string& s1);
-void	get_enter(bj_ostream& os, ch_string msg);
 int		tests_main_(int argc, char** argv);
 int		solver_main(int argc, char** argv);
 

@@ -38,12 +38,10 @@ extern "C" {
 #endif
 
 typedef enum {
-	k_unknown_satisf,
-	k_yes_satisf,
-	k_no_satisf,
-	k_timeout,
-	k_memout,
-	k_error
+	bjr_unknown_satisf,
+	bjr_yes_satisf,
+	bjr_no_satisf,
+	bjr_error
 } bj_satisf_val_t;
 
 typedef enum {
@@ -95,22 +93,27 @@ typedef struct {
 
 typedef void*	bj_solver_t;
 
+#define bj_solver_is_null(bjs) (bjs == NULL)
+
+void 		bj_init_output(bj_output_t* the_out);
+
 bj_solver_t bj_solver_create(const char* bjs_dir_path);
 void 		bj_solver_release(bj_solver_t bjs);
 
-int 		bj_update(bj_solver_t dest, bj_solver_t src);
-
 const char* bj_get_path(bj_solver_t bjs);
-const long* bj_get_assig(bj_solver_t bjs);
-
-bj_satisf_val_t 	bj_get_result(bj_solver_t bjs);
-bj_output_t 		bj_get_output(bj_solver_t bjs);
-void				bj_restart(bj_solver_t bjs);
 
 bj_satisf_val_t 	bj_solve_file(bj_solver_t bjs, const char* f_path);
 bj_satisf_val_t 	bj_solve_data(bj_solver_t bjs, long dat_sz, char* dat);
 bj_satisf_val_t 	bj_solve_literals(bj_solver_t bjs, long num_vars, long num_cls, 
 						  long lits_sz, long* lits);
+
+bj_satisf_val_t 	bj_get_result(bj_solver_t bjs);
+bj_output_t 		bj_get_output(bj_solver_t bjs);
+const long* 		bj_get_assig(bj_solver_t bjs);
+
+void			bj_restart(bj_solver_t bjs);
+
+int 		bj_update(bj_solver_t dest, bj_solver_t src);
 
 
 #ifdef __cplusplus

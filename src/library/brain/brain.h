@@ -74,6 +74,12 @@ enum action_t {
 	ac_go_on = 1
 };
 
+enum mem_op_t {
+	mo_invalid = 0,
+	mo_save = 1,
+	mo_find = 2
+};
+
 #define k_invalid_order		0
 #define k_left_order		1
 #define k_right_order		2

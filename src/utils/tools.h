@@ -2066,6 +2066,15 @@ bj_ostream& operator << (bj_ostream& os, avg_stat& obj){
 }
 
 
+//======================================================================
+// timeout_exception
+
+class timeout_exception : public top_exception {
+public:
+	timeout_exception(long the_id = 0) : top_exception(the_id)
+	{}
+};
+
 //=================================================================
 // timer
 
