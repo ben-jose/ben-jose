@@ -37,6 +37,14 @@ ben_jose interfase.
 extern "C" {
 #endif
 
+#define RES_UNKNOWN_STR "unknown"
+#define RES_YES_SATISF_STR "yes_satisf"
+#define RES_NO_SATISF_STR "no_satisf"
+#define RES_ERROR_STR "error"
+
+#define RESULT_FIELD_SEP		"|"
+#define RESULT_FIELD_SEP_CHAR		'|'
+
 typedef enum {
 	bjr_unknown_satisf,
 	bjr_yes_satisf,

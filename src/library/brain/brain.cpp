@@ -1561,7 +1561,7 @@ brain::set_result(bj_satisf_val_t re){
 
 	the_result = re;
 
-	DBG_PRT(27, os << "RESULT " << as_satisf_str(the_result));
+	DBG_PRT(27, os << "RESULT " << as_ist_satisf_str(the_result));
 	DBG_PRT(28, os << "HIT ENTER TO CONTINUE...");
 	DBG_COMMAND(28, getchar());
 }

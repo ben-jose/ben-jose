@@ -206,6 +206,9 @@ void	dbg_print_ccls_neus(bj_ostream& os, row<canon_clause*>& dbg_ccls);
 void	split_tees(sort_glb& srg, row<sortee*>& sorted_tees, row<sortee*>& sub_tees, 
 			row<canon_clause*>& ccls_in, row<canon_clause*>& ccls_not_in);
 
+bool	dbg_run_satex_on(brain& brn, ch_string f_nam);
+
+
 //=============================================================================
 // ticket
 

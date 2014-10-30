@@ -13,7 +13,6 @@ SOURCES := \
 	$(SRC_BASE_DIR)/programs/tests/test_main.cpp
 
 SRC_INCDIRS := \
-	$(SRC_BASE_DIR)/library/batch \
 	$(SRC_BASE_DIR)/library/brain \
 	$(SRC_BASE_DIR)/library/debug \
 	$(SRC_BASE_DIR)/library/dimacs \

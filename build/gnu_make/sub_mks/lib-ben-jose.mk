@@ -7,8 +7,6 @@ SOURCES := \
 	$(SRC_BASE_DIR)/external/bj_mem.cpp \
 	$(SRC_BASE_DIR)/external/stack_trace.cpp \
 	$(SRC_BASE_DIR)/external/top_exception.cpp \
-	$(SRC_BASE_DIR)/library/batch/batch_solver.cpp \
-	$(SRC_BASE_DIR)/library/brain/instance_info.cpp \
 	$(SRC_BASE_DIR)/library/brain/brain.cpp \
 	$(SRC_BASE_DIR)/library/brain/sortor.cpp \
 	$(SRC_BASE_DIR)/library/brain/reverse.cpp \
@@ -27,7 +25,6 @@ SOURCES := \
 
 
 SRC_INCDIRS := \
-	$(SRC_BASE_DIR)/library/batch \
 	$(SRC_BASE_DIR)/library/brain \
 	$(SRC_BASE_DIR)/library/debug \
 	$(SRC_BASE_DIR)/library/dimacs \

@@ -1798,4 +1798,23 @@ memap::map_oper(mem_op_t mm, brain& brn){
 	return oper_ok;
 }
 
+bool
+dbg_run_satex_on(brain& brn, ch_string f_nam){
+#ifdef FULL_DEBUG
+	bool is_no = dbg_run_satex_is_no_sat(f_nam);
+	MARK_USED(is_no);
+	DBG_COND_COMM(! is_no ,
+		os << "ABORTING_DATA " << bj_eol;
+		//os << "mmap_before_tk=" << ma_before_retract_tk << bj_eol;
+		//os << "mmap_after_tks=" << ma_after_retract_tks << bj_eol;
+		os << " brn_tk=" << brn.br_current_ticket << bj_eol;
+		os << "	LV=" << brn.level() << bj_eol;
+		os << " f_nam=" << f_nam << bj_eol;
+		os << " save_consec=" << brn.br_dbg.dbg_canon_save_id << bj_eol;
+		os << "END_OF_aborting_data" << bj_eol;
+	);
+	BRAIN_CK(is_no);
+#endif
+	return true;
+}
 

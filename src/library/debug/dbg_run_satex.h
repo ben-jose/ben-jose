@@ -33,9 +33,9 @@ func to run satex.
 #ifndef RUN_SATEX_H
 #define RUN_SATEX_H
 
-class brain;
+#define RSATX_CK(prm) DBG_CK(prm)
 
-bool	dbg_run_satex_on(brain& brn, ch_string f_nam);
+bool	dbg_run_satex_is_no_sat(ch_string f_nam);
 void	system_exec(ch_string& strstm);
 
 #endif		// RUN_SATEX_H

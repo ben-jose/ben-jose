@@ -36,12 +36,116 @@ dbg_run_satex func.
 #include "bj_stream.h"
 #include "ch_string.h"
 #include "file_funcs.h"
-#include "brain.h"
-#include "batch_log.h"
+//include "brain.h"
+//include "batch_log.h"
+#include "ben_jose.h"
 #include "dbg_run_satex.h"
 
+//=================================================================
+// defs
+
+#define LOG_SATEX_NM_RESULTS	"results.log"
+#define RESULT_SATEX_FIELD_SEP_CHAR '|'
+
+#define RES_SATEX_UNKNOWN_STR "unknown"
+#define RES_SATEX_YES_SATISF_STR "yes_satisf"
+#define RES_SATEX_NO_SATISF_STR "no_satisf"
+#define RES_SATEX_ERROR_STR "error"
+
+inline
+bj_satisf_val_t
+satex_as_satisf(ch_string str_ln){
+	bj_satisf_val_t the_val = bjr_unknown_satisf;
+	if(str_ln == RES_SATEX_UNKNOWN_STR){
+		the_val = bjr_unknown_satisf;
+	} else if(str_ln == RES_SATEX_YES_SATISF_STR){
+		the_val = bjr_yes_satisf;
+	} else if(str_ln == RES_SATEX_NO_SATISF_STR){
+		the_val = bjr_no_satisf;
+	} else if(str_ln == RES_SATEX_ERROR_STR){
+		the_val = bjr_error;
+	}
+	return the_val;
+}
+
+
+//=================================================================
+// decl
+
+ch_string 
+satex_parse_field(const char*& pt_in);
+
+//=================================================================
+// satex_entry
+
+class satex_entry {
+public:
+	ch_string 		ist_file_path;
+	bj_output_t 	ist_out;
+	
+	satex_entry(){
+		init_satex_entry();
+	}
+	
+	~satex_entry(){
+	}
+	
+	void init_satex_entry(){
+		ist_file_path = "";
+		bj_init_output(&ist_out);
+	}
+
+	void
+	parse_entry(ch_string str_ln, long line){
+		init_satex_entry();
+
+		const char* pt_in = str_ln.c_str();
+		ist_file_path = satex_parse_field(pt_in);
+		ch_string r_fi = satex_parse_field(pt_in);
+		ist_out.bjo_result = satex_as_satisf(r_fi);
+	}
+};
+
+//=================================================================
+// aux funcs
+
+ch_string 
+satex_parse_field(const char*& pt_in){
+	char sep = RESULT_SATEX_FIELD_SEP_CHAR;
+	char eol = '\n';
+
+	ch_string the_field = "";
+	const char* pt_0 = pt_in;
+
+	while(*pt_in != 0){
+		if(*pt_in == sep){ 
+			// get the field
+			char* pt_1 = (char*)pt_in;
+			(*pt_1) = 0;
+			the_field = pt_0;
+			(*pt_1) = sep;
+			RSATX_CK((*pt_in) == sep);
+
+			pt_in++; 
+			break;
+		}
+		if(! isprint(*pt_in) || (*pt_in == eol)){
+			break;
+		}
+		pt_in++; 
+	}
+	return the_field;
+}
+
+
+ch_string
+get_satex_log_name(ch_string f_nam, ch_string sufix){
+	ch_string lg_nm = f_nam + "_" + sufix;
+	return lg_nm;
+}
+
 void
-read_batch_instances(ch_string file_nm, row<instance_info>& f_insts){
+read_batch_instances(ch_string file_nm, row<satex_entry>& f_insts){
 	bj_ostream& os = bj_out;
 
 	std::ifstream in_stm;
@@ -62,10 +166,10 @@ read_batch_instances(ch_string file_nm, row<instance_info>& f_insts){
 		num_ln++;
 
 		if(! str_ln.empty()){
-			instance_info& n_inst = f_insts.inc_sz();
+			satex_entry& n_inst = f_insts.inc_sz();
 		
 			//os << "Lei:<<" << str_ln << ">>" << bj_eol;
-			n_inst.parse_instance(str_ln, num_ln);
+			n_inst.parse_entry(str_ln, num_ln);
 		}
 	}
 	in_stm.close();
@@ -73,12 +177,12 @@ read_batch_instances(ch_string file_nm, row<instance_info>& f_insts){
 
 bool
 all_results_batch_instances(ch_string file_nm, bj_satisf_val_t r_val){
-	row<instance_info> f_insts;
+	row<satex_entry> f_insts;
 	read_batch_instances(file_nm, f_insts);
 	bool all_ok = true;
 
 	for(long aa = 0; aa < f_insts.size(); aa++){
-		instance_info& inst_info = f_insts[aa];
+		satex_entry& inst_info = f_insts[aa];
 		if(inst_info.ist_out.bjo_result != r_val){
 			all_ok = false;
 		}
@@ -87,32 +191,22 @@ all_results_batch_instances(ch_string file_nm, bj_satisf_val_t r_val){
 }
 
 bool
-dbg_run_satex_on(brain& brn, ch_string f_nam){
+dbg_run_satex_is_no_sat(ch_string f_nam){
+	bool is_no_sat = true;
 #ifdef FULL_DEBUG
+
 	if(file_exists(f_nam)){
 		ch_string o_str = "satex -s " + f_nam;
 
 		system_exec(o_str);
-		ch_string lg_nm = get_log_name(f_nam, LOG_NM_RESULTS);
+		ch_string lg_nm = get_satex_log_name(f_nam, LOG_SATEX_NM_RESULTS);
 
-		BRAIN_CK(file_exists(lg_nm));
-		bool is_no_sat = all_results_batch_instances(lg_nm, bjr_no_satisf);
+		RSATX_CK(file_exists(lg_nm));
+		is_no_sat = all_results_batch_instances(lg_nm, bjr_no_satisf);
 		MARK_USED(is_no_sat);
-
-		DBG_COND_COMM(! is_no_sat ,
-			os << "ABORTING_DATA " << bj_eol;
-			//os << "mmap_before_tk=" << ma_before_retract_tk << bj_eol;
-			//os << "mmap_after_tks=" << ma_after_retract_tks << bj_eol;
-			os << " brn_tk=" << brn.br_current_ticket << bj_eol;
-			os << "	LV=" << brn.level() << bj_eol;
-			os << " f_nam=" << f_nam << bj_eol;
-			os << " save_consec=" << brn.br_dbg.dbg_canon_save_id << bj_eol;
-			os << "END_OF_aborting_data" << bj_eol;
-		);
-		BRAIN_CK(is_no_sat);
 	}
 #endif
-	return true;
+	return is_no_sat;
 }
 
 void system_exec(ch_string& comm){

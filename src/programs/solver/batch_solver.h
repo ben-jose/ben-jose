@@ -44,11 +44,16 @@ Declaration of classes that batch solving.
 #include "tools.h"
 #include "util_funcs.h"
 
-#include "batch_log.h"
+// include "batch_log.h"
 #include "ben_jose.h"
 #include "dbg_prt.h"
 
 #define BATCH_CK(prm) DBG_CK(prm)
+
+#define LOG_NM_ERROR	"error.log"
+#define LOG_NM_RESULTS	"results.log"
+#define LOG_NM_STATS	"stats.log"
+#define LOG_NM_ASSIGS	"assigs.log"
 
 //=================================================================
 // pre-configuration decl
@@ -65,6 +70,53 @@ Declaration of classes that batch solving.
 //--end_of_def
 
 #define PRT_OUT_1(comm) /**/
+
+//=================================================================
+// aux funcs
+
+inline
+ch_string
+get_log_name(ch_string f_nam, ch_string sufix){
+	ch_string lg_nm = f_nam + "_" + sufix;
+	return lg_nm;
+}
+
+inline
+bj_satisf_val_t
+as_satisf(ch_string str_ln){
+	bj_satisf_val_t the_val = bjr_unknown_satisf;
+	if(str_ln == RES_UNKNOWN_STR){
+		the_val = bjr_unknown_satisf;
+	} else if(str_ln == RES_YES_SATISF_STR){
+		the_val = bjr_yes_satisf;
+	} else if(str_ln == RES_NO_SATISF_STR){
+		the_val = bjr_no_satisf;
+	} else if(str_ln == RES_ERROR_STR){
+		the_val = bjr_error;
+	}
+	return the_val;
+}
+
+inline
+ch_string
+as_satisf_str(bj_satisf_val_t vv){
+	ch_string sf_str = RES_UNKNOWN_STR;
+	switch(vv){
+		case bjr_unknown_satisf:
+			sf_str = RES_UNKNOWN_STR;
+			break;
+		case bjr_yes_satisf:
+			sf_str = RES_YES_SATISF_STR;
+			break;
+		case bjr_no_satisf:
+			sf_str = RES_NO_SATISF_STR;
+			break;
+		case bjr_error:
+			sf_str = RES_ERROR_STR;
+			break;
+	}
+	return sf_str;
+}
 
 //=================================================================
 // decl
@@ -243,7 +295,6 @@ DEFINE_PRINT_FUNCS(batch_entry)
 // global functions
 
 void	chomp_string(ch_string& s1);
-int		tests_main_(int argc, char** argv);
 int		solver_main(int argc, char** argv);
 
 

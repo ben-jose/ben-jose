@@ -30,8 +30,8 @@ Global classes and functions that support and assist the system.
 
 --------------------------------------------------------------*/
 
-#include "batch_solver.h"
- 
+int		tests_main_(int argc, char** argv);
+
 int	main(int argc, char** argv){
 	int rr = tests_main_(argc, argv);
 	return rr;

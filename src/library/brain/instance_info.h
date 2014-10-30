@@ -36,7 +36,7 @@ all info to keep or return of an instance cnf to solve.
 #include "bj_big_number.h"
 #include "tools.h"
 #include "ch_string.h"
-#include "batch_log.h"
+// include "batch_log.h"
 #include "ben_jose.h"
 
 
@@ -189,9 +189,6 @@ public:
 	bj_ostream& 	print_headers(bj_ostream& os);
 
 	bj_ostream& 	print_instance_info(bj_ostream& os, bool from_pt = false);
-
-	void		parse_instance(ch_string str_ln, long line);
-	ch_string	parse_field(const char*& pt_in);
 };
 
 
@@ -214,11 +211,32 @@ instance_info::print_headers(bj_ostream& os){
 }
 
 inline
+ch_string
+as_ist_satisf_str(bj_satisf_val_t vv){
+	ch_string sf_str = RES_UNKNOWN_STR;
+	switch(vv){
+		case bjr_unknown_satisf:
+			sf_str = RES_UNKNOWN_STR;
+			break;
+		case bjr_yes_satisf:
+			sf_str = RES_YES_SATISF_STR;
+			break;
+		case bjr_no_satisf:
+			sf_str = RES_NO_SATISF_STR;
+			break;
+		case bjr_error:
+			sf_str = RES_ERROR_STR;
+			break;
+	}
+	return sf_str;
+}
+
+inline
 bj_ostream& 	
 instance_info::print_instance_info(bj_ostream& os, bool from_pt){
 	ch_string sep = RESULT_FIELD_SEP;
 	os << ist_file_path << sep;
-	os << as_satisf_str(ist_out.bjo_result) << sep;
+	os << as_ist_satisf_str(ist_out.bjo_result) << sep;
 	os << ist_out.bjo_solve_time << sep;
 	os << ist_out.bjo_num_vars << sep;
 	os << ist_out.bjo_num_ccls << sep;
