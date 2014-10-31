@@ -43,10 +43,8 @@ Declaration of classes that batch solving.
 
 #include "tools.h"
 #include "util_funcs.h"
-
-// include "batch_log.h"
 #include "ben_jose.h"
-#include "dbg_prt.h"
+
 
 #define BATCH_CK(prm) DBG_CK(prm)
 
@@ -57,6 +55,8 @@ Declaration of classes that batch solving.
 
 //=================================================================
 // pre-configuration decl
+
+#define DO_PRINTS(prm)		prm
 
 #define PRT_OUT_0(comm) \
 	DO_PRINTS( \

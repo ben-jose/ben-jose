@@ -1,5 +1,5 @@
 
-TARGET := c-test
+TARGET := bj-c-test
 
 SRC_BASE_DIR := ../../../src
 

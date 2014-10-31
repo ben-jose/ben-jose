@@ -58,6 +58,12 @@ bj_solver_t bj_solver_create(const char* bjs_dir_path){
 	
 	bj_solver_t bjs = (bj_solver_t)nw_slv;
 
+	DBG_CHECK_SAVED(
+		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
+		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
+		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
+		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
+	);
 	BRAIN_CK((bj_out << "doing CKs (plain CKs)" << bj_eol) && true);
 	BRAIN_CK_0((bj_out << "doing CK_0s" << bj_eol) && true);
 	BRAIN_CK_1((bj_out << "doing CK_1s" << bj_eol) && true);
@@ -76,6 +82,12 @@ void 		bj_solver_release(bj_solver_t bjs){
 	BRAIN_CK_0((bj_out << "doing CK_0s" << bj_eol) && true);
 	BRAIN_CK_1((bj_out << "doing CK_1s" << bj_eol) && true);
 	BRAIN_CK_2((bj_out << "doing CK_2s" << bj_eol) && true);
+	DBG_CHECK_SAVED(
+		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
+		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
+		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
+		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
+	);
 }
 
 const char* bj_get_path(bj_solver_t bjs){

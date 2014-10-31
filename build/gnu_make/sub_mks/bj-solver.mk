@@ -1,5 +1,5 @@
 
-TARGET := ben-jose-solver
+TARGET := bj-solver
 
 SRC_BASE_DIR := ../../../src
 
@@ -13,11 +13,7 @@ SOURCES := \
 	$(SRC_BASE_DIR)/programs/solver/solver_main.cpp
 
 SRC_INCDIRS := \
-	$(SRC_BASE_DIR)/library/brain \
-	$(SRC_BASE_DIR)/library/debug \
-	$(SRC_BASE_DIR)/library/dimacs \
 	$(SRC_BASE_DIR)/library/interface \
-	$(SRC_BASE_DIR)/library/unsat_db \
 	$(SRC_BASE_DIR)/external \
 	$(SRC_BASE_DIR)/utils 
 

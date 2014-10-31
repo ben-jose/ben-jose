@@ -13,9 +13,9 @@ LDFLAGS := -rdynamic
 
 SUBMAKEFILES := \
 	sub_mks/lib-ben-jose.mk \
-	sub_mks/ben-jose-solver.mk \
+	sub_mks/bj-solver.mk \
 	sub_mks/bj-test-rbt.mk \
-	sub_mks/c-test.mk \
+	sub_mks/bj-c-test.mk \
 	sub_mks/bj-test.mk
 
 # $(VERBOSE).SILENT:

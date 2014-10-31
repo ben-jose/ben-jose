@@ -34,9 +34,9 @@ Global classes and functions that batch_solver and assist the system.
 
 #include "top_exception.h"
 #include "file_funcs.h"
-#include "batch_solver.h"
 #include "stack_trace.h"
-//include "brain.h"
+
+#include "batch_solver.h"
 
 long
 find_first_digit(ch_string& the_str, bool dig = true){
@@ -365,8 +365,8 @@ batch_solver::print_mini_stats(bj_ostream& os){
 	ch_string f_nam = inst_info.be_ff_nam;
 
 	os << CARRIAGE_RETURN;
-	os << "'" << f_nam << "'";
-	dbg_print_cond_func(NULL, true, false, "NO_NAME", 0, "true", INVALID_DBG_LV);
+	os << "'" << f_nam << "' ";
+	//dbg_print_cond_func(NULL, true, false, "NO_NAME", 0, "true", INVALID_DBG_LV);
 	return os; 
 }
 
@@ -383,7 +383,7 @@ batch_solver::print_stats(bj_ostream& os, double current_secs){
 	os << bj_eol;
 	os << "file_name: '" << f_nam << "'" << bj_eol;
 	
-	DBG( dbg_print_cond_func(NULL, true, false, "NO_NAME", 0, "true", INVALID_DBG_LV) );
+	//DBG( dbg_print_cond_func(NULL, true, false, "NO_NAME", 0, "true", INVALID_DBG_LV) );
 
 	print_totals(os, current_secs);
 	os << bj_eol << bj_eol;
@@ -739,12 +739,6 @@ int	solver_main(int argc, char** argv){
 	batch_solver top_dat;
 	
 	MEM_CTRL(top_dat.dbg_mem_at_start = mem_get_num_by_in_use());
-	DBG_CHECK_SAVED(
-		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-	);
 	DBG(bj_out << "FULL_DEBUG is defined" << bj_eol);
 	MEM_CTRL(bj_out << "MEM_CONTROL is defined" << bj_eol);
 
@@ -799,12 +793,6 @@ int	solver_main(int argc, char** argv){
 	
 	MEM_CTRL(bj_out << "MEM_CONTROL is defined" << bj_eol);
 	DBG(bj_out << "FULL_DEBUG is defined" << bj_eol);
-	DBG_CHECK_SAVED(
-		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-	);
 
 	MEM_CTRL(
 		DBG_CK_2(top_dat.dbg_mem_at_start == mem_get_num_by_in_use(), 

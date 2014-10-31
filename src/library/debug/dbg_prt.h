@@ -52,8 +52,6 @@ bool	dbg_check_lev(brain* brn, long lev);
 
 #define DBG_ALL_LVS -1
 
-#define DO_PRINTS(prm)		prm
-
 #define	DBG_COND(lev, cond)	(dbg_check_lev(get_dbg_brn(), lev) && (cond))
 
 #define INVALID_DBG_LV 		-123
