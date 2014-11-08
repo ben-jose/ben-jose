@@ -99,9 +99,6 @@ sortee::print_sortee(bj_ostream& os, bool from_pt){
 
 	if(! from_pt){
 		os << "REL=";
-		if(so_related != NULL_PT){
-			os << so_related->so_after;
-		}
 		// NEEDS_brain_h
 		
 		if(so_dbg_me_class == 1){
@@ -430,36 +427,6 @@ sorset::fill_srs_trails(row_sort_id_t& id_trl, row<void*>& src_trl)
 }
 
 bool
-sortrel::ck_related(long tee_cons){
-	MARK_USED(tee_cons);
-
-	for(long aa = 0; aa < so_before.size(); aa++){
-		SORTER_CK(so_before[aa] != NULL_PT);
-		sortee& bef_tee = *(so_before[aa]);
-		SORTER_CK(bef_tee.so_related != NULL_PT);
-
-		long bef_cons = bef_tee.so_tee_consec;
-		MARK_USED(bef_cons);
-
-		SORTER_CK(bef_cons != INVALID_NATURAL);
-		SORTER_CK(bef_cons < tee_cons);		
-	}
-
-	for(long aa = 0; aa < so_after.size(); aa++){
-		SORTER_CK(so_after[aa] != NULL_PT);
-		sortee& aft_tee = *(so_after[aa]);
-		SORTER_CK(aft_tee.so_related != NULL_PT);
-
-		long aft_cons = aft_tee.so_tee_consec;
-		MARK_USED(aft_cons);
-
-		SORTER_CK(aft_cons != INVALID_NATURAL);
-		SORTER_CK(aft_cons > tee_cons);		
-	}
-	return true;
-}
-
-bool
 sort_glb::ck_all_tees_related(){
 	//sort_glb& srg = *this;
 	row<sortee*>& tees = sg_step_sortees;
@@ -470,7 +437,6 @@ sort_glb::ck_all_tees_related(){
 		long tee_cons = tee.so_tee_consec;
 		MARK_USED(tee_cons);
 		SORTER_CK(tee.so_related != NULL_PT);
-		SORTER_CK(tee.so_related->ck_related(tee_cons));
 	}
 	return true;
 }
@@ -705,7 +671,9 @@ sortee::update_totals(sort_glb& srg, long tgt_sz){
 }
 
 void
-sort_glb::sort_all_from(row<sortee*>& tees, sort_id_t curr_id, bool add_ccl_id, long ccl_id, bool sort_opps, tgt_ccl_t tgt){
+sort_glb::sort_all_from(row<sortee*>& tees, sort_id_t curr_id, 
+						bool add_ccl_id, long ccl_id, bool sort_opps, tgt_ccl_t tgt)
+{
 	sort_glb& srg = *this;
 
 	for(long aa = 0; aa < tees.size(); aa++){
@@ -1101,7 +1069,9 @@ void
 sort_glb::step_quas(sort_glb& mates_srg){
 	step_mutual_stabilize(mates_srg, sm_with_quas);
 
-	DBG_PRT(62, os << " STEP_QUAS cnf=" << bj_eol; mates_srg.sg_cnf_clauses.print_row_data(os, true, "\n"););
+	DBG_PRT(62, os << " STEP_QUAS cnf=" << bj_eol;
+		mates_srg.sg_cnf_clauses.print_row_data(os, true, "\n");
+	);
 }
 
 void

@@ -198,7 +198,7 @@ void	negate_quantons(row_quanton_t& qua_row);
 void	get_ids_of(row_quanton_t& quans, row_long_t& the_ids);
 void	get_c_arr_ids(row_quanton_t& quans, long& arr_sz, long*& arr_ids);
 void	elim_until_dominated(brain& brn, quanton& qua);
-void	find_max_level_and_tier(row_quanton_t& tmp_mots, long& max_lev, long& max_tier);
+void	find_max_level(row_quanton_t& tmp_mots, long& max_lev);
 
 void	dbg_prepare_used_dbg_ccl(row_quanton_t& rr_qua, canon_clause& dbg_ccl);
 void	dbg_print_ccls_neus(bj_ostream& os, row<canon_clause*>& dbg_ccls);
@@ -411,7 +411,7 @@ class quanton {
 	charge_t		qu_charge;	// symetric. current charge
 	ticket			qu_charge_tk;	// symetric. 
 
-	long			qu_tier;	// my inverse quanton
+	long			qu_tier;	// the tier at which it was charged
 
 	neuron*			qu_source;	// source of signal when charged
 
@@ -799,7 +799,7 @@ class neuron {
 		return ne_fibres[0];
 	}
 
-	quanton*	set_motives(brain& brn, notekeeper& dke, bool is_first);
+	void	set_motives(brain& brn, notekeeper& dke, bool is_first);
 
 	void	swap_fibres_0_1(){
 		BRAIN_CK(ck_tunnels());
@@ -929,9 +929,6 @@ class neuron {
 
 	bool	in_ne_dominated(brain& brn);
 
-	void	mem_ne_fill_sortees(brain& brn, quanton& aft_qua);
-	void	mem_ne_fill_remote_sortees(mem_op_t mm, brain& brn);
-
 	void	fill_mutual_sortees(brain& brn);
 
 	bool	has_qua(quanton& tg_qua);
@@ -1014,7 +1011,6 @@ class deduction {
 	row_quanton_t	dt_motives;
 	quanton*		dt_forced;
 	long			dt_target_level;
-	long			dt_target_tier;
 	long			dt_forced_level;
 
 	deduction(){
@@ -1029,7 +1025,6 @@ class deduction {
 		dt_motives.clear();
 		dt_forced = NULL_PT;
 		dt_target_level = INVALID_LEVEL;
-		dt_target_tier = INVALID_TIER;
 		dt_forced_level = INVALID_LEVEL;
 	}
 
@@ -1043,10 +1038,9 @@ class deduction {
 		bool c1 = (dt_motives.is_empty());
 		bool c2 = (dt_forced == NULL_PT);
 		bool c3 = (dt_target_level == INVALID_LEVEL);
-		bool c4 = (dt_target_tier == INVALID_TIER);
 		bool c5 = (dt_forced_level == INVALID_LEVEL);
 
-		bool is_vg = (c1 && c2 && c3 && c4 && c5);
+		bool is_vg = (c1 && c2 && c3 && c5);
 	
 		return is_vg;
 	}
@@ -1057,7 +1051,6 @@ class deduction {
 
 		dct2.dt_forced = dt_forced;
 		dct2.dt_target_level = dt_target_level;
-		dct2.dt_target_tier = dt_target_tier;
 		dct2.dt_forced_level = dt_forced_level;
 
 		init_deduction();
@@ -1080,7 +1073,6 @@ class deduction {
 		os << "dt={ mots=" << dt_motives;
 		os << " qu:" << dt_forced;
 		os << " lv:" << dt_target_level;
-		os << " ti:" << dt_target_tier;
 		os << " fl:" << dt_forced_level;
 		os << "}";
 		os.flush();
@@ -1193,7 +1185,6 @@ class memap {
 		
 	brain*			ma_brn;
 
-	quanton* 		ma_dual;
 	ticket			ma_before_retract_tk;
 	row<ticket>		ma_after_retract_tks;
 
@@ -1230,7 +1221,6 @@ class memap {
 		
 		ma_brn = pt_brn;
 
-		ma_dual = NULL_PT;
 		ma_before_retract_tk.init_ticket();
 		ma_confl = NULL_PT;
 
@@ -1261,7 +1251,6 @@ class memap {
 	void	reset_memap(brain& brn);
 
 	bool	is_ma_virgin(){
-		bool c1 = (ma_dual == NULL_PT);
 		bool c2 = ! ma_before_retract_tk.is_valid();
 		bool c3 = (ma_confl == NULL_PT);
 
@@ -1282,7 +1271,7 @@ class memap {
 
 		bool c14 = (ma_active == false);
 
-		bool is_vg = (c1 && c2 && c3 && c4 && c5 && c6 && c7 && 
+		bool is_vg = (c2 && c3 && c4 && c5 && c6 && c7 && 
 			c8 && c9 && c10 && c11 && c12 && c13 && c14);
 	
 		return is_vg;
@@ -1324,7 +1313,6 @@ class memap {
 	void	map_prepare_tees_related(mem_op_t mm, brain& brn);
 	void	map_prepare_forced_sorter(mem_op_t mm, brain& brn, long first_idx);
 
-	bool 	map_prepare_oper(mem_op_t mm, brain& brn);
 	bool	map_find(brain& brn);
 	bool	map_save(brain& brn);
 	bool	map_oper(mem_op_t mm, brain& brn);
@@ -1399,17 +1387,13 @@ class memap {
 };
 
 inline
-void	find_max_level_and_tier(row_quanton_t& tmp_mots, long& max_lev, long& max_tier){
+void	find_max_level(row_quanton_t& tmp_mots, long& max_lev){
 	max_lev = INVALID_LEVEL;
-	max_tier = INVALID_TIER;
 
 	for(long aa = 0; aa < tmp_mots.size(); aa++){
 
 		quanton& qua = *(tmp_mots[aa]);
 		max_lev = max(max_lev, qua.qlevel());
-		if(max_lev == qua.qlevel()){
-			max_tier = max(max_tier, qua.qu_tier);
-		}
 	}
 }
 
@@ -1604,7 +1588,7 @@ class notekeeper {
 
 	void		restart_with(brain& brn, row_quanton_t& bak_upper);
 
-	quanton*	set_motive_notes(row_quanton_t& rr_qua, long from, long until);
+	void	set_motive_notes(row_quanton_t& rr_qua, long from, long until);
 
 	void		add_motive(quanton& qua, long q_layer){
 		row_quanton_t& layer_mots = get_layer_motives(q_layer);
@@ -1710,8 +1694,8 @@ class deducer {
 	public:
 
 	brain*			de_brain;
-	//row_quanton_t*		de_trail;
-	row_quanton_t		de_charge_trail;
+
+	row_quanton_t	de_charge_trail;
 	
 	bool			de_all_original;
 	bool			de_all_dom;
@@ -1734,8 +1718,6 @@ class deducer {
 
 	long 			de_trl_idx;
 	neuron* 		de_nxt_src;
-
-
 
 	deducer(brain* brn = NULL_PT, neuron* confl = NULL_PT, 
 		long tg_lv = INVALID_LEVEL)
@@ -1761,16 +1743,13 @@ class deducer {
 	row_quanton_t&	tg_motives(){ return de_target_dct.dt_motives; }
 	long&			tg_level(){ return de_target_dct.dt_target_level; }
 
-	long&			tg_tier(){ return de_target_dct.dt_target_tier; }
-	
 	brain&		get_de_brain();
 	row_quanton_t&	get_trail();
 	quanton&	get_curr_quanton();
 
-	void 		dbg_find_dct_of(neuron& confl, deduction& dct);
-	
-	void		deduc_find_next_source();
-	void		deduc_find_next_dotted();
+	void 		dbg_find_dct_of(neuron& confl, deduction& dct);	
+	void		dbg_deduc_find_next_source();
+	void		dbg_deduc_find_next_dotted();
 
 };
 
@@ -2222,7 +2201,7 @@ public:
 	void	init_uncharged();
 
 	neuron*	add_neuron(row_quanton_t& quans, quanton*& forced_qua, bool orig);
-	void	learn_mots(row_quanton_t& the_mots, quanton& forced_qua, long the_tier);
+	void	learn_mots(row_quanton_t& the_mots, quanton& forced_qua);
 
 	quanton*	get_quanton(long q_id);
 	
@@ -2639,40 +2618,6 @@ comparison	cmp_qlevel(quanton* const & qua1, quanton* const & qua2){
 	}
 	return cmp_long(qlev2, qlev1);
 }
-
-inline
-comparison	cmp_qtier(quanton* const & qua1, quanton* const & qua2){
-	BRAIN_CK(qua1 != NULL_PT);
-	BRAIN_CK(qua2 != NULL_PT);
-	long	qtier1 = qua1->qu_tier;
-	long	qtier2 = qua2->qu_tier;
-	bool inv1 = (qtier1 == INVALID_TIER);
-	bool inv2 = (qtier2 == INVALID_TIER);
-	// sort them in inverse order with inv as the max:
-	if(inv1 && inv2){ return 0; }
-	if(inv1 && !inv2){ return -1; }
-	if(!inv1 && inv2){ return 1; }
-	if(qtier1 == qtier2){
-		return cmp_long(qua2->get_charge(), qua1->get_charge());
-	}
-	return cmp_long(qtier2, qtier1);
-}
-
-/*
-inline
-comparison	cmp_dbg_fst_lap_cho(quanton* const & qua1, quanton* const & qua2){
-	BRAIN_CK(qua1 != NULL_PT);
-	BRAIN_CK(qua2 != NULL_PT);
-	DBG(
-		bj_big_int_t lap1 = qua1->qu_dbg_fst_lap_cho;
-		bj_big_int_t lap2 = qua2->qu_dbg_fst_lap_cho;
-
-		if(lap1 < lap1){ return -1; }
-		if(lap1 > lap1){ return 1; }
-	)
-	return 0;
-}
-*/
 
 inline
 charge_t negate_trinary(charge_t val){

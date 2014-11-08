@@ -119,6 +119,7 @@ quanton::ck_charge(brain& brn){
 
 bool
 brain::ck_trail(){	
+#ifdef FULL_DEBUG
 	bj_ostream& os = bj_dbg;
 	brain& brn = *this;
 
@@ -141,7 +142,6 @@ brain::ck_trail(){
 			ab_mm = "NULL qua !!." + br_file_name;
 			abort_func(-1, ab_mm.c_str());
 		}
-		
 		if((prev_tier != INVALID_TIER) && (prev_tier > qua->qu_tier)){
 			os << "qua= " << qua << bj_eol;
 			print_trail(os);
@@ -149,7 +149,7 @@ brain::ck_trail(){
 			abort_func(-1, ab_mm.c_str());
 		}
 		prev_tier = qua->qu_tier;
-
+		
 		if((qua->qlevel() == ROOT_LEVEL) && (qua->get_source() != NULL)){
 			print_trail(os);
 			ab_mm = "case1." + br_file_name;
@@ -209,6 +209,7 @@ brain::ck_trail(){
 		ab_mm = "case6." + br_file_name;
 		abort_func(-1, ab_mm.c_str());
 	}
+#endif
 	return true;
 }
 
@@ -228,7 +229,7 @@ memap::print_memap(bj_ostream& os, bool from_pt){
 		os.flush();
 		return os;
 	}
-	os << "MEMAP(" << (void*)this <<")={ du=" << ma_dual << bj_eol;
+	os << "MEMAP(" << (void*)this <<")={ " << bj_eol;
 	os << " dotted=" << bj_eol;
 	os << ma_dotted << bj_eol;
 	os << " filled=" << bj_eol;
@@ -563,10 +564,7 @@ quanton::print_quanton(bj_ostream& os, bool from_pt){
 		long the_tee_consec = qu_tee.so_tee_consec;
 		if(the_tee_consec == 0){ the_tee_consec = -(qu_inverse->qu_tee.so_tee_consec); } 
 
-		//if(! qu_tee.is_unsorted()){ os << ".i" << the_tee_consec; }
 		if(! qu_tee.is_unsorted()){ os << ".q" << qu_tee.so_qua_id; }
-		//if(qlevel() != INVALID_LEVEL){ os << ".l" << qlevel(); }
-		//if(qu_tier != INVALID_TIER){ os << ".t" << qu_tier; }
 		if(is_posi){ os << '\\';  }
 		if(is_nega){ os << '/';  }
 		if(! has_charge()){ os << ")"; }
@@ -1377,12 +1375,11 @@ brain::init_loading(long num_qua, long num_neu){
 }
 
 void
-brain::learn_mots(row_quanton_t& the_mots, quanton& forced_qua, long the_tier){
-	DBG_PRT(23, os << "**LEARNING** mots=" << the_mots << " forced=" << &forced_qua << " tier=" << the_tier);
+brain::learn_mots(row_quanton_t& the_mots, quanton& forced_qua){
+	DBG_PRT(23, os << "**LEARNING** mots=" << the_mots << " forced=" 
+		<< &forced_qua);
 
 	neuron* the_neu = NULL_PT;
-
-	//BRAIN_CK(the_mots.is_empty() || (tier() == the_tier));
 
 	BRAIN_CK(! the_mots.is_empty() || (level() == ROOT_LEVEL));
 
@@ -1404,7 +1401,6 @@ brain::learn_mots(row_quanton_t& the_mots, quanton& forced_qua, long the_tier){
 	);
 
 	if(the_mots.is_empty()){
-		//long nxt_tir = the_tier + 1;
 		long nxt_tir = 0;
 		BRAIN_CK(level() == ROOT_LEVEL);
 		send_psignal(forced_qua, the_neu, nxt_tir);
@@ -1870,7 +1866,7 @@ brain::aux_solve_instance(){
 	all_mutual_init();
 }
 
-quanton*
+void
 notekeeper::set_motive_notes(row_quanton_t& rr_qua, long from, long until){
 	BRAIN_CK(ck_funcs());
 	BRAIN_CK(dk_tot_noted >= 0);
@@ -1880,10 +1876,6 @@ notekeeper::set_motive_notes(row_quanton_t& rr_qua, long from, long until){
 
 	DBG_PRT(104, os << "making notes " << rr_qua);
 
-	long max_tier = -1;
-	long num_max = 0;
-	quanton* max_qua = NULL_PT;
-
 	if(from < 0){ from = 0; }
 	if(until > rr_qua.size()){ until = rr_qua.size(); }
 
@@ -1892,11 +1884,6 @@ notekeeper::set_motive_notes(row_quanton_t& rr_qua, long from, long until){
 		BRAIN_CK(rr_qua[ii] != NULL_PT);
 		quanton& qua = *(rr_qua[ii]);
 		BRAIN_CK(qua.get_charge() == cg_negative);
-
-
-		long qti = qua.qu_tier;
-		if(qti == max_tier){ num_max++; }
-		if(qti > max_tier){ max_tier = qti; num_max = 1; max_qua = &qua; }
 
 		bool has_note = (qua.*dk_has_note_fn)();
 		if(! has_note && (qua.qlevel() != ROOT_LEVEL)){
@@ -1921,17 +1908,11 @@ notekeeper::set_motive_notes(row_quanton_t& rr_qua, long from, long until){
 				}
 			);
 			DBG_PRT(20, os << dbg_msg << qua << " num_notes_in_lv " << dk_num_noted_in_layer 
-					<< "lv=" << dk_note_layer << "ti=" << qua.qu_tier << bj_eol
+					<< "lv=" << dk_note_layer << bj_eol
 					<< "motives_by_lv= " << dk_motives_by_layer);
 			
 		}
 	}
-
-	BRAIN_CK((from == 0) || (rr_qua.size() < 2) || ((max_tier + 1) == rr_qua.first()->qu_tier));
-	BRAIN_CK(num_max > 0);
-
-	if(num_max == 1){ return max_qua; }
-	return NULL_PT;
 }
 
 void
@@ -1970,9 +1951,11 @@ deducer::init_deducer(brain* brn, neuron* confl, long tg_lv)
 }
 
 void
-deducer::deduc_find_next_dotted(){
+deducer::dbg_deduc_find_next_dotted(){
+#ifdef FULL_DEBUG
 	while(! get_curr_quanton().has_dot()){
-		DBG_PRT(20, os << "NOT dotted " << get_curr_quanton() << " in deduc find next dotted");
+		DBG_PRT(20, os << "NOT dotted " << get_curr_quanton() 
+				<< " in deduc find next dotted");
 		de_trl_idx--;
 	}
 
@@ -1981,10 +1964,12 @@ deducer::deduc_find_next_dotted(){
 	long qlv = nxt_qua.qlevel();
 
 	de_noteke.update_notes_layer(qlv);
+#endif
 }
 
 void
-deducer::deduc_find_next_source(){
+deducer::dbg_deduc_find_next_source(){
+#ifdef FULL_DEBUG
 
 	brain& brn = get_de_brain();
 
@@ -1996,7 +1981,6 @@ deducer::deduc_find_next_source(){
 		os << " tot_dotted=" << de_noteke.dk_tot_noted;
 		os << " num_dotted_in_lv=" << de_noteke.dk_num_noted_in_layer;
 		os << " dotting level=" << de_noteke.dk_note_layer;
-		os << " ti=" << get_curr_quanton().qu_tier;
 	);
 
 	if(de_nxt_src != NULL){
@@ -2017,12 +2001,12 @@ deducer::deduc_find_next_source(){
 
 	BRAIN_CK(de_noteke.dk_tot_noted > 0);
 
-	deduc_find_next_dotted();
+	dbg_deduc_find_next_dotted();
 
 	quanton& nxt_qua = get_curr_quanton();
-	DBG_PRT(20, os << "dotted found " << nxt_qua << " num_dotted_in_lv " << de_noteke.dk_num_noted_in_layer;
+	DBG_PRT(20, os << "dotted found " << nxt_qua 
+		<< " num_dotted_in_lv " << de_noteke.dk_num_noted_in_layer;
 		os << " dotting level=" << de_noteke.dk_note_layer;
-		os << " ti=" << get_curr_quanton().qu_tier;
 	);
 
 	de_nxt_src = nxt_qua.get_source();
@@ -2036,6 +2020,7 @@ deducer::deduc_find_next_source(){
 	DBG_PRT(101, os << "qua=" << &nxt_qua << " filled APPEND=";
 		nxt_qua.qu_full_charged.print_row_data(os, true, "\n");
 	);
+#endif
 }
 
 bool
@@ -2061,6 +2046,7 @@ ck_motives(brain& brn, row_quanton_t& mots){
 
 void
 deducer::dbg_find_dct_of(neuron& confl, deduction& dct){
+#ifdef FULL_DEBUG
 	brain& brn = get_de_brain();
 
 	brn.br_charge_trail.get_all_ordered_motives(de_charge_trail);
@@ -2096,9 +2082,9 @@ deducer::dbg_find_dct_of(neuron& confl, deduction& dct){
 	long deduc_lv = de_noteke.dk_note_layer;
 	MARK_USED(deduc_lv);
 
-	deduc_find_next_source();
+	dbg_deduc_find_next_source();
 	while(de_noteke.dk_num_noted_in_layer > 0){
-		deduc_find_next_source();
+		dbg_deduc_find_next_source();
 	}
 
 	quanton& nxt_qua = get_curr_quanton();
@@ -2115,7 +2101,7 @@ deducer::dbg_find_dct_of(neuron& confl, deduction& dct){
 
 	// close deduction
 
-	find_max_level_and_tier(dct.dt_motives, dct.dt_target_level, dct.dt_target_tier);
+	find_max_level(dct.dt_motives, dct.dt_target_level);
 
 	BRAIN_CK(! opp_nxt->has_dot());
 	dct.dt_forced = opp_nxt;
@@ -2135,6 +2121,7 @@ deducer::dbg_find_dct_of(neuron& confl, deduction& dct){
 	BRAIN_CK(tmp_mots.is_empty());
 
 	BRAIN_CK(brn.br_tot_qu_dots == 0);
+#endif
 }
 
 // blocks
@@ -2182,53 +2169,6 @@ notekeeper::clear_all_motives(long lim_lv, bool reset_notes){
 }
 
 void
-neuron::mem_ne_fill_remote_sortees(mem_op_t mm, brain& brn){
-
-	DBG(quanton& cnfl_qu = brn.br_conflict_quanton);
-
-	ne_num_remote_tees = 0;
-
-	for(long aa = 0; aa < fib_sz(); aa++){
-		BRAIN_CK(ne_fibres[aa] != NULL_PT);
-		quanton& qua = *(ne_fibres[aa]);
-		quanton& opp = *(qua.qu_inverse);
-
-		bool base_qua = false;
-
-		BRAIN_CK(&cnfl_qu != &qua);
-		BRAIN_CK(&cnfl_qu != &opp);
-
-		if(qua.has_pos_mark()){ 
-			BRAIN_CK(qua.has_mark());
-			BRAIN_CK(qua.qu_mark_idx != INVALID_IDX);
-			if(! base_qua){
-				sortrel& sre = qua.qu_reltee;
-				row<sortee*>& all_pos = sre.so_positive;
-				all_pos.push(&ne_tee);
-				ne_num_remote_tees++;
-			}
-		}
-	
-		if(opp.has_pos_mark()){ 
-			BRAIN_CK(qua.has_mark());
-			BRAIN_CK(qua.qu_mark_idx != INVALID_IDX);
-			if(! base_qua){
-				sortrel& sre = opp.qu_reltee;
-				row<sortee*>& all_neg = sre.so_negative;
-				all_neg.push(&ne_tee);
-				ne_num_remote_tees++;
-			}
-		}
-	}
-
-	BRAIN_CK(cnfl_qu.qu_inverse != NULL_PT);
-	BRAIN_CK(cnfl_qu.qu_reltee.so_positive.is_empty());
-	BRAIN_CK(cnfl_qu.qu_reltee.so_negative.is_empty());
-	BRAIN_CK(cnfl_qu.qu_inverse->qu_reltee.so_positive.is_empty());
-	BRAIN_CK(cnfl_qu.qu_inverse->qu_reltee.so_negative.is_empty());
-}
-
-void
 deduction::set_with(brain& brn, notekeeper& nke, quanton& nxt_qua){
 	if(! is_dt_virgin()){
 		return;
@@ -2242,9 +2182,10 @@ deduction::set_with(brain& brn, notekeeper& nke, quanton& nxt_qua){
 	nke.get_all_motives(dt_motives);
 
 	DBG_PRT(51, os << " motives_by_lv= " << nke.dk_motives_by_layer);
-	DBG_PRT(52, os << "LV=" <<  nke.dk_note_layer << " motives " << dt_motives << " opp_nxt=" << &opp_nxt);
+	DBG_PRT(52, os << "LV=" <<  nke.dk_note_layer << " motives " 
+		<< dt_motives << " opp_nxt=" << &opp_nxt);
 
-	find_max_level_and_tier(dt_motives, dt_target_level, dt_target_tier);
+	find_max_level(dt_motives, dt_target_level);
 
 	dt_forced = &opp_nxt;
 	dt_forced_level = opp_nxt.qlevel();
@@ -2254,7 +2195,7 @@ deduction::set_with(brain& brn, notekeeper& nke, quanton& nxt_qua){
 	BRAIN_CK(! is_dt_virgin());
 }
 
-quanton*
+void
 neuron::set_motives(brain& brn, notekeeper& nke, bool is_first){
 	neuron& neu = *this;
 
@@ -2289,9 +2230,7 @@ neuron::set_motives(brain& brn, notekeeper& nke, bool is_first){
 
 	long from = (is_first)?(0):(1);
 	long until = causes.size();
-	quanton* max_qua = nke.set_motive_notes(neu.ne_fibres, from, until);
-
-	return max_qua;
+	nke.set_motive_notes(neu.ne_fibres, from, until);
 }
 
 void
@@ -2330,16 +2269,14 @@ brain::dbg_ck_deducs(deduction& dct1, deduction& dct2){
 	bool c1 = (dct1.dt_motives.equal_to(dct2.dt_motives));
 	bool c2 = (dct1.dt_forced == dct2.dt_forced);
 	bool c3 = (lv1 == lv2);
-	bool c4 = (dct1.dt_target_tier == dct2.dt_target_tier);
 
 	MARK_USED(c1);
 	MARK_USED(c2);
 	MARK_USED(c3);
-	MARK_USED(c4);
 
-	DBG_COND_COMM(! (c1 && c2 && c3 && c4) ,
+	DBG_COND_COMM(! (c1 && c2 && c3) ,
 		os << "ABORTING_DATA " << bj_eol;
-		os << "  c1=" << c1 << "  c2=" << c2 << "  c3=" << c3 << "  c4=" << c4 << bj_eol;
+		os << "  c1=" << c1 << "  c2=" << c2 << "  c3=" << c3 << bj_eol;
 		os << "dct1=" << dct1 << bj_eol;
 		os << "dct2=" << dct2 << bj_eol;
 		print_trail(os);
@@ -2350,9 +2287,6 @@ brain::dbg_ck_deducs(deduction& dct1, deduction& dct2){
 	BRAIN_CK(c2);
 
 	BRAIN_CK(c3);
-	BRAIN_CK(c4);
-
-	//DBG_PRT(DBG_ALL_LVS, os << "CK_DCTS_OK"); 
 	return true;
 }
 
@@ -2853,8 +2787,10 @@ brain::receive_psignal(bool only_in_dom){
 
 		DBG_PRT_COND(64, (neu != NULL_PT), os << "qua=" << &qua << " SRC=" << neu);
 
-		BRAIN_CK((qua.qu_source == neu) || ((level() == ROOT_LEVEL) && (qua.qu_source == NULL_PT)));
-		BRAIN_CK((qua.qu_tier == sg_tier) || ((level() == ROOT_LEVEL) && (qua.qu_tier == 0)));
+		BRAIN_CK((qua.qu_source == neu) || 
+			((level() == ROOT_LEVEL) && (qua.qu_source == NULL_PT)));
+		BRAIN_CK((qua.qu_tier == sg_tier) || 
+			((level() == ROOT_LEVEL) && (qua.qu_tier == 0)));
 	}
 	return pt_qua;
 }
@@ -2935,7 +2871,7 @@ brain::pulsate(){
 			DBG(cho->qu_dbg_num_laps_cho++);
 		}
 
-		DBG_PRT(25, os << "**CHOICE** " << cho << " in tier=" << tier());
+		DBG_PRT(25, os << "**CHOICE** " << cho);
 
 	}
 }
@@ -3397,59 +3333,6 @@ brain::dbg_add_to_used(neuron& neu){
 
 //============================================================
 // map oper funcs
-
-/*
-void
-neuron::mem_ne_fill_sortees(brain& brn, quanton& aft_qua){
-
-	BRAIN_CK(aft_qua.qu_inverse != NULL_PT);
-	DBG(quanton& cnfl_qu = brn.br_conflict_quanton);
-
-	row<sortee*>& all_after = aft_qua.qu_reltee.so_after;
-	BRAIN_CK(all_after.is_empty());
-	DBG(long aft_ti = aft_qua.qu_dbg_tee_ti);
-	BRAIN_CK(aft_ti > 0);
-
-	DBG(bool found_it = false);
-
-	for(long aa = 0; aa < fib_sz(); aa++){
-		BRAIN_CK(ne_fibres[aa] != NULL_PT);
-		quanton& qua = *(ne_fibres[aa]);
-		quanton& opp = *(qua.qu_inverse);
-
-		BRAIN_CK(&cnfl_qu != &qua);
-		BRAIN_CK(&cnfl_qu != &opp);
-
-		if(&qua == &aft_qua){ 
-			DBG(found_it = true);
-			continue;	
-		}
-		BRAIN_CK(&opp != &aft_qua);
-		//BRAIN_CK(! qua.has_pos_mark());
-
-		//if(! opp.has_pos_mark()){ 
-		if(! opp.has_mark()){ 
-			continue; 
-		}
-		BRAIN_CK(opp.has_pos_mark());
-		BRAIN_CK(qua.has_neg_mark());
-	
-		sortee& srt = opp.qu_tee;
-
-		BRAIN_CK(qua.qu_dbg_tee_ti == INVALID_NATURAL);
-		DBG(long qu_ti = opp.qu_dbg_tee_ti);
-		BRAIN_CK(qu_ti > 0);
-		BRAIN_CK(aft_ti < qu_ti);
-
-		all_after.push(&srt);
-
-		row<sortee*>& all_before = opp.qu_reltee.so_before;
-		all_before.push(&(aft_qua.qu_tee));
-	}
-
-	BRAIN_CK((&aft_qua == &cnfl_qu) || found_it);
-}
-*/
 
 long
 memap::get_trace_sz(mem_op_t mm){

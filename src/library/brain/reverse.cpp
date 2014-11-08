@@ -193,15 +193,9 @@ brain::reverse(){
 
 		// init nke0 with confl
 	
-		quanton* max_qua = cfl.set_motives(brn, nke0, true);
+		cfl.set_motives(brn, nke0, true);
 
 		BRAIN_CK(all_notes0 > 0);
-		if(max_qua != NULL_PT){
-			BRAIN_CK(max_qua->is_neg());
-			mpp0.ma_dual = max_qua->qu_inverse;
-			BRAIN_CK(mpp0.ma_dual->qu_tier <= brn.tier());
-			BRAIN_CK(mpp0.ma_dual->is_pos());
-		}
 
 		BRAIN_CK(! mpp0.is_ma_virgin());
 
@@ -531,7 +525,7 @@ brain::reverse(){
 	if(data_level().ld_first_learned == NULL_PT){
 		data_level().ld_first_learned = dct.dt_forced;
 	}
-	learn_mots(dct.dt_motives, *dct.dt_forced, dct.dt_target_tier);
+	learn_mots(dct.dt_motives, *dct.dt_forced);
 
 	// resend chosen
 
@@ -830,8 +824,12 @@ memap::get_initial_guide_coloring(brain& brn, coloring& clr, long idx_szs){
 		bool inc_col = false;
 		if(ii > 0){
 			prop_signal& q_sig0 = trace[ii - 1];
+			
+			// this two lines are the whole purpose of tiers. 
+			// initialize the guide coloring (one color per tier).
 			long col0 = q_sig0.ps_tier;
 			long col1 = q_sig1.ps_tier;
+			
 			BRAIN_CK(col0 >= 0);
 			BRAIN_CK(col1 >= 0);
 			if(col0 != col1){
@@ -1012,6 +1010,7 @@ memap::map_anchor_stab(brain& brn){
 
 bool
 memap::ck_guide_idx(coloring& guide_col, dbg_call_id dbg_id){
+#ifdef FULL_DEBUG
 	long g_idx = guide_col.co_szs_idx;
 	if(g_idx == INVALID_IDX){
 		BRAIN_CK(guide_col.is_co_virgin());
@@ -1031,6 +1030,7 @@ memap::ck_guide_idx(coloring& guide_col, dbg_call_id dbg_id){
 		os << "END_OF_aborting_data" << bj_eol;
 	);
 	BRAIN_CK((qua_sz * 2) == guide_col.co_quas.size());
+#endif
 	return true;
 }
 
@@ -1061,45 +1061,12 @@ memap::get_initial_anchor_coloring(brain& brn, coloring& ini_anc_clr, long lst_i
 	BRAIN_CK(ck_map_guides(dbg_call_2));
 }
 
-/*
-void
-coloring::calc_dims(brain& brn, dima_dims& dims){
-	BRAIN_CK(ck_cols());
-
-	row_quanton_t&	all_quas = co_quas;
-	row<long>&	qua_colors = co_qua_colors;
-
-	row<neuron*>&	all_neus = co_neus;
-	row<long>&	neu_colors = co_neu_colors;
-
-	BRAIN_CK(brn.br_qu_tot_note2 == 0);
-
-	for(long aa = 0; aa < all_quas.size(); aa++){
-		BRAIN_CK(all_quas[aa] != NULL_PT);
-		quanton& qua = *(all_quas[aa]);
-		quanton& opp = qua.opposite();
-
-		BRAIN_CK(! qua.has_note2());
-		qua.set_note2(brn);
-	}
-
-	for(long bb = 0; bb < all_neus.size(); bb++){
-		BRAIN_CK(all_neus[bb] != NULL_PT);
-		neuron& neu = *(all_neus[bb]);
-
-		//long num_notes = neu.get_num_notes(brn);
-	}
-
-	reset_all_note2(brn, all_quas);
-	BRAIN_CK(brn.br_qu_tot_note2 == 0);
-	BRAIN_CK(ck_cols());
-}
-*/
-
 bool
 memap::ck_map_guides(dbg_call_id dbg_id){
+#ifdef FULL_DEBUG
 	BRAIN_CK(ck_guide_idx(ma_save_guide_col, dbg_id));
 	BRAIN_CK(ck_guide_idx(ma_find_guide_col, dbg_id));
+#endif
 	return true;
 }
 
@@ -1111,8 +1078,6 @@ memap::map_replace_with(brain& brn, memap& mpp, dbg_call_id call_id){
 	);
 	BRAIN_CK(mpp.ck_map_guides(dbg_call_1));
 	BRAIN_CK(is_ma_virgin());
-
-	ma_dual = mpp.ma_dual;
 
 	ma_before_retract_tk = mpp.ma_before_retract_tk;
 	mpp.ma_after_retract_tks.move_to(ma_after_retract_tks);
@@ -1318,6 +1283,7 @@ coloring::get_initial_sorting_coloring(brain& brn, coloring& ini_clr, bool fill_
 
 bool
 memap::map_ck_contained_in(brain& brn, coloring& colr, dbg_call_id dbg_id){
+#ifdef FULL_DEBUG
 	long szs_idx = colr.co_szs_idx;
 	row<neuron*>& all_neus = colr.co_neus;
 
@@ -1359,11 +1325,14 @@ memap::map_ck_contained_in(brain& brn, coloring& colr, dbg_call_id dbg_id){
 	}
 
 	BRAIN_CK(brn.br_tot_ne_spots == 0);
+#endif
 	return true;
 }
 
 void
-dbg_find_not_in_rr1(brain& brn, row<neuron*>& rr1, row<neuron*>& rr2, row<neuron*>& not_in_rr1){
+dbg_find_not_in_rr1(brain& brn, row<neuron*>& rr1, row<neuron*>& rr2, 
+					row<neuron*>& not_in_rr1){
+#ifdef FULL_DEBUG
 	not_in_rr1.clear();
 
 	BRAIN_CK(brn.br_tot_ne_spots == 0);
@@ -1380,6 +1349,7 @@ dbg_find_not_in_rr1(brain& brn, row<neuron*>& rr1, row<neuron*>& rr2, row<neuron
 
 	reset_spots_of(brn, rr1);
 	BRAIN_CK(brn.br_tot_ne_spots == 0);
+#endif
 }
 
 void
@@ -1689,7 +1659,6 @@ memap::map_oper(mem_op_t mm, brain& brn){
 
 	brn.init_mem_tmps();
 
-	//bool prep_ok = map_prepare_oper(mm, brn);
 	bool prep_ok = map_prepare_mem_oper(mm, brn);
 
 	if(! prep_ok){

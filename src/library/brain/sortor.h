@@ -326,11 +326,6 @@ enum tgt_ccl_t {
 
 class sortrel {
 public:
-	row<sortee*>	so_before;
-	row<sortee*>	so_after;
-	row<sortee*>	so_positive;
-	row<sortee*>	so_negative;
-
 	row<sortee*>	so_mates;
 	sortee*		so_opposite;
 
@@ -341,12 +336,7 @@ public:
 	~sortrel(){
 	}
 
-	void		init_sortrel(bool free_mem = false){
-		so_before.clear(free_mem, free_mem);
-		so_after.clear(free_mem, free_mem);
-		so_positive.clear(free_mem, free_mem);
-		so_negative.clear(free_mem, free_mem);
-	
+	void		init_sortrel(bool free_mem = false){	
 		so_mates.clear(free_mem, free_mem);
 		so_opposite = NULL_PT;
 	}
