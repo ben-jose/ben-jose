@@ -33,8 +33,7 @@ funcs that implement reverse func.
 #include "stack_trace.h"
 #include "dimacs.h"
 #include "brain.h"
-#include "dbg_run_satex.h"
-#include "config.h"
+#include "dbg_config.h"
 #include "dbg_prt.h"
 
 bool
@@ -199,6 +198,7 @@ brain::reverse(){
 
 		BRAIN_CK(! mpp0.is_ma_virgin());
 
+		BRAIN_CK(cfl.ne_original);
 		if(! cfl.ne_original){ 
 			mpp0.reset_memap(brn);
 		}
@@ -247,8 +247,8 @@ brain::reverse(){
 			} else {
 				has_in_mem = true;
 				dct.init_deduction();
+				BRAIN_CK(dct.is_dt_virgin());
 			}
-			//break;
 		}
 		
 		BRAIN_CK(level() != ROOT_LEVEL);
@@ -1008,32 +1008,6 @@ memap::map_anchor_stab(brain& brn){
 	BRAIN_CK(ck_map_guides(dbg_call_3));
 }
 
-bool
-memap::ck_guide_idx(coloring& guide_col, dbg_call_id dbg_id){
-#ifdef FULL_DEBUG
-	long g_idx = guide_col.co_szs_idx;
-	if(g_idx == INVALID_IDX){
-		BRAIN_CK(guide_col.is_co_virgin());
-		return true;
-	}
-	BRAIN_CK(ma_szs_dotted.is_valid_idx(g_idx));
-	long qua_sz = ma_szs_dotted[g_idx];
-	MARK_USED(qua_sz);
-
-	DBG_PRT_COND(DBG_ALL_LVS, ! ((qua_sz * 2) == guide_col.co_quas.size()) ,
-		os << "ABORTING_DATA " << bj_eol;
-		os << " dbg_id=" << dbg_id << bj_eol;
-		os << " qua_sz=" << qua_sz << bj_eol;
-		os << " guide_sz=" << guide_col.co_quas.size() << bj_eol;
-		os << " guide=" << guide_col << bj_eol;
-		os << " map=" << *this << bj_eol;
-		os << "END_OF_aborting_data" << bj_eol;
-	);
-	BRAIN_CK((qua_sz * 2) == guide_col.co_quas.size());
-#endif
-	return true;
-}
-
 void
 memap::get_initial_anchor_coloring(brain& brn, coloring& ini_anc_clr, long lst_idx, 
 								   long nxt_idx)
@@ -1059,15 +1033,6 @@ memap::get_initial_anchor_coloring(brain& brn, coloring& ini_anc_clr, long lst_i
 
 	BRAIN_CK(ini_anc_clr.ck_cols());
 	BRAIN_CK(ck_map_guides(dbg_call_2));
-}
-
-bool
-memap::ck_map_guides(dbg_call_id dbg_id){
-#ifdef FULL_DEBUG
-	BRAIN_CK(ck_guide_idx(ma_save_guide_col, dbg_id));
-	BRAIN_CK(ck_guide_idx(ma_find_guide_col, dbg_id));
-#endif
-	return true;
 }
 
 void
@@ -1242,6 +1207,9 @@ coloring::get_initial_sorting_coloring(brain& brn, coloring& ini_clr, bool fill_
 	BRAIN_CK(ck_cols());
 	BRAIN_CK(all_quas.is_empty());
 	BRAIN_CK(all_neus.is_empty());
+	
+	all_quas.clear();
+	all_neus.clear();
 
 	// select quas
 
@@ -1282,109 +1250,6 @@ coloring::get_initial_sorting_coloring(brain& brn, coloring& ini_clr, bool fill_
 }
 
 bool
-memap::map_ck_contained_in(brain& brn, coloring& colr, dbg_call_id dbg_id){
-#ifdef FULL_DEBUG
-	long szs_idx = colr.co_szs_idx;
-	row<neuron*>& all_neus = colr.co_neus;
-
-	DBG_PRT_COND(DBG_ALL_LVS, ! (ma_szs_dotted.is_valid_idx(szs_idx)) ,
-		os << "ABORTING_DATA " << bj_eol;
-		os << " dbg_id=" << dbg_id << bj_eol;
-		os << " szs_idx=" << szs_idx << bj_eol;
-		os << " ma_szs_dotted=" << ma_szs_dotted << bj_eol;
-	);
-	BRAIN_CK(ma_szs_dotted.is_valid_idx(szs_idx));
-	BRAIN_CK(brn.br_tot_ne_spots == 0);
-
-	for(long ii = 0; ii < all_neus.size(); ii++){
-		neuron& fll_neu = *(all_neus[ii]);
-		fll_neu.set_spot(brn);
-		DBG_PRT(103, os << "spot " << &fll_neu);
-	}
-	
-	BRAIN_CK(ma_confl != NULL_PT);
-
-	DBG_PRT(103, os << "CK spot confl " << ma_confl);
-	BRAIN_CK(ma_confl->ne_spot);
-
-	long trace_sz = ma_szs_dotted[szs_idx];
-	row<prop_signal>& trace = ma_dotted;
-
-	BRAIN_CK((trace_sz == trace.size()) || trace.is_valid_idx(trace_sz));
-	for(long ii = 0; ii < trace_sz; ii++){
-		prop_signal& q_sig = trace[ii];
-		if(q_sig.ps_source != NULL_PT){
-			DBG_PRT(103, os << "CK spot " << q_sig.ps_source);
-			BRAIN_CK(q_sig.ps_source->ne_spot);
-		}
-	}
-
-	for(long ii = 0; ii < all_neus.size(); ii++){
-		neuron& fll_neu = *(all_neus[ii]);
-		fll_neu.reset_spot(brn);
-	}
-
-	BRAIN_CK(brn.br_tot_ne_spots == 0);
-#endif
-	return true;
-}
-
-void
-dbg_find_not_in_rr1(brain& brn, row<neuron*>& rr1, row<neuron*>& rr2, 
-					row<neuron*>& not_in_rr1){
-#ifdef FULL_DEBUG
-	not_in_rr1.clear();
-
-	BRAIN_CK(brn.br_tot_ne_spots == 0);
-	set_spots_of(brn, rr1);
-
-	for(long aa = 0; aa < rr2.size(); aa++){
-		BRAIN_CK(rr2[aa] != NULL_PT);
-		neuron& neu = *(rr2[aa]);
-
-		if(! neu.ne_spot){
-			not_in_rr1.push(&neu);
-		} 
-	}
-
-	reset_spots_of(brn, rr1);
-	BRAIN_CK(brn.br_tot_ne_spots == 0);
-#endif
-}
-
-void
-dbg_find_diff_tauto_vs_simple_neus(brain& brn, row<neuron*>& not_in_tauto, 
-								   row<neuron*>& not_in_simple)
-{
-#ifdef FULL_DEBUG
-	row<neuron*>& dbg_simple_neus = brn.br_dbg.dbg_simple_neus;
-
-	row<neuron*> dbg_tauto_neus;
-	srt_row_as<neuron>(brn.br_tauto_neus_srg.sg_step_sortees, dbg_tauto_neus);
-
-	dbg_find_not_in_rr1(brn, dbg_tauto_neus, dbg_simple_neus, not_in_tauto);
-	dbg_find_not_in_rr1(brn, dbg_simple_neus, dbg_tauto_neus, not_in_simple);
-#endif
-}
-
-bool
-dbg_prt_diff_tauto_vs_simple_neus(bj_ostream& os, brain& brn){
-#ifdef FULL_DEBUG
-	row<neuron*> not_in_tauto;
-	row<neuron*> not_in_simple;
-
-	dbg_find_diff_tauto_vs_simple_neus(brn, not_in_tauto, not_in_simple);
-
-	os << "not_in_tauto=" << bj_eol;
-	os << not_in_tauto << bj_eol;
-	os << "not_in_simple=" << bj_eol;
-	os << not_in_simple << bj_eol;
-
-#endif
-	return true;
-}
-
-bool
 memap::map_prepare_mem_oper(mem_op_t mm, brain& brn){
 	bj_output_t& o_info = brn.get_out_info();
 	
@@ -1400,16 +1265,6 @@ memap::map_prepare_mem_oper(mem_op_t mm, brain& brn){
 	}
 
 	bool do_quick_finds = (mm == mo_find);
-	//bool do_quick_finds = false;
-
-	// first quick find
-
-	/*if(do_quick_finds){
-		calc_dims(brain& brn, dima_dims& dims)
-		ch_string base_pth = skg.as_full_path(SKG_REF_DIR);
-		bool dim_exis = dims_path_exists(base_pth, dims0);
-		if(! dim_exis){	return false; }
-	}*/
 
 	// calc anchor
 
@@ -1495,7 +1350,7 @@ memap::map_prepare_mem_oper(mem_op_t mm, brain& brn){
 	BRAIN_CK(map_ck_contained_in(brn, uni_guide_col, dbg_call_2));
 
 	//DBG_PRT_COND(67, (mm == mo_find), map_dbg_prt(os, mm, brn));
-	row<sortee*>& guide_tees = brn.br_tmp_wrt_tauto_tees;
+	row<sortee*>& guide_tees = brn.br_tmp_wrt_guide_tees;
 	neus_srg.sg_step_sortees.move_to(guide_tees);
 
 	// stab uni_colors
@@ -1540,7 +1395,7 @@ memap::map_prepare_mem_oper(mem_op_t mm, brain& brn){
 
 	dbg_shas.push(tauto_cnf.cf_sha_str + "\n");
 
-	row<sortee*>& tauto_tees = brn.br_tmp_wrt_guide_tees;
+	row<sortee*>& tauto_tees = brn.br_tmp_wrt_tauto_tees;
 	fnl_ne_srg.sg_step_sortees.move_to(tauto_tees);
 
 	// init write ccls 
@@ -1614,43 +1469,6 @@ memap::map_prepare_mem_oper(mem_op_t mm, brain& brn){
 	BRAIN_CK(! tmp_guide_cnf.has_phase_path());
 
 	return true;
-}
-
-void
-memap::map_dbg_print(bj_ostream& os, mem_op_t mm, brain& brn){
-	canon_cnf& tmp_tauto_cnf = brn.br_tmp_wrt_tauto_cnf;
-	canon_cnf& tmp_diff_cnf = brn.br_tmp_wrt_diff_cnf;
-	canon_cnf& tmp_guide_cnf = brn.br_tmp_wrt_guide_cnf;
-
-	//os << STACK_STR << bj_eol;
-	os << "DBG_PRT=" << bj_eol;
-	os << this << bj_eol;
-	os << "brn_tk=" << brn.br_current_ticket << bj_eol;
-	if(mm == mo_save){ os << "SAVE "; }
-	if(mm == mo_find){ os << "FIND "; }
-
-	//os << "CERO FILLED___________________________________________ " << bj_eol;
-	sort_glb& tauto_srg = brn.br_tauto_neus_srg;
-	os << " sg_dbg_cnf_tot_onelit=" << tauto_srg.sg_dbg_cnf_tot_onelit << bj_eol;
-
-	os << " TATUTO_STEP_SORTEES (after step)=" << bj_eol;
-	for(long aa = 0; aa < tauto_srg.sg_step_sortees.size(); aa++){
-		os << *(tauto_srg.sg_step_sortees[aa]) << bj_eol;
-	}
-
-	os << " TAUTO_CNF=" << bj_eol;
-	os << tmp_tauto_cnf << bj_eol;
-	os << " DIFF_CNF=" << bj_eol;
-	os << tmp_diff_cnf << bj_eol;
-	os << " GUIDE_CNF=" << bj_eol;
-	os << tmp_guide_cnf << bj_eol;
-
-	os << bj_eol;
-	BRAIN_DBG(os << " RECOIL_LV=" << brn.br_dbg.dbg_last_recoil_lv);
-
-	os << bj_eol;
-	os << brn.get_my_inst().get_f_nam() << bj_eol;
-	os << "=========================================================" << bj_eol;
 }
 
 bool
@@ -1765,25 +1583,5 @@ memap::map_oper(mem_op_t mm, brain& brn){
 		}
 	}
 	return oper_ok;
-}
-
-bool
-dbg_run_satex_on(brain& brn, ch_string f_nam){
-#ifdef FULL_DEBUG
-	bool is_no = dbg_run_satex_is_no_sat(f_nam);
-	MARK_USED(is_no);
-	DBG_COND_COMM(! is_no ,
-		os << "ABORTING_DATA " << bj_eol;
-		//os << "mmap_before_tk=" << ma_before_retract_tk << bj_eol;
-		//os << "mmap_after_tks=" << ma_after_retract_tks << bj_eol;
-		os << " brn_tk=" << brn.br_current_ticket << bj_eol;
-		os << "	LV=" << brn.level() << bj_eol;
-		os << " f_nam=" << f_nam << bj_eol;
-		os << " save_consec=" << brn.br_dbg.dbg_canon_save_id << bj_eol;
-		os << "END_OF_aborting_data" << bj_eol;
-	);
-	BRAIN_CK(is_no);
-#endif
-	return true;
 }
 

@@ -34,8 +34,8 @@ dbg_prt_brn funcs.
 
 #include "bj_stream.h"
 #include "ch_string.h"
-#include "config.h"
 #include "brain.h"
+#include "dbg_config.h"
 #include "dbg_prt.h"
 #include "dbg_run_satex.h"
 

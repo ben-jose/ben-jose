@@ -34,7 +34,7 @@ funcs for inference graph printing
 
 #include "brain.h"
 #include "dbg_run_satex.h"
-#include "config.h"
+#include "dbg_config.h"
 
 #define DBG_IC_RANKS		1
 #define DBG_IC_SUBGRAPHS	2

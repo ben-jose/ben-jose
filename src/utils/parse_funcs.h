@@ -34,6 +34,10 @@ parse funcs.
 #define PARSE_FUNCS_H
 
 #include "top_exception.h"
+#include "ch_string.h"
+
+#define PARSE_FN_DBG(prm)	DBG(prm)
+#define PARSE_FN_CK(prm) 	DBG_CK(prm)
 
 //======================================================================
 // parse_exception
@@ -52,6 +56,16 @@ public:
 		line = ll;
 	}
 };
+
+//=================================================================
+// parse funcs
+
+ch_string get_parse_err_msg(ch_string hd_msg, long num_line, char ch_err, ch_string msg);
+
+void skip_whitespace(const char*& pt_in, long& line);
+void skip_line(const char*& pt_in, long& line);
+ch_string read_text_line(const char*& pt_in, long& line);
+integer parse_int(const char*& pt_in, long line);
 
 
 #endif		// PARSE_FUNCS_H

@@ -24,9 +24,9 @@ email: joseluisquirogabeltran@gmail.com
 
 ------------------------------------------------------------
 
-config.cpp  
+dbg_config.cpp  
 
-Functions to read and parse config files.
+Functions to read and parse debug config files.
 
 --------------------------------------------------------------*/
 
@@ -34,94 +34,8 @@ Functions to read and parse config files.
 
 #include "file_funcs.h"
 #include "parse_funcs.h"
-#include "config.h"
 #include "brain.h"
-
-
-//======================================================================
-// parse funcs
-
-ch_string parse_err_msg(ch_string hd_msg, long num_line, char ch_err, ch_string msg)
-{
-	bj_ostr_stream err_msg;
-
-	err_msg << hd_msg;
-	if(num_line >= 0){
-		err_msg << "line " << num_line << ". ";
-	}
-	if(ch_err >= 0){
-		err_msg << "invalid character '" << ch_err << "'. ";
-	}
-	err_msg << msg;
-	return err_msg.str();
-}
-
-void skip_whitespace(const char*& pt_in, long& line){
-	while(	(! isalnum(*pt_in) || isspace(*pt_in)) && 
-			(*pt_in != '-') && (*pt_in != '+') && (*pt_in != END_OF_SEC))
-	{ 
-		if(*pt_in == '\n'){ 
-			line++; 
-		}
-		pt_in++; 
-	}
-}
-
-void skip_line(const char*& pt_in, long& line){
-	while(*pt_in != END_OF_SEC){
-		if(*pt_in == '\n'){ 
-			line++; 
-			pt_in++; 
-			return; 
-		}
-		pt_in++; 
-	}
-}
-
-ch_string 
-read_text_line(const char*& pt_in, long& line){
-	ch_string the_ln = "";
-	const char* pt_0 = pt_in;
-	bool all_prt = true;
-
-	while(*pt_in != END_OF_SEC){
-		if(*pt_in == '\n'){ 
-			if(all_prt){
-				char* pt_1 = (char*)pt_in;
-				(*pt_1) = '0';
-				the_ln = pt_0;
-				(*pt_1) = '\n';
-			}
-			CONFIG_CK((*pt_in) == '\n');
-
-			line++; 
-			pt_in++; 
-			return the_ln; 
-		}
-		if(! isprint(*pt_in)){
-			all_prt = false;
-		}
-		pt_in++; 
-	}
-	return the_ln;
-}
-
-integer parse_int(const char*& pt_in, long line) {
-	integer	val = 0;
-	bool	neg = false;
-
-	if(*pt_in == '-'){ neg = true; pt_in++; }
-	else if(*pt_in == '+'){ pt_in++; }
-
-	if( ! isdigit(*pt_in)){
-		throw parse_exception(pax_bad_int, (char)(*pt_in), line);
-	}
-	while(isdigit(*pt_in)){
-		val = val*10 + (*pt_in - '0');
-		pt_in++;
-	}
-	return (neg)?(-val):(val);
-}
+#include "dbg_config.h"
 
 void
 config_reader::parse_debug_line(row<long>& dbg_line, ch_string& str_ln){
@@ -244,18 +158,19 @@ void
 dbg_update_config_entries(brain& brn){
 #ifdef FULL_DEBUG
 	
-	row<bool>& dbg_arr = brn.br_dbg.dbg_levs_arr;
+	dbg_inst_info& dbg_info = brn.br_dbg;
+	row<bool>& dbg_arr = dbg_info.dbg_levs_arr;
 	
 	bj_ostream& os = bj_out;
 	MARK_USED(os);
 
 	recoil_counter_t curr_round = brn.recoil();
 
-	long& start_idx = brn.br_dbg.dbg_current_start_entry;
-	long& stop_idx = brn.br_dbg.dbg_current_stop_entry;
+	long& start_idx = dbg_info.dbg_current_start_entry;
+	long& stop_idx = dbg_info.dbg_current_stop_entry;
 
-	row<debug_entry>& start_lst = brn.br_dbg.dbg_start_dbg_entries;
-	row<debug_entry>& stop_lst = brn.br_dbg.dbg_stop_dbg_entries;
+	row<debug_entry>& start_lst = dbg_info.dbg_start_dbg_entries;
+	row<debug_entry>& stop_lst = dbg_info.dbg_stop_dbg_entries;
 
 	while(	(start_idx < start_lst.size()) && 
 		(start_lst[start_idx].dbg_round <= curr_round))

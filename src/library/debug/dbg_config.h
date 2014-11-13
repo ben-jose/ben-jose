@@ -41,17 +41,6 @@ Declaration of functions to read and parse config files.
 class brain;
 
 //=================================================================
-// parser funcs
-
-ch_string parse_err_msg(ch_string hd_msg, long num_line, char ch_err, ch_string msg);
-
-void skip_whitespace(const char*& pt_in, long& line);
-void skip_line(const char*& pt_in, long& line);
-ch_string read_text_line(const char*& pt_in, long& line);
-integer parse_int(const char*& pt_in, long line);
-
-
-//=================================================================
 // debug_entry
 
 class debug_entry {

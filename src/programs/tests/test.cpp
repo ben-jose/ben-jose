@@ -37,7 +37,6 @@ file for test and debugging purposes.
 
 #include "file_tree.h"
 #include "ch_string.h"
-#include "config.h"
 
 #include "brain.h"
 #include "tak_mak.h"
@@ -45,6 +44,8 @@ file for test and debugging purposes.
 #include "file_funcs.h"
 
 #include "top_exception.h"
+
+#include "dbg_config.h"
 
 skeleton_glb 	GSKE;
 tak_mak*	glb_test_tak_mak = NULL_PT;

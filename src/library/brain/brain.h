@@ -39,7 +39,7 @@ Declarations of classes and that implement the neural network.
 #include "ben_jose.h"
 #include "instance_info.h"
 #include "sortor.h"
-#include "config.h"
+#include "dbg_config.h"
 #include "dbg_prt.h"
 
 //=============================================================================
@@ -106,7 +106,8 @@ enum mem_op_t {
 class solver;
 class skeleton_glb;
 class instance_info;
-class dbg_inst_info;
+
+BRAIN_DBG(class dbg_inst_info;)
 
 class ticket;
 class quanton;
@@ -1840,6 +1841,8 @@ class leveldat {
 //=================================================================
 // dbg_inst_info
 
+#ifdef FULL_DEBUG
+
 class dbg_inst_info {
 public:
 	
@@ -1885,6 +1888,8 @@ public:
 	void	init_dbg_inst_info();
 
 };
+
+#endif
 
 //=============================================================================
 // brain

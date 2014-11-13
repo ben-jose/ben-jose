@@ -32,8 +32,9 @@ Functions to read and parse dimacs files.
 
 #include "tools.h"
 #include "dimacs.h"
-#include "config.h"
+#include "parse_funcs.h"
 #include "file_funcs.h"
+#include "dbg_config.h"
 #include "dbg_prt.h"
 
 #define DIMACS_CK(prm) 	DBG_CK(prm)
@@ -51,7 +52,7 @@ const ch_string k_dimacs_header_str =
 bj_ostr_stream& 
 dimacs_loader::dimacs_err_msg(long num_line, char ch_err, ch_string msg){
 	ld_err_msg.clear();
-	ld_err_msg << parse_err_msg("DIMACS ERROR. ", num_line, ch_err, msg);
+	ld_err_msg << get_parse_err_msg("DIMACS ERROR. ", num_line, ch_err, msg);
 	return ld_err_msg;
 }
 
