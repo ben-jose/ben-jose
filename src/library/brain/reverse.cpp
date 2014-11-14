@@ -177,44 +177,31 @@ brain::reverse(){
 	DBG_PRT(14, print_trail(os));
 	DBG_PRT(14, os << "chosen " << br_chosen);
 
-	// FOUND conflict
+	// START REVERSE (init mpp0 and nke0)
 
 	BRAIN_CK(found_conflict());
-	if(found_conflict()){
-		neuron& cfl = *br_conflict_found;
-
-		BRAIN_DBG(br_dbg.dbg_before_retract_lv = level());
-
-		DEDUC_DBG(br_deducer.dbg_find_dct_of(cfl, dct2));
-
-		mpp0.ma_confl = &cfl;
-		mpp0.ma_before_retract_tk.update_ticket(&brn);
-
-		// init nke0 with confl
 	
-		cfl.set_motives(brn, nke0, true);
+	neuron& cfl = *br_conflict_found;
 
-		BRAIN_CK(all_notes0 > 0);
+	BRAIN_DBG(br_dbg.dbg_before_retract_lv = level());
 
-		BRAIN_CK(! mpp0.is_ma_virgin());
+	DEDUC_DBG(br_dbg.dbg_br_deducer.dbg_find_dct_of(cfl, dct2));
 
-		BRAIN_CK(cfl.ne_original);
-		if(! cfl.ne_original){ 
-			mpp0.reset_memap(brn);
-		}
-	} else {
-		br_retract_is_first_lv = false;
+	mpp0.ma_confl = &cfl;
+	mpp0.ma_before_retract_tk.update_ticket(&brn);
+	
+	cfl.set_motives(brn, nke0, true); // init nke0 with confl
 
-		BRAIN_CK(br_conflict_found == NULL_PT);
-		BRAIN_CK(dct.is_dt_virgin());
-		BRAIN_CK(! in_edge_of_target_lv(dct));
-		BRAIN_CK(in_edge_of_level());
-		BRAIN_CK(lv_has_learned());
-		BRAIN_CK(data_level().ld_map0.ma_active);
-		BRAIN_CK(! can_write_reverse_map(dct));
+	BRAIN_CK(all_notes0 > 0);
+
+	BRAIN_CK(! mpp0.is_ma_virgin());
+
+	BRAIN_CK(cfl.ne_original);
+	if(! cfl.ne_original){ 
+		mpp0.reset_memap(brn);
 	}
 
-	// retract loop
+	// REVERSE LOOP
 
 	quanton* chosen_qua = NULL_PT;
 	bool has_in_mem = false;

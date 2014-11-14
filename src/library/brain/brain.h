@@ -185,29 +185,27 @@ bool		ck_motives(brain& brn, row_quanton_t& mots);
 //=================================================================
 // funcs declarations
 
+long	dbg_set_spots_of(brain& brn, row<neuron*>& neus);
+long	dbg_reset_spots_of(brain& brn, row<neuron*>& neus);
+void	dbg_prepare_used_dbg_ccl(row_quanton_t& rr_qua, canon_clause& dbg_ccl);
+void	dbg_print_ccls_neus(bj_ostream& os, row<canon_clause*>& dbg_ccls);
+bool	dbg_run_satex_on(brain& brn, ch_string f_nam);
+
 charge_t 	negate_trinary(charge_t val);
 
-bool		has_neu(row<neuron*>& rr_neus, neuron* neu);
+bool	has_neu(row<neuron*>& rr_neus, neuron* neu);
 
 long	set_dots_of(brain& brn, row_quanton_t& quans);
 long	reset_dots_of(brain& brn, row_quanton_t& quans);
 
-long	set_spots_of(brain& brn, row<neuron*>& neus);
-long	reset_spots_of(brain& brn, row<neuron*>& neus);
-
 void	negate_quantons(row_quanton_t& qua_row);
 void	get_ids_of(row_quanton_t& quans, row_long_t& the_ids);
-void	get_c_arr_ids(row_quanton_t& quans, long& arr_sz, long*& arr_ids);
 void	elim_until_dominated(brain& brn, quanton& qua);
 void	find_max_level(row_quanton_t& tmp_mots, long& max_lev);
-
-void	dbg_prepare_used_dbg_ccl(row_quanton_t& rr_qua, canon_clause& dbg_ccl);
-void	dbg_print_ccls_neus(bj_ostream& os, row<canon_clause*>& dbg_ccls);
 
 void	split_tees(sort_glb& srg, row<sortee*>& sorted_tees, row<sortee*>& sub_tees, 
 			row<canon_clause*>& ccls_in, row<canon_clause*>& ccls_not_in);
 
-bool	dbg_run_satex_on(brain& brn, ch_string f_nam);
 
 
 //=============================================================================
@@ -683,8 +681,6 @@ class neuron {
 
 	bool			ne_is_conflict;		// to push conflcts only once into conflct queue
 
-	bool			ne_used_no_orig;
-
 	sortee			ne_tee;
 	sortrel			ne_reltee;
 
@@ -697,6 +693,7 @@ class neuron {
 	bool			ne_spot;
 
 	DBG(
+		bool			ne_dbg_used_no_orig;
 		canon_clause	ne_dbg_ccl;
 		bool			ne_dbg_in_used;
 		ticket			ne_dbg_filled_tk;	// all filled updated a filled time
@@ -741,8 +738,6 @@ class neuron {
 
 		ne_is_conflict = false;
 
-		ne_used_no_orig = false;
-
 		ne_tee.init_sortee(true);
 		ne_reltee.init_sortrel(true);
 
@@ -760,6 +755,7 @@ class neuron {
 		ne_spot = false;
 
 		DBG(
+			ne_dbg_used_no_orig = false;
 			ne_dbg_ccl.cc_me = this;
 			ne_dbg_in_used = false;
 			ne_dbg_filled_tk.init_ticket();
@@ -775,7 +771,7 @@ class neuron {
 		bool c5 = (ne_edge == INVALID_IDX);
 		bool c6 = (! ne_edge_tk.is_valid());
 		bool c7 = (ne_is_conflict == false);
-		bool c8 = (ne_used_no_orig == false);
+		bool c8 = true; BRAIN_DBG(c8 = (ne_dbg_used_no_orig == false);)
 		bool c9 = (ne_curr_map == NULL_PT);
 		bool c10 = (! ne_recoil_tk.is_valid());
 
@@ -1426,7 +1422,6 @@ class notekeeper {
 	notekeeper(brain* brn = NULL_PT, long tg_lv = INVALID_LEVEL)
 	{
 		init_notekeeper(brn, tg_lv);
-
 	}
 
 	~notekeeper(){
@@ -1845,6 +1840,7 @@ class leveldat {
 
 class dbg_inst_info {
 public:
+	deducer		dbg_br_deducer;
 	
 	long	dbg_before_retract_lv;
 	long	dbg_last_recoil_lv;
@@ -1962,7 +1958,6 @@ public:
 	long			br_last_psignal;
 	row<prop_signal>	br_psignals;	// forward propagated signals
 	row<prop_signal>	br_delayed_psignals;
-	notekeeper		br_noteke;
 
 	row_quanton_t		br_semi_monos;
 
@@ -1987,8 +1982,6 @@ public:
 	neuron* 		br_conflict_found;
 
 	row<memap*>		br_maps_active;
-
-	deducer			br_deducer;
 
 	sort_glb 		br_forced_srg;
 	sort_glb 		br_filled_srg;
@@ -2347,9 +2340,9 @@ public:
 
 	bj_ostream& 	print_all_quantons(bj_ostream& os, long ln_sz, ch_string ln_fd);
 
-	bool	brn_compute_binary(row<neuron*>& neus);
-	bool	brn_compute_dots(row<neuron*>& neus);
-	bool	brn_compute_dots_of(row<neuron*>& neus, row_quanton_t& assig);
+	bool	brn_dbg_compute_binary(row<neuron*>& neus);
+	bool	brn_dbg_compute_dots(row<neuron*>& neus);
+	bool	brn_dbg_compute_dots_of(row<neuron*>& neus, row_quanton_t& assig);
 
 	void		read_cnf(dimacs_loader& ldr);
 	void		parse_cnf(dimacs_loader& ldr, row<long>& all_ccls);
@@ -2374,7 +2367,7 @@ public:
 	//void		fill_with_positons(row_quanton_t& quas);
 
 	void		check_timeout();
-	void		check_sat_assig();
+	void		dbg_check_sat_assig();
 
 	void		set_result(bj_satisf_val_t re);
 	bj_satisf_val_t	get_result();
@@ -2424,20 +2417,22 @@ void
 quanton::set_source(brain& brn, neuron* neu){
 	BRAIN_CK((qu_source == NULL_PT) || (qu_inverse->qu_source == NULL_PT));
 	BRAIN_CK((qu_inverse->qu_source == NULL_PT) || (neu == NULL_PT));
-	BRAIN_CK((neu == NULL_PT) || neu->ne_original || ! neu->ne_used_no_orig);
+	BRAIN_CK((neu == NULL_PT) || neu->ne_original || ! neu->ne_dbg_used_no_orig);
 
-	if((neu != NULL_PT) && ! neu->ne_original){
-		BRAIN_CK(neu->ne_used_no_orig == false);
-		neu->ne_used_no_orig = true;
-	}
+	BRAIN_DBG(
+		if((neu != NULL_PT) && ! neu->ne_original){
+			BRAIN_CK(neu->ne_dbg_used_no_orig == false);
+			neu->ne_dbg_used_no_orig = true;
+		}
 
-	if(! has_charge()){
-		BRAIN_CK(neu == NULL_PT);
-		BRAIN_CK(qu_inverse->qu_source == NULL_PT);
-		if((qu_source != NULL_PT) && ! qu_source->ne_original){
-			qu_source->ne_used_no_orig = false;
-		}		
-	}
+		if(! has_charge()){
+			BRAIN_CK(neu == NULL_PT);
+			BRAIN_CK(qu_inverse->qu_source == NULL_PT);
+			if((qu_source != NULL_PT) && ! qu_source->ne_original){
+				qu_source->ne_dbg_used_no_orig = false;
+			}		
+		}
+	)
 	
 	qu_source = neu;
 	if(neu == NULL_PT){ 
