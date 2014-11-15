@@ -38,8 +38,8 @@ funcs that implement reverse func.
 
 bool
 memap::map_find(brain& brn){
-	return false;
-	//return map_oper(mo_find, brn);
+	//return false;
+	return map_oper(mo_find, brn);
 }
 
 bool

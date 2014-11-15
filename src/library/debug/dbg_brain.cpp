@@ -30,6 +30,7 @@ dbg_brain funcs.
 
 --------------------------------------------------------------*/
 
+#include "file_funcs.h"
 #include "brain.h"
 #include "dbg_run_satex.h"
 
@@ -503,7 +504,7 @@ memap::map_ck_simple_no_satisf(mem_op_t mm, brain& brn){
 	//DBG_PRT(106, os << "tot_ccls=" << dbg_cnf.cf_dims.dd_tot_ccls);
 
 	ch_string dbg_cnf_nm = skg.kg_root_path + "/DBG_CNF_CK_SAVE.yos";
-	canon_save(dbg_cnf_nm, dbg_cnf.cf_chars, false);
+	write_file(dbg_cnf_nm, dbg_cnf.cf_chars, false);
 
 	BRAIN_CK(dbg_cnf.cf_dims.dd_tot_ccls == dbg_cnf.cf_clauses.size());
 
@@ -589,7 +590,7 @@ memap::dbg_ck_used_simple_no_satisf(mem_op_t mm, brain& brn){
 					  INVALID_NATURAL, false);
 
 	ch_string dbg_cnf_nm = skg.kg_root_path + "/DBG_CNF_CK_USED.yos";
-	canon_save(dbg_cnf_nm, dbg_cnf.cf_chars, false);
+	write_file(dbg_cnf_nm, dbg_cnf.cf_chars, false);
 
 	DBG_CHECK_SAVED(dbg_run_satex_on(brn, dbg_cnf_nm));
 

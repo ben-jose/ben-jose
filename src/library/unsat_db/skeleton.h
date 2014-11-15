@@ -34,8 +34,9 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 #ifndef SKELETON_H
 #define SKELETON_H
 
+#include <set>
+
 #include "bj_stream.h"
-#include "mem_redblack.h"
 #include "tools.h"
 #include "dimacs.h"
 #include "sha2.h"
@@ -86,9 +87,8 @@ class skeleton_glb;
 //=================================================================
 // type declarations
 
-//typedef std::set<ch_string> 	string_set_t;
-typedef mem_redblack<ch_string>						string_set_t;
-typedef mem_redblack<ch_string>::rbt_nod_ref_t 		string_set_nd_ref_t;
+typedef std::set<ch_string> 	string_set_t;
+//typedef mem_redblack<ch_string>						string_set_t;
 
 //=================================================================
 // skeleton defines
@@ -547,6 +547,7 @@ public:
 		return ref_pth;
 	}
 
+	bool	save_canon_cnf(ch_string& the_pth, row<char>& cnn, bool write_once = true);
 	bool	save_cnf(skeleton_glb& skg, ch_string pth);
 	void	update_parent_variants(skeleton_glb& skg, ch_string sv_dir);
 
@@ -606,6 +607,7 @@ public:
 	bool			kg_keep_skeleton;
 	bool			kg_find_cnn_pth;
 
+	string_set_t	kg_cnf_new_paths;
 	string_set_t	kg_cnf_paths_found;
 
 	ch_string		kg_root_path;
@@ -630,8 +632,8 @@ public:
 	row<variant> 		kg_tmp_all_nxt_vnts;
 	row<ch_string> 	kg_tmp_all_del_paths;
 
-	//skeleton_glb() {
-	skeleton_glb() : kg_cnf_paths_found(cmp_string) {
+	//skeleton_glb() : kg_cnf_paths_found(cmp_string) {
+	skeleton_glb() {
 		init_skeleton_glb();
 	}
 
@@ -707,6 +709,37 @@ public:
 	bj_ostream&	print_paths(bj_ostream& os);
 };
 
+
+//=================================================================
+// strset_funcs
+
+inline
+void strset_clear(string_set_t ss){
+	//ss.clear_redblack();
+	ss.clear();
+}
+
+inline
+bool strset_is_empty(string_set_t ss){
+	//bool ee = ss.is_empty();
+	bool ee = ss.empty();
+	return ee;
+}
+
+inline
+bool strset_find_path(string_set_t ss, ch_string pth){
+	//bool ff = ss.search(pth);
+	bool ff = (ss.find(pth) != ss.end());
+	return ff;
+}
+
+inline
+void strset_add_path(string_set_t ss, ch_string pth){
+	if(pth.empty()){ return; }
+	if(pth == ""){ return; }
+	//ss.push(pth);
+	ss.insert(pth);
+}
 
 //=================================================================
 // printing operators

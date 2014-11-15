@@ -2351,10 +2351,11 @@ brain::solve_instance(){
 	}
 	
 	recoil_counter_t num_laps = recoil();
-	if(num_laps < ULONG_MAX){
-		o_info.bjo_num_laps = num_laps.get_ui();
+	recoil_counter_t max_laps = DBL_MAX;
+	if(num_laps < max_laps){
+		o_info.bjo_num_laps = num_laps.get_d();
 	} else {
-		o_info.bjo_num_laps = ULONG_MAX;
+		o_info.bjo_num_laps = DBL_MAX;
 	}
 	return o_info.bjo_result;
 }
