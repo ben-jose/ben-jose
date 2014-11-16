@@ -2136,10 +2136,6 @@ public:
 		return s_time;
 	}
 
-
-
-
-
 	double	period_time(double current_secs = 0.0){
 		if(current_secs == 0.0){
 			current_secs = run_time();

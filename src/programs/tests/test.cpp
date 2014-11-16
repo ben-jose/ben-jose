@@ -1091,9 +1091,9 @@ test_skl(){
 
 	os << "3. LOADING TEST ..."  << bj_eol;
 
-	bool fnd1 = GSKE.find_path(GSKE.as_full_path(rr_pth + "/test_ref1/"));
-	bool fnd2 = GSKE.find_path(GSKE.as_full_path(rr_pth + "/test_ref2/"));
-	bool fnd3 = GSKE.find_path(GSKE.as_full_path(rr_pth + "/test_ref3/"));
+	bool fnd1 = GSKE.find_skl_path(GSKE.as_full_path(rr_pth + "/test_ref1/"));
+	bool fnd2 = GSKE.find_skl_path(GSKE.as_full_path(rr_pth + "/test_ref2/"));
+	bool fnd3 = GSKE.find_skl_path(GSKE.as_full_path(rr_pth + "/test_ref3/"));
 
 	MARK_USED(fnd1);
 	MARK_USED(fnd2);

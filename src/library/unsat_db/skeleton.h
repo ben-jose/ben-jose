@@ -41,6 +41,7 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 #include "dimacs.h"
 #include "sha2.h"
 #include "print_macros.h"
+#include "ben_jose.h"
 #include "dbg_prt.h"
 
 enum charge_t {
@@ -85,10 +86,46 @@ class skeleton_glb;
 
 
 //=================================================================
-// type declarations
+// strset
 
 typedef std::set<ch_string> 	string_set_t;
 //typedef mem_redblack<ch_string>						string_set_t;
+
+
+inline
+void strset_clear(string_set_t ss){
+	//ss.clear_redblack();
+	ss.clear();
+}
+
+inline
+bool strset_is_empty(string_set_t ss){
+	//bool ee = ss.is_empty();
+	bool ee = ss.empty();
+	return ee;
+}
+
+inline
+long strset_size(string_set_t ss){
+	//long nn = ss.size();
+	long nn = ss.size();
+	return nn;
+}
+
+inline
+bool strset_find_path(string_set_t ss, ch_string pth){
+	//bool ff = ss.search(pth);
+	bool ff = (ss.find(pth) != ss.end());
+	return ff;
+}
+
+inline
+void strset_add_path(string_set_t ss, ch_string pth){
+	if(pth.empty()){ return; }
+	if(pth == ""){ return; }
+	//ss.push(pth);
+	ss.insert(pth);
+}
 
 //=================================================================
 // skeleton defines
@@ -416,6 +453,8 @@ public:
 
 	ref_strs		cf_phdat;
 	row_str_t		cf_dbg_shas;
+	
+	bj_output_t* 	cf_out_info;
 
 	canon_cnf(){
 		init_canon_cnf();
@@ -457,6 +496,8 @@ public:
 
 		cf_phdat.init_ref_strs();
 		cf_dbg_shas.clear(free_mem, free_mem);
+		
+		cf_out_info = NULL_PT;
 	}
 
 	void	init_with(skeleton_glb& skg, row<canon_clause*>& all_ccls, 
@@ -506,7 +547,7 @@ public:
 	ch_string	get_id_str();
 	void		get_extreme_lits(row<long>& lits);
 
-	ch_string	get_num_variants_name();
+	ch_string	get_num_variants_file_name(skeleton_glb& skg);
 
 	void	release_all_clauses(skeleton_glb& skg, bool free_mem = false);
 
@@ -529,7 +570,7 @@ public:
 	void		set_num_variants(skeleton_glb& skg, bj_big_int_t num_vnts);
 
 	bool	all_nxt_vnt(skeleton_glb& skg, row<variant>& all_next, row<ch_string>& all_del);
-	long	first_vnt_i_super_of(skeleton_glb& skg);
+	long	first_vnt_i_super_of(skeleton_glb& skg, bj_output_t* o_info = NULL);
 	bool	ck_vnts(skeleton_glb& skg);
 
 	ch_string	get_cnf_path(){
@@ -671,7 +712,7 @@ public:
 	void	init_paths();
 	void	report_err(ch_string pth, ch_string err_pth);
 
-	bool	find_path(ch_string the_pth, void* out_info = NULL);
+	bool	find_skl_path(ch_string the_pth, bj_output_t* o_info = NULL);
 
 	bool	in_skl(ch_string a_dir){
 		ch_string skl_pth = as_full_path(SKG_SKELETON_DIR);
@@ -688,7 +729,7 @@ public:
 
 	bool	ref_find(ch_string a_ref){
 		ch_string f_pth = as_full_path(a_ref);
-		return find_path(f_pth);
+		return find_skl_path(f_pth);
 	}
 
 	bool	ref_touch(ch_string a_ref);
@@ -702,6 +743,10 @@ public:
 	ch_string	ref_read(ch_string nam_ref);
 
 	ch_string	ref_vnt_name(ch_string vpth, ch_string sub_nm);
+	
+	long num_new_paths(){
+		return strset_size(kg_cnf_new_paths);
+	}
 
 	int		get_write_lock(ch_string lk_dir);
 	void	drop_write_lock(ch_string lk_dir, int fd_lock);
@@ -709,37 +754,6 @@ public:
 	bj_ostream&	print_paths(bj_ostream& os);
 };
 
-
-//=================================================================
-// strset_funcs
-
-inline
-void strset_clear(string_set_t ss){
-	//ss.clear_redblack();
-	ss.clear();
-}
-
-inline
-bool strset_is_empty(string_set_t ss){
-	//bool ee = ss.is_empty();
-	bool ee = ss.empty();
-	return ee;
-}
-
-inline
-bool strset_find_path(string_set_t ss, ch_string pth){
-	//bool ff = ss.search(pth);
-	bool ff = (ss.find(pth) != ss.end());
-	return ff;
-}
-
-inline
-void strset_add_path(string_set_t ss, ch_string pth){
-	if(pth.empty()){ return; }
-	if(pth == ""){ return; }
-	//ss.push(pth);
-	ss.insert(pth);
-}
 
 //=================================================================
 // printing operators

@@ -82,12 +82,12 @@ typedef struct {
 	
 	double		bjo_num_laps;
 	
-	double		bjo_load_tm;
+	double		bjo_load_time;
 	double		bjo_saved_targets;
-	double		bjo_old_hits;
-	double		bjo_old_sub_hits;
-	double		bjo_new_hits;
-	double		bjo_new_sub_hits;
+	double		bjo_quick_discards;
+	double		bjo_old_pth_hits;
+	double		bjo_new_pth_hits;
+	double		bjo_sub_cnf_hits;
 	
 	bj_error_t  bjo_error;
 	char		bjo_err_char;

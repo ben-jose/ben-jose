@@ -184,17 +184,16 @@ public:
 	integer			batch_num_memout;
 	integer			batch_num_error;
 
-	avg_stat		batch_stat_choices;
 	avg_stat		batch_stat_laps;
 	avg_stat		batch_stat_load_tm;
 	avg_stat		batch_stat_solve_tm;
 	avg_stat		batch_stat_mem_used;
 
-	avg_stat		batch_stat_direct_hits;
-	avg_stat		batch_stat_equ_hits;
-	avg_stat		batch_stat_sub_hits;
+	avg_stat		batch_stat_old_pth_hits;
+	avg_stat		batch_stat_new_pth_hits;
+	avg_stat		batch_stat_sub_cnf_hits;
+	
 	avg_stat		batch_stat_saved_targets;
-	avg_stat		batch_stat_conflicts;
 
 	double			batch_start_time;
 	double			batch_end_time;

@@ -156,17 +156,16 @@ batch_solver::init_batch_solver(){
 	batch_num_memout = 0;
 	batch_num_error = 0;
 
-	batch_stat_choices.vs_nam = "CHOICES";
 	batch_stat_laps.vs_nam = "LAPS";
 	batch_stat_load_tm.vs_nam = "LOAD SEGs";
 	batch_stat_solve_tm.vs_nam = "SOLVE SEGs";
 	batch_stat_mem_used.vs_nam = "BYTES USED";
 
-	batch_stat_direct_hits.vs_nam = "DIRECT HITS";
-	batch_stat_equ_hits.vs_nam = "EQU HITS";
-	batch_stat_sub_hits.vs_nam = "SUB HITS";
+	batch_stat_old_pth_hits.vs_nam = "OLD_PATH_HITS";
+	batch_stat_new_pth_hits.vs_nam = "NEW_PATH_HITS";
+	batch_stat_sub_cnf_hits.vs_nam = "SUB_CNF_HITS";
+	
 	batch_stat_saved_targets.vs_nam = "SAVED";
-	batch_stat_conflicts.vs_nam = "CNFLS";
 
 	batch_start_time = 0.0;
 	batch_end_time = 0.0;
@@ -228,17 +227,16 @@ batch_solver::print_final_totals(bj_ostream& os){
 	//os << bj_fixed;
 	//os.precision(2);
 
-	os << batch_stat_choices;
 	os << batch_stat_laps;
 	os << batch_stat_load_tm;
 	os << batch_stat_solve_tm;
 	os << batch_stat_mem_used;
 
-	os << batch_stat_direct_hits;
-	os << batch_stat_equ_hits;
-	os << batch_stat_sub_hits;
+	os << batch_stat_old_pth_hits;
+	os << batch_stat_new_pth_hits;
+	os << batch_stat_sub_cnf_hits;
+	
 	os << batch_stat_saved_targets;
-	os << batch_stat_conflicts;
 
 	double tot_tm = batch_end_time - batch_start_time;
 	os << "TOTAL TIME = " << tot_tm << bj_eol;
@@ -298,21 +296,18 @@ batch_solver::print_final_assig(){
 
 void
 batch_solver::count_instance(batch_entry& inst_info){
-	double end_time = run_time();
-	double full_tm = end_time - inst_info.be_out.bjo_solve_time;
+	bj_output_t& o_info = inst_info.be_out;
+	
+	batch_stat_laps.add_val(o_info.bjo_num_laps);
+	batch_stat_load_tm.add_val(o_info.bjo_load_time);
+	batch_stat_solve_tm.add_val(o_info.bjo_solve_time);
 
-	batch_stat_laps.add_val(inst_info.be_out.bjo_num_laps);
-	batch_stat_solve_tm.add_val(full_tm);
-
-	/*
-	batch_avg_solve_time.add_val(full_tm);
-	batch_total_solve_time += full_tm;
-
-	if(full_tm > batch_max_solve_time){
-		batch_max_solve_time = full_tm;
-	}
-	*/
-
+	batch_stat_old_pth_hits.add_val(o_info.bjo_old_pth_hits);
+	batch_stat_new_pth_hits.add_val(o_info.bjo_new_pth_hits);
+	batch_stat_sub_cnf_hits.add_val(o_info.bjo_sub_cnf_hits);
+	
+	batch_stat_saved_targets.add_val(o_info.bjo_saved_targets);
+	
 	MEM_CTRL(
 		if(using_mem_ctrl){
 			long tot_byt = mem_get_num_by_available();
@@ -327,9 +322,7 @@ batch_solver::count_instance(batch_entry& inst_info){
 
 	PRT_OUT_1( os << "FINISHING" << bj_eol);
 
-	inst_info.be_out.bjo_solve_time = full_tm;
-
-	bj_satisf_val_t inst_res = inst_info.be_out.bjo_result;
+	bj_satisf_val_t inst_res = o_info.bjo_result;
 
 	if(inst_res == bjr_unknown_satisf){
 		batch_num_unknown_satisf++;
@@ -339,10 +332,10 @@ batch_solver::count_instance(batch_entry& inst_info){
 	} else if(inst_res == bjr_no_satisf){
 		batch_num_no_satisf++;
 	} else if(inst_res == bjr_error){
-		if(inst_info.be_out.bjo_error == bje_memout){
+		if(o_info.bjo_error == bje_memout){
 			batch_num_memout++;
 		} else
-		if(inst_info.be_out.bjo_error == bje_timeout){
+		if(o_info.bjo_error == bje_timeout){
 			batch_num_timeout++;
 		} else {
 			batch_num_error++;
@@ -383,8 +376,6 @@ batch_solver::print_stats(bj_ostream& os, double current_secs){
 	os << bj_eol;
 	os << "file_name: '" << f_nam << "'" << bj_eol;
 	
-	//DBG( dbg_print_cond_func(NULL, true, false, "NO_NAME", 0, "true", INVALID_DBG_LV) );
-
 	print_totals(os, current_secs);
 	os << bj_eol << bj_eol;
 
@@ -779,10 +770,7 @@ int	solver_main(int argc, char** argv){
 	
 	MEM_CTRL(BATCH_CK(mem_in_u == mem_get_num_by_in_use()));
 
-	double end_tm = 0.0;
-	MARK_USED(end_tm);
 	if(args_ok){
-		//end_tm = run_time();
 		PRT_OUT_0( 
 			top_dat.print_totals(os);
 			top_dat.print_final_totals(os);

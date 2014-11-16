@@ -1914,6 +1914,7 @@ public:
 	timer			br_prt_timer;
 
 	double 			br_start_load_tm;
+	double 			br_start_solve_tm;
 
 	// temporal attributes
 	row_quanton_t		br_tmp_fixing_quantons;

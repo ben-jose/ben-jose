@@ -1238,8 +1238,6 @@ coloring::get_initial_sorting_coloring(brain& brn, coloring& ini_clr, bool fill_
 
 bool
 memap::map_prepare_mem_oper(mem_op_t mm, brain& brn){
-	bj_output_t& o_info = brn.get_out_info();
-	
 	DBG_PRT(110, os << "map_mem_oper=" << ((void*)this));
 	BRAIN_CK(ck_map_guides(dbg_call_1));
 	DBG_PRT(110, os << "map_mem_oper=" << this);
@@ -1250,8 +1248,6 @@ memap::map_prepare_mem_oper(mem_op_t mm, brain& brn){
 	if(mm == mo_find){
 		op_szs_idx = get_find_idx();
 	}
-
-	bool do_quick_finds = (mm == mo_find);
 
 	// calc anchor
 
@@ -1303,24 +1299,24 @@ memap::map_prepare_mem_oper(mem_op_t mm, brain& brn){
 	canon_cnf& cnf1 = neus_srg.stab_mutual_get_cnf(skg, PHASE_1_COMMENT, false);
 
 	BRAIN_CK(! cnf1.cf_phdat.has_ref());
-	/*ch_string sv_guide_pth1 = cnf1.get_ref_path() + SKG_GUIDE_NAME;
-	cnf1.save_cnf(skg, sv_guide_pth1);*/
 
-	ref_strs phd;
+	ref_strs phtd;
 	row_str_t dbg_shas;
 
-	phd.pd_ref1_nam = cnf1.get_ref_path();	// stab guide 
-	phd.pd_ref2_nam = cnf1.get_lck_path();
+	phtd.pd_ref1_nam = cnf1.get_ref_path();	// stab guide 
+	phtd.pd_ref2_nam = cnf1.get_lck_path();
 	
 	dbg_shas.push(cnf1.cf_sha_str + "\n");
 
-	if(do_quick_finds){
-		ch_string find_ref = phd.pd_ref1_nam;
+	if(mm == mo_find){
+		bj_output_t& o_info = brn.get_out_info();
+		
+		ch_string find_ref = phtd.pd_ref1_nam;
 		ch_string pth1 = skg.as_full_path(find_ref);
-		bool found1 = skg.find_path(pth1, &(o_info));
-		if(! found1){ return false; }
-		else { 
-			o_info.bjo_old_hits++;
+		bool found1 = skg.find_skl_path(pth1, &o_info);
+		if(! found1){ 
+			o_info.bjo_quick_discards++;
+			return false; 
 		}
 	}
 
@@ -1360,26 +1356,6 @@ memap::map_prepare_mem_oper(mem_op_t mm, brain& brn){
 
 	canon_cnf& tauto_cnf = fnl_ne_srg.stab_mutual_get_cnf(skg, FINAL_COMMENT, true);
 
-	/*
-	DBG_PRT_COND(115, (brn.br_dbg.dbg_canon_save_id == 21), 
-		sort_glb& dbg_ne_srg1 = brn.br_tauto_neus_srg;
-		sort_glb& dbg_qu_srg1 = brn.br_tauto_quas_srg;
-		os << " QUAS_STEP_SORTEES (after step)=" << bj_eol;
-		for(long aa = 0; aa < dbg_qu_srg1.sg_step_sortees.size(); aa++){
-			os << *(dbg_qu_srg1.sg_step_sortees[aa]) << bj_eol;
-		}
-		os << " NEUS_STEP_SORTEES (after step)=" << bj_eol;
-		for(long aa = 0; aa < dbg_ne_srg1.sg_step_sortees.size(); aa++){
-			os << *(dbg_ne_srg1.sg_step_sortees[aa]) << bj_eol;
-		}
-		os << " tauto=" << bj_eol << tauto_cnf << bj_eol 
-		<< "<<<< sha=" << bj_eol << tauto_cnf.cf_sha_str << " sv_id" 
-		<< brn.br_dbg.dbg_canon_save_id << bj_eol;
-		os << "phd=" << phd << bj_eol << " dbg_shas=" << dbg_shas << bj_eol;
-		dbg_prt_diff_tauto_vs_simple_neus(os, brn);
-	);
-	*/
-
 	dbg_shas.push(tauto_cnf.cf_sha_str + "\n");
 
 	row<sortee*>& tauto_tees = brn.br_tmp_wrt_tauto_tees;
@@ -1406,8 +1382,7 @@ memap::map_prepare_mem_oper(mem_op_t mm, brain& brn){
 	tmp_diff_cnf.init_with(skg, tmp_diff_ccls);
 	tmp_guide_cnf.init_with(skg, tmp_guide_ccls);
 
-	//tmp_tauto_cnf.cf_phdat = phd;
-	tmp_diff_cnf.cf_phdat = phd;
+	tmp_diff_cnf.cf_phdat = phtd;
 	dbg_shas.move_to(tmp_diff_cnf.cf_dbg_shas);
 
 	BRAIN_CK(tmp_tauto_ccls.is_empty());
@@ -1430,9 +1405,6 @@ memap::map_prepare_mem_oper(mem_op_t mm, brain& brn){
 		os << "DIFF=" << bj_eol;
 		ccls_diff_cnf.print_row_data(os, true, "\n");
 	);
-
-	//DBG_PRT_COND(76, (mm == mo_save), os << 
-	//		"prepare_oper diff phd " << tmp_diff_cnf.cf_phdat);
 
 	DBG(
 		bool are_eq = false;
@@ -1460,8 +1432,6 @@ memap::map_prepare_mem_oper(mem_op_t mm, brain& brn){
 
 bool
 memap::map_oper(mem_op_t mm, brain& brn){
-	bj_output_t& o_info = brn.get_out_info();
-
 	brn.init_mem_tmps();
 
 	bool prep_ok = map_prepare_mem_oper(mm, brn);
@@ -1484,13 +1454,8 @@ memap::map_oper(mem_op_t mm, brain& brn){
 	BRAIN_CK(tmp_diff_cnf.has_phase_path());
 	BRAIN_CK(! tmp_guide_cnf.has_phase_path());
 
-	ref_strs& phd = tmp_diff_cnf.cf_phdat;
-
-	//DBG_PRT_COND(76, (mm == mo_save), os << 
-	//		"mem_oper diff_cnf phd " << tmp_diff_cnf.cf_phdat);
-	//DBG_PRT_COND(76, (mm == mo_save), os << 
-	//		"mem_oper tauto_cnf phd " << tmp_tauto_cnf.cf_phdat);
-
+	bj_output_t& o_info = brn.get_out_info();
+	
 	bool oper_ok = false;
 	if(mm == mo_find){
 
@@ -1521,8 +1486,8 @@ memap::map_oper(mem_op_t mm, brain& brn){
 				<< "fst_vpth='" << fst_vpth << "'" << bj_eol
 				<< "find_id= " << brn.br_dbg.dbg_canon_find_id);
 			DBG_COMMAND(115, getchar());
-
-			o_info.bjo_old_sub_hits++;
+			
+			o_info.bjo_sub_cnf_hits++;
 
 			row<neuron*>& all_tmp_found = brn.br_tmp_found_neus;
 			all_tmp_found.clear();
@@ -1536,6 +1501,8 @@ memap::map_oper(mem_op_t mm, brain& brn){
 			}			
 		}
 	} else {
+		ref_strs& phd = tmp_diff_cnf.cf_phdat;
+		
 		BRAIN_CK(mm == mo_save);
 		BRAIN_CK(! skg.kg_save_canon || phd.has_ref());
 
@@ -1551,6 +1518,8 @@ memap::map_oper(mem_op_t mm, brain& brn){
 			oper_ok = tmp_diff_cnf.save_cnf(skg, sv_pth2);
 			tmp_guide_cnf.save_cnf(skg, sv_pth3);
 
+			o_info.bjo_saved_targets++;
+			
 			//BRAIN_CK(! oper_ok || srg_forced.base_path_exists(skg));
 			
 			skg.drop_write_lock(lk_dir, fd_lk);
@@ -1558,8 +1527,8 @@ memap::map_oper(mem_op_t mm, brain& brn){
 			ch_string pth1 = phd.pd_ref1_nam;
 			ch_string pth2 = phd.pd_ref2_nam;
 
-			BRAIN_CK((pth1 == "") || skg.find_path(skg.as_full_path(pth1)));
-			BRAIN_CK((pth2 == "") || skg.find_path(skg.as_full_path(pth2)));
+			BRAIN_CK((pth1 == "") || skg.find_skl_path(skg.as_full_path(pth1)));
+			BRAIN_CK((pth2 == "") || skg.find_skl_path(skg.as_full_path(pth2)));
 
 			DBG_CHECK_SAVED(
 				if(oper_ok){

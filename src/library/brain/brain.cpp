@@ -1139,9 +1139,8 @@ brain::load_brain(long num_neu, long num_var, row_long_t& load_ccls){
 	init_uncharged();
 
 	double end_load_tm = run_time();
-	double ld_tm = (end_load_tm - br_start_load_tm);
-	
-	get_out_info().bjo_load_tm = ld_tm;
+	double ld_tm = (end_load_tm - br_start_load_tm);	
+	get_out_info().bjo_load_time = ld_tm;
 
 	ch_string f_nam = inst_info.get_f_nam();
 	return true;
@@ -1185,7 +1184,7 @@ brain::aux_solve_instance(){
 		} 
 	)
 
-	o_info.bjo_solve_time = run_time();
+	br_start_solve_tm = run_time();
 
 	ch_string f_nam = inst_info.get_f_nam();
 
@@ -1197,8 +1196,6 @@ brain::aux_solve_instance(){
 		pulsate();
 	}
 
-	o_info.bjo_saved_targets = br_num_memo;
-	
 	br_tmp_assig_quantons.clear();
 
 	if(inst_info.ist_with_assig){
@@ -2351,12 +2348,12 @@ brain::solve_instance(){
 	}
 	
 	recoil_counter_t num_laps = recoil();
-	recoil_counter_t max_laps = DBL_MAX;
-	if(num_laps < max_laps){
-		o_info.bjo_num_laps = num_laps.get_d();
-	} else {
-		o_info.bjo_num_laps = DBL_MAX;
-	}
+	o_info.bjo_num_laps = num_laps.get_d();
+
+	double end_solve_tm = run_time();
+	double slv_tm = (end_solve_tm - br_start_solve_tm);	
+	o_info.bjo_solve_time = slv_tm;
+
 	return o_info.bjo_result;
 }
 

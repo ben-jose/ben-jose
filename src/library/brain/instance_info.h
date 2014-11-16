@@ -152,12 +152,12 @@ public:
 		
 		out.bjo_num_laps = 0.0;
 		
-		out.bjo_load_tm = 0.0;
+		out.bjo_load_time = 0.0;
 		out.bjo_saved_targets = 0.0;
-		out.bjo_old_hits = 0.0;
-		out.bjo_old_sub_hits = 0.0;
-		out.bjo_new_hits = 0.0;
-		out.bjo_new_sub_hits = 0.0;
+		out.bjo_quick_discards = 0.0;
+		out.bjo_old_pth_hits = 0.0;
+		out.bjo_new_pth_hits = 0.0;
+		out.bjo_sub_cnf_hits = 0.0;
 		
 		out.bjo_error = bje_no_error;
 		out.bjo_err_char = 0;

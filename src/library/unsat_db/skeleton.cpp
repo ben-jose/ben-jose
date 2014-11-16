@@ -1071,9 +1071,10 @@ canon_cnf::get_variant_dir_name(long num_vnt){
 }
 
 ch_string
-canon_cnf::get_num_variants_name(){
+canon_cnf::get_num_variants_file_name(skeleton_glb& skg){
 	ch_string num_vnt_name = get_all_variant_dir_name() + SKG_NUM_VNT_NAME;
-	return num_vnt_name;
+	ch_string num_vnt_f_nm = skg.as_full_path(num_vnt_name);
+	return num_vnt_f_nm;
 }
 
 bj_ostream&
@@ -1467,7 +1468,7 @@ canon_cnf::i_sub_of_vnt(skeleton_glb& skg, ch_string& vpth, bool& are_eq){
 }
 
 bool
-skeleton_glb::find_path(ch_string pth_to_find, void* o_info){
+skeleton_glb::find_skl_path(ch_string pth_to_find, bj_output_t* o_info){
 	if(! kg_find_cnn_pth){
 		DBG_PRT(109, os << "NOT finding 1 pth=" << pth_to_find);
 		return false;
@@ -1503,13 +1504,12 @@ skeleton_glb::find_path(ch_string pth_to_find, void* o_info){
 		strset_add_path(all_found, pth_to_find);
 	}
 
-	bj_output_t* out_info = (bj_output_t*)o_info;
-	if(found_it && (out_info != NULL)){
+	if(found_it && (o_info != NULL)){
 		bool is_nw = strset_find_path(kg_cnf_new_paths, pth_to_find);
 		if(is_nw){
-			out_info->bjo_new_hits++;
+			o_info->bjo_new_pth_hits++;
 		} else {
-			out_info->bjo_old_hits++;
+			o_info->bjo_old_pth_hits++;
 		}
 	}
 	
@@ -1518,7 +1518,7 @@ skeleton_glb::find_path(ch_string pth_to_find, void* o_info){
 
 bj_big_int_t
 canon_cnf::get_num_variants(skeleton_glb& skg){
-	ch_string f_nm = skg.as_full_path(get_num_variants_name());
+	ch_string f_nm = get_num_variants_file_name(skg);
 	ch_string num_str1 = get_fstr(f_nm);
 	bj_big_int_t num_vnts;
 	num_vnts = num_str1;
@@ -1539,7 +1539,7 @@ canon_cnf::set_num_variants(skeleton_glb& skg, bj_big_int_t num_vnts){
 	if(num_vnts > SKG_MAX_NUM_VARIANT){
 		num_vnts = 0;
 	}
-	ch_string f_nm = skg.as_full_path(get_num_variants_name());
+	ch_string f_nm = get_num_variants_file_name(skg);
 	ch_string val_str = num_vnts.get_str();
 	long wr_ok = set_fstr(f_nm, val_str);
 	if(wr_ok != 0){
@@ -1553,7 +1553,8 @@ canon_cnf::all_nxt_vnt(skeleton_glb& skg, row<variant>& all_next, row<ch_string>
 	long num_eq = 0;
 	average avg_szs;
 
-	DBG_PRT(107, os << "getting all_vnts in=" << skg.as_full_path(get_all_variant_dir_name()));
+	DBG_PRT(107, os << "getting all_vnts in=" 
+			<< skg.as_full_path(get_all_variant_dir_name()));
 
 	all_next.clear();
 	all_del.clear();
@@ -1571,7 +1572,7 @@ canon_cnf::all_nxt_vnt(skeleton_glb& skg, row<variant>& all_next, row<ch_string>
 		average val_elap;
 
 		if(i_sub_it){ 
-			num_i_sub++; 
+			num_i_sub++;
 			if(are_eq){ num_eq++; }
 			else { del_it = true; }
 		}
@@ -1653,7 +1654,10 @@ canon_cnf::all_nxt_vnt(skeleton_glb& skg, row<variant>& all_next, row<ch_string>
 }
 
 long
-canon_cnf::first_vnt_i_super_of(skeleton_glb& skg){
+canon_cnf::first_vnt_i_super_of(skeleton_glb& skg, bj_output_t* o_info){
+	SKELETON_CK(cf_out_info == NULL_PT);
+	cf_out_info = o_info;
+	
 	long fst_vnt = INVALID_NATURAL;
 
 	//for(long aa = 0; aa < SKG_MAX_NUM_VARIANT; aa++){
@@ -1672,6 +1676,8 @@ canon_cnf::first_vnt_i_super_of(skeleton_glb& skg){
 			break;
 		}
 	}
+	
+	cf_out_info = NULL_PT;
 	return fst_vnt;
 }
 
@@ -1714,7 +1720,7 @@ canon_cnf::get_variant_path(skeleton_glb& skg, long num_vnt, bool skip_report){
 
 	SKELETON_CK(! path_begins_with(vpth, get_all_variant_dir_name()));
 
-	if((vpth != "") && ! skg.kg_only_save && ! skg.find_path(skg.as_full_path(vpth))){
+	if((vpth != "") && ! skg.kg_only_save && ! skg.find_skl_path(skg.as_full_path(vpth))){
 		if(! skip_report){
 			skg.report_err(vdir, skg.kg_broken_path);
 			if(skg.ref_in_skl(vdir)){
@@ -1960,8 +1966,8 @@ canon_cnf::save_cnf(skeleton_glb& skg, ch_string sv_pth){
 				SKELETON_CK((pth1 == "") || skg.ref_exists(pth1));
 				SKELETON_CK((pth2 == "") || skg.ref_exists(pth2));
 
-				SKELETON_CK((pth1 == "") || skg.find_path(skg.as_full_path(pth1)));
-				SKELETON_CK((pth2 == "") || skg.find_path(skg.as_full_path(pth2)));
+				SKELETON_CK((pth1 == "") || skg.find_skl_path(skg.as_full_path(pth1)));
+				SKELETON_CK((pth2 == "") || skg.find_skl_path(skg.as_full_path(pth2)));
 			}
 		);
 	}
@@ -1980,8 +1986,8 @@ canon_cnf::save_cnf(skeleton_glb& skg, ch_string sv_pth){
 		SKELETON_CK((pth1 == "") || skg.ref_exists(pth1));
 		SKELETON_CK((pth2 == "") || skg.ref_exists(pth2));
 
-		SKELETON_CK((pth1 == "") || skg.find_path(skg.as_full_path(pth1)));
-		SKELETON_CK((pth2 == "") || skg.find_path(skg.as_full_path(pth2)));
+		SKELETON_CK((pth1 == "") || skg.find_skl_path(skg.as_full_path(pth1)));
+		SKELETON_CK((pth2 == "") || skg.find_skl_path(skg.as_full_path(pth2)));
 
 		ch_string comm_name = skg.as_full_path(skg.ref_vnt_name(sv_dir, SKG_COMMENT_NAME));
 		canon_save(comm_name, cf_comment_chars);
