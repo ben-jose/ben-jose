@@ -133,6 +133,11 @@ batch_solver::init_batch_solver(){
 
 	dbg_skip_print_info = false;
 
+	DBG(
+		dbg_ops.W = 1;
+		dbg_ops.F = 0;
+	)
+	
 	reset_err_msg();
 
 	error_cod = -1;
@@ -157,15 +162,21 @@ batch_solver::init_batch_solver(){
 	batch_num_error = 0;
 
 	batch_stat_laps.vs_nam = "LAPS";
-	batch_stat_load_tm.vs_nam = "LOAD SEGs";
 	batch_stat_solve_tm.vs_nam = "SOLVE SEGs";
 	batch_stat_mem_used.vs_nam = "BYTES USED";
 
+	batch_stat_load_tm.vs_nam = "LOAD SEGs";
+	batch_stat_saved_targets.vs_nam = "SAVED";
+	batch_stat_variants.vs_nam = "VARIANTS";
+	batch_stat_quick_discards.vs_nam = "QUICK_DISCARDS";
 	batch_stat_old_pth_hits.vs_nam = "OLD_PATH_HITS";
 	batch_stat_new_pth_hits.vs_nam = "NEW_PATH_HITS";
 	batch_stat_sub_cnf_hits.vs_nam = "SUB_CNF_HITS";
+	batch_stat_eq_new_hits.vs_nam = "EQ_NEW_HITS";
+	batch_stat_eq_old_hits.vs_nam = "EQ_OLD_HITS";
+	batch_stat_sb_new_hits.vs_nam = "SB_NEW_HITS";
+	batch_stat_sb_old_hits.vs_nam = "SB_OLD_HITS";
 	
-	batch_stat_saved_targets.vs_nam = "SAVED";
 
 	batch_start_time = 0.0;
 	batch_end_time = 0.0;
@@ -173,6 +184,8 @@ batch_solver::init_batch_solver(){
 	gg_file_name = "";
 	
 	bc_slvr_path = "";
+	NOT_DBG(bc_slvr_path = path_to_absolute_path(".");)
+	
 	bc_solver = NULL;
 }
 
@@ -232,11 +245,16 @@ batch_solver::print_final_totals(bj_ostream& os){
 	os << batch_stat_solve_tm;
 	os << batch_stat_mem_used;
 
+	os << batch_stat_saved_targets;
+	os << batch_stat_variants;
+	os << batch_stat_quick_discards;
 	os << batch_stat_old_pth_hits;
 	os << batch_stat_new_pth_hits;
 	os << batch_stat_sub_cnf_hits;
-	
-	os << batch_stat_saved_targets;
+	os << batch_stat_eq_new_hits;
+	os << batch_stat_eq_old_hits;
+	os << batch_stat_sb_new_hits;
+	os << batch_stat_sb_old_hits;
 
 	double tot_tm = batch_end_time - batch_start_time;
 	os << "TOTAL TIME = " << tot_tm << bj_eol;
@@ -302,11 +320,17 @@ batch_solver::count_instance(batch_entry& inst_info){
 	batch_stat_load_tm.add_val(o_info.bjo_load_time);
 	batch_stat_solve_tm.add_val(o_info.bjo_solve_time);
 
+	batch_stat_saved_targets.add_val(o_info.bjo_saved_targets);
+	batch_stat_variants.add_val(o_info.bjo_max_variants);
+	batch_stat_variants.add_val(o_info.bjo_avg_variants);
+	batch_stat_quick_discards.add_val(o_info.bjo_quick_discards);
 	batch_stat_old_pth_hits.add_val(o_info.bjo_old_pth_hits);
 	batch_stat_new_pth_hits.add_val(o_info.bjo_new_pth_hits);
 	batch_stat_sub_cnf_hits.add_val(o_info.bjo_sub_cnf_hits);
-	
-	batch_stat_saved_targets.add_val(o_info.bjo_saved_targets);
+	batch_stat_eq_new_hits.add_val(o_info.bjo_eq_new_hits);
+	batch_stat_eq_old_hits.add_val(o_info.bjo_eq_old_hits);
+	batch_stat_sb_new_hits.add_val(o_info.bjo_sb_new_hits);
+	batch_stat_sb_old_hits.add_val(o_info.bjo_sb_old_hits);
 	
 	MEM_CTRL(
 		if(using_mem_ctrl){
@@ -646,39 +670,34 @@ batch_solver::get_args(int argc, char** argv)
 
 	bool prt_help = false;
 	bool prt_version = false;
-	bool prt_headers = false;
 	bool prt_paths = false;
 	
-	//skeleton_glb& the_slk = get_solver().slv_skl;
-
-	//the_slk.init_paths();
-
 	for(long ii = 1; ii < argc; ii++){
 		ch_string the_arg = argv[ii];
 		if(the_arg == "-h"){
 			prt_help = true;
 		} else if(the_arg == "-v"){
 			prt_version = true;
-		} else if(the_arg == "-t"){
-			prt_headers = true;
 		} else if(the_arg == "-paths"){
 			prt_paths = true;
-		} else if(the_arg == "-verify"){
-			//the_slk.kg_local_verifying = true;
-		} else if(the_arg == "-only_save"){
-			//the_slk.kg_only_save = true;
 		} else if(the_arg == "-just_read"){
 			op_just_read = true;
 		} else if(the_arg == "-debug"){
 			op_debug_clean_code = true;
-		} else if(the_arg == "-keep_skeleton"){
-			//the_slk.kg_keep_skeleton = true;
-
+		} else if(the_arg == "-w"){
+			DBG(dbg_ops.W = 0;)
+		} else if(the_arg == "+w"){
+			DBG(dbg_ops.W = 1;)
+		} else if(the_arg == "-f"){
+			DBG(dbg_ops.F = 0;)
+		} else if(the_arg == "+f"){
+			DBG(dbg_ops.F = 1;)
 		} else if((the_arg == "-root") && ((ii + 1) < argc)){
 			int kk_idx = ii + 1;
 			ii++;
 
-			bc_slvr_path = argv[kk_idx];
+			ch_string the_pth = argv[kk_idx];
+			bc_slvr_path = path_to_absolute_path(the_pth);
 		} else if((the_arg == "-max_mem") && ((ii + 1) < argc)){
 			int kk_idx = ii + 1;
 			ii++;
@@ -704,14 +723,11 @@ batch_solver::get_args(int argc, char** argv)
 		os << argv[0] << " " << version_str << bj_eol;
 		return false;
 	}
-	if(prt_headers){
-		//instance_info::print_headers(os);
-		os << "FIX prt_headers CODE" << bj_eol;
-		return false;
-	}	
 	if(prt_paths){
-		os << "FIX prt_paths CODE" << bj_eol;
-		//the_slk.print_paths(os);
+		const char* pth = bc_slvr_path.c_str();
+		bc_solver = bj_solver_create(pth);
+		bj_print_paths(bc_solver);
+		bj_solver_release(bc_solver);
 		return false;
 	}
 	if(input_file_nm.size() == 0){
@@ -744,11 +760,18 @@ int	solver_main(int argc, char** argv){
 	MEM_CTRL(mem_set_num_by_available(get_free_mem_kb() * NUM_BYTES_IN_KBYTE));
 
 	bool args_ok = top_dat.get_args(argc, argv);
-
-	const char* pth = top_dat.bc_slvr_path.c_str();
-	top_dat.bc_solver = bj_solver_create(pth);
-	
 	if(args_ok){
+		const char* pth = top_dat.bc_slvr_path.c_str();
+		top_dat.bc_solver = bj_solver_create(pth);
+
+		DBG(
+			bj_dbg_t* pt_dbg_ops = bj_debug(top_dat.bc_solver);
+			if(pt_dbg_ops != NULL){
+				bj_dbg_t& d_ops = *pt_dbg_ops;
+				d_ops = top_dat.dbg_ops;
+				top_dat.prt_dbg_ops();
+			}
+		)
 		PRT_OUT_1( os << ".STARTING AT " << run_time() << bj_eol);
 
 		MEM_CTRL(
@@ -764,9 +787,11 @@ int	solver_main(int argc, char** argv){
 		top_dat.do_all_instances();
 
 		PRT_OUT_1( os << ".ENDING AT " << run_time() << bj_eol);
-	}
+		
+		bj_solver_release(top_dat.bc_solver);
 
-	bj_solver_release(top_dat.bc_solver);
+		DBG(top_dat.prt_dbg_ops();)
+	}
 	
 	MEM_CTRL(BATCH_CK(mem_in_u == mem_get_num_by_in_use()));
 

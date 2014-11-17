@@ -163,6 +163,8 @@ public:
 
 	bool			dbg_skip_print_info;
 	
+	DBG(bj_dbg_t	dbg_ops;)
+	
 	bj_ostr_stream	error_stm;
 	long			error_cod;
 
@@ -185,15 +187,21 @@ public:
 	integer			batch_num_error;
 
 	avg_stat		batch_stat_laps;
-	avg_stat		batch_stat_load_tm;
 	avg_stat		batch_stat_solve_tm;
 	avg_stat		batch_stat_mem_used;
 
+	avg_stat		batch_stat_load_tm;
+	avg_stat		batch_stat_saved_targets;
+	avg_stat		batch_stat_variants;
+	avg_stat		batch_stat_quick_discards;
 	avg_stat		batch_stat_old_pth_hits;
 	avg_stat		batch_stat_new_pth_hits;
 	avg_stat		batch_stat_sub_cnf_hits;
+	avg_stat		batch_stat_eq_new_hits;
+	avg_stat		batch_stat_eq_old_hits;
+	avg_stat		batch_stat_sb_new_hits;
+	avg_stat		batch_stat_sb_old_hits;
 	
-	avg_stat		batch_stat_saved_targets;
 
 	double			batch_start_time;
 	double			batch_end_time;
@@ -269,6 +277,15 @@ public:
 	void	work_all_instances();
 	void	do_all_instances();
 	void	do_cnf_file();
+	
+	DBG(
+		void 	prt_dbg_ops(){
+			bj_out << "DBG_OPS=";
+			if(dbg_ops.W > 0){ bj_out << "W"; }
+			if(dbg_ops.F > 0){ bj_out << "F"; }
+			bj_out << bj_eol;
+		}
+	)
 };
 
 //=================================================================

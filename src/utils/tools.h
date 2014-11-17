@@ -2012,7 +2012,7 @@ bj_ostream& operator << (bj_ostream& os, average& obj){
 //=================================================================
 // avg_stat
 
-class avg_stat : private average {
+class avg_stat : public average {
 public:
 	bj_big_float_t	vs_tot_val;
 	bj_big_float_t	vs_max_val;
@@ -2052,9 +2052,9 @@ avg_stat::print_avg_stat(bj_ostream& os){
 
 	os << vs_nam;
 	os << " tot=" << vs_tot_val;
-	os << " max=" << vs_max_val;
 	os << " avg=" << avg;
-	os << " %avg=" << avg_perc;
+	os << " max=" << vs_max_val;
+	os << " (avg/max)=" << avg_perc << "%";
 	os << bj_eol;
 	os.flush();
 	return os;

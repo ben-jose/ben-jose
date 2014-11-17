@@ -447,7 +447,13 @@ brain::~brain(){
 	DBG_PRT(6, os << "RELEASING brain 1");
 }
 
-skeleton_glb& 	
+solver&
+brain::get_solver(){
+	BRAIN_CK(br_pt_slvr != NULL);
+	return *br_pt_slvr;
+}
+
+skeleton_glb&
 brain::get_skeleton(){
 	BRAIN_CK(br_pt_slvr != NULL);
 	return br_pt_slvr->slv_skl;
@@ -461,7 +467,7 @@ brain::get_my_inst(){
 
 bj_output_t&
 brain::get_out_info(){
-	bj_output_t& o_inf = get_my_inst().ist_out;
+	bj_output_t& o_inf = get_my_inst().get_out_info();
 	return o_inf;
 }
 
@@ -2311,6 +2317,10 @@ brain::solve_instance(){
 	bj_output_t& o_info = get_out_info();
 	try{
 		aux_solve_instance();
+	} catch (skeleton_exception& ex1){
+		print_ex(ex1);
+		o_info.bjo_result = bjr_error;
+		o_info.bjo_error = bje_invalid_root_directory;
 	} catch (file_exception& ex1){
 		print_ex(ex1);
 		o_info.bjo_result = bjr_error;
@@ -2353,6 +2363,10 @@ brain::solve_instance(){
 	double end_solve_tm = run_time();
 	double slv_tm = (end_solve_tm - br_start_solve_tm);	
 	o_info.bjo_solve_time = slv_tm;
+	
+	instance_info& iinfo = get_my_inst();
+	o_info.bjo_max_variants = iinfo.ist_num_variants_stat.vs_max_val.get_d();
+	o_info.bjo_avg_variants = iinfo.ist_num_variants_stat.avg.get_d();
 
 	return o_info.bjo_result;
 }

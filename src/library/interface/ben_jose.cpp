@@ -48,12 +48,18 @@ bj_solver_t bj_solver_create(const char* bjs_dir_path){
 	if(bjs_dir_path == NULL){
 		return NULL;
 	}
+	ch_string root_pth = bjs_dir_path;
+	bool is_no_pth = (root_pth.empty() || (root_pth == ""));
+	NOT_DBG(if(is_no_pth){ return NULL; })
+	
 	solver* nw_slv = solver::create_solver();
 	if(nw_slv == NULL){
 		return NULL;
 	}
 	solver& the_slvr = *((solver*)nw_slv);
-	the_slvr.slv_skl.kg_root_path = bjs_dir_path;
+	the_slvr.slv_skl.kg_root_path = root_pth;	
+
+	DBG(if(is_no_pth){ the_slvr.slv_skl.kg_keep_skeleton = false; })
 	the_slvr.slv_skl.init_paths();
 	
 	bj_solver_t bjs = (bj_solver_t)nw_slv;
@@ -172,4 +178,19 @@ int 	bj_update(bj_solver_t dest, bj_solver_t src){
 	return 0;
 }
 
+void		bj_print_paths(bj_solver_t bjs){
+	if(bjs == NULL){ return; }
+	solver& the_slvr = *((solver*)bjs);
+	the_slvr.slv_skl.print_paths(bj_out);
+}
+
+bj_dbg_t*	bj_debug(bj_solver_t bjs){
+	bj_dbg_t* dd = NULL;
+	DBG(
+		if(bjs == NULL){ return NULL; }
+		solver& the_slvr = *((solver*)bjs);
+		dd = &(the_slvr.slv_dbg);
+	)
+	return dd;
+}
 

@@ -123,6 +123,9 @@ make_dir(ch_string the_pth, mode_t mod);
 ch_string
 path_get_running_path();
 
+ch_string
+path_to_absolute_path(ch_string pth);
+
 #endif		// FILE_FUNCS_H
 
 

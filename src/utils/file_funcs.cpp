@@ -681,3 +681,15 @@ path_get_running_path(){
 	return the_pth;
 }
 
+ch_string
+path_to_absolute_path(ch_string pth){
+	char rpath[BJ_PATH_MAX];
+
+	char* rr = realpath(pth.c_str(), rpath);
+	if(rr == rpath){ 
+		ch_string real_pth = rpath;
+		return real_pth;
+	}
+	return pth;
+}
+

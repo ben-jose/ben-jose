@@ -41,7 +41,6 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 #include "dimacs.h"
 #include "sha2.h"
 #include "print_macros.h"
-#include "ben_jose.h"
 #include "dbg_prt.h"
 
 enum charge_t {
@@ -50,6 +49,7 @@ enum charge_t {
 	cg_positive = 1
 };
 
+class instance_info;
 
 class brain;
 class canon_clause;
@@ -184,7 +184,6 @@ void		path_delete(ch_string full_pth, ch_string up_to);
 bool		path_create(ch_string n_pth);
 
 ch_string	path_get_directory(ch_string the_pth);
-ch_string	path_to_absolute_path(ch_string pth);
 bool		path_begins_with(ch_string the_pth, ch_string the_beg);
 bool		path_ends_with(ch_string& the_str, ch_string& the_suf);
 
@@ -214,6 +213,15 @@ long		canon_purge_clauses(skeleton_glb& skg, row<canon_clause*>& all_ccl, long& 
 
 void		canon_count_tots(row<canon_clause*>& all_ccls, long& tot_vars, long& tot_lits, long& tot_twolits);
 
+
+//======================================================================
+// skeleton_exception
+
+class skeleton_exception : public top_exception {
+public:
+	skeleton_exception(long the_id = 0) : top_exception(the_id)
+	{}
+};
 
 //=================================================================
 // ref_strs
@@ -454,7 +462,7 @@ public:
 	ref_strs		cf_phdat;
 	row_str_t		cf_dbg_shas;
 	
-	bj_output_t* 	cf_out_info;
+	instance_info* 	cf_inst_inf;
 
 	canon_cnf(){
 		init_canon_cnf();
@@ -497,7 +505,7 @@ public:
 		cf_phdat.init_ref_strs();
 		cf_dbg_shas.clear(free_mem, free_mem);
 		
-		cf_out_info = NULL_PT;
+		cf_inst_inf = NULL_PT;
 	}
 
 	void	init_with(skeleton_glb& skg, row<canon_clause*>& all_ccls, 
@@ -570,7 +578,7 @@ public:
 	void		set_num_variants(skeleton_glb& skg, bj_big_int_t num_vnts);
 
 	bool	all_nxt_vnt(skeleton_glb& skg, row<variant>& all_next, row<ch_string>& all_del);
-	long	first_vnt_i_super_of(skeleton_glb& skg, bj_output_t* o_info = NULL);
+	long	first_vnt_i_super_of(skeleton_glb& skg, instance_info* iinfo = NULL);
 	bool	ck_vnts(skeleton_glb& skg);
 
 	ch_string	get_cnf_path(){
@@ -587,6 +595,8 @@ public:
 		ch_string ref_pth = SKG_LCK_DIR + cf_unique_path;
 		return ref_pth;
 	}
+	
+	bool	is_new(skeleton_glb& skg);
 
 	bool	save_canon_cnf(ch_string& the_pth, row<char>& cnn, bool write_once = true);
 	bool	save_cnf(skeleton_glb& skg, ch_string pth);
@@ -611,7 +621,16 @@ public:
 	void		fill_with(skeleton_glb& skg, row<long>& all_lits, long num_cla, long num_var);
 	ch_string	calc_loader_sha_str(dimacs_loader& the_loader);
 	bool		load_from(skeleton_glb& skg, ch_string& f_nam);
+	
+	bool 	has_instance_info(){
+		return (cf_inst_inf != NULL);
+	}
 
+	instance_info&	get_info(){
+		SKELETON_CK(has_instance_info());
+		return (*cf_inst_inf);
+	}
+	
 	//void		get_first_full(long& idx_all_pos, long& idx_all_neg);
 
 	//bj_ostream&	print_canon_cnf(bj_ostream& os);
@@ -712,7 +731,7 @@ public:
 	void	init_paths();
 	void	report_err(ch_string pth, ch_string err_pth);
 
-	bool	find_skl_path(ch_string the_pth, bj_output_t* o_info = NULL);
+	bool	find_skl_path(ch_string the_pth, instance_info* iinfo = NULL);
 
 	bool	in_skl(ch_string a_dir){
 		ch_string skl_pth = as_full_path(SKG_SKELETON_DIR);

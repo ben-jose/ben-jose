@@ -1849,6 +1849,8 @@ public:
 	row<neuron*>	 	dbg_used_neus;
 	row<canon_clause*> 	dbg_ccls;
 	canon_cnf		dbg_cnf;
+
+	bool	dbg_do_finds;
 	
 	bj_big_int_t	dbg_find_id;
 	bj_big_int_t	dbg_save_id;
@@ -2053,6 +2055,7 @@ public:
 
 	void	release_brain();
 
+	solver& 		get_solver();
 	skeleton_glb& 	get_skeleton();
 	instance_info&	get_my_inst();	
 	bj_output_t&	get_out_info();

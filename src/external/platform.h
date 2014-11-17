@@ -54,8 +54,10 @@ to make the code more clear.
 
 #ifdef FULL_DEBUG
 #define DBG(prm) prm
+#define NOT_DBG(prm) /**/ 
 #else
 #define DBG(prm) /**/ 
+#define NOT_DBG(prm) prm
 #endif
 
 #define MARK_USED(X)  ((void)(&(X)))

@@ -62,6 +62,7 @@ typedef enum {
 	bje_file_cannot_open,
 	bje_file_corrupted,
 	bje_file_too_big,
+	bje_invalid_root_directory,
 	bje_parse_bad_number,
 	bje_dimacs_no_cnf_declaration,
 	bje_dimacs_bad_cls_num,
@@ -71,6 +72,11 @@ typedef enum {
 	bje_dimacs_bad_literal,
 	bje_dimacs_clause_too_long
 } bj_error_t;
+
+typedef struct {
+	int W;
+	int F;
+} bj_dbg_t;
 
 typedef struct {
 	bj_satisf_val_t 	bjo_result;
@@ -84,10 +90,16 @@ typedef struct {
 	
 	double		bjo_load_time;
 	double		bjo_saved_targets;
+	double		bjo_max_variants;
+	double		bjo_avg_variants;
 	double		bjo_quick_discards;
 	double		bjo_old_pth_hits;
 	double		bjo_new_pth_hits;
 	double		bjo_sub_cnf_hits;
+	double		bjo_eq_new_hits;
+	double		bjo_eq_old_hits;
+	double		bjo_sb_new_hits;
+	double		bjo_sb_old_hits;
 	
 	bj_error_t  bjo_error;
 	char		bjo_err_char;
@@ -123,6 +135,8 @@ void			bj_restart(bj_solver_t bjs);
 
 int 		bj_update(bj_solver_t dest, bj_solver_t src);
 
+void		bj_print_paths(bj_solver_t bjs);
+bj_dbg_t*	bj_debug(bj_solver_t bjs);
 
 #ifdef __cplusplus
 }

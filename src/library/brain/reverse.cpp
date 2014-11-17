@@ -33,18 +33,32 @@ funcs that implement reverse func.
 #include "stack_trace.h"
 #include "dimacs.h"
 #include "brain.h"
+#include "solver.h"
 #include "dbg_config.h"
 #include "dbg_prt.h"
 
 bool
 memap::map_find(brain& brn){
-	//return false;
-	return map_oper(mo_find, brn);
+	DBG(
+		bool do_finds = (brn.get_solver().slv_dbg.F > 0);
+		if(do_finds){
+			return map_oper(mo_find, brn);
+		}
+		return false;
+	)
+	NOT_DBG(return map_oper(mo_find, brn);)
 }
 
 bool
 memap::map_save(brain& brn){
-	return map_oper(mo_save, brn);
+	DBG(
+		bool do_save = (brn.get_solver().slv_dbg.W > 0);
+		if(do_save){
+			return map_oper(mo_save, brn);
+		}
+		return false;
+	)
+	NOT_DBG(return map_oper(mo_save, brn);)
 }
 
 void
@@ -1309,12 +1323,13 @@ memap::map_prepare_mem_oper(mem_op_t mm, brain& brn){
 	dbg_shas.push(cnf1.cf_sha_str + "\n");
 
 	if(mm == mo_find){
-		bj_output_t& o_info = brn.get_out_info();
+		instance_info& iinfo = brn.get_my_inst();
 		
 		ch_string find_ref = phtd.pd_ref1_nam;
 		ch_string pth1 = skg.as_full_path(find_ref);
-		bool found1 = skg.find_skl_path(pth1, &o_info);
+		bool found1 = skg.find_skl_path(pth1, &iinfo);
 		if(! found1){ 
+			bj_output_t& o_info = brn.get_out_info();
 			o_info.bjo_quick_discards++;
 			return false; 
 		}
@@ -1458,8 +1473,9 @@ memap::map_oper(mem_op_t mm, brain& brn){
 	
 	bool oper_ok = false;
 	if(mm == mo_find){
+		instance_info& iinfo = brn.get_my_inst();
 
-		long fst_idx = tmp_diff_cnf.first_vnt_i_super_of(skg);
+		long fst_idx = tmp_diff_cnf.first_vnt_i_super_of(skg, &iinfo);
 
 		///////  start of debug of NO DEBUG
 

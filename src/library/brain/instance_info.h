@@ -36,7 +36,6 @@ all info to keep or return of an instance cnf to solve.
 #include "bj_big_number.h"
 #include "tools.h"
 #include "ch_string.h"
-// include "batch_log.h"
 #include "ben_jose.h"
 
 
@@ -111,6 +110,7 @@ public:
 	
 	bj_output_t		ist_out;
 
+	avg_stat		ist_num_variants_stat;
 	row<long> 		ist_assig;
 	
 	instance_info(){
@@ -154,10 +154,16 @@ public:
 		
 		out.bjo_load_time = 0.0;
 		out.bjo_saved_targets = 0.0;
+		out.bjo_max_variants = 0.0;
+		out.bjo_avg_variants = 0.0;
 		out.bjo_quick_discards = 0.0;
 		out.bjo_old_pth_hits = 0.0;
 		out.bjo_new_pth_hits = 0.0;
 		out.bjo_sub_cnf_hits = 0.0;
+		out.bjo_eq_new_hits = 0.0;
+		out.bjo_eq_old_hits = 0.0;
+		out.bjo_sb_new_hits = 0.0;
+		out.bjo_sb_old_hits = 0.0;
 		
 		out.bjo_error = bje_no_error;
 		out.bjo_err_char = 0;
@@ -183,6 +189,10 @@ public:
 		bool c3 = (ist_num_ccls >= 0);
 		bool is_p = (c1 && c2 && c3);
 		return is_p;
+	}
+	
+	bj_output_t& 	get_out_info(){
+		return ist_out;
 	}
 
 	static

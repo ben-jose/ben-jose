@@ -35,6 +35,7 @@ the solver wrapper.
 
 #include "instance_info.h"
 #include "skeleton.h"
+#include "ben_jose.h"
 
 #define SOLVER_CK(prm) 	DBG_BJ_LIB_CK(prm)
 
@@ -54,6 +55,7 @@ private:
 public:
 	instance_info	slv_inst;
 	skeleton_glb	slv_skl;
+	DBG(bj_dbg_t		slv_dbg;)
 	
 	solver(){
 		init_solver();
@@ -63,7 +65,15 @@ public:
 	}
 	
 	void	init_solver(){
+		DBG(init_debug();)
 	}
+	
+	DBG(
+		void	init_debug(){
+			slv_dbg.W = 1;
+			slv_dbg.F = 0;
+		}
+	);
 	
 	static
 	solver* create_solver(){

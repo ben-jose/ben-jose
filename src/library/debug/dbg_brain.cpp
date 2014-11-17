@@ -616,25 +616,43 @@ brain::dbg_add_to_used(neuron& neu){
 
 #ifdef FULL_DEBUG
 void
-dbg_inst_info::init_dbg_inst_info(){	
-	dbg_ic_active = false;
-	dbg_ic_after = false;
-	dbg_just_read = false;
-	dbg_clean_code = false;
+dbg_inst_info::init_dbg_inst_info(){
+	//dbg_br_deducer
+	
+	dbg_before_retract_lv = INVALID_LEVEL;
+	dbg_last_recoil_lv = INVALID_LEVEL;
+	
+	dbg_simple_neus.clear();
+	dbg_used_neus.clear();
+	dbg_ccls.clear();
+	dbg_cnf.clear_cnf();
+	
+	dbg_do_finds = false;
 	
 	dbg_find_id = 0;
 	dbg_save_id = 0;
 	dbg_canon_find_id = 0;
 	dbg_canon_save_id = 0;
 	
-	dbg_periodic_prt = true;
-
+	dbg_original_used.clear();
+	dbg_all_chosen.clear();
+	
+	dbg_ic_active = false;
+	dbg_ic_after = false;
 	dbg_ic_max_seq = -1;
 	dbg_ic_seq = 0;
 	dbg_ic_gen_jpg = false;
 	
-	dbg_all_chosen.clear();
+	dbg_just_read = false;
+	dbg_clean_code = false;
+	
+	dbg_periodic_prt = true;
 
+	dbg_start_dbg_entries.clear();
+	dbg_stop_dbg_entries.clear();
+	dbg_current_start_entry = 0;
+	dbg_current_stop_entry = 0;
+	
 	dbg_bad_cycle1 = false;
 	dbg_levs_arr.fill(false, DBG_NUM_LEVS);
 }
