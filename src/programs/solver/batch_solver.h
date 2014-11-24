@@ -193,6 +193,7 @@ public:
 	avg_stat		batch_stat_load_tm;
 	avg_stat		batch_stat_saved_targets;
 	avg_stat		batch_stat_variants;
+	avg_stat		batch_stat_num_finds;
 	avg_stat		batch_stat_quick_discards;
 	avg_stat		batch_stat_old_pth_hits;
 	avg_stat		batch_stat_new_pth_hits;

@@ -92,6 +92,7 @@ typedef struct {
 	double		bjo_saved_targets;
 	double		bjo_max_variants;
 	double		bjo_avg_variants;
+	double		bjo_num_finds;
 	double		bjo_quick_discards;
 	double		bjo_old_pth_hits;
 	double		bjo_new_pth_hits;

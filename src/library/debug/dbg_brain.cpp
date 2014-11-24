@@ -1022,6 +1022,7 @@ memap::print_memap(bj_ostream& os, bool from_pt){
 	MARK_USED(from_pt);
 	if(from_pt){
 		os << "MM(" << (void*)this <<")";
+		os << " cho=" << ma_cho;
 		os << " szs_dotted=";
 		os << ma_szs_dotted;
 		os << " bef_rtct_tk=" << ma_before_retract_tk;
@@ -1030,6 +1031,7 @@ memap::print_memap(bj_ostream& os, bool from_pt){
 		return os;
 	}
 	os << "MEMAP(" << (void*)this <<")={ " << bj_eol;
+	os << " cho=" << ma_cho << bj_eol;
 	os << " dotted=" << bj_eol;
 	os << ma_dotted << bj_eol;
 	os << " filled=" << bj_eol;
@@ -1144,6 +1146,14 @@ quanton::print_quanton(bj_ostream& os, bool from_pt){
 	bool is_posi = is_pos();
 	bool with_dot = has_dot();
 	bool with_mark = has_mark();
+	bool has_src = has_source();
+	
+	ch_string lft_bra = "(";
+	ch_string rgt_bra = ")";
+	if(! has_src){
+		lft_bra = "{";
+		rgt_bra = "}";
+	}
 
 	bool dominated = false;
 	if(pt_brn != NULL_PT){
@@ -1153,13 +1163,13 @@ quanton::print_quanton(bj_ostream& os, bool from_pt){
 	neuron* neu = qu_source;
 
 	if(from_pt){
-		os << "("; 
+		os << lft_bra; 
 		os << qu_id; 
-		DBG(
+		/*DBG(
 			os << "." << qu_dbg_fst_lap_cho; 
 			os << "." << qu_dbg_num_laps_cho; 
-		)
-		os << ")"; 
+		)*/
+		os << rgt_bra; 
 		os.flush();
 		return os;
 	}

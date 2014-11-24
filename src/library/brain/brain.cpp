@@ -750,6 +750,7 @@ brain::choose_quanton(){
 		}
 		BRAIN_CK(qua == NULL_PT);
 		deactivate_last_map();
+		DBG_PRT(122, os << "deac_lst (choose)");
 	}
 
 	//BRAIN_CK(ck_choices());
@@ -839,8 +840,6 @@ brain::init_loading(long num_qua, long num_neu){
 	br_current_ticket.tk_recoil = 1;
 	br_current_ticket.tk_level = 0;
 
-	//br_data_levels.clear(true, true);
-	//br_data_levels.inc_sz();
 	BRAIN_CK(br_data_levels.is_empty());
 	inc_data_levels();
 
@@ -1556,9 +1555,7 @@ brain::deactivate_last_map(){
 	BRAIN_CK(pt_mpp != NULL_PT);
 	memap& mpp = *pt_mpp;
 
-	DBG_PRT(112, os << "DEACTIVATING MEMAP=" << bj_eol;
-		os << (void*)(&(mpp))
-	);
+	DBG_PRT(112, os << "DEACTIVATING MEMAP=" << (void*)(&(mpp)));
 
 	mpp.map_deactivate(brn);
 }

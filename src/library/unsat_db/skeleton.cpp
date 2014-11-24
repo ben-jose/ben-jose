@@ -1920,7 +1920,7 @@ canon_cnf::save_cnf(skeleton_glb& skg, ch_string sv_pth){
 		return false;
 	}
 
-	DBG_PRT(76, os << "before save_cnf'" << sv_pth << "'" << bj_eol 
+	DBG_PRT(122, os << "before save_cnf'" << sv_pth << "'" << bj_eol 
 		<< cf_sha_str << bj_eol 
 		<< cf_phdat << bj_eol 
 		<< cf_dbg_shas
@@ -2039,7 +2039,7 @@ canon_cnf::save_cnf(skeleton_glb& skg, ch_string sv_pth){
 		skg.ref_touch(sv_dir);
 	}
 
-	DBG_PRT(76, 
+	DBG_PRT(122, 
 		dbg_inst_info& dbg_inf = skg.get_dbg_brn()->br_dbg;
 		os << "AFTER save_cnf'" << sv_pth 
 		<< "' ok=" << sv_ok << " existed=" << existed

@@ -156,6 +156,7 @@ public:
 		out.bjo_saved_targets = 0.0;
 		out.bjo_max_variants = 0.0;
 		out.bjo_avg_variants = 0.0;
+		out.bjo_num_finds = 0.0;
 		out.bjo_quick_discards = 0.0;
 		out.bjo_old_pth_hits = 0.0;
 		out.bjo_new_pth_hits = 0.0;

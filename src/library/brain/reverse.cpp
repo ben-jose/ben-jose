@@ -178,16 +178,18 @@ brain::reverse(){
 		os << " trl_lv" << trail_level()
 		<< " brn_lv" << level()
 	);
-	DBG_PRT(24,
+	DBG_PRT(112,
 		os << "BEFORE_REVERSE" << bj_eol;
 		print_trail(os);
 		os << "brn_tk=" << br_current_ticket << bj_eol;
 		os << "learned=" << bj_eol;
 		data_level().ld_learned.print_row_data(os, true, "\n");
+		os << " trl_lv" << trail_level() << " brn_lv" << level();
 		os << "cfl=" << br_conflict_found << bj_eol;
 		//os << "pulsate. BEFORE conflit treatment. Type ENTER to continue..." << bj_eol;
 		//DO_GETCHAR
 	);
+	DBG_PRT(122, print_trail(os));
 	DBG_PRT(14, print_trail(os));
 	DBG_PRT(14, os << "chosen " << br_chosen);
 
@@ -204,6 +206,7 @@ brain::reverse(){
 	mpp0.ma_confl = &cfl;
 	mpp0.ma_before_retract_tk.update_ticket(&brn);
 	
+	DBG_PRT_COND(122, ! cfl.in_ne_dominated(brn), os << "NOT_DOM cfl=" << cfl);
 	cfl.set_motives(brn, nke0, true); // init nke0 with confl
 
 	BRAIN_CK(all_notes0 > 0);
@@ -213,8 +216,13 @@ brain::reverse(){
 	BRAIN_CK(cfl.ne_original);
 	if(! cfl.ne_original){ 
 		mpp0.reset_memap(brn);
+		DBG_PRT(121, os << "mpp0.reset_memap (! orig)");
 	}
 
+	DBG_PRT(122, dbg_prt_lvs_active(os));
+	DBG_PRT(122, dbg_prt_lvs_have_learned(os));
+	//DBG_PRT(122, dbg_prt_lvs_virgin(os));
+	
 	// REVERSE LOOP
 
 	quanton* chosen_qua = NULL_PT;
@@ -224,6 +232,8 @@ brain::reverse(){
 	while(true){
 		BRAIN_CK(! mpp0.ma_active);
 		BRAIN_CK(mpp0.ck_map_guides(dbg_call_1));
+		
+		DBG(int vg_m0 = ((mpp0.is_ma_virgin())?(1):(0)));
 
 		bool end_of_recoil = in_edge_of_target_lv(dct);
 		if(end_of_recoil){
@@ -234,6 +244,7 @@ brain::reverse(){
 			BRAIN_CK(! dct.is_dt_virgin());
 			bool in_mm = false;
 			memap& lv_map0 = data_level().ld_map0;
+			//if(lv_map0.is_ma_virgin() && (mpp0.ma_anchor_idx != INVALID_IDX)){
 			if(lv_map0.is_ma_virgin() && (mpp0.ma_anchor_idx != INVALID_IDX)){
 				BRAIN_CK(mpp0.ck_last_szs());
 				BRAIN_CK(! mpp0.ma_dotted.is_empty());
@@ -244,8 +255,10 @@ brain::reverse(){
 			}
 			if(! in_mm){ 
 				BRAIN_CK((br_charge_trail.last_qlevel() + 1) == level());
+				DBG_PRT(122, os << "!ff." << vg_m0);
 				break;
 			} else {
+				DBG_PRT(122, os << "FF." << vg_m0);
 				has_in_mem = true;
 				dct.init_deduction();
 				BRAIN_CK(dct.is_dt_virgin());
@@ -270,9 +283,14 @@ brain::reverse(){
 
 			if(lv_has_learned()){
 				mpp0.reset_memap(brn);
+				DBG_PRT(121, os << "mpp0.reset_memap (has_learnd)");
 			}
 			
+			DBG(bool wrote = false);
 			memap& lv_map0 = data_level().ld_map0;
+			
+			DBG(bool m_act = lv_map0.ma_active);
+			DBG(bool m_cw = false);
 			if(lv_map0.ma_active){
 				BRAIN_CK(lv_map0.ck_last_szs());
 				BRAIN_CK(! lv_map0.is_ma_virgin());
@@ -281,7 +299,7 @@ brain::reverse(){
 				BRAIN_CK(lv_has_learned());
 				bool can_write = can_write_reverse_map(dct);
 				if(can_write){
-	
+					DBG(m_cw = true);
 					//brn.init_forced_sorter();
 
 					DBG(br_dbg.dbg_save_id++; br_dbg.dbg_canon_save_id = br_dbg.dbg_save_id);
@@ -289,17 +307,17 @@ brain::reverse(){
 					BRAIN_CK(lv_map0.dbg_ck_used_simple_no_satisf(mo_save, brn));
 					BRAIN_CK(lv_map0.map_ck_simple_no_satisf(mo_save, brn));
 
-					DBG_PRT(112, os << "SAVING MAP" << bj_eol;
+					DBG_PRT(122, os << "SAVING MAP" << bj_eol;
+						//os << (&(lv_map0)) << bj_eol;
+						os << lv_map0 << bj_eol;
 						brn.print_trail(os);
-						os << " up_dom=" << (void*)(brn.get_last_upper_map())
-						<< " save_map=" << (void*)(&(lv_map0)) << bj_eol
-						<< " br_maps_active=" << brn.br_maps_active
 					);
-					DBG_PRT(112, os << "HIT RETURN TO CONTINUE...");
-					DBG_COMMAND(112, getchar());
+					DBG_PRT(123, os << "HIT RETURN TO CONTINUE...");
+					DBG_COMMAND(123, getchar());
 
 					bool sv_ok = lv_map0.map_save(brn);
 					if(sv_ok){
+						DBG(wrote = true);
 						brn.br_num_memo++;
 					}
 
@@ -319,11 +337,16 @@ brain::reverse(){
 				mpp0.map_replace_with(brn, lv_map0, dbg_call_1);
 				BRAIN_CK(mpp0.ck_last_szs());
 
+				DBG_PRT(120, os << "mpp0.reset_memap (end_lv)");
 			} // lv_map0.ma_active
 
 			dec_level();
 			br_retract_is_first_lv = false;
 
+			DBG(int vg2_m0 = ((mpp0.is_ma_virgin())?(1):(0)));
+			DBG_PRT(122, if(wrote){ os << "WW."; } else { os << "!ww."; }
+				os << vg_m0 << '.' << vg2_m0 << ".a." << m_act << ".c." << m_cw;
+			);
 		} // end_of_lev
 
 		BRAIN_CK(! mpp0.ma_active);
@@ -335,6 +358,7 @@ brain::reverse(){
 
 		if(lv_has_learned()){
 			mpp0.reset_memap(brn);
+			DBG_PRT(121, os << "mpp0.reset_memap (has_learnd)");
 		}
 
 		if(! br_charge_trail.has_motives()){
@@ -381,6 +405,7 @@ brain::reverse(){
 			if(! qua.has_note0()){
 				mpp0.reset_memap(brn);
 				BRAIN_CK(mpp0.is_ma_virgin());
+				DBG_PRT(120, os << "mpp0.reset_memap (has_3 && ! has_0)");
 			}
 		}
 
@@ -435,6 +460,7 @@ brain::reverse(){
 						has_neu(mpp0.ma_fll_in_lv, src));
 				if(! src->ne_original){ 
 					mpp0.reset_memap(brn);
+					DBG_PRT(121, os << "mpp0.reset_memap (! orig)");
 					//all_src_orig = false; 
 				}
 
@@ -452,6 +478,7 @@ brain::reverse(){
 					BRAIN_CK(! mpp0.ma_dotted.last().ps_quanton->has_source());
 					BRAIN_CK(mpp0.ma_dotted.last().ps_quanton == &qua);
 
+					mpp0.ma_cho = &qua;
 					mpp0.set_filled(brn); // old update_filled
 
 					DBG_PRT(110, os << "rec_szs " << br_current_ticket << " " << &mpp0);
@@ -490,7 +517,7 @@ brain::reverse(){
 	BRAIN_CK((level() == ROOT_LEVEL) || (level() == dct.dt_target_level));
 
 	// update leveldat
-
+	
 	memap& lv_map0 = data_level().ld_map0;
 	if(! mpp0.is_ma_virgin() && lv_map0.is_ma_virgin()){
 		ticket& n_tk = mpp0.ma_after_retract_tks.inc_sz();
@@ -499,7 +526,14 @@ brain::reverse(){
 		BRAIN_CK(mpp0.ck_map_guides(dbg_call_2));
 		lv_map0.map_replace_with(brn, mpp0, dbg_call_2);
 		lv_map0.map_activate(brn);
+		DBG_PRT(122, os << "Updated " << &(data_level()) << " with " << &lv_map0);
 	}
+	DBG(	
+		if(! mpp0.is_ma_virgin() && ! lv_map0.is_ma_virgin()){
+			BRAIN_CK(mpp0.map_ck_all_qu_dominated(brn));
+			//BRAIN_CK(mpp0.map_ck_all_ne_dominated(brn));
+		}
+	);
 
 	// update notes3
 
@@ -507,12 +541,6 @@ brain::reverse(){
 	nke0.get_all_motives(rr_upper);
 	BRAIN_CK(ck_motives(brn, rr_upper));
 	set_all_note3(brn, rr_upper);
-
-	DBG(	if(! mpp0.is_ma_virgin() && ! lv_map0.is_ma_virgin()){
-			BRAIN_CK(mpp0.map_ck_all_qu_dominated(brn));
-			//BRAIN_CK(mpp0.map_ck_all_ne_dominated(brn));
-		}
-	);
 
 	DBG(long old_num3 = brn.br_qu_tot_note3);
 	nke0.clear_all_motives();
@@ -567,6 +595,8 @@ brain::reverse(){
 		os << " trl_lv" << trail_level()
 		<< " brn_lv" << level()
 	);
+	DBG_PRT(122, dbg_prt_lvs_active(os));
+	DBG_PRT(122, print_trail(os); os << dct << bj_eol);
 
 	br_conflict_found = NULL_PT;
 	BRAIN_CK(! found_conflict());
@@ -811,7 +841,7 @@ memap::get_initial_guide_coloring(brain& brn, coloring& clr, long idx_szs){
 	all_quas.clear();
 	all_neus.clear();
 
-	row<prop_signal>& trace = ma_dotted;
+	row<prop_signal>& dtrace = ma_dotted;
 	long beg_sz = ma_szs_dotted[idx_szs - 1];
 	long end_sz = ma_szs_dotted[idx_szs];
 
@@ -820,11 +850,11 @@ memap::get_initial_guide_coloring(brain& brn, coloring& clr, long idx_szs){
 	BRAIN_CK(brn.br_qu_tot_note1 == 0);
 
 	for(long ii = beg_sz; ii < end_sz; ii++){
-		prop_signal& q_sig1 = trace[ii];
+		prop_signal& q_sig1 = dtrace[ii];
 
 		bool inc_col = false;
 		if(ii > 0){
-			prop_signal& q_sig0 = trace[ii - 1];
+			prop_signal& q_sig0 = dtrace[ii - 1];
 			
 			// this two lines are the whole purpose of tiers. 
 			// initialize the guide coloring (one color per tier).
@@ -883,7 +913,7 @@ memap::map_get_layer_quas(brain& brn, row_quanton_t& all_quas, long lyr_idx1, lo
 
 	all_quas.clear();
 
-	row<prop_signal>& trace = ma_dotted;
+	row<prop_signal>& dtrace = ma_dotted;
 	long beg_sz = 0;
 	if(ma_szs_dotted.is_valid_idx(lyr_idx1)){
 		beg_sz = ma_szs_dotted[lyr_idx1];
@@ -893,7 +923,7 @@ memap::map_get_layer_quas(brain& brn, row_quanton_t& all_quas, long lyr_idx1, lo
 	BRAIN_CK(brn.br_qu_tot_note1 == 0);
 
 	for(long ii = beg_sz; ii < end_sz; ii++){
-		prop_signal& q_sig1 = trace[ii];
+		prop_signal& q_sig1 = dtrace[ii];
 
 		BRAIN_CK(q_sig1.ps_quanton != NULL_PT);
 
@@ -1044,11 +1074,14 @@ memap::map_replace_with(brain& brn, memap& mpp, dbg_call_id call_id){
 	);
 	BRAIN_CK(mpp.ck_map_guides(dbg_call_1));
 	BRAIN_CK(is_ma_virgin());
+	
+	ma_brn = &brn;
 
 	ma_before_retract_tk = mpp.ma_before_retract_tk;
 	mpp.ma_after_retract_tks.move_to(ma_after_retract_tks);
 
 	ma_confl = mpp.ma_confl;
+	ma_cho = mpp.ma_cho; 
 
 	mpp.ma_dotted.move_to(ma_dotted);
 	mpp.ma_filled.move_to(ma_filled);
@@ -1266,9 +1299,11 @@ memap::map_prepare_mem_oper(mem_op_t mm, brain& brn){
 	// calc anchor
 
 	if(ma_anchor_idx == INVALID_IDX){
+		// BJ_FIX_THIS
 		BRAIN_CK((mm == mo_find) || (mm == mo_save));
 		BRAIN_CK(guide_col.is_co_virgin());
 		if(mm == mo_save){
+			DBG_PRT(122, os << "map_prep=" << this);
 			BRAIN_CK(ma_anchor_col.is_co_virgin());
 			ma_anchor_idx = op_szs_idx;
 			get_initial_anchor_coloring(brn, ma_anchor_col, INVALID_IDX, ma_anchor_idx);
@@ -1328,11 +1363,13 @@ memap::map_prepare_mem_oper(mem_op_t mm, brain& brn){
 		ch_string find_ref = phtd.pd_ref1_nam;
 		ch_string pth1 = skg.as_full_path(find_ref);
 		bool found1 = skg.find_skl_path(pth1, &iinfo);
+		
+		bj_output_t& o_info = brn.get_out_info();
 		if(! found1){ 
-			bj_output_t& o_info = brn.get_out_info();
 			o_info.bjo_quick_discards++;
 			return false; 
 		}
+		o_info.bjo_num_finds++;
 	}
 
 	neus_srg.stab_mutual_unique(quas_srg);
@@ -1452,8 +1489,10 @@ memap::map_oper(mem_op_t mm, brain& brn){
 	bool prep_ok = map_prepare_mem_oper(mm, brn);
 
 	if(! prep_ok){
+		DBG_PRT(122, os << "map_oper skip (prepare == false)");
 		return false;
 	}
+	DBG_PRT(122, os << "map_oper_go");
 
 	skeleton_glb& skg = brn.get_skeleton();
 
@@ -1508,6 +1547,7 @@ memap::map_oper(mem_op_t mm, brain& brn){
 			row<neuron*>& all_tmp_found = brn.br_tmp_found_neus;
 			all_tmp_found.clear();
 
+			// BJ_FIX_THIS
 			ccl_row_as<neuron>(tmp_diff_cnf.cf_clauses, all_tmp_found, true);
 			
 			for(long aa = 0; aa < all_tmp_found.size(); aa++){

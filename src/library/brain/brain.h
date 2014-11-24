@@ -1186,6 +1186,7 @@ class memap {
 	row<ticket>		ma_after_retract_tks;
 
 	neuron*			ma_confl;
+	quanton*		ma_cho;
 
 	row<prop_signal>	ma_dotted;
 	row<neuron*>		ma_filled;
@@ -1220,6 +1221,7 @@ class memap {
 
 		ma_before_retract_tk.init_ticket();
 		ma_confl = NULL_PT;
+		ma_cho = NULL_PT;
 
 		ma_dotted.clear();
 		ma_filled.clear();
@@ -1250,26 +1252,27 @@ class memap {
 	bool	is_ma_virgin(){
 		bool c2 = ! ma_before_retract_tk.is_valid();
 		bool c3 = (ma_confl == NULL_PT);
+		bool c4 = (ma_cho == NULL_PT);
 
-		bool c4 = (ma_dotted.is_empty());
-		bool c5 = (ma_filled.is_empty());
+		bool c5 = (ma_dotted.is_empty());
+		bool c6 = (ma_filled.is_empty());
 
-		bool c6 = (ma_szs_dotted.is_empty());
-		bool c7 = (ma_szs_filled.is_empty());
+		bool c7 = (ma_szs_dotted.is_empty());
+		bool c8 = (ma_szs_filled.is_empty());
 
-		bool c8 = (ma_fll_in_lv.is_empty());
-		bool c9 = (ma_discarded.is_empty());
+		bool c9 = (ma_fll_in_lv.is_empty());
+		bool c10 = (ma_discarded.is_empty());
 
-		bool c10 = (ma_save_guide_col.is_co_virgin());
-		bool c11 = (ma_find_guide_col.is_co_virgin());
+		bool c11 = (ma_save_guide_col.is_co_virgin());
+		bool c12 = (ma_find_guide_col.is_co_virgin());
 
-		bool c12 = (ma_anchor_col.is_co_virgin());
-		bool c13 = (ma_anchor_idx == INVALID_IDX);
+		bool c13 = (ma_anchor_col.is_co_virgin());
+		bool c14 = (ma_anchor_idx == INVALID_IDX);
 
-		bool c14 = (ma_active == false);
+		bool c15 = (ma_active == false);
 
 		bool is_vg = (c2 && c3 && c4 && c5 && c6 && c7 && 
-			c8 && c9 && c10 && c11 && c12 && c13 && c14);
+			c8 && c9 && c10 && c11 && c12 && c13 && c14 && c15);
 	
 		return is_vg;
 	}
@@ -1757,6 +1760,7 @@ class leveldat {
 	
 	brain*			ld_brn;
 		
+	long			ld_idx;
 	memap			ld_map0;
 	row<prop_signal>	ld_pre_sigs;
 	row<neuron*>		ld_learned;
@@ -1777,6 +1781,7 @@ class leveldat {
 
 	void	init_leveldat(brain* pt_brn = NULL){
 		ld_brn = pt_brn;
+		ld_idx = INVALID_IDX;
 		ld_map0.init_memap(pt_brn);
 		ld_pre_sigs.clear();
 		ld_learned.clear();
@@ -1821,7 +1826,10 @@ class leveldat {
 	void	release_learned(brain& brn);
 
 	bj_ostream&	print_leveldat(bj_ostream& os, bool from_pt = false){
-		MARK_USED(from_pt);
+		if(from_pt){
+			os << "[LV=" << ld_idx << ".cho=" << ld_chosen << "]";
+			return os;
+		}
 		os << "LVDAT(" << (void*)this <<")={" << bj_eol;
 		os << " ld_map0=" << ld_map0 << bj_eol;
 		os << " ld_chosen=" << ld_chosen << bj_eol;
@@ -1927,7 +1935,6 @@ public:
 	row_quanton_t		br_tmp_edge;
 
 	row<leveldat*>		br_data_levels;
-	//k_row<leveldat>		br_data_levels;
 
 	// config attributes
 	ch_string		br_file_name;
@@ -2220,9 +2227,18 @@ public:
 		return br_current_ticket.tk_level;
 	}
 
+	leveldat*	sup_dat_level(){
+		BRAIN_CK(! br_data_levels.is_empty());
+		int l_idx = br_data_levels.last_idx() - 1;
+		leveldat* pt_lv = NULL_PT;
+		if(l_idx > 0){
+			pt_lv = br_data_levels[l_idx];
+		}
+		return pt_lv;
+	}
+
 	leveldat&	data_level(){
 		BRAIN_CK(! br_data_levels.is_empty());
-		//return br_data_levels.last();
 		leveldat* pt_lv = br_data_levels.last();
 		BRAIN_CK(pt_lv != NULL);
 		return *pt_lv;
@@ -2233,16 +2249,26 @@ public:
 		BRAIN_CK(pt_lv != NULL);
 		br_data_levels.push(pt_lv);
 		leveldat& dat_lv = *pt_lv;
+		dat_lv.ld_idx = br_data_levels.last_idx();
 		return dat_lv;
 	}
 	
 	void	inc_level(quanton& qua){
 		(br_current_ticket.tk_level)++;
 		
-		//leveldat& dat_lv = br_data_levels.inc_sz();
 		leveldat& dat_lv = inc_data_levels();
-		
 		dat_lv.ld_chosen = &qua;
+	}
+
+	void	dec_level(){
+		br_current_ticket.tk_level--;
+
+		brain& brn = *this;
+		data_level().reset_semi_monos(brn);
+		data_level().release_learned(brn);
+
+		leveldat* lv = br_data_levels.pop();
+		leveldat::release_leveldat(lv);
 	}
 
 	long	trail_level(){
@@ -2255,9 +2281,6 @@ public:
 
 
 	quanton*	curr_choice(){
-		//leveldat& dat_lv = br_data_levels.last();
-		//return dat_lv.ld_chosen;
-		
 		leveldat* lv = br_data_levels.last();
 		BRAIN_CK(lv != NULL);
 		return lv->ld_chosen;
@@ -2269,23 +2292,6 @@ public:
 
 	long 	lv_num_learned(){
 		return data_level().num_learned();
-	}
-	/*
-	void	set_level_choice(quanton& qua){
-		leveldat& dat_lv = br_data_levels.last();
-		dat_lv.ld_chosen = &qua;
-	}*/
-
-	void	dec_level(){
-		br_current_ticket.tk_level--;
-
-		brain& brn = *this;
-		data_level().reset_semi_monos(brn);
-		data_level().release_learned(brn);
-
-		//br_data_levels.dec_sz();
-		leveldat* lv = br_data_levels.pop();
-		leveldat::release_leveldat(lv);
 	}
 
 	void	update_semi_monos();
@@ -2368,7 +2374,6 @@ public:
 	}
 
 	void		fill_with_origs(row<neuron*>& neus);
-	//void		fill_with_positons(row_quanton_t& quas);
 
 	void		check_timeout();
 	void		dbg_check_sat_assig();
@@ -2377,6 +2382,51 @@ public:
 	bj_satisf_val_t	get_result();
 
 	void		dbg_add_to_used(neuron& neu);
+	
+	void 	dbg_prt_lvs_have_learned(bj_ostream& os){
+		os << "lrnd=[";
+		
+		row<leveldat*>& all_lv = br_data_levels;
+		for(int aa = 0; aa < all_lv.size(); aa++){
+			leveldat& lv = *(all_lv[aa]);
+			if(lv.has_learned()){
+				os << "1.";
+			} else {
+				os << "0.";
+			}
+		}
+		os << "]";
+	}
+
+	void 	dbg_prt_lvs_active(bj_ostream& os){
+		os << "actv=[";
+		
+		row<leveldat*>& all_lv = br_data_levels;
+		for(int aa = 0; aa < all_lv.size(); aa++){
+			leveldat& lv = *(all_lv[aa]);
+			if(lv.ld_map0.ma_active){
+				os << "1.";
+			} else {
+				os << "0.";
+			}
+		}
+		os << "]";
+	}
+
+	void 	dbg_prt_lvs_virgin(bj_ostream& os){
+		os << "vrgn=[";
+		
+		row<leveldat*>& all_lv = br_data_levels;
+		for(int aa = 0; aa < all_lv.size(); aa++){
+			leveldat& lv = *(all_lv[aa]);
+			if(lv.ld_map0.is_ma_virgin()){
+				os << "1.";
+			} else {
+				os << "0.";
+			}
+		}
+		os << "]";
+	}
 
 	void		print_active_blocks(bj_ostream& os);
 
@@ -2520,7 +2570,7 @@ inline
 void
 memap::reset_memap(brain& brn){
 	BRAIN_CK(map_ck_all_qu_dominated(brn));
-	init_memap();
+	init_memap(&brn);
 }
 
 inline

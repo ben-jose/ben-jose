@@ -168,6 +168,7 @@ batch_solver::init_batch_solver(){
 	batch_stat_load_tm.vs_nam = "LOAD SEGs";
 	batch_stat_saved_targets.vs_nam = "SAVED";
 	batch_stat_variants.vs_nam = "VARIANTS";
+	batch_stat_num_finds.vs_nam = "NUM_FINDS";
 	batch_stat_quick_discards.vs_nam = "QUICK_DISCARDS";
 	batch_stat_old_pth_hits.vs_nam = "OLD_PATH_HITS";
 	batch_stat_new_pth_hits.vs_nam = "NEW_PATH_HITS";
@@ -247,6 +248,7 @@ batch_solver::print_final_totals(bj_ostream& os){
 
 	os << batch_stat_saved_targets;
 	os << batch_stat_variants;
+	os << batch_stat_num_finds;
 	os << batch_stat_quick_discards;
 	os << batch_stat_old_pth_hits;
 	os << batch_stat_new_pth_hits;
@@ -323,6 +325,7 @@ batch_solver::count_instance(batch_entry& inst_info){
 	batch_stat_saved_targets.add_val(o_info.bjo_saved_targets);
 	batch_stat_variants.add_val(o_info.bjo_max_variants);
 	batch_stat_variants.add_val(o_info.bjo_avg_variants);
+	batch_stat_num_finds.add_val(o_info.bjo_num_finds);
 	batch_stat_quick_discards.add_val(o_info.bjo_quick_discards);
 	batch_stat_old_pth_hits.add_val(o_info.bjo_old_pth_hits);
 	batch_stat_new_pth_hits.add_val(o_info.bjo_new_pth_hits);
@@ -671,6 +674,7 @@ batch_solver::get_args(int argc, char** argv)
 	bool prt_help = false;
 	bool prt_version = false;
 	bool prt_paths = false;
+	bool as_release = false;
 	
 	for(long ii = 1; ii < argc; ii++){
 		ch_string the_arg = argv[ii];
@@ -684,14 +688,20 @@ batch_solver::get_args(int argc, char** argv)
 			op_just_read = true;
 		} else if(the_arg == "-debug"){
 			op_debug_clean_code = true;
+		} else if(the_arg == "-r"){
+			as_release = true;
 		} else if(the_arg == "-w"){
 			DBG(dbg_ops.W = 0;)
+			NOT_DBG(os << "running RELEASE exe. ignoring debug op '-w'" << bj_eol;)
 		} else if(the_arg == "+w"){
 			DBG(dbg_ops.W = 1;)
+			NOT_DBG(os << "running RELEASE exe. ignoring debug op '+w'" << bj_eol;)
 		} else if(the_arg == "-f"){
 			DBG(dbg_ops.F = 0;)
+			NOT_DBG(os << "running RELEASE exe. ignoring debug op '-f'" << bj_eol;)
 		} else if(the_arg == "+f"){
 			DBG(dbg_ops.F = 1;)
+			NOT_DBG(os << "running RELEASE exe. ignoring debug op '+f'" << bj_eol;)
 		} else if((the_arg == "-root") && ((ii + 1) < argc)){
 			int kk_idx = ii + 1;
 			ii++;
@@ -713,6 +723,16 @@ batch_solver::get_args(int argc, char** argv)
 		} else if(input_file_nm.size() == 0){
 			input_file_nm = argv[ii];
 		}
+	}
+	
+	if(as_release){
+		DBG(
+			dbg_ops.W = 1;
+			dbg_ops.F = 1;
+			if(bc_slvr_path.empty()){
+				bc_slvr_path = path_to_absolute_path(".");
+			}
+		)
 	}
 
 	if(prt_help){
@@ -789,8 +809,6 @@ int	solver_main(int argc, char** argv){
 		PRT_OUT_1( os << ".ENDING AT " << run_time() << bj_eol);
 		
 		bj_solver_release(top_dat.bc_solver);
-
-		DBG(top_dat.prt_dbg_ops();)
 	}
 	
 	MEM_CTRL(BATCH_CK(mem_in_u == mem_get_num_by_in_use()));
@@ -799,9 +817,9 @@ int	solver_main(int argc, char** argv){
 		PRT_OUT_0( 
 			top_dat.print_totals(os);
 			top_dat.print_final_totals(os);
+			os << "ROOT_DIR=" << top_dat.bc_slvr_path << bj_eol;
+			DBG(top_dat.prt_dbg_ops();)
 		);
-
-		DO_FINAL_GETCHAR;
 	}
 	
 	MEM_CTRL(bj_out << "MEM_CONTROL is defined" << bj_eol);
