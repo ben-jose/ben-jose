@@ -1201,9 +1201,6 @@ class memap {
 	coloring		ma_save_guide_col;
 	coloring		ma_find_guide_col;
 
-	coloring		ma_anchor_col;
-	long 			ma_anchor_idx;
-
 	bool			ma_active;
 
 	memap() {
@@ -1236,9 +1233,6 @@ class memap {
 		ma_save_guide_col.init_coloring(pt_brn);
 		ma_find_guide_col.init_coloring(pt_brn);
 
-		ma_anchor_col.init_coloring(pt_brn);
-		ma_anchor_idx = INVALID_IDX;
-
 		ma_active = false;
 	}
 
@@ -1267,13 +1261,10 @@ class memap {
 		bool c11 = (ma_save_guide_col.is_co_virgin());
 		bool c12 = (ma_find_guide_col.is_co_virgin());
 
-		bool c13 = (ma_anchor_col.is_co_virgin());
-		bool c14 = (ma_anchor_idx == INVALID_IDX);
-
-		bool c15 = (ma_active == false);
+		bool c13 = (ma_active == false);
 
 		bool is_vg = (c2 && c3 && c4 && c5 && c6 && c7 && 
-			c8 && c9 && c10 && c11 && c12 && c13 && c14 && c15);
+			c8 && c9 && c10 && c11 && c12 && c13);
 	
 		return is_vg;
 	}
@@ -1308,7 +1299,6 @@ class memap {
 	coloring&	map_guide_coloring(mem_op_t mm);
 
 	void	map_inc_stab_guide(brain& brn, coloring& guide_col);
-	void	map_anchor_stab(brain& brn);
 	bool 	map_prepare_mem_oper(mem_op_t mm, brain& brn);
 
 	void	map_prepare_tees_related(mem_op_t mm, brain& brn);
@@ -1343,10 +1333,6 @@ class memap {
 	void	get_initial_guide_coloring(brain& brn, coloring& clr, long idx_szs);
 	void	get_initial_tauto_coloring(brain& brn, coloring& stab_guide_clr, 
 									   coloring& base_final_clr, bool ck_tks);
-	void	get_initial_anchor_coloring(brain& brn, coloring& clr, long lst_idx, 
-										long nxt_idx);
-
-	//bool 	ck_sorted_quas();
 
 	long	get_save_idx();
 	long	get_find_idx();
@@ -2436,8 +2422,9 @@ public:
 		row<leveldat*>& all_lv = br_data_levels;
 		for(int aa = 0; aa < all_lv.size(); aa++){
 			leveldat& lv = *(all_lv[aa]);
-			os << lv.ld_chosen;
 			quanton* ch2 = lv.ld_map0.ma_cho;
+			os << lv.ld_chosen;
+			if(ch2 != NULL){ os << "."; } else { os << ","; }
 			if((ch2 != NULL) && (ch2 != lv.ld_chosen)){
 				os << "\n\n\n" << ch2 << " != " << lv.ld_chosen << "!!!!!\n\n\n";
 			}

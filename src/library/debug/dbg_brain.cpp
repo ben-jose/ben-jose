@@ -1047,9 +1047,6 @@ memap::print_memap(bj_ostream& os, bool from_pt){
 	os << ma_save_guide_col;
 	os << " find_guide_col=" << bj_eol;
 	os << ma_find_guide_col;
-	os << " anchor_col=" << bj_eol;
-	os << ma_anchor_col;
-	os << " ma_anchor_idx=" << ma_anchor_idx << bj_eol;
 	os << "bef_rtct_tk=" << ma_before_retract_tk << bj_eol;
 	os << "aft_rtct_tks=" << ma_after_retract_tks << bj_eol;
 	os << "confl=" << ma_confl << bj_eol;

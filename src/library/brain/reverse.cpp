@@ -227,7 +227,7 @@ brain::reverse(){
 	
 	// REVERSE LOOP
 
-	quanton* chosen_qua = NULL_PT;
+	//quanton* chosen_qua = NULL_PT;
 	bool has_in_mem = false;
 	MARK_USED(has_in_mem);
 
@@ -246,10 +246,9 @@ brain::reverse(){
 			BRAIN_CK(! dct.is_dt_virgin());
 			bool in_mm = false;
 			memap& lv_map0 = data_level().ld_map0;
-			//if(lv_map0.is_ma_virgin() && (mpp0.ma_anchor_idx != INVALID_IDX)){
-			if(lv_map0.is_ma_virgin() && (mpp0.ma_anchor_idx != INVALID_IDX)){
+			if(lv_map0.is_ma_virgin() && ! mpp0.ma_dotted.is_empty()){
 				BRAIN_CK(mpp0.ck_last_szs());
-				BRAIN_CK(! mpp0.ma_dotted.is_empty());
+				//BRAIN_CK(! mpp0.ma_dotted.is_empty());
 
 				DBG(br_dbg.dbg_find_id++; br_dbg.dbg_canon_find_id = br_dbg.dbg_find_id;)
 
@@ -500,7 +499,7 @@ brain::reverse(){
 			BRAIN_CK(nke0.dk_num_noted_in_layer == 0);
 			BRAIN_CK(! dct.is_dt_virgin());
 
-			chosen_qua = &qua;
+			//chosen_qua = &qua;
 		}
 		
 		// reset charge
@@ -1026,73 +1025,6 @@ neuron::fill_mutual_sortees(brain& brn){
 }
 
 void
-memap::map_anchor_stab(brain& brn){
-	//skeleton_glb& skg = get_skeleton();
-	BRAIN_CK(ck_map_guides(dbg_call_1));
-	BRAIN_CK(ma_anchor_idx != INVALID_IDX);
-
-	coloring& guide_col = ma_anchor_col;
-	long nxt_idx = ma_anchor_idx;
-
-	sort_glb& neus_srg = brn.br_tauto_neus_srg;
-	sort_glb& quas_srg = brn.br_tauto_quas_srg;
-
-	sort_id_t quas_consec = quas_srg.sg_curr_stab_consec;
-	sort_id_t neus_consec = neus_srg.sg_curr_stab_consec;
-
-	quas_consec = 0;
-	neus_consec = 0;
-
-	dima_dims dims0;
-
-	DBG(long old_quas_sz = guide_col.co_quas.size());
-	DBG(long old_neus_sz = guide_col.co_neus.size());
-	BRAIN_CK(old_quas_sz > 0);
-	BRAIN_CK(old_neus_sz > 0);
-
-	brn.all_mutual_init();
-	guide_col.load_colors_into(brn, neus_srg, quas_srg, dims0);
-	neus_srg.stab_mutual(quas_srg);
-	guide_col.save_colors_from(neus_srg, quas_srg);
-	guide_col.co_szs_idx = nxt_idx;
-
-	BRAIN_CK(old_quas_sz == guide_col.co_quas.size());
-	BRAIN_CK(old_neus_sz == guide_col.co_neus.size());
-
-	DBG_PRT(110, os << "simple mutual sz=" << ma_szs_dotted.size());
-	BRAIN_CK(ck_guide_idx(guide_col, dbg_call_2));
-
-	BRAIN_CK(ck_map_guides(dbg_call_3));
-}
-
-void
-memap::get_initial_anchor_coloring(brain& brn, coloring& ini_anc_clr, long lst_idx, 
-								   long nxt_idx)
-{
-	BRAIN_CK(ck_map_guides(dbg_call_1));
-
-	ini_anc_clr.init_coloring();
-
-	row_quanton_t&	all_quas = ini_anc_clr.co_quas;
-	row<long>&	qua_colors = ini_anc_clr.co_qua_colors;
-
-	row<neuron*>&	all_neus = ini_anc_clr.co_neus;
-	row<long>&	neu_colors = ini_anc_clr.co_neu_colors;
-
-	BRAIN_CK(lst_idx < nxt_idx);
-	BRAIN_CK(ma_szs_dotted.is_valid_idx(nxt_idx));
-
-	map_get_layer_quas(brn, all_quas, lst_idx, nxt_idx);
-	map_get_layer_neus(all_neus, lst_idx, nxt_idx, true);
-
-	qua_colors.fill(1, all_quas.size());
-	neu_colors.fill(1, all_neus.size());
-
-	BRAIN_CK(ini_anc_clr.ck_cols());
-	BRAIN_CK(ck_map_guides(dbg_call_2));
-}
-
-void
 memap::map_replace_with(brain& brn, memap& mpp, dbg_call_id call_id){
 
 	DBG_PRT(113, os << "before_replace call_id=" << call_id << 
@@ -1123,9 +1055,6 @@ memap::map_replace_with(brain& brn, memap& mpp, dbg_call_id call_id){
 
 	mpp.ma_save_guide_col.move_co_to(ma_save_guide_col);
 	mpp.ma_find_guide_col.move_co_to(ma_find_guide_col);
-
-	mpp.ma_anchor_col.move_co_to(ma_anchor_col);
-	ma_anchor_idx = mpp.ma_anchor_idx;
 
 	BRAIN_CK(mpp.ma_dotted.is_empty());
 	BRAIN_CK(mpp.ma_filled.is_empty());
@@ -1322,39 +1251,8 @@ memap::map_prepare_mem_oper(mem_op_t mm, brain& brn){
 		op_szs_idx = get_find_idx();
 	}
 
-	// calc anchor
-
-	if(ma_anchor_idx == INVALID_IDX){
-		// BJ_FIX_THIS
-		BRAIN_CK((mm == mo_find) || (mm == mo_save));
-		BRAIN_CK(guide_col.is_co_virgin());
-		if(mm == mo_save){
-			DBG_PRT(122, os << "map_prep=" << this);
-			BRAIN_CK(ma_anchor_col.is_co_virgin());
-			ma_anchor_idx = op_szs_idx;
-			get_initial_anchor_coloring(brn, ma_anchor_col, INVALID_IDX, ma_anchor_idx);
-		}
-		BRAIN_CK(ck_map_guides(dbg_call_2));
-		return false;
-	}
-
-	BRAIN_CK(ma_anchor_idx != INVALID_IDX);
-
-	if(ma_anchor_col.co_szs_idx == INVALID_IDX){
-		map_anchor_stab(brn);
-		BRAIN_CK(ma_anchor_col.co_szs_idx == ma_anchor_idx);
-		BRAIN_CK(ma_anchor_col.co_szs_idx != INVALID_IDX);
-	}
-
-	if(guide_col.co_szs_idx == INVALID_IDX){
-		BRAIN_CK(guide_col.is_co_virgin());
-		ma_anchor_col.copy_co_to(guide_col);
-		BRAIN_CK(guide_col.co_szs_idx == ma_anchor_idx);
-	}
-
 	BRAIN_CK(op_szs_idx != INVALID_IDX);
-	BRAIN_CK(ma_anchor_idx != INVALID_IDX);
-	BRAIN_CK(guide_col.co_szs_idx != INVALID_IDX);
+	BRAIN_CK((guide_col.co_szs_idx != INVALID_IDX) || guide_col.is_co_virgin());
 
 	// update guide
 
