@@ -1358,52 +1358,23 @@ quanton::ck_all_tunnels(){
 }
 
 bool
-quanton::ck_uncharged_tunnel(){
+quanton::ck_uncharged_partner_neu(){
 	bool ok_uchg2 = true;
 #ifdef FULL_DEBUG
 	if(has_charge()){
 		return true;
 	}
 	quanton& qua = *this;
-	neuron* neu = get_uncharged_tunnel(dbg_call_1);
+	neuron* neu = get_uncharged_partner_neu(dbg_call_1);
 	if(neu == NULL_PT){
-		long uch_idx = find_uncharged_tunnel();
-
-		DBG_COND_COMM(! (uch_idx == INVALID_IDX) ,
-			os << "ABORTING_DATA " << bj_eol;
-			os << "qua=" << &qua << bj_eol;
-			neuron* tnn = qu_tunnels[uch_idx];
-			os << "neu=" << tnn << bj_eol;
-			os << "par=" << &(tnn->partner_fib(qua)) << bj_eol;
-			brain* pt_brn = get_dbg_brn();
-			if(pt_brn != NULL_PT){
-				os << " lv=" << pt_brn->level() << bj_eol;
-				os << " trail_sz=" << pt_brn->br_charge_trail.get_num_motives() << bj_eol;
-			}
-			os << "END_OF_aborting_data" << bj_eol;
-		);
-
+		long uch_idx = find_uncharged_partner_neu();
 		bool ok_uchg1 = (uch_idx == INVALID_IDX);
 		BRAIN_CK(ok_uchg1);
 		return ok_uchg1;
 	}
 
 	BRAIN_CK(neu->ne_original);
-	BRAIN_CK(neu == qu_uncharged_tunnel);
-
-	DBG_COND_COMM(! (neu->is_partner_fib(qua)),
-		os << "ABORTING_DATA x1 " << bj_eol;
-		os << "qua=" << &qua << bj_eol;
-		os << "neu=" << qu_uncharged_tunnel << bj_eol;
-		os << "neu2=" << qua.qu_uncharged_tunnel << bj_eol;
-		brain* pt_brn = get_dbg_brn();
-		if(pt_brn != NULL_PT){
-			os << " lv=" << pt_brn->level() << bj_eol;
-			os << " trail_sz=" << pt_brn->br_charge_trail.get_num_motives() << bj_eol;
-		}
-		os << "END_OF_aborting_data" << bj_eol;
-	);
-
+	BRAIN_CK(neu == qu_uncharged_partner_neu);
 	BRAIN_CK(neu->is_partner_fib(qua));
 	quanton& par = neu->partner_fib(qua);
 

@@ -171,7 +171,7 @@ brain::reverse(){
 	BRAIN_CK(mpp0.is_ma_virgin());
 	BRAIN_CK(level() != ROOT_LEVEL);
 	BRAIN_CK(all_notes0 == 0);
-	BRAIN_CK(br_semi_monos.is_empty());
+	BRAIN_CK(br_semi_monos_to_update.is_empty());
 
 	DBG_PRT(110, os << "BEFORE_REVERSE " << br_current_ticket << bj_eol; 
 		print_trail(os);
@@ -213,7 +213,7 @@ brain::reverse(){
 
 	BRAIN_CK(! mpp0.is_ma_virgin());
 
-	BRAIN_CK(cfl.ne_original);
+	//BRAIN_CK(cfl.ne_original);
 	if(! cfl.ne_original){ 
 		mpp0.reset_memap(brn);
 		DBG_PRT(121, os << "mpp0.reset_memap (! orig)");

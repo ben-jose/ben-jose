@@ -416,9 +416,9 @@ class quanton {
 
 	// tunneling attributes
 	row<neuron*>		qu_tunnels;	// tunnelled neurons.
-	neuron*			qu_uncharged_tunnel;
-	neuron*			qu_bak_uncharged_tunnel;
-	bool			qu_in_uncharged_to_update;
+	neuron*			qu_uncharged_partner_neu;
+	neuron*			qu_bak_uncharged_partner_neu;
+	bool			qu_in_semi_monos_to_update;
 
 	// choice attributes
 	long			qu_choice_idx;	// idx in brain's 'choices'
@@ -484,9 +484,9 @@ class quanton {
 		qu_spin = spn;
 		qu_inverse = inv;
 
-		qu_uncharged_tunnel = NULL_PT;
-		qu_bak_uncharged_tunnel = NULL_PT;
-		qu_in_uncharged_to_update = false;
+		qu_uncharged_partner_neu = NULL_PT;
+		qu_bak_uncharged_partner_neu = NULL_PT;
+		qu_in_semi_monos_to_update = false;
 
 		qu_choice_idx = INVALID_IDX;
 
@@ -534,13 +534,13 @@ class quanton {
 	void	reset_and_add_tee(sort_glb& quas_srg, sort_id_t quas_consec);
 
 	bool		is_semi_mono(){
-		bool c1 = (opposite().qu_uncharged_tunnel == NULL_PT);
-		bool c2 = (qu_uncharged_tunnel == NULL_PT);
+		bool c1 = (opposite().qu_uncharged_partner_neu == NULL_PT);
+		bool c2 = (qu_uncharged_partner_neu == NULL_PT);
 		return (c1 || c2);
 	}
 
 	quanton*	get_semi_mono(){
-		if(qu_uncharged_tunnel != NULL_PT){
+		if(qu_uncharged_partner_neu != NULL_PT){
 			return this;
 		}
 		quanton& opp = opposite();
@@ -618,11 +618,12 @@ class quanton {
 
 	bool		in_qu_dominated(brain& brn);
 
-	void		set_uncharged_tunnel(brain& brn, long uidx, long dbg_call, neuron* dbg_neu);
-	neuron*		get_uncharged_tunnel(dbg_call_id dbg_call);
-	long		find_uncharged_tunnel();
-	void		reset_uncharged_tunnel(brain& brn);
-	bool		ck_uncharged_tunnel();
+	void		set_uncharged_partner_neu(brain& brn, long uidx, 
+										long dbg_call, neuron* dbg_neu);
+	neuron*		get_uncharged_partner_neu(dbg_call_id dbg_call);
+	long		find_uncharged_partner_neu();
+	void		reset_uncharged_partner_neu(brain& brn);
+	bool		ck_uncharged_partner_neu();
 
 	bool		is_choice(){
 		bool cho = (! has_source() && (qlevel() != ROOT_LEVEL));
@@ -1767,7 +1768,7 @@ class leveldat {
 	quanton*		ld_chosen;
 	row_quanton_t		ld_upper_quas;
 
-	row_quanton_t		ld_semi_monos;
+	row_quanton_t		ld_semi_monos_to_update;
 
 	quanton*		ld_first_learned;
 
@@ -1788,7 +1789,8 @@ class leveldat {
 		ld_chosen = NULL_PT;
 		ld_upper_quas.clear();
 
-		ld_semi_monos.clear();
+		BRAIN_CK(ld_semi_monos_to_update.is_empty());
+		ld_semi_monos_to_update.clear();
 
 		ld_first_learned = NULL_PT;
 	}
@@ -1834,7 +1836,7 @@ class leveldat {
 		os << " ld_map0=" << ld_map0 << bj_eol;
 		os << " ld_chosen=" << ld_chosen << bj_eol;
 		os << " ld_upper_quas=" << ld_upper_quas << bj_eol;
-		os << " ld_semi_monos=" << ld_semi_monos << bj_eol;
+		os << " ld_semi_monos_to_update=" << ld_semi_monos_to_update << bj_eol;
 		os << "}";
 		os.flush();
 		return os;
@@ -1969,8 +1971,6 @@ public:
 	row<prop_signal>	br_psignals;	// forward propagated signals
 	row<prop_signal>	br_delayed_psignals;
 
-	row_quanton_t		br_semi_monos;
-
 	deduction		br_retract_dct;
 	//deduction		br_retract_nxt_dct;
 
@@ -1978,6 +1978,8 @@ public:
 	memap			br_retract_map0;
 	bool			br_retract_is_first_lv;
 
+	row_quanton_t		br_semi_monos_to_update;
+	
 	row<sortee*> 		br_tmp_wrt_tauto_tees;
 	row<sortee*> 		br_tmp_wrt_guide_tees;
 
