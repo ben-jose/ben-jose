@@ -2212,7 +2212,7 @@ public:
 	void	init_uncharged();
 
 	neuron*	add_neuron(row_quanton_t& quans, quanton*& forced_qua, bool orig);
-	void	learn_mots(row_quanton_t& the_mots, quanton& forced_qua);
+	neuron*	learn_mots(row_quanton_t& the_mots, quanton& forced_qua);
 
 	quanton*	get_quanton(long q_id);
 	
@@ -2425,6 +2425,21 @@ public:
 				os << "1.";
 			} else {
 				os << "0.";
+			}
+		}
+		os << "]";
+	}
+
+	void 	dbg_prt_lvs_cho(bj_ostream& os){
+		os << "chos=[";
+		
+		row<leveldat*>& all_lv = br_data_levels;
+		for(int aa = 0; aa < all_lv.size(); aa++){
+			leveldat& lv = *(all_lv[aa]);
+			os << lv.ld_chosen;
+			quanton* ch2 = lv.ld_map0.ma_cho;
+			if((ch2 != NULL) && (ch2 != lv.ld_chosen)){
+				os << "\n\n\n" << ch2 << " != " << lv.ld_chosen << "!!!!!\n\n\n";
 			}
 		}
 		os << "]";

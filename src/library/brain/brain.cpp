@@ -299,7 +299,6 @@ neuron::neu_tunnel_signals(brain& brn, quanton& r_qua){
 	BRAIN_CK(! is_ne_virgin());
 	BRAIN_CK(ne_original || (brn.br_dbg.dbg_last_recoil_lv == brn.level()));
 
-
 	quanton* qua = &r_qua;
 	BRAIN_CK(qua->get_charge() != cg_neutral);
 	DBG_PRT(17, os << "tunneling " << qua << " in " << this);
@@ -857,7 +856,7 @@ brain::init_loading(long num_qua, long num_neu){
 	)
 }
 
-void
+neuron*
 brain::learn_mots(row_quanton_t& the_mots, quanton& forced_qua){
 	DBG_PRT(23, os << "**LEARNING** mots=" << the_mots << " forced=" 
 		<< &forced_qua);
@@ -896,6 +895,7 @@ brain::learn_mots(row_quanton_t& the_mots, quanton& forced_qua){
 			dbg_ic_print(*this, the_trl);
 		}
 	)
+	return the_neu;
 }
 
 neuron*

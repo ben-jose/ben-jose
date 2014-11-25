@@ -142,7 +142,8 @@ bool
 brain::in_edge_of_target_lv(deduction& dct){
 	if(dct.is_dt_virgin()){ return false; }
 	long trl_lv = trail_level();
-	bool in_tg_lv = (trl_lv < dct.dt_target_level);
+	//bool in_tg_lv = (trl_lv < dct.dt_target_level);
+	bool in_tg_lv = (trl_lv <= dct.dt_target_level);
 	BRAIN_CK(! in_tg_lv || ((trl_lv + 1) == level()));
 	return in_tg_lv;
 }
@@ -189,6 +190,7 @@ brain::reverse(){
 		//os << "pulsate. BEFORE conflit treatment. Type ENTER to continue..." << bj_eol;
 		//DO_GETCHAR
 	);
+	DBG_PRT(131, print_trail(os));
 	DBG_PRT(122, print_trail(os));
 	DBG_PRT(14, print_trail(os));
 	DBG_PRT(14, os << "chosen " << br_chosen);
@@ -254,9 +256,9 @@ brain::reverse(){
 				in_mm = mpp0.map_find(brn);
 			}
 			if(! in_mm){ 
-				BRAIN_CK((br_charge_trail.last_qlevel() + 1) == level());
+				BRAIN_CK((trail_level() + 1) == level());
 				DBG_PRT(122, os << "!ff." << vg_m0);
-				break;
+				//break;
 			} else {
 				DBG_PRT(122, os << "FF." << vg_m0);
 				has_in_mem = true;
@@ -347,11 +349,15 @@ brain::reverse(){
 			DBG_PRT(122, if(wrote){ os << "WW."; } else { os << "!ww."; }
 				os << vg_m0 << '.' << vg2_m0 << ".a." << m_act << ".c." << m_cw;
 			);
+
+			
 		} // end_of_lev
 
 		BRAIN_CK(! mpp0.ma_active);
-		BRAIN_CK(br_charge_trail.last_qlevel() == level());
+		BRAIN_CK(trail_level() == level());
 
+		if(end_of_recoil){ break; }
+		
 		if(level() == ROOT_LEVEL){
 			break;
 		}
@@ -507,14 +513,20 @@ brain::reverse(){
 
 	} // true
 
+	DBG_PRT(131, 
+			print_trail(os);
+			dbg_prt_lvs_cho(os);
+			os << "tr_lv=" << trail_level() << " tg_lv=" << dct.dt_target_level;
+	);
 	BRAIN_DBG(br_dbg.dbg_last_recoil_lv = dct.dt_target_level);
 
 	//BRAIN_CK(! has_in_mem);	// DBG purposes
 	
 	DEDUC_DBG(has_in_mem || dbg_ck_deducs(dct, dct2));
-	DBG(long rr_lv = br_charge_trail.last_qlevel());
-	BRAIN_CK((level() == ROOT_LEVEL) || ((rr_lv + 1) == dct.dt_target_level));
+	DBG(long rr_lv = trail_level());
+	//BRAIN_CK((level() == ROOT_LEVEL) || ((rr_lv + 1) == dct.dt_target_level));
 	BRAIN_CK((level() == ROOT_LEVEL) || (level() == dct.dt_target_level));
+	BRAIN_CK((level() == ROOT_LEVEL) || (rr_lv == dct.dt_target_level));
 
 	// update leveldat
 	
@@ -554,16 +566,26 @@ brain::reverse(){
 	if(data_level().ld_first_learned == NULL_PT){
 		data_level().ld_first_learned = dct.dt_forced;
 	}
-	learn_mots(dct.dt_motives, *dct.dt_forced);
+	neuron* lnd_neu = learn_mots(dct.dt_motives, *dct.dt_forced);
 
+	// send forced learned
+
+	quanton* nxt_qua = dct.dt_forced;
+	if(! dct.dt_motives.is_empty()){
+		BRAIN_CK(nxt_qua != NULL_PT);
+		send_psignal(*nxt_qua, lnd_neu, tier() + 1);
+	}
+
+	/*
 	// resend chosen
 
+	quanton* nxt_qua = chosen_qua;
 	if(! dct.dt_motives.is_empty()){
-		BRAIN_CK(chosen_qua != NULL_PT);
-		BRAIN_CK(data_level().ld_chosen == chosen_qua);
-		DBG_PRT(25, os << "**RETRACTED TO chosen=" << chosen_qua);
-		send_psignal(*chosen_qua, NULL, tier() + 1);
-	}
+		BRAIN_CK(data_level().ld_chosen == nxt_qua);
+		BRAIN_CK(nxt_qua != NULL_PT);
+		DBG_PRT(25, os << "**RETRACTED TO chosen=" << data_level().ld_chosen);
+		send_psignal(*nxt_qua, NULL, tier() + 1);
+	}*/
 
 	update_semi_monos();
 
@@ -578,6 +600,10 @@ brain::reverse(){
 
 	BRAIN_CK((level() == ROOT_LEVEL) || lv_has_learned());
 
+	DBG_PRT(131, 
+			os << " f_qu=" << nxt_qua; 
+			DO_GETCHAR()
+	);
 	DBG_PRT(111, os << "AFTER_REVERSE" << bj_eol; 
 		print_trail(os);
 		//os << " br_maps_active=" << br_maps_active << bj_eol;

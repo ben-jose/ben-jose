@@ -177,6 +177,7 @@ brain::ck_trail(){
 		os << "num_null_src=" << num_null_src << bj_eol;
 		os << "lv=" << level() << bj_eol;
 		print_trail(os);
+		dbg_prt_lvs_cho(os);
 		ab_mm = "case6." + br_file_name;
 		abort_func(-1, ab_mm.c_str());
 	}
