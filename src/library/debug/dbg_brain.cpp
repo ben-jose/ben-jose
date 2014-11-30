@@ -438,9 +438,10 @@ memap::map_set_dbg_cnf(mem_op_t mm, brain& brn, row<canon_clause*>& the_ccls,
 	BRAIN_CK(brn.br_tot_qu_marks == 0);
 	set_marks_of(brn, trace, 0, trace_sz);
 
-	BRAIN_CK(ma_confl != NULL_PT);
-	ma_confl->map_set_dbg_ccl(mm, brn);
-	ma_confl->add_dbg_ccl(brn, the_ccls, the_neus, dims);
+	neuron* cfl_neu = ma_confl.ps_source;
+	BRAIN_CK(cfl_neu != NULL_PT);
+	cfl_neu->map_set_dbg_ccl(mm, brn);
+	cfl_neu->add_dbg_ccl(brn, the_ccls, the_neus, dims);
 	
 	for(long aa = 0; aa < trace_sz; aa++){
 		prop_signal& q_sig = trace[aa];
@@ -706,10 +707,11 @@ memap::map_ck_contained_in(brain& brn, coloring& colr, dbg_call_id dbg_id){
 		DBG_PRT(103, os << "spot " << &fll_neu);
 	}
 	
-	BRAIN_CK(ma_confl != NULL_PT);
+	neuron* cfl_neu = ma_confl.ps_source;
+	BRAIN_CK(cfl_neu != NULL_PT);
 
-	DBG_PRT(103, os << "CK spot confl " << ma_confl);
-	BRAIN_CK(ma_confl->ne_spot);
+	DBG_PRT(103, os << "CK spot confl " << cfl_neu);
+	BRAIN_CK(cfl_neu->ne_spot);
 
 	long trace_sz = ma_szs_dotted[szs_idx];
 	row<prop_signal>& trace = ma_dotted;
@@ -1128,11 +1130,11 @@ quanton::print_quanton(bj_ostream& os, bool from_pt){
 
 	brain* pt_brn = get_dbg_brn();
 
-	if((pt_brn != NULL_PT) && (this == &(pt_brn->br_conflict_quanton))){
+	/*if((pt_brn != NULL_PT) && (this == &(pt_brn->br_conflict_quanton))){
 		os << "CONFL_QUA";
 		os.flush();
 		return os;
-	}
+	}*/
 
 	if((pt_brn != NULL_PT) && (this == &(pt_brn->br_top_block))){
 		os << "TOP_BLOCK_QUA";
@@ -1382,4 +1384,114 @@ quanton::ck_uncharged_partner_neu(){
 	return ok_uchg2;
 }
 
+bool
+neuron::ck_all_charges(brain* brn, long from){
+	bool all_ok = true;
+#ifdef FULL_DEBUG
+	for(long ii = from; ii < fib_sz(); ii++){
+		all_ok = (all_ok && (ne_fibres[ii]->is_neg()));
+	}
+#endif
+	return all_ok;
+}
+
+bool
+neuron::ck_all_has_charge(long& npos){
+	bool all_ok = true;
+#ifdef FULL_DEBUG
+	npos = 0;
+	for(long ii = 0; ii < fib_sz(); ii++){
+		quanton& qua = *(ne_fibres[ii]);
+		all_ok = (all_ok && qua.has_charge());
+		all_ok = (all_ok && qua.has_tier());
+		if(qua.is_pos()){ npos++; }
+	}
+#endif
+	return all_ok;
+}
+
+bool
+neuron::ck_no_source_of_any(){
+#ifdef FULL_DEBUG
+	for(long ii = 0; ii < fib_sz(); ii++){
+		quanton* qua = ne_fibres[ii];
+		MARK_USED(qua);
+		BRAIN_CK_0(qua->get_source() != this);
+	}
+#endif
+	return true;
+}
+
+void 
+brain::dbg_prt_lvs_have_learned(bj_ostream& os){
+#ifdef FULL_DEBUG
+	os << "lrnd=[";
+	
+	row<leveldat*>& all_lv = br_data_levels;
+	for(int aa = 0; aa < all_lv.size(); aa++){
+		leveldat& lv = *(all_lv[aa]);
+		if(lv.has_learned()){
+			os << "1.";
+		} else {
+			os << "0.";
+		}
+	}
+	os << "]";
+#endif
+}
+
+void
+brain::dbg_prt_lvs_active(bj_ostream& os){
+#ifdef FULL_DEBUG
+	os << "actv=[";
+	
+	row<leveldat*>& all_lv = br_data_levels;
+	for(int aa = 0; aa < all_lv.size(); aa++){
+		leveldat& lv = *(all_lv[aa]);
+		if(lv.ld_map0.ma_active){
+			os << "1.";
+		} else {
+			os << "0.";
+		}
+	}
+	os << "]";
+#endif
+}
+
+void 
+brain::dbg_prt_lvs_virgin(bj_ostream& os){
+#ifdef FULL_DEBUG
+	os << "vrgn=[";
+	
+	row<leveldat*>& all_lv = br_data_levels;
+	for(int aa = 0; aa < all_lv.size(); aa++){
+		leveldat& lv = *(all_lv[aa]);
+		if(lv.ld_map0.is_ma_virgin()){
+			os << "1.";
+		} else {
+			os << "0.";
+		}
+	}
+	os << "]";
+#endif
+}
+
+void 
+brain::dbg_prt_lvs_cho(bj_ostream& os){
+#ifdef FULL_DEBUG
+	os << "chos=[";
+	
+	row<leveldat*>& all_lv = br_data_levels;
+	for(int aa = 0; aa < all_lv.size(); aa++){
+		leveldat& lv = *(all_lv[aa]);
+		quanton* ch2 = lv.ld_map0.ma_cho;
+		os << lv.ld_chosen;
+		if(ch2 != NULL){ os << "."; } else { os << ","; }
+		if((ch2 != NULL) && (ch2 != lv.ld_chosen)){
+			os << "\n\n\n" << ch2 << " != " << lv.ld_chosen << "!!!!!\n\n\n";
+		}
+	}
+	os << "]";
+#endif
+}
 

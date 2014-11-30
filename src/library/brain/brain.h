@@ -427,6 +427,8 @@ class quanton {
 
 	// maps in
 	memap*			qu_curr_map;
+	
+	prop_signal*	qu_tmp_psig;
 
 	// finder data
 
@@ -504,6 +506,8 @@ class quanton {
 		qu_source = NULL;
 
 		qu_curr_map = NULL_PT;
+		
+		qu_tmp_psig = NULL_PT;
 
 		DBG(qu_dbg_tee_ti = INVALID_NATURAL);
 
@@ -607,6 +611,8 @@ class quanton {
 	bool		is_pos(){ return (get_charge() == cg_positive); } 
 	bool		is_neg(){ return (get_charge() == cg_negative); } 
 
+	bool		has_tier(){ return (qu_tier != INVALID_TIER); }
+	
 	void		set_source(brain& brn, neuron* neu);
 	neuron*		get_source();
 
@@ -628,6 +634,10 @@ class quanton {
 	bool		is_choice(){
 		bool cho = (! has_source() && (qlevel() != ROOT_LEVEL));
 		return cho;
+	}
+	
+	bool	has_tmp_psig(){
+		return (qu_tmp_psig != NULL_PT);
 	}
 
 	bj_ostream&		print_quanton(bj_ostream& os, bool from_pt = false);
@@ -869,33 +879,9 @@ class neuron {
 
 	void		update_uncharged(brain& brn, quanton* chg_qua);
 
-	bool		ck_all_charges(brain* brn, long from){
-		bool all_ok = true;
-		for(long ii = from; ii < fib_sz(); ii++){
-			all_ok = (all_ok && (ne_fibres[ii]->is_neg()));
-		}
-		return all_ok;
-	}
-
-	bool		ck_all_has_charge(long& npos){
-		npos = 0;
-		bool all_ok = true;
-		for(long ii = 0; ii < fib_sz(); ii++){
-			quanton& qua = *(ne_fibres[ii]);
-			all_ok = (all_ok && qua.has_charge());
-			if(qua.is_pos()){ npos++; }
-		}
-		return all_ok;
-	}
-
-	bool		ck_no_source_of_any(){
-		for(long ii = 0; ii < fib_sz(); ii++){
-			quanton* qua = ne_fibres[ii];
-			MARK_USED(qua);
-			BRAIN_CK_0(qua->get_source() != this);
-		}
-		return true;
-	}
+	bool		ck_all_charges(brain* brn, long from);
+	bool		ck_all_has_charge(long& npos);
+	bool		ck_no_source_of_any();
 
 	bool	neu_compute_binary(){
 		for(long ii = 0; ii < fib_sz(); ii++){
@@ -974,6 +960,14 @@ class prop_signal {
 		init_prop_signal();
 	}
 
+	bool	is_ps_virgin(){
+		bool c1 = (ps_quanton == NULL_PT);
+		bool c2 = (ps_source == NULL_PT);
+		bool c3 = (ps_tier == INVALID_TIER);
+
+		return (c1 && c2 && c3);
+	}
+
 	brain*	get_dbg_brn(){
 		brain* the_brn = NULL;
 		BRAIN_DBG(if(ps_quanton != NULL){ the_brn = ps_quanton->get_dbg_brn(); });
@@ -998,7 +992,6 @@ void	set_marks_of(brain& brn, row<prop_signal>& trace,
 			long first_idx = 0, long last_idx = -1, bool with_related = false);
 void	reset_marks_of(brain& brn, row<prop_signal>& trace, 
 			long first_idx = 0, long last_idx = -1, bool with_related = false);
-
 
 //=============================================================================
 // deduction
@@ -1186,7 +1179,7 @@ class memap {
 	ticket			ma_before_retract_tk;
 	row<ticket>		ma_after_retract_tks;
 
-	neuron*			ma_confl;
+	prop_signal		ma_confl;
 	quanton*		ma_cho;
 
 	row<prop_signal>	ma_dotted;
@@ -1218,7 +1211,7 @@ class memap {
 		ma_brn = pt_brn;
 
 		ma_before_retract_tk.init_ticket();
-		ma_confl = NULL_PT;
+		ma_confl.init_prop_signal();
 		ma_cho = NULL_PT;
 
 		ma_dotted.clear();
@@ -1246,7 +1239,7 @@ class memap {
 
 	bool	is_ma_virgin(){
 		bool c2 = ! ma_before_retract_tk.is_valid();
-		bool c3 = (ma_confl == NULL_PT);
+		bool c3 = (ma_confl.is_ps_virgin());
 		bool c4 = (ma_cho == NULL_PT);
 
 		bool c5 = (ma_dotted.is_empty());
@@ -1283,6 +1276,7 @@ class memap {
 	void	map_record_szs();
 
 	void	set_filled(brain& brn);
+	void 	map_add_lv_filled(brain& brn);
 
 	void	map_replace_with(brain& brn, memap& mpp, dbg_call_id dbg_id);
 
@@ -1311,6 +1305,9 @@ class memap {
 
 	void	map_dbg_print(bj_ostream& os, mem_op_t mm, brain& brn);
 
+	void	map_make_all_qu_dominated(brain& brn);
+	void	map_make_all_ne_dominated(brain& brn);
+
 	void	map_set_all_qu_curr_dom(brain& brn);
 	void	map_reset_all_qu_curr_dom(brain& brn);
 
@@ -1320,11 +1317,12 @@ class memap {
 	bool	map_ck_all_qu_dominated(brain& brn);
 	bool	map_ck_all_ne_dominated(brain& brn);
 
+	void	map_make_dominated(brain& brn);
 	void	map_activate(brain& brn);
 	void	map_deactivate(brain& brn);
 
-	void	map_get_layer_quas(brain& brn, row_quanton_t& quas, long lyr_idx1, 
-							   long lyr_idx2);
+	//void	map_get_layer_quas(brain& brn, row_quanton_t& quas, long lyr_idx1, 
+	//						   long lyr_idx2);
 	void	map_get_layer_neus(row<neuron*>& neus, long lyr_idx1, long lyr_idx2, 
 							   bool ck_tks);
 
@@ -1914,6 +1912,8 @@ public:
 	double 			br_start_load_tm;
 	double 			br_start_solve_tm;
 
+	row<leveldat*>		br_data_levels;
+	
 	// temporal attributes
 	row_quanton_t		br_tmp_fixing_quantons;
 	row_quanton_t		br_tmp_load_quantons;
@@ -1922,7 +1922,7 @@ public:
 	row_quanton_t		br_tmp_motives;
 	row_quanton_t		br_tmp_edge;
 
-	row<leveldat*>		br_data_levels;
+	row_quanton_t		br_tmp_rever_quas;
 
 	// config attributes
 	ch_string		br_file_name;
@@ -1977,7 +1977,7 @@ public:
 	canon_cnf		br_tmp_wrt_diff_cnf;
 	canon_cnf		br_tmp_wrt_guide_cnf;
 
-	neuron* 		br_conflict_found;
+	prop_signal		br_conflict_found;
 
 	row<memap*>		br_maps_active;
 
@@ -1995,8 +1995,8 @@ public:
 
 	long 			br_num_memo;
 
-	neuron			br_root_conflict;
-	quanton			br_conflict_quanton;
+	//neuron			br_root_conflict;
+	//quanton			br_conflict_quanton;
 	quanton			br_top_block;
 
 	long			br_tot_qu_dots;
@@ -2188,8 +2188,14 @@ public:
 
 	// aux methods
 
+	void	reset_conflict(){
+		br_conflict_found.init_prop_signal();
+	}
+	
 	bool 	found_conflict(){
-		return (br_conflict_found != NULL_PT);
+		bool h_cfl = (br_conflict_found.ps_quanton != NULL);
+		BRAIN_CK(! h_cfl || (br_conflict_found.ps_tier != INVALID_TIER));
+		return h_cfl;
 	}
 
 	void	set_file_name_in_ic(ch_string f_nam = "");
@@ -2371,66 +2377,10 @@ public:
 
 	void		dbg_add_to_used(neuron& neu);
 	
-	void 	dbg_prt_lvs_have_learned(bj_ostream& os){
-		os << "lrnd=[";
-		
-		row<leveldat*>& all_lv = br_data_levels;
-		for(int aa = 0; aa < all_lv.size(); aa++){
-			leveldat& lv = *(all_lv[aa]);
-			if(lv.has_learned()){
-				os << "1.";
-			} else {
-				os << "0.";
-			}
-		}
-		os << "]";
-	}
-
-	void 	dbg_prt_lvs_active(bj_ostream& os){
-		os << "actv=[";
-		
-		row<leveldat*>& all_lv = br_data_levels;
-		for(int aa = 0; aa < all_lv.size(); aa++){
-			leveldat& lv = *(all_lv[aa]);
-			if(lv.ld_map0.ma_active){
-				os << "1.";
-			} else {
-				os << "0.";
-			}
-		}
-		os << "]";
-	}
-
-	void 	dbg_prt_lvs_virgin(bj_ostream& os){
-		os << "vrgn=[";
-		
-		row<leveldat*>& all_lv = br_data_levels;
-		for(int aa = 0; aa < all_lv.size(); aa++){
-			leveldat& lv = *(all_lv[aa]);
-			if(lv.ld_map0.is_ma_virgin()){
-				os << "1.";
-			} else {
-				os << "0.";
-			}
-		}
-		os << "]";
-	}
-
-	void 	dbg_prt_lvs_cho(bj_ostream& os){
-		os << "chos=[";
-		
-		row<leveldat*>& all_lv = br_data_levels;
-		for(int aa = 0; aa < all_lv.size(); aa++){
-			leveldat& lv = *(all_lv[aa]);
-			quanton* ch2 = lv.ld_map0.ma_cho;
-			os << lv.ld_chosen;
-			if(ch2 != NULL){ os << "."; } else { os << ","; }
-			if((ch2 != NULL) && (ch2 != lv.ld_chosen)){
-				os << "\n\n\n" << ch2 << " != " << lv.ld_chosen << "!!!!!\n\n\n";
-			}
-		}
-		os << "]";
-	}
+	void 	dbg_prt_lvs_have_learned(bj_ostream& os);
+	void 	dbg_prt_lvs_active(bj_ostream& os);
+	void 	dbg_prt_lvs_virgin(bj_ostream& os);
+	void 	dbg_prt_lvs_cho(bj_ostream& os);
 
 	void		print_active_blocks(bj_ostream& os);
 
