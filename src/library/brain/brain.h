@@ -1407,6 +1407,9 @@ class notekeeper {
 
 	row_row_quanton_t	dk_motives_by_layer;
 
+	long			dk_curr_qua_layer;
+	long			dk_curr_qua_idx;
+	
 	notekeeper(brain* brn = NULL_PT, long tg_lv = INVALID_LEVEL)
 	{
 		init_notekeeper(brn, tg_lv);
@@ -1455,6 +1458,9 @@ class notekeeper {
 		dk_num_noted_in_layer = 0;
 
 		dk_motives_by_layer.clear(true, true);
+
+		dk_curr_qua_layer = INVALID_IDX;
+		dk_curr_qua_idx = INVALID_IDX;
 	}
 
 	bool	ck_funcs(){
@@ -1512,7 +1518,7 @@ class notekeeper {
 			lv_mots.append_to(mots);
 		}
 	}
-
+	
 	long	get_num_motives(){
 		long nmm = 0;
 		for(long aa = 0; aa < dk_motives_by_layer.size(); aa++){
@@ -1523,6 +1529,50 @@ class notekeeper {
 
 	}
 
+	void 	update_curr_quanton(bool reset = false){
+		dk_curr_qua_layer = get_nxt_busy_layer(dk_curr_qua_layer, reset);
+		dk_curr_qua_idx = INVALID_IDX;
+		
+		if(dk_curr_qua_layer != INVALID_IDX){
+			dk_curr_qua_idx = dk_motives_by_layer[dk_curr_qua_layer].last_idx();
+		}
+	}
+
+	void 	reset_curr_quanton(){
+		dk_curr_qua_layer = INVALID_IDX;
+		update_curr_quanton(true);
+	}
+	
+	void 	dec_curr_quanton(){
+		BRAIN_CK(dk_curr_qua_idx >= INVALID_IDX);
+		if(dk_curr_qua_idx == INVALID_IDX){
+			return;
+		}
+		dk_curr_qua_idx--;
+		if(dk_curr_qua_idx == INVALID_IDX){
+			BRAIN_CK(dk_curr_qua_layer >= 0);
+			dk_curr_qua_layer--;
+			if(dk_curr_qua_layer == INVALID_IDX){
+				return;
+			}
+			update_curr_quanton();
+		}
+	}
+	
+	quanton*	get_curr_quanton(){
+		if(dk_curr_qua_idx == INVALID_IDX){
+			return NULL_PT;
+		}
+		BRAIN_CK(dk_motives_by_layer.is_valid_idx(dk_curr_qua_layer));
+		row_quanton_t& lv_mots = dk_motives_by_layer[dk_curr_qua_layer];
+		
+		BRAIN_CK(lv_mots.is_valid_idx(dk_curr_qua_idx));
+		
+		quanton* nxt_qua = lv_mots[dk_curr_qua_idx];
+		BRAIN_CK(nxt_qua != NULL_PT);
+		return nxt_qua;
+	}
+	
 	void	dec_notes(){
 		BRAIN_CK(dk_tot_noted > 0);
 		BRAIN_CK(dk_num_noted_in_layer > 0);
@@ -1570,7 +1620,7 @@ class notekeeper {
 		return true;
 	}
 
-	void		restart_with(brain& brn, row_quanton_t& bak_upper);
+	void	restart_with(brain& brn, row_quanton_t& bak_upper);
 
 	void	set_motive_notes(row_quanton_t& rr_qua, long from, long until);
 
@@ -1582,7 +1632,27 @@ class notekeeper {
 		}
 	}
 
+	long	get_nxt_busy_layer(long lyr, bool with_restart = false){
+		row_row_quanton_t& mots_by_ly = dk_motives_by_layer;
+		if(mots_by_ly.is_empty()){
+			return INVALID_IDX;
+		}
+		long nxt_lyr = lyr;
+		if(with_restart){
+			nxt_lyr = mots_by_ly.last_idx();
+		}
+		while(mots_by_ly.is_valid_idx(nxt_lyr) && mots_by_ly[nxt_lyr].is_empty()){
+			nxt_lyr--;
+		}
+		BRAIN_CK((nxt_lyr == INVALID_IDX) || mots_by_ly.is_valid_idx(nxt_lyr));
+		return nxt_lyr;
+	}
+
 	void		update_pop_layer(bool with_restart = false){
+		dk_pop_layer = get_nxt_busy_layer(dk_pop_layer, with_restart);
+	}
+
+	/*void		update_pop_layer(bool with_restart = false){
 		row_row_quanton_t& mots_by_ly = dk_motives_by_layer;
 		if(mots_by_ly.is_empty()){
 			dk_pop_layer = INVALID_IDX;
@@ -1594,7 +1664,7 @@ class notekeeper {
 		while(mots_by_ly.is_valid_idx(dk_pop_layer) && mots_by_ly[dk_pop_layer].is_empty()){
 			dk_pop_layer--;
 		}
-	}
+	}*/
 
 	quanton*	pop_motive(){
 		row_row_quanton_t& mots_by_ly = dk_motives_by_layer;
@@ -1679,8 +1749,6 @@ class deducer {
 
 	brain*			de_brain;
 
-	row_quanton_t	de_charge_trail;
-	
 	bool			de_all_original;
 	bool			de_all_dom;
 
@@ -1700,7 +1768,6 @@ class deducer {
 
 	row<neuron*>		de_filled_in_lv;
 
-	long 			de_trl_idx;
 	neuron* 		de_nxt_src;
 
 	deducer(brain* brn = NULL_PT, neuron* confl = NULL_PT, 
@@ -1728,7 +1795,14 @@ class deducer {
 	long&			tg_level(){ return de_target_dct.dt_target_level; }
 
 	brain&		get_de_brain();
-	row_quanton_t&	get_trail();
+	notekeeper& get_orig_trail();
+	
+	void		reset_curr_quanton(){
+		get_orig_trail().reset_curr_quanton();
+	}
+	void		dec_curr_quanton(){
+		get_orig_trail().dec_curr_quanton();
+	}	
 	quanton&	get_curr_quanton();
 
 	void 		dbg_find_dct_of(neuron& confl, deduction& dct);	
@@ -2566,21 +2640,15 @@ deducer::get_de_brain(){
 }
 
 inline
-row_quanton_t&	
-deducer::get_trail(){
-	row_quanton_t& trl = de_charge_trail;
-	return trl;
+notekeeper& 
+deducer::get_orig_trail(){
+	return get_de_brain().br_charge_trail;
 }
 
 inline
 quanton&
 deducer::get_curr_quanton(){
-	long trl_idx = de_trl_idx;
-	row_quanton_t& the_trail = get_trail();
-
-	BRAIN_CK(the_trail.is_valid_idx(trl_idx));
-
-	quanton* nxt_qua = the_trail[trl_idx];
+	quanton* nxt_qua = get_orig_trail().get_curr_quanton();
 	BRAIN_CK(nxt_qua != NULL_PT);
 	BRAIN_CK(nxt_qua->qu_id != 0);
 	BRAIN_CK(nxt_qua->is_pos());

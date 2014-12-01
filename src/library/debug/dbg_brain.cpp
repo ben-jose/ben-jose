@@ -213,7 +213,7 @@ deducer::dbg_deduc_find_next_dotted(){
 	while(! get_curr_quanton().has_dot()){
 		DBG_PRT(20, os << "NOT dotted " << get_curr_quanton() 
 				<< " in deduc find next dotted");
-		de_trl_idx--;
+		dec_curr_quanton();
 	}
 
 	BRAIN_CK(de_noteke.dk_note_layer <= get_de_brain().level());
@@ -308,8 +308,6 @@ deducer::dbg_find_dct_of(neuron& confl, deduction& dct){
 #ifdef FULL_DEBUG
 	brain& brn = get_de_brain();
 
-	brn.br_charge_trail.get_all_ordered_motives(de_charge_trail);
-
 	de_all_original = true;
 	de_all_dom = true;
 
@@ -324,18 +322,14 @@ deducer::dbg_find_dct_of(neuron& confl, deduction& dct){
 
 	tg_confl() = &confl;
 
-
-
-	long trail_sz = get_trail().size();
-
 	DBG(row_quanton_t tmp_mots);
 	DBG(de_noteke.get_all_motives(tmp_mots));
 	BRAIN_CK(tmp_mots.is_empty());
 
 	de_filled_in_lv.clear();
-	de_trl_idx = trail_sz - 1;
 	de_nxt_src = &confl;
 
+	reset_curr_quanton();
 
 	BRAIN_CK(de_noteke.dk_note_layer == brn.level());
 	long deduc_lv = de_noteke.dk_note_layer;
@@ -369,8 +363,6 @@ deducer::dbg_find_dct_of(neuron& confl, deduction& dct){
 	BRAIN_CK(ck_motives(brn, dct.dt_motives));
 
 	DBG_PRT(20, os << "dbg_find_dct_of deduction=" << dct);
-
-	BRAIN_CK(trail_sz == get_trail().size());
 
 	// reset all
 

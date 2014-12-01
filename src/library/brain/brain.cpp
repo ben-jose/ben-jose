@@ -1331,7 +1331,7 @@ deducer::init_deducer(brain* brn, neuron* confl, long tg_lv)
 	de_tmp_selected.clear();
 	de_filled_in_lv.clear();
 
-	de_trl_idx = INVALID_IDX;
+	//de_trl_idx = INVALID_IDX;
 
 	tg_confl() = confl;
 	de_nxt_src = confl;

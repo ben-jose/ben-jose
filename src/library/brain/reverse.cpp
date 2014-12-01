@@ -159,7 +159,8 @@ brain::reverse(){
 	deduction& dct = br_retract_dct;
 	memap& mpp0 = br_retract_map0;
 	long& all_notes0 = br_qu_tot_note0;
-	row_quanton_t& all_rev = br_tmp_rever_quas;
+	//row_quanton_t& all_rev = br_tmp_rever_quas;
+	//MARK_USED(all_rev);
 	MARK_USED(all_notes0);
 
 	br_retract_is_first_lv = true;
@@ -174,7 +175,7 @@ brain::reverse(){
 	BRAIN_CK(level() != ROOT_LEVEL);
 	BRAIN_CK(all_notes0 == 0);
 	BRAIN_CK(br_semi_monos_to_update.is_empty());
-	BRAIN_CK(all_rev.is_empty());
+	//BRAIN_CK(all_rev.is_empty());
 
 	DBG_PRT(110, os << "BEFORE_REVERSE " << br_current_ticket << bj_eol; 
 		print_trail(os);
