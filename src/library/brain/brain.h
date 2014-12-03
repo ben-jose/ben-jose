@@ -48,6 +48,7 @@ Declarations of classes and that implement the neural network.
 #define BRAIN_DBG(prm) DBG(prm)
 
 #define BRAIN_CK(prm) DBG_BJ_LIB_CK(prm)
+#define BRAIN_CK_PRT(prm, comms1)  DBG_CK_2(prm, comms1)
 
 #define BRAIN_CK_0(prm)	DBG_BJ_LIB_CK(prm)
 
@@ -1373,7 +1374,8 @@ class memap {
 
 inline
 void	find_max_level(row_quanton_t& tmp_mots, long& max_lev){
-	max_lev = INVALID_LEVEL;
+	//max_lev = INVALID_LEVEL;
+	max_lev = ROOT_LEVEL;
 
 	for(long aa = 0; aa < tmp_mots.size(); aa++){
 
@@ -1501,14 +1503,6 @@ class notekeeper {
 			//BRAIN_CK(mots[ii]->has_dot() == val);
 		}
 		return true;
-	}
-
-	void	get_all_motives(row_quanton_t& mots){
-		mots.clear();
-		for(long aa = dk_motives_by_layer.last_idx(); aa >= 0; aa--){
-			row_quanton_t& lv_mots = dk_motives_by_layer[aa];
-			lv_mots.append_to(mots);
-		}
 	}
 
 	void	get_all_ordered_motives(row_quanton_t& mots){
@@ -1803,11 +1797,17 @@ class deducer {
 	void		dec_curr_quanton(){
 		get_orig_trail().dec_curr_quanton();
 	}	
-	quanton&	get_curr_quanton();
+	quanton&	get_curr_quanton(){
+		quanton* nxt_qua = get_orig_trail().get_curr_quanton();
+		BRAIN_CK(nxt_qua != NULL_PT);
+		BRAIN_CK(nxt_qua->qu_id != 0);
+		BRAIN_CK(nxt_qua->is_pos());
+		return *nxt_qua;
+	}
 
-	void 		dbg_find_dct_of(neuron& confl, deduction& dct);	
-	void		dbg_deduc_find_next_source();
-	void		dbg_deduc_find_next_dotted();
+	void 		find_dct_of(neuron& confl, deduction& dct);	
+	void		deduc_find_next_source();
+	void		deduc_find_next_dotted();
 
 };
 
@@ -1908,8 +1908,6 @@ class leveldat {
 
 class dbg_inst_info {
 public:
-	deducer		dbg_br_deducer;
-	
 	long	dbg_before_retract_lv;
 	long	dbg_last_recoil_lv;
 	
@@ -2031,6 +2029,8 @@ public:
 	row<prop_signal>	br_psignals;	// forward propagated signals
 	row<prop_signal>	br_delayed_psignals;
 
+	deducer			br_deducer;
+	
 	deduction		br_retract_dct;
 	//deduction		br_retract_nxt_dct;
 
@@ -2295,16 +2295,6 @@ public:
 		return br_current_ticket.tk_level;
 	}
 
-	leveldat*	sup_dat_level(){
-		BRAIN_CK(! br_data_levels.is_empty());
-		int l_idx = br_data_levels.last_idx() - 1;
-		leveldat* pt_lv = NULL_PT;
-		if(l_idx > 0){
-			pt_lv = br_data_levels[l_idx];
-		}
-		return pt_lv;
-	}
-
 	leveldat&	data_level(){
 		BRAIN_CK(! br_data_levels.is_empty());
 		leveldat* pt_lv = br_data_levels.last();
@@ -2365,8 +2355,9 @@ public:
 	void	update_semi_monos();
 
 	void	retract_choice();
-	void	retract_all();
+	void	retract_to(long tg_lv = ROOT_LEVEL);
 	void	reverse();
+	void	new_reverse();
 
 	bool	map_get_sorted_clauses_of(row<neuron*>& neus, long neus_sz, 
 			row<sortee*>& qtees, row<canon_clause*>& sorted_ccls);
@@ -2643,16 +2634,6 @@ inline
 notekeeper& 
 deducer::get_orig_trail(){
 	return get_de_brain().br_charge_trail;
-}
-
-inline
-quanton&
-deducer::get_curr_quanton(){
-	quanton* nxt_qua = get_orig_trail().get_curr_quanton();
-	BRAIN_CK(nxt_qua != NULL_PT);
-	BRAIN_CK(nxt_qua->qu_id != 0);
-	BRAIN_CK(nxt_qua->is_pos());
-	return *nxt_qua;
 }
 
 inline

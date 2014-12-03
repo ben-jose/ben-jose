@@ -207,79 +207,6 @@ brain::check_timeout(){
 #endif
 }
 
-void
-deducer::dbg_deduc_find_next_dotted(){
-#ifdef FULL_DEBUG
-	while(! get_curr_quanton().has_dot()){
-		DBG_PRT(20, os << "NOT dotted " << get_curr_quanton() 
-				<< " in deduc find next dotted");
-		dec_curr_quanton();
-	}
-
-	BRAIN_CK(de_noteke.dk_note_layer <= get_de_brain().level());
-	quanton& nxt_qua = get_curr_quanton();
-	long qlv = nxt_qua.qlevel();
-
-	de_noteke.update_notes_layer(qlv);
-#endif
-}
-
-void
-deducer::dbg_deduc_find_next_source(){
-#ifdef FULL_DEBUG
-
-	brain& brn = get_de_brain();
-
-	BRAIN_CK(tg_confl() != NULL_PT);
-	bool is_first = (de_nxt_src == tg_confl());
-
-	BRAIN_CK(! is_first || (de_nxt_src != NULL));
-	DBG_PRT(20, os << "reasoning_cause_of_conflict " << de_nxt_src;
-		os << " tot_dotted=" << de_noteke.dk_tot_noted;
-		os << " num_dotted_in_lv=" << de_noteke.dk_num_noted_in_layer;
-		os << " dotting level=" << de_noteke.dk_note_layer;
-	);
-
-	if(de_nxt_src != NULL){
-		BRAIN_CK(! de_nxt_src->ne_fibres.is_empty());
-		BRAIN_CK(is_first || (de_nxt_src->ne_fibres[0]->get_charge() == cg_positive) );
-		BRAIN_CK(is_first || de_nxt_src->neu_compute_binary());
-
-		if(! de_nxt_src->ne_original){
-			de_all_original = false;
-		}
-
-		row_quanton_t& causes = de_nxt_src->ne_fibres;
-		long from = (is_first)?(0):(1);
-		long until = causes.size();
-		//quanton* max_qua = 
-		de_noteke.set_motive_notes(de_nxt_src->ne_fibres, from, until);
-	}
-
-	BRAIN_CK(de_noteke.dk_tot_noted > 0);
-
-	dbg_deduc_find_next_dotted();
-
-	quanton& nxt_qua = get_curr_quanton();
-	DBG_PRT(20, os << "dotted found " << nxt_qua 
-		<< " num_dotted_in_lv " << de_noteke.dk_num_noted_in_layer;
-		os << " dotting level=" << de_noteke.dk_note_layer;
-	);
-
-	de_nxt_src = nxt_qua.get_source();
-
-	nxt_qua.reset_dot(brn);
-	BRAIN_CK(nxt_qua.qlevel() == de_noteke.dk_note_layer);
-	BRAIN_CK(nxt_qua.is_pos());
-
-	de_noteke.dec_notes();
-
-	DBG_PRT(101, os << "qua=" << &nxt_qua << " filled APPEND=";
-		nxt_qua.qu_full_charged.print_row_data(os, true, "\n");
-	);
-#endif
-}
-
 bool
 ck_motives(brain& brn, row_quanton_t& mots){
 #ifdef FULL_DEBUG
@@ -301,78 +228,6 @@ ck_motives(brain& brn, row_quanton_t& mots){
 	}
 #endif
 	return true;
-}
-
-void
-deducer::dbg_find_dct_of(neuron& confl, deduction& dct){
-#ifdef FULL_DEBUG
-	brain& brn = get_de_brain();
-
-	de_all_original = true;
-	de_all_dom = true;
-
-	de_noteke.init_notes(brn.level());	
-
-	BRAIN_CK(brn.br_tot_qu_dots == 0);
-	BRAIN_CK(de_noteke.dk_note_layer != INVALID_LEVEL);
-	BRAIN_CK(de_noteke.dk_note_layer != ROOT_LEVEL);
-	BRAIN_CK(de_noteke.dk_note_layer > 0);
-	BRAIN_CK(de_noteke.dk_note_layer <= get_de_brain().level());
-	BRAIN_CK(! confl.ne_fibres.is_empty());
-
-	tg_confl() = &confl;
-
-	DBG(row_quanton_t tmp_mots);
-	DBG(de_noteke.get_all_motives(tmp_mots));
-	BRAIN_CK(tmp_mots.is_empty());
-
-	de_filled_in_lv.clear();
-	de_nxt_src = &confl;
-
-	reset_curr_quanton();
-
-	BRAIN_CK(de_noteke.dk_note_layer == brn.level());
-	long deduc_lv = de_noteke.dk_note_layer;
-	MARK_USED(deduc_lv);
-
-	dbg_deduc_find_next_source();
-	while(de_noteke.dk_num_noted_in_layer > 0){
-		dbg_deduc_find_next_source();
-	}
-
-	quanton& nxt_qua = get_curr_quanton();
-	quanton* opp_nxt = nxt_qua.qu_inverse; 
-	BRAIN_CK(opp_nxt != NULL);
-
-	BRAIN_CK(opp_nxt->qlevel() == deduc_lv);
-	BRAIN_CK(opp_nxt->get_charge() == cg_negative);
-
-	dct.init_deduction();
-	dct.dt_motives.set_cap(de_noteke.dk_tot_noted + 1);
-
-	de_noteke.get_all_motives(dct.dt_motives);
-
-	// close deduction
-
-	find_max_level(dct.dt_motives, dct.dt_target_level);
-
-	BRAIN_CK(! opp_nxt->has_dot());
-	dct.dt_forced = opp_nxt;
-
-	BRAIN_CK(dct.dt_target_level < de_noteke.dk_note_layer);
-	BRAIN_CK(ck_motives(brn, dct.dt_motives));
-
-	DBG_PRT(20, os << "dbg_find_dct_of deduction=" << dct);
-
-	// reset all
-
-	de_noteke.clear_all_motives();
-
-	DBG(de_noteke.get_all_motives(tmp_mots));
-	BRAIN_CK(tmp_mots.is_empty());
-
-	BRAIN_CK(brn.br_tot_qu_dots == 0);
-#endif
 }
 
 void
@@ -611,8 +466,6 @@ brain::dbg_add_to_used(neuron& neu){
 #ifdef FULL_DEBUG
 void
 dbg_inst_info::init_dbg_inst_info(){
-	//dbg_br_deducer
-	
 	dbg_before_retract_lv = INVALID_LEVEL;
 	dbg_last_recoil_lv = INVALID_LEVEL;
 	

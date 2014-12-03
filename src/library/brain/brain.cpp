@@ -504,7 +504,7 @@ brain::init_brain(solver& ss){
 							   &quanton::set_note0, &quanton::reset_its_note0, 
 								&set_all_note0, &reset_all_its_note0);
 
-	BRAIN_DBG(br_dbg.dbg_br_deducer.init_deducer(this);)
+	br_deducer.init_deducer(this);
 	
 	br_retract_map0.init_memap(this);
 	
@@ -539,7 +539,7 @@ brain::release_brain(){
 	get_skeleton().set_dbg_brn(NULL);
 
 	if(level() != ROOT_LEVEL){
-		retract_all();
+		retract_to();
 	}
 	while(! br_data_levels.is_empty()){
 		dec_level();
@@ -1241,7 +1241,7 @@ brain::aux_solve_instance(){
 	close_all_maps();
 
 	if(level() != ROOT_LEVEL){
-		retract_all();
+		retract_to();
 	}
 
 	br_psignals.clear(true, true);
@@ -1392,7 +1392,7 @@ deduction::set_with(brain& brn, notekeeper& nke, quanton& nxt_qua){
 	BRAIN_CK(opp_nxt.qlevel() == nke.dk_note_layer);
 	BRAIN_CK(opp_nxt.get_charge() == cg_negative);
 
-	nke.get_all_motives(dt_motives);
+	nke.get_all_ordered_motives(dt_motives);
 
 	DBG_PRT(51, os << " motives_by_lv= " << nke.dk_motives_by_layer);
 	DBG_PRT(52, os << "LV=" <<  nke.dk_note_layer << " motives " 
@@ -1449,27 +1449,35 @@ neuron::set_motives(brain& brn, notekeeper& nke, bool is_first){
 }
 
 void
-brain::retract_all(){
+brain::retract_to(long tg_lv){
 	BRAIN_CK(br_semi_monos_to_update.is_empty());
 
 	brain& brn = *this;
-	//deduction dct;
-	while(br_charge_trail.has_motives()){
-		bool end_of_lev = (br_charge_trail.last_qlevel() != level());
+	while(level() >= 0){
+		bool end_of_lev = (trail_level() != level());
 		if(end_of_lev){
-			BRAIN_CK_0((br_charge_trail.last_qlevel() + 1) == level());
-			BRAIN_CK_0(level() != ROOT_LEVEL);
+			BRAIN_CK((trail_level() + 1) == level());
+			BRAIN_CK(level() != ROOT_LEVEL);
 		
 			dec_level();
 		}
 
-		if(level() == ROOT_LEVEL){
+		if(level() == tg_lv){
 			break;
 		}
+		
+		BRAIN_CK_PRT(br_charge_trail.has_motives(),
+			os << recoil() << ".lv=" << level() << " tg_lv=" << tg_lv;
+			os << " trail_lv=" << trail_level() << bj_eol;
+			print_trail(os)			
+		);
 
 		quanton& qua = trail_last();
 		qua.set_charge(brn, NULL_PT, cg_neutral, INVALID_TIER);
 	}
+	BRAIN_CK(level() == tg_lv);
+	BRAIN_CK(trail_level() == tg_lv);
+	
 	update_semi_monos();
 }
 
@@ -1763,7 +1771,7 @@ notekeeper::restart_with(brain& brn, row_quanton_t& bak_upper){
 	BRAIN_CK(dk_has_note_fn == &quanton::has_note0);
 
 	row_quanton_t rr_upper;
-	get_all_motives(rr_upper);
+	get_all_ordered_motives(rr_upper);
 	BRAIN_CK(ck_motives(brn, rr_upper));
 	set_all_note3(brn, rr_upper);
 
@@ -1907,7 +1915,8 @@ brain::pulsate(){
 			set_result(bjr_no_satisf);
 			return;
 		}
-		reverse();
+		//reverse();
+		new_reverse();
 		BRAIN_CK(has_psignals());
 
 	} else {
