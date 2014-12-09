@@ -78,24 +78,40 @@ deducer::init_nk_with_note0(notekeeper& nkpr, brain* brn, long tg_lv){
 }
 
 void
-deducer::deduc_find_next_noted(){
-	notekeeper& nkpr = de_dct_nkpr;
-	while(! nkpr.nk_has_note(get_curr_quanton())){
-		DBG_PRT(20, os << "NOT noted " << get_curr_quanton() 
+deducer::deduc_find_next_noted(notekeeper& nkpr, nkref& nkr){
+	quanton* nxt_qua = nkr.get_curr_quanton();
+	while(nxt_qua != NULL_PT){
+		nxt_qua = nkr.get_curr_quanton();
+		if(nxt_qua == NULL_PT){
+			break;
+		}
+		BRAIN_CK(nxt_qua != NULL_PT);
+		if(nkpr.nk_has_note(*nxt_qua)){
+			break;
+		}
+		
+		DBG_PRT(20, os << "NOT noted " << nkr.get_curr_quanton() 
 				<< " in deduc find next noted");
-		dec_curr_quanton();
+		nkr.dec_curr_quanton();
 	}
 
 	BRAIN_CK(nkpr.dk_note_layer <= get_de_brain().level());
-	quanton& nxt_qua = get_curr_quanton();
-	long qlv = nxt_qua.qlevel();
+	if(nxt_qua == NULL_PT){
+		return;
+	}
+	
+	BRAIN_CK(nxt_qua != NULL_PT);
+	BRAIN_CK(nkpr.nk_has_note(*nxt_qua));
+	BRAIN_CK(nxt_qua->qu_id != 0);
+	BRAIN_CK(nxt_qua->is_pos());
+	
+	long qlv = nxt_qua->qlevel();
 
 	nkpr.update_notes_layer(qlv);
 }
 
 void
-deducer::deduc_find_next_source(){
-	notekeeper& nkpr = de_dct_nkpr;
+deducer::deduc_find_next_source(notekeeper& nkpr, nkref& nkr, bool only_origs){
 	//brain& brn = get_de_brain();
 
 	BRAIN_CK(tg_confl() != NULL_PT);
@@ -108,7 +124,7 @@ deducer::deduc_find_next_source(){
 		os << " note layer=" << nkpr.dk_note_layer;
 	);
 
-	if(de_nxt_src != NULL){
+	if((de_nxt_src != NULL) && (! only_origs || de_nxt_src->ne_original)){
 		BRAIN_CK(! de_nxt_src->ne_fibres.is_empty());
 		BRAIN_CK(is_first || (de_nxt_src->ne_fibres[0]->get_charge() == cg_positive) );
 		BRAIN_CK(is_first || de_nxt_src->neu_compute_binary());
@@ -121,9 +137,14 @@ deducer::deduc_find_next_source(){
 
 	BRAIN_CK(nkpr.dk_tot_noted > 0);
 
-	deduc_find_next_noted();
+	deduc_find_next_noted(nkpr, nkr);
 
-	quanton& nxt_qua = get_curr_quanton();
+	quanton* pt_qua = nkr.get_curr_quanton();
+	if(pt_qua == NULL_PT){
+		return;
+	}
+	BRAIN_CK(pt_qua != NULL_PT);
+	quanton& nxt_qua = *pt_qua;
 	DBG_PRT(20, os << "noted found " << nxt_qua 
 		<< " num_noted_in_layer " << nkpr.dk_num_noted_in_layer;
 		os << " note layer=" << nkpr.dk_note_layer;
@@ -145,6 +166,7 @@ deducer::deduc_find_next_source(){
 void
 deducer::find_dct_of(prop_signal const & confl_sg, deduction& dct){
 	brain& brn = get_de_brain();
+	nkref& nkr = de_dct_ref;
 	notekeeper& nkpr = de_dct_nkpr;
 	
 	BRAIN_CK(confl_sg.ps_source != NULL);
@@ -170,18 +192,21 @@ deducer::find_dct_of(prop_signal const & confl_sg, deduction& dct){
 
 	de_nxt_src = &confl;
 
-	reset_curr_quanton();
+	nkr.reset_curr_quanton();
 
+	BRAIN_CK(nkr.has_curr_quanton());
 	BRAIN_CK(nkpr.dk_note_layer == brn.level());
 	long deduc_lv = nkpr.dk_note_layer;
 	MARK_USED(deduc_lv);
 
-	deduc_find_next_source();
+	deduc_find_next_source(nkpr, nkr);
 	while(! is_end_of_dct()){
-		deduc_find_next_source();
+		BRAIN_CK(nkr.has_curr_quanton());
+		deduc_find_next_source(nkpr, nkr);
 	}
+	BRAIN_CK(nkr.has_curr_quanton());
 
-	fill_dct(nkpr, dct);
+	fill_dct(nkpr, nkr, dct);
 
 	// reset all
 
@@ -194,9 +219,13 @@ deducer::find_dct_of(prop_signal const & confl_sg, deduction& dct){
 }
 
 void
-deducer::fill_dct(notekeeper& nkpr, deduction& dct){
+deducer::fill_dct(notekeeper& nkpr, nkref& nkr, deduction& dct){
 	DBG(brain& brn = get_de_brain());
-	quanton& qua = get_curr_quanton();
+	
+	quanton* pt_qua = nkr.get_curr_quanton();
+	BRAIN_CK(pt_qua != NULL_PT);
+	
+	quanton& qua = *pt_qua;
 	quanton& opp = qua.opposite(); 
 
 	BRAIN_CK(is_end_of_dct());
@@ -220,9 +249,12 @@ deducer::fill_dct(notekeeper& nkpr, deduction& dct){
 }
 
 void
-deducer::fill_nmp(){
+deducer::fill_nmp(notekeeper& nkpr, nkref& nkr){
 	brain& brn = get_de_brain();
-	quanton& qua = get_curr_quanton();
+	quanton* pt_qua = nkr.get_curr_quanton();
+	BRAIN_CK(pt_qua != NULL_PT);
+	quanton& qua = *pt_qua;
+	
 	quanton& opp = qua.opposite();
 	neuromap& nmp = nxt_nmp();
 	

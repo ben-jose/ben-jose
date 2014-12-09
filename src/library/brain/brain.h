@@ -1818,6 +1818,11 @@ class nkref {
 
 		return (c1 && c2 && c3);
 	}
+	
+	notekeeper& 	get_keeper(){
+		BRAIN_CK(nr_keeper != NULL_PT);
+		return *nr_keeper;
+	}
 
 	void 	update_curr_quanton(bool reset = false){
 		if(nr_keeper == NULL_PT){
@@ -1878,6 +1883,11 @@ class nkref {
 		BRAIN_CK(nxt_qua != NULL_PT);
 		return nxt_qua;
 	}
+	
+	bool		has_curr_quanton(){
+		return 	(get_curr_quanton() != NULL_PT);
+	}
+	
 };
 
 //=============================================================================
@@ -1941,30 +1951,13 @@ class deducer {
 		return (num_ly_notes == 0);
 	}
 	
-	void	fill_dct(notekeeper& nkpr, deduction& dct);
-	void	fill_nmp();
+	void	fill_dct(notekeeper& nkpr, nkref& nkr, deduction& dct);
+	void	fill_nmp(notekeeper& nkpr, nkref& nkr);
 	
-	void		reset_curr_quanton(){
-		BRAIN_CK(! de_dct_ref.is_nr_virgin());
-		de_dct_ref.reset_curr_quanton();
-	}
-	void		dec_curr_quanton(){
-		BRAIN_CK(! de_dct_ref.is_nr_virgin());
-		de_dct_ref.dec_curr_quanton();
-	}	
-	quanton&	get_curr_quanton(){
-		BRAIN_CK(! de_dct_ref.is_nr_virgin());
-		quanton* nxt_qua = de_dct_ref.get_curr_quanton();
-		BRAIN_CK(nxt_qua != NULL_PT);
-		BRAIN_CK(nxt_qua->qu_id != 0);
-		BRAIN_CK(nxt_qua->is_pos());
-		return *nxt_qua;
-	}
-
 	void 		find_dct_of(prop_signal const & confl, deduction& dct);
-	void		deduc_find_next_source();
-	void		deduc_find_next_noted();
-	//void 		deduc_fill_dct(deduction& dct);
+	void		deduc_find_next_source(notekeeper& nkpr, nkref& ref, 
+									   bool only_origs = false);
+	void		deduc_find_next_noted(notekeeper& nkpr, nkref& ref);
 
 };
 
