@@ -9,6 +9,7 @@ SOURCES := \
 	$(SRC_BASE_DIR)/external/top_exception.cpp \
 	$(SRC_BASE_DIR)/library/brain/brain.cpp \
 	$(SRC_BASE_DIR)/library/brain/sortor.cpp \
+	$(SRC_BASE_DIR)/library/brain/neuromap.cpp \
 	$(SRC_BASE_DIR)/library/brain/memap.cpp \
 	$(SRC_BASE_DIR)/library/brain/reverse.cpp \
 	$(SRC_BASE_DIR)/library/dimacs/dimacs.cpp \

@@ -38,50 +38,6 @@ funcs that implement reverse func.
 #include "dbg_prt.h"
 
 void
-brain::start_propagation(quanton& nxt_qua){
-	quanton* pt_qua = &nxt_qua;
-	if(pt_qua->is_semi_mono()){
-		pt_qua = pt_qua->get_semi_mono();
-	}
-	quanton& qua = *pt_qua;
-
-	inc_level(qua);
-
-	DBG(long old_lv = level());
-	BRAIN_CK(data_level().ld_chosen == &qua);
-
-	BRAIN_CK(! has_psignals());
-	send_psignal(qua, NULL, tier() + 1);
-	BRAIN_CK(has_psignals());
-
-	if(qua.is_semi_mono()){
-		return;
-	}
-
-	long num1 = propagate_signals();
-	BRAIN_CK(num1 > 0);
-
-	if(! found_conflict()){
-		retract_choice();
-		long num2 = propagate_signals();
-		BRAIN_CK(num2 > 0);
-
-		if(! found_conflict()){
-			if(num1 > num2){
-				retract_choice();
-				BRAIN_CK(old_lv == level());
-			}
-
-			if((num1 == num2) && qua.is_note5()){
-				retract_choice();
-				BRAIN_CK(old_lv == level());
-			}
-		}
-	}
-}
-
-
-void
 brain::new_reverse(){
 	BRAIN_CK(! has_psignals());
 	brain& brn = *this;
@@ -109,18 +65,27 @@ brain::new_reverse(){
 	// START REVERSE (init mpp0 and nke0)
 
 	BRAIN_CK(found_conflict());
-	
-	neuron& cfl = *(br_conflict_found.ps_source);
-
 	BRAIN_DBG(br_dbg.dbg_before_retract_lv = level());
 
+	DBG(
+		neuron* cfl = br_conflict_found.ps_source;
+		BRAIN_CK(cfl != NULL_PT);
+		if(! cfl->ne_original){ 
+			DBG_PRT(117, os << "NOT_ORIG_CONFL=" << cfl 
+				<< " creat_tk=" << cfl->ne_dbg_creation_tk);
+		}
+	)
+	
+	BRAIN_CK(br_conflict_found.ps_source != NULL_PT);
+	BRAIN_CK(br_conflict_found.ps_source->ne_original);
+	
 	//mpp0.ma_confl = br_conflict_found;
-	//mpp0.ma_before_retract_tk.update_ticket(&brn);
+	//mpp0.ma_before_retract_tk.update_ticket(brn);
 	//BRAIN_CK(! mpp0.is_ma_virgin());
 	
 	// analize
 
-	br_deducer.find_dct_of(cfl, dct);
+	br_deducer.find_dct_of(br_conflict_found, dct);
 
 	DBG_PRT(122, dbg_prt_lvs_active(os));
 	DBG_PRT(122, dbg_prt_lvs_have_learned(os));
@@ -150,7 +115,7 @@ brain::new_reverse(){
 	memap& lv_map0 = data_level().ld_map0;
 	if(! mpp0.is_ma_virgin() && lv_map0.is_ma_virgin()){
 		ticket& n_tk = mpp0.ma_after_retract_tks.inc_sz();
-		n_tk.update_ticket(&brn);
+		n_tk.update_ticket(brn);
 
 		BRAIN_CK(mpp0.ck_map_guides(dbg_call_2));
 		lv_map0.map_replace_with(brn, mpp0, dbg_call_2);

@@ -115,6 +115,7 @@ class quanton;
 class neuron;
 class deduction;
 class coloring;
+class neuromap;
 class memap;
 class deducer;
 class notekeeper;
@@ -168,6 +169,7 @@ DECLARE_PRINT_FUNCS(neuron)
 DECLARE_PRINT_FUNCS(deduction)
 DECLARE_PRINT_FUNCS(prop_signal)
 DECLARE_PRINT_FUNCS(coloring)
+DECLARE_PRINT_FUNCS(neuromap)
 DECLARE_PRINT_FUNCS(memap)
 DECLARE_PRINT_FUNCS(leveldat)
 
@@ -236,7 +238,7 @@ class ticket {
 		return ((tk_recoil != INVALID_RECOIL) && (tk_level != INVALID_LEVEL));
 	}
 
-	void	update_ticket(brain* brn);
+	void	update_ticket(brain& brn);
 
 	bj_ostream&	print_ticket(bj_ostream& os, bool from_pt = false){
 		os << "[";
@@ -427,6 +429,7 @@ class quanton {
 	row<neuron*>		qu_full_charged;
 
 	// maps in
+	neuromap*		qu_curr_nemap;
 	memap*			qu_curr_map;
 	
 	prop_signal*	qu_tmp_psig;
@@ -506,6 +509,7 @@ class quanton {
 
 		qu_source = NULL;
 
+		qu_curr_nemap = NULL_PT;
 		qu_curr_map = NULL_PT;
 		
 		qu_tmp_psig = NULL_PT;
@@ -624,6 +628,7 @@ class quanton {
 	void		add_source(neuron& neu);
 
 	bool		in_qu_dominated(brain& brn);
+	void		make_qu_dominated(brain& brn);
 
 	void		set_uncharged_partner_neu(brain& brn, long uidx, 
 										long dbg_call, neuron* dbg_neu);
@@ -680,7 +685,7 @@ class neuron {
 	//static 
 	//long			NE_TOT_SPOTS;
 
-	long			ne_index;
+	long			ne_index;		//idx in br_neurons
 	bool			ne_original;
 
 	row_quanton_t		ne_fibres;		// used in forward propagation of negative signls
@@ -696,6 +701,7 @@ class neuron {
 	sortee			ne_tee;
 	sortrel			ne_reltee;
 
+	neuromap*		ne_curr_nemap;
 	memap*			ne_curr_map;
 
 	ticket			ne_recoil_tk;		// srcs of the confl are updated at recoil time
@@ -709,11 +715,13 @@ class neuron {
 		canon_clause	ne_dbg_ccl;
 		bool			ne_dbg_in_used;
 		ticket			ne_dbg_filled_tk;	// all filled updated a filled time
+		ticket			ne_dbg_creation_tk;
 	)
 
 	// methods
 
 	neuron(){
+		ne_index = INVALID_IDX;	// not in init_neuron to be consistent with is_ne_virgin.
 		init_neuron();
 	}
 
@@ -758,6 +766,7 @@ class neuron {
 		ne_tee.so_related = &ne_reltee;
 		ne_tee.so_ccl.cc_me = this;
 
+		ne_curr_nemap = NULL_PT;
 		ne_curr_map = NULL_PT;
 
 		ne_recoil_tk.init_ticket();
@@ -784,10 +793,11 @@ class neuron {
 		bool c6 = (! ne_edge_tk.is_valid());
 		bool c7 = (ne_is_conflict == false);
 		bool c8 = true; BRAIN_DBG(c8 = (ne_dbg_used_no_orig == false);)
-		bool c9 = (ne_curr_map == NULL_PT);
-		bool c10 = (! ne_recoil_tk.is_valid());
+		bool c9 = (ne_curr_nemap == NULL_PT);
+		bool c10 = (ne_curr_map == NULL_PT);
+		bool c11 = (! ne_recoil_tk.is_valid());
 
-		return (c1 && c2 && c3 && c4 && c5 && c6 && c7 && c8 && c9 && c10);
+		return (c1 && c2 && c3 && c4 && c5 && c6 && c7 && c8 && c9 && c10 && c11);
 	}
 
 	long	fib_sz(){ return ne_fibres.size(); }
@@ -854,7 +864,7 @@ class neuron {
 		BRAIN_CK(ck_tunnels());
 	}
 
-	void		neu_swap_edge(brain* brn, long ii);
+	void		neu_swap_edge(brain& brn, long ii);
 	void		neu_tunnel_signals(brain& brn, quanton& r_qua);
 
 	quanton*	update_fibres(row_quanton_t& synps, bool orig);
@@ -913,6 +923,7 @@ class neuron {
 	}
 
 	bool	in_ne_dominated(brain& brn);
+	void	make_ne_dominated(brain& brn);
 
 	void	fill_mutual_sortees(brain& brn);
 
@@ -969,6 +980,15 @@ class prop_signal {
 		return (c1 && c2 && c3);
 	}
 
+	void	make_ps_dominated(brain& brn){
+		if(ps_quanton != NULL_PT){
+			ps_quanton->make_qu_dominated(brn);
+		}
+		if(ps_source != NULL_PT){
+			ps_source->make_ne_dominated(brn);
+		}
+	}
+	
 	brain*	get_dbg_brn(){
 		brain* the_brn = NULL;
 		BRAIN_DBG(if(ps_quanton != NULL){ the_brn = ps_quanton->get_dbg_brn(); });
@@ -1170,6 +1190,73 @@ class coloring {
 };
 
 //=============================================================================
+// neuromap
+
+// coding this replacement for memaps
+class neuromap {
+	public:
+		
+	brain*			na_brn;	
+
+	long			na_index;		//idx in br_neuromaps
+	bool			na_active;
+	long			na_deact_tier;
+	quanton*		na_orig_cho;
+	neuromap*		na_submap;
+	
+	prop_signal		na_confl;
+
+	row<neuron*>		na_fll_in_lv;
+	row<neuron*>		na_not_selected;
+	
+	row<prop_signal>	na_forced;
+	row<neuron*>		na_non_forced;
+	
+	coloring		ma_guide_col;
+	
+	neuromap(brain* pt_brn = NULL) {
+		na_index = INVALID_IDX;
+		init_neuromap(pt_brn);
+	}
+
+	~neuromap(){
+		init_neuromap();
+	}
+
+	void	init_neuromap(brain* pt_brn = NULL){
+		na_brn = pt_brn;
+		
+		na_active = false;
+		na_deact_tier = INVALID_TIER;
+		na_orig_cho = NULL_PT;
+		na_submap = NULL_PT;
+	}
+	
+	bool	is_na_virgin(){
+		bool c1 = (na_brn == NULL_PT);
+		bool c2 = (na_active == false);
+		bool c3 = (na_deact_tier == INVALID_TIER);
+		bool c4 = (na_orig_cho == NULL_PT);
+		bool c5 = (na_submap == NULL_PT);
+
+		return (c1 && c2 && c3 && c4 && c5);
+	}
+
+	brain&	get_brn(){
+		BRAIN_CK(na_brn != NULL);
+		return (*na_brn);
+	}
+	
+	brain*	get_dbg_brn(){
+		brain* the_brn = NULL;
+		BRAIN_DBG(the_brn = na_brn);
+		return the_brn;
+	}
+
+	bj_ostream&	print_neuromap(bj_ostream& os, bool from_pt = false);
+};
+
+//=============================================================================
 // memap
 
 class memap {
@@ -1180,6 +1267,7 @@ class memap {
 	ticket			ma_before_retract_tk;
 	row<ticket>		ma_after_retract_tks;
 
+	long			ma_tier;
 	prop_signal		ma_confl;
 	quanton*		ma_cho;
 
@@ -1212,6 +1300,8 @@ class memap {
 		ma_brn = pt_brn;
 
 		ma_before_retract_tk.init_ticket();
+		
+		ma_tier = INVALID_TIER;
 		ma_confl.init_prop_signal();
 		ma_cho = NULL_PT;
 
@@ -1372,18 +1462,6 @@ class memap {
 	bj_ostream&	print_memap(bj_ostream& os, bool from_pt = false);
 };
 
-inline
-void	find_max_level(row_quanton_t& tmp_mots, long& max_lev){
-	//max_lev = INVALID_LEVEL;
-	max_lev = ROOT_LEVEL;
-
-	for(long aa = 0; aa < tmp_mots.size(); aa++){
-
-		quanton& qua = *(tmp_mots[aa]);
-		max_lev = max(max_lev, qua.qlevel());
-	}
-}
-
 //=============================================================================
 // notekeeper
 
@@ -1409,8 +1487,8 @@ class notekeeper {
 
 	row_row_quanton_t	dk_motives_by_layer;
 
-	long			dk_curr_qua_layer;
-	long			dk_curr_qua_idx;
+	//long			dk_curr_qua_layer;
+	//long			dk_curr_qua_idx;
 	
 	notekeeper(brain* brn = NULL_PT, long tg_lv = INVALID_LEVEL)
 	{
@@ -1433,6 +1511,40 @@ class notekeeper {
 		dk_reset_all_fn = NULL_PT;
 
 		init_notes(tg_lv);
+	}
+	
+	long 	nk_get_counter(){
+		BRAIN_CK(dk_note_counter != NULL_PT);
+		return *dk_note_counter;
+	}
+	
+	bool	nk_has_note(quanton& qua){
+		BRAIN_CK(dk_has_note_fn != NULL_PT);
+		return (qua.*dk_has_note_fn)();
+	}
+
+	void	nk_set_note(quanton& qua){
+		BRAIN_CK(dk_set_note_fn != NULL_PT);
+		brain& brn = get_dk_brain();
+		(qua.*dk_set_note_fn)(brn);
+	}
+
+	void	nk_reset_note(quanton& qua){
+		BRAIN_CK(dk_reset_note_fn != NULL_PT);
+		brain& brn = get_dk_brain();
+		(qua.*dk_reset_note_fn)(brn);
+	}
+	
+	long 	nk_set_all_notes(row_quanton_t& quans){
+		BRAIN_CK(dk_set_all_fn != NULL_PT);
+		brain& brn = get_dk_brain();
+		return (*dk_set_all_fn)(brn, quans);
+	}
+
+	long 	nk_reset_all_notes(row_quanton_t& quans){
+		BRAIN_CK(dk_reset_all_fn != NULL_PT);
+		brain& brn = get_dk_brain();
+		return (*dk_reset_all_fn)(brn, quans);
 	}
 
 	brain*	get_dbg_brn(){
@@ -1461,8 +1573,8 @@ class notekeeper {
 
 		dk_motives_by_layer.clear(true, true);
 
-		dk_curr_qua_layer = INVALID_IDX;
-		dk_curr_qua_idx = INVALID_IDX;
+		//dk_curr_qua_layer = INVALID_IDX;
+		//dk_curr_qua_idx = INVALID_IDX;
 	}
 
 	bool	ck_funcs(){
@@ -1500,7 +1612,6 @@ class notekeeper {
 			bool c1 = (qua->*dk_has_note_fn)();
 			MARK_USED(c1);
 			BRAIN_CK(c1 == val);
-			//BRAIN_CK(mots[ii]->has_dot() == val);
 		}
 		return true;
 	}
@@ -1523,50 +1634,6 @@ class notekeeper {
 
 	}
 
-	void 	update_curr_quanton(bool reset = false){
-		dk_curr_qua_layer = get_nxt_busy_layer(dk_curr_qua_layer, reset);
-		dk_curr_qua_idx = INVALID_IDX;
-		
-		if(dk_curr_qua_layer != INVALID_IDX){
-			dk_curr_qua_idx = dk_motives_by_layer[dk_curr_qua_layer].last_idx();
-		}
-	}
-
-	void 	reset_curr_quanton(){
-		dk_curr_qua_layer = INVALID_IDX;
-		update_curr_quanton(true);
-	}
-	
-	void 	dec_curr_quanton(){
-		BRAIN_CK(dk_curr_qua_idx >= INVALID_IDX);
-		if(dk_curr_qua_idx == INVALID_IDX){
-			return;
-		}
-		dk_curr_qua_idx--;
-		if(dk_curr_qua_idx == INVALID_IDX){
-			BRAIN_CK(dk_curr_qua_layer >= 0);
-			dk_curr_qua_layer--;
-			if(dk_curr_qua_layer == INVALID_IDX){
-				return;
-			}
-			update_curr_quanton();
-		}
-	}
-	
-	quanton*	get_curr_quanton(){
-		if(dk_curr_qua_idx == INVALID_IDX){
-			return NULL_PT;
-		}
-		BRAIN_CK(dk_motives_by_layer.is_valid_idx(dk_curr_qua_layer));
-		row_quanton_t& lv_mots = dk_motives_by_layer[dk_curr_qua_layer];
-		
-		BRAIN_CK(lv_mots.is_valid_idx(dk_curr_qua_idx));
-		
-		quanton* nxt_qua = lv_mots[dk_curr_qua_idx];
-		BRAIN_CK(nxt_qua != NULL_PT);
-		return nxt_qua;
-	}
-	
 	void	dec_notes(){
 		BRAIN_CK(dk_tot_noted > 0);
 		BRAIN_CK(dk_num_noted_in_layer > 0);
@@ -1646,20 +1713,6 @@ class notekeeper {
 		dk_pop_layer = get_nxt_busy_layer(dk_pop_layer, with_restart);
 	}
 
-	/*void		update_pop_layer(bool with_restart = false){
-		row_row_quanton_t& mots_by_ly = dk_motives_by_layer;
-		if(mots_by_ly.is_empty()){
-			dk_pop_layer = INVALID_IDX;
-			return;
-		}
-		if(with_restart){
-			dk_pop_layer = mots_by_ly.last_idx();
-		}
-		while(mots_by_ly.is_valid_idx(dk_pop_layer) && mots_by_ly[dk_pop_layer].is_empty()){
-			dk_pop_layer--;
-		}
-	}*/
-
 	quanton*	pop_motive(){
 		row_row_quanton_t& mots_by_ly = dk_motives_by_layer;
 		BRAIN_CK(ck_pop_layer());
@@ -1736,6 +1789,98 @@ class notekeeper {
 };
 
 //=============================================================================
+// nkref
+
+class nkref {
+	public:
+	notekeeper*	nr_keeper;
+	long		nr_curr_qua_layer;
+	long		nr_curr_qua_idx;
+	
+	nkref(notekeeper* the_kpr = NULL_PT){
+		init_nkref(the_kpr);
+	}
+
+	~nkref(){
+		init_nkref();
+	}
+
+	void	init_nkref(notekeeper* the_kpr = NULL_PT){
+		nr_keeper = the_kpr;
+		nr_curr_qua_layer = INVALID_IDX;
+		nr_curr_qua_idx = INVALID_IDX;
+	}
+	
+	bool	is_nr_virgin(){
+		bool c1 = (nr_keeper == NULL_PT);
+		bool c2 = (nr_curr_qua_layer == INVALID_IDX);
+		bool c3 = (nr_curr_qua_idx == INVALID_IDX);
+
+		return (c1 && c2 && c3);
+	}
+
+	void 	update_curr_quanton(bool reset = false){
+		if(nr_keeper == NULL_PT){
+			return;
+		}
+		BRAIN_CK(nr_keeper != NULL_PT);
+		nr_curr_qua_layer = nr_keeper->get_nxt_busy_layer(nr_curr_qua_layer, reset);
+		nr_curr_qua_idx = INVALID_IDX;
+		
+		if(nr_curr_qua_layer != INVALID_IDX){
+			nr_curr_qua_idx = nr_keeper->dk_motives_by_layer[nr_curr_qua_layer].last_idx();
+		}
+	}
+
+	void 	reset_curr_quanton(){
+		if(nr_keeper == NULL_PT){
+			return;
+		}
+		BRAIN_CK(nr_keeper != NULL_PT);
+		nr_curr_qua_layer = INVALID_IDX;
+		update_curr_quanton(true);
+	}
+	
+	void 	dec_curr_quanton(){
+		if(nr_keeper == NULL_PT){
+			return;
+		}
+		BRAIN_CK(nr_keeper != NULL_PT);
+		BRAIN_CK(nr_curr_qua_idx >= INVALID_IDX);
+		if(nr_curr_qua_idx == INVALID_IDX){
+			return;
+		}
+		nr_curr_qua_idx--;
+		if(nr_curr_qua_idx == INVALID_IDX){
+			BRAIN_CK(nr_curr_qua_layer >= 0);
+			nr_curr_qua_layer--;
+			if(nr_curr_qua_layer == INVALID_IDX){
+				return;
+			}
+			update_curr_quanton();
+		}
+	}
+	
+	quanton*	get_curr_quanton(){
+		if(nr_keeper == NULL_PT){
+			return NULL_PT;
+		}
+		if(nr_curr_qua_idx == INVALID_IDX){
+			return NULL_PT;
+		}
+		BRAIN_CK(nr_keeper != NULL_PT);
+		BRAIN_CK(nr_keeper->dk_motives_by_layer.is_valid_idx(nr_curr_qua_layer));
+		row_quanton_t& lv_mots = nr_keeper->dk_motives_by_layer[nr_curr_qua_layer];
+		
+		BRAIN_CK(lv_mots.is_valid_idx(nr_curr_qua_idx));
+		
+		quanton* nxt_qua = lv_mots[nr_curr_qua_idx];
+		BRAIN_CK(nxt_qua != NULL_PT);
+		return nxt_qua;
+	}
+};
+
+//=============================================================================
 // deducer
 
 class deducer {
@@ -1743,26 +1888,17 @@ class deducer {
 
 	brain*			de_brain;
 
-	bool			de_all_original;
-	bool			de_all_dom;
-
-
-	long			de_analysed_level;
-
-	deduction		de_target_dct;
 	neuron*			de_target_confl;
 
-	notekeeper		de_noteke;
-
-	long			de_searched_dotted_sz;
-	long			de_searched_filled_sz;
-
-	row<neuron*>		de_tmp_selected;
-	row<neuron*>		de_tmp_not_selected;
-
-	row<neuron*>		de_filled_in_lv;
+	notekeeper		de_dct_nkpr;
+	notekeeper		de_nmp_nkpr;
+	
+	nkref			de_dct_ref;
+	nkref			de_nmp_ref;
 
 	neuron* 		de_nxt_src;
+	neuromap*		de_nxt_nmp;
+	deduction		de_nxt_dct;
 
 	deducer(brain* brn = NULL_PT, neuron* confl = NULL_PT, 
 		long tg_lv = INVALID_LEVEL)
@@ -1778,36 +1914,57 @@ class deducer {
 	void	init_deducer(brain* brn = NULL_PT, neuron* confl = NULL_PT, 
 						 long tg_lv = INVALID_LEVEL);
 
+	static
+	void	init_nk_with_dots(notekeeper& nkpr, brain* brn, long tg_lv);
+	
+	static
+	void	init_nk_with_note0(notekeeper& nkpr, brain* brn, long tg_lv);
+
 	brain*	get_dbg_brn(){
 		brain* the_brn = NULL;
 		BRAIN_DBG(the_brn = de_brain);
 		return the_brn;
 	}
 
-	neuron*&		tg_confl(){ return de_target_confl; }
-	row_quanton_t&	tg_motives(){ return de_target_dct.dt_motives; }
-	long&			tg_level(){ return de_target_dct.dt_target_level; }
-
 	brain&		get_de_brain();
 	notekeeper& get_orig_trail();
 	
+	neuron*&	tg_confl(){ return de_target_confl; }
+	neuromap&	nxt_nmp(){
+		BRAIN_CK(de_nxt_nmp != NULL_PT);
+		return *de_nxt_nmp;
+	}
+	
+	bool	is_end_of_dct(){
+		long num_ly_notes = de_dct_nkpr.dk_num_noted_in_layer;
+		BRAIN_CK(num_ly_notes >= 0);
+		return (num_ly_notes == 0);
+	}
+	
+	void	fill_dct(notekeeper& nkpr, deduction& dct);
+	void	fill_nmp();
+	
 	void		reset_curr_quanton(){
-		get_orig_trail().reset_curr_quanton();
+		BRAIN_CK(! de_dct_ref.is_nr_virgin());
+		de_dct_ref.reset_curr_quanton();
 	}
 	void		dec_curr_quanton(){
-		get_orig_trail().dec_curr_quanton();
+		BRAIN_CK(! de_dct_ref.is_nr_virgin());
+		de_dct_ref.dec_curr_quanton();
 	}	
 	quanton&	get_curr_quanton(){
-		quanton* nxt_qua = get_orig_trail().get_curr_quanton();
+		BRAIN_CK(! de_dct_ref.is_nr_virgin());
+		quanton* nxt_qua = de_dct_ref.get_curr_quanton();
 		BRAIN_CK(nxt_qua != NULL_PT);
 		BRAIN_CK(nxt_qua->qu_id != 0);
 		BRAIN_CK(nxt_qua->is_pos());
 		return *nxt_qua;
 	}
 
-	void 		find_dct_of(neuron& confl, deduction& dct);	
+	void 		find_dct_of(prop_signal const & confl, deduction& dct);
 	void		deduc_find_next_source();
-	void		deduc_find_next_dotted();
+	void		deduc_find_next_noted();
+	//void 		deduc_fill_dct(deduction& dct);
 
 };
 
@@ -2023,6 +2180,9 @@ public:
 
 	row<neuron*>		br_unit_neurons;
 
+	k_row<neuromap>		br_neuromaps;	// all maps
+	row<neuromap*>		br_free_neuromaps;
+	long 			br_num_active_neuromaps;
 
 	long			br_first_psignal;
 	long			br_last_psignal;
@@ -2223,6 +2383,42 @@ public:
 	void	close_all_maps();
 
 	void	print_active_maps(bj_ostream& os);
+
+	// aux neuromaps
+
+	neuromap&	locate_neuromap(){
+		neuromap* pt_nmp = NULL_PT;
+		if(! br_free_neuromaps.is_empty()){
+			pt_nmp = br_free_neuromaps.pop();
+			long nmp_idx = pt_nmp->na_index;
+			MARK_USED(nmp_idx);
+			BRAIN_CK(br_neuromaps.is_valid_idx(nmp_idx));
+			BRAIN_CK(&(br_neuromaps[nmp_idx]) == pt_nmp);
+		} else {
+			pt_nmp = &(br_neuromaps.inc_sz());
+			pt_nmp->na_index = br_neuromaps.last_idx();
+		}
+		BRAIN_CK(pt_nmp != NULL);
+
+		neuromap& nmp = *pt_nmp;
+		BRAIN_CK(nmp.na_index != INVALID_IDX);
+		BRAIN_CK(nmp.is_na_virgin());
+		
+		nmp.na_brn = this;
+
+		br_num_active_neuromaps++;
+		return nmp;
+	}
+
+	void	release_neuromap(neuromap& nmp){
+		BRAIN_CK(! br_neuromaps.is_empty());
+		br_free_neuromaps.push(&nmp);
+		nmp.init_neuromap();
+
+		BRAIN_CK(nmp.is_na_virgin());
+
+		br_num_active_neuromaps--;
+	}
 
 	// aux neuron
 
@@ -2459,9 +2655,9 @@ public:
 
 inline 
 void
-ticket::update_ticket(brain* brn){
-	tk_recoil = brn->recoil();
-	tk_level = brn->level();
+ticket::update_ticket(brain& brn){
+	tk_recoil = brn.recoil();
+	tk_level = brn.level();
 }
 
 inline 
@@ -2705,6 +2901,18 @@ void	get_ids_of(row_quanton_t& quans, row_long_t& the_ids){
 	}
 }
 
+inline
+void	find_max_level(row_quanton_t& tmp_mots, long& max_lev){
+	//max_lev = INVALID_LEVEL;
+	max_lev = ROOT_LEVEL;
+
+	for(long aa = 0; aa < tmp_mots.size(); aa++){
+
+		quanton& qua = *(tmp_mots[aa]);
+		max_lev = max(max_lev, qua.qlevel());
+	}
+}
+
 //=============================================================================
 // printing funcs
 
@@ -2714,6 +2922,7 @@ DEFINE_PRINT_FUNCS(neuron)
 DEFINE_PRINT_FUNCS(deduction)
 DEFINE_PRINT_FUNCS(prop_signal)
 DEFINE_PRINT_FUNCS(coloring)
+DEFINE_PRINT_FUNCS(neuromap)
 DEFINE_PRINT_FUNCS(memap)
 DEFINE_PRINT_FUNCS(leveldat)
 
