@@ -1020,10 +1020,10 @@ void	reset_marks_of(brain& brn, row<prop_signal>& trace,
 class deduction {
 	public:
 
-	row_quanton_t	dt_motives;
-	quanton*		dt_forced;
-	long			dt_target_level;
-	long			dt_forced_level;
+	row_quanton_t		dt_motives;
+	quanton*			dt_forced;
+	long				dt_target_level;
+	//long			dt_forced_level;
 
 	deduction(){
 		init_deduction();
@@ -1037,7 +1037,7 @@ class deduction {
 		dt_motives.clear();
 		dt_forced = NULL_PT;
 		dt_target_level = INVALID_LEVEL;
-		dt_forced_level = INVALID_LEVEL;
+		//dt_forced_level = INVALID_LEVEL;
 	}
 
 	brain*	get_dbg_brn(){
@@ -1050,9 +1050,9 @@ class deduction {
 		bool c1 = (dt_motives.is_empty());
 		bool c2 = (dt_forced == NULL_PT);
 		bool c3 = (dt_target_level == INVALID_LEVEL);
-		bool c5 = (dt_forced_level == INVALID_LEVEL);
+		//bool c5 = (dt_forced_level == INVALID_LEVEL);
 
-		bool is_vg = (c1 && c2 && c3 && c5);
+		bool is_vg = (c1 && c2 && c3);
 	
 		return is_vg;
 	}
@@ -1063,7 +1063,7 @@ class deduction {
 
 		dct2.dt_forced = dt_forced;
 		dct2.dt_target_level = dt_target_level;
-		dct2.dt_forced_level = dt_forced_level;
+		//dct2.dt_forced_level = dt_forced_level;
 
 		init_deduction();
 		BRAIN_CK(is_dt_virgin());
@@ -1085,7 +1085,7 @@ class deduction {
 		os << "dt={ mots=" << dt_motives;
 		os << " qu:" << dt_forced;
 		os << " lv:" << dt_target_level;
-		os << " fl:" << dt_forced_level;
+		//os << " fl:" << dt_forced_level;
 		os << "}";
 		os.flush();
 		return os;
@@ -1898,31 +1898,28 @@ class deducer {
 
 	brain*			de_brain;
 
-	neuron*			de_target_confl;
-
 	notekeeper		de_dct_nkpr;
 	notekeeper		de_nmp_nkpr;
 	
 	nkref			de_dct_ref;
 	nkref			de_nmp_ref;
 
-	neuron* 		de_nxt_src;
+	prop_signal 	de_first_bk_psig;
+	prop_signal 	de_next_bk_psig;
+	row<prop_signal>	de_all_noted;
+	
 	neuromap*		de_nxt_nmp;
 	deduction		de_nxt_dct;
 
-	deducer(brain* brn = NULL_PT, neuron* confl = NULL_PT, 
-		long tg_lv = INVALID_LEVEL)
-	{
-
-		init_deducer(brn, confl, tg_lv);
+	deducer(){
+		init_deducer();
 	}
 
 	~deducer(){
 		init_deducer();
 	}
 
-	void	init_deducer(brain* brn = NULL_PT, neuron* confl = NULL_PT, 
-						 long tg_lv = INVALID_LEVEL);
+	void	init_deducer(brain* brn = NULL_PT);
 
 	static
 	void	init_nk_with_dots(notekeeper& nkpr, brain* brn, long tg_lv);
@@ -1939,7 +1936,11 @@ class deducer {
 	brain&		get_de_brain();
 	notekeeper& get_orig_trail();
 	
-	neuron*&	tg_confl(){ return de_target_confl; }
+	neuron* 	tg_confl(){
+		BRAIN_CK(de_first_bk_psig.ps_source != NULL_PT);
+		return de_first_bk_psig.ps_source;
+	}
+	
 	neuromap&	nxt_nmp(){
 		BRAIN_CK(de_nxt_nmp != NULL_PT);
 		return *de_nxt_nmp;
@@ -1954,10 +1955,10 @@ class deducer {
 	void	fill_dct(notekeeper& nkpr, nkref& nkr, deduction& dct);
 	void	fill_nmp(notekeeper& nkpr, nkref& nkr);
 	
-	void 		find_dct_of(prop_signal const & confl, deduction& dct);
-	void		deduc_find_next_source(notekeeper& nkpr, nkref& ref, 
+	void 		deduction_analysis(prop_signal const & confl, deduction& dct);
+	void		find_next_source(notekeeper& nkpr, nkref& ref, row<prop_signal>& all_noted,
 									   bool only_origs = false);
-	void		deduc_find_next_noted(notekeeper& nkpr, nkref& ref);
+	void		find_next_noted(notekeeper& nkpr, nkref& ref);
 
 };
 
@@ -2060,6 +2061,8 @@ class dbg_inst_info {
 public:
 	long	dbg_before_retract_lv;
 	long	dbg_last_recoil_lv;
+	
+	deduction	dbg_deduc;
 	
 	row<neuron*>	 	dbg_simple_neus;
 	row<neuron*>	 	dbg_used_neus;

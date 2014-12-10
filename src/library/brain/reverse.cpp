@@ -85,7 +85,7 @@ brain::new_reverse(){
 	
 	// analize
 
-	br_deducer.find_dct_of(br_conflict_found, dct);
+	br_deducer.deduction_analysis(br_conflict_found, dct);
 
 	DBG_PRT(122, dbg_prt_lvs_active(os));
 	DBG_PRT(122, dbg_prt_lvs_have_learned(os));

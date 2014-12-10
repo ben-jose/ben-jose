@@ -1369,7 +1369,7 @@ deduction::set_with(brain& brn, notekeeper& nke, quanton& nxt_qua){
 	find_max_level(dt_motives, dt_target_level);
 
 	dt_forced = &opp_nxt;
-	dt_forced_level = opp_nxt.qlevel();
+	//dt_forced_level = opp_nxt.qlevel();
 
 	BRAIN_CK(dt_target_level < nke.dk_note_layer);
 	BRAIN_CK(ck_motives(brn, dt_motives));

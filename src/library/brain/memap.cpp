@@ -929,7 +929,7 @@ memap::map_oper(mem_op_t mm, brain& brn){
 
 void
 brain::reverse(){
-	DEDUC_DBG(deduction dct2);
+	DEDUC_DBG(deduction& dct2 = br_dbg.dbg_deduc);
 	//long dbg_old_lv = level();
 
 	BRAIN_CK(! has_psignals());
@@ -983,7 +983,7 @@ brain::reverse(){
 	
 	BRAIN_DBG(br_dbg.dbg_before_retract_lv = level());
 
-	DEDUC_DBG(br_deducer.find_dct_of(br_conflict_found, dct2));
+	DEDUC_DBG(br_deducer.deduction_analysis(br_conflict_found, dct2));
 	BRAIN_CK_PRT(dct2.dt_target_level >= ROOT_LEVEL, 
 		os << recoil() << ".dct2=" << dct2
 	);
@@ -1445,8 +1445,9 @@ brain::in_edge_of_level(){
 bool
 brain::can_write_reverse_map(deduction& dct){
 	if(dct.is_dt_virgin()){ return false; }
-	bool can_write = (dct.dt_forced_level == level());
-	return can_write;
+	//bool can_write = (dct.dt_forced_level == level());
+	//return can_write;
+	return false;
 }
 
 bool
