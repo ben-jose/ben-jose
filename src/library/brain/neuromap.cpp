@@ -214,6 +214,9 @@ deducer::deduction_analysis(prop_signal const & confl_sg, deduction& dct){
 	BRAIN_CK(nkr.has_curr_quanton());
 
 	fill_dct(nkpr, nkr, dct);
+	
+	make_all_ps_dominated(brn, all_noted);
+	update_all_ps_deduc_tk(brn, all_noted);
 
 	// reset all
 
@@ -271,5 +274,47 @@ deducer::fill_nmp(notekeeper& nkpr, nkref& nkr){
 	prop_signal& n_sig = nmp.na_forced.inc_sz();
 	n_sig.init_qua_signal(qua);
 	n_sig.make_ps_dominated(brn);
+}
+
+
+void
+deducer::neuromap_write_analysis(deduction& dct, row<neuromap*>& all_nmps){
+	brain& brn = get_de_brain();
+	row<leveldat*>& all_lv = brn.br_data_levels;
+	
+	BRAIN_CK(brn.level() == all_lv.last_idx());
+	
+	long tg_lv = dct.dt_target_level;
+	
+	all_nmps.clear();
+	
+	for(int aa = all_lv.last_idx(); aa >= 0; aa--){
+		BRAIN_CK(all_lv[aa] != NULL_PT);
+		leveldat& lv = *(all_lv[aa]);
+		BRAIN_CK(aa == lv.ld_idx);
+		
+		if(aa == tg_lv){
+			break;
+		}
+		
+		row<neuromap*>& to_wrt = lv.ld_all_nmps_to_write;
+		for(int bb = to_wrt.last_idx(); bb >= 0; bb--){
+			BRAIN_CK(to_wrt[bb] != NULL_PT);
+			neuromap& nmp = *(to_wrt[bb]);
+			if(nmp.na_active){
+				all_nmps.push(&nmp);
+			}
+		}
+	}
+}
+
+neuromap*
+deducer::neuromap_find_analysis(deduction& dct){
+	neuromap* out_nmp = NULL_PT;
+	return out_nmp;
+}
+
+void
+deducer::neuromap_setup_analysis(deduction& dct, row<neuromap*>& all_nmps){
 }
 

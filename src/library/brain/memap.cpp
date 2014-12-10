@@ -1059,18 +1059,18 @@ brain::reverse(){
 				<< " brn_lv" << level()
 				<< " " << dct
 			);
-			/* NO_DEACT */
-			BRAIN_CK(mpp0.map_ck_all_qu_dominated(brn));
-			BRAIN_CK(mpp0.map_ck_all_ne_dominated(brn));
-
 			BRAIN_CK(level() != ROOT_LEVEL);
 			BRAIN_CK(nke0.dk_num_noted_in_layer == 0);
 			BRAIN_CK(level() <= nke0.dk_note_layer);
 
+			/* NO_DEACT 
+			BRAIN_CK(mpp0.map_ck_all_qu_dominated(brn));
+			BRAIN_CK(mpp0.map_ck_all_ne_dominated(brn));
+
 			if(lv_has_learned()){
 				mpp0.reset_memap(brn);
 				DBG_PRT(121, os << "mpp0.reset_memap (has_learnd)");
-			}
+			}*/
 			
 			DBG(bool wrote = false);
 			memap& lv_map0 = data_level().ld_map0;
@@ -1078,6 +1078,8 @@ brain::reverse(){
 			DBG(bool m_act = lv_map0.ma_active);
 			DBG(bool m_cw = false);
 			if(lv_map0.ma_active){
+				BRAIN_CK(false);
+				
 				BRAIN_CK(lv_map0.ck_last_szs());
 				BRAIN_CK(! lv_map0.is_ma_virgin());
 				/* NO_DEACT */
@@ -1114,7 +1116,7 @@ brain::reverse(){
 						os << data_level()
 					);
 				}
-				lv_map0.map_deactivate(brn);
+				//lv_map0.map_deactivate(brn);
 
 				BRAIN_CK(mpp0.is_ma_virgin());
 				BRAIN_CK(level() > dct.dt_target_level);
@@ -1179,9 +1181,9 @@ brain::reverse(){
 		//BRAIN_CK((dbg_old_lv != level()) || qua.has_source() || qua.has_note0());
 		BRAIN_CK(! br_retract_is_first_lv || qua.has_source() || qua.has_note0());
 
-		/* NO_DEACT */
 		DBG(bool had_n3 = false);
 		DBG(bool had_n0 = false);
+		/* NO_DEACT 
 		if(qua.has_note3()){
 			qua.reset_its_note3(brn);
 			DBG(had_n3 = true);
@@ -1204,7 +1206,7 @@ brain::reverse(){
 				BRAIN_CK(mpp0.is_ma_virgin());
 				DBG_PRT(120, os << "mpp0.reset_memap (has_3 && ! has_0)");
 			}
-		}
+		}*/
 
 		if(qua.has_note0()){
 			long qlv = qua.qlevel();
@@ -1213,7 +1215,7 @@ brain::reverse(){
 
 			qua.reset_its_note0(brn);
 			
-			/* NO_DEACT */
+			/* NO_DEACT 
 			DBG(had_n0 = true);
 			while(! qua.in_qu_dominated(brn)){
 				DBG_PRT(112, os << "NOT dom (case 2) qua=" << &qua << 
@@ -1226,6 +1228,7 @@ brain::reverse(){
 				);
 				deactivate_last_map();
 			}
+			*/
 			BRAIN_CK(qua.in_qu_dominated(brn));
 		
 			BRAIN_CK(qua.qlevel() == nke0.dk_note_layer);
@@ -1330,11 +1333,11 @@ brain::reverse(){
 		n_tk.update_ticket(brn);
 
 		BRAIN_CK(mpp0.ck_map_guides(dbg_call_2));
-		lv_map0.map_replace_with(brn, mpp0, dbg_call_2);
-		lv_map0.map_activate(brn);
+		//lv_map0.map_replace_with(brn, mpp0, dbg_call_2);
+		//lv_map0.map_activate(brn);
 		DBG_PRT(122, os << "Updated " << &(data_level()) << " with " << &lv_map0);
 	}
-	/* NO_DEACT */
+	/* NO_DEACT 
 	DBG(	
 		if(! mpp0.is_ma_virgin() && ! lv_map0.is_ma_virgin()){
 			BRAIN_CK(mpp0.map_ck_all_qu_dominated(brn));
@@ -1348,6 +1351,7 @@ brain::reverse(){
 	nke0.get_all_ordered_motives(rr_upper);
 	BRAIN_CK(ck_motives(brn, rr_upper));
 	set_all_note3(brn, rr_upper);
+	*/
 
 	DBG(long old_num3 = brn.br_qu_tot_note3);
 	nke0.clear_all_motives();

@@ -114,12 +114,13 @@ brain::new_reverse(){
 	
 	memap& lv_map0 = data_level().ld_map0;
 	if(! mpp0.is_ma_virgin() && lv_map0.is_ma_virgin()){
-		ticket& n_tk = mpp0.ma_after_retract_tks.inc_sz();
-		n_tk.update_ticket(brn);
+		BRAIN_CK(false);
+		//ticket& n_tk = mpp0.ma_after_retract_tks.inc_sz();
+		//n_tk.update_ticket(brn);
 
 		BRAIN_CK(mpp0.ck_map_guides(dbg_call_2));
-		lv_map0.map_replace_with(brn, mpp0, dbg_call_2);
-		lv_map0.map_activate(brn);
+		//lv_map0.map_replace_with(brn, mpp0, dbg_call_2);
+		//lv_map0.map_activate(brn);
 		DBG_PRT(122, os << "Updated " << &(data_level()) << " with " << &lv_map0);
 	}
 	DBG(	

@@ -749,7 +749,7 @@ brain::choose_quanton(){
 			return qua;
 		}
 		BRAIN_CK(qua == NULL_PT);
-		deactivate_last_map();
+		//deactivate_last_map();
 		DBG_PRT(122, os << "deac_lst (choose)");
 	}
 
@@ -1386,7 +1386,7 @@ neuron::set_motives(brain& brn, notekeeper& nke, bool is_first){
 
 	ne_recoil_tk.update_ticket(brn);
 
-	/* NO_DEACT */
+	/* NO_DEACT 
 	if(ne_original){
 		while(! in_ne_dominated(brn)){
 			DBG_PRT(112, os << "NOT NE dom neu=" << this << bj_eol;
@@ -1404,7 +1404,7 @@ neuron::set_motives(brain& brn, notekeeper& nke, bool is_first){
 		}
 		BRAIN_CK(in_ne_dominated(brn));
 	}
-	
+	*/
 
 	DBG(brn.dbg_add_to_used(neu));
 

@@ -705,6 +705,7 @@ class neuron {
 	memap*			ne_curr_map;
 
 	ticket			ne_recoil_tk;		// srcs of the confl are updated at recoil time
+	ticket			ne_deduc_tk;		// srcs of the confl are updated at deduction time
 
 	long			ne_num_remote_tees;
 
@@ -770,6 +771,7 @@ class neuron {
 		ne_curr_map = NULL_PT;
 
 		ne_recoil_tk.init_ticket();
+		ne_deduc_tk.init_ticket();
 
 		ne_num_remote_tees = 0;
 	
@@ -922,6 +924,10 @@ class neuron {
 		return (ne_recoil_tk.tk_recoil >= tik.tk_recoil);
 	}
 
+	bool	deduced_in_or_after(ticket tik){
+		return (ne_deduc_tk.tk_recoil >= tik.tk_recoil);
+	}
+
 	bool	in_ne_dominated(brain& brn);
 	void	make_ne_dominated(brain& brn);
 
@@ -984,8 +990,14 @@ class prop_signal {
 		if(ps_quanton != NULL_PT){
 			ps_quanton->make_qu_dominated(brn);
 		}
-		if(ps_source != NULL_PT){
+		if((ps_source != NULL_PT) && ps_source->ne_original){
 			ps_source->make_ne_dominated(brn);
+		}
+	}
+	
+	void	update_ps_deduc_tk(brain& brn){
+		if((ps_source != NULL_PT) && ps_source->ne_original){
+			ps_source->ne_deduc_tk.update_ticket(brn);
 		}
 	}
 	
@@ -1008,6 +1020,40 @@ class prop_signal {
 		return os;
 	}
 };
+
+inline
+void
+make_all_ps_dominated(brain& brn, row<prop_signal>& trace, 
+			long first_idx = 0, long last_idx = -1)
+{
+	if(last_idx < 0){ last_idx = trace.size(); }
+
+	BRAIN_CK(first_idx <= last_idx);
+	BRAIN_CK(trace.is_valid_idx(first_idx));
+	BRAIN_CK((last_idx == trace.size()) || trace.is_valid_idx(last_idx));
+
+	for(long ii = first_idx; ii < last_idx; ii++){
+		prop_signal& q_sig = trace[ii];
+		q_sig.make_ps_dominated(brn);
+	}
+}
+
+inline
+void
+update_all_ps_deduc_tk(brain& brn, row<prop_signal>& trace, 
+			long first_idx = 0, long last_idx = -1)
+{
+	if(last_idx < 0){ last_idx = trace.size(); }
+
+	BRAIN_CK(first_idx <= last_idx);
+	BRAIN_CK(trace.is_valid_idx(first_idx));
+	BRAIN_CK((last_idx == trace.size()) || trace.is_valid_idx(last_idx));
+
+	for(long ii = first_idx; ii < last_idx; ii++){
+		prop_signal& q_sig = trace[ii];
+		q_sig.update_ps_deduc_tk(brn);
+	}
+}
 
 void	set_marks_of(brain& brn, row<prop_signal>& trace, 
 			long first_idx = 0, long last_idx = -1, bool with_related = false);
@@ -1956,6 +2002,10 @@ class deducer {
 	void	fill_nmp(notekeeper& nkpr, nkref& nkr);
 	
 	void 		deduction_analysis(prop_signal const & confl, deduction& dct);
+	void 		neuromap_write_analysis(deduction& dct, row<neuromap*>& all_nmps);
+	neuromap* 	neuromap_find_analysis(deduction& dct);
+	void 		neuromap_setup_analysis(deduction& dct, row<neuromap*>& all_nmps);
+	
 	void		find_next_source(notekeeper& nkpr, nkref& ref, row<prop_signal>& all_noted,
 									   bool only_origs = false);
 	void		find_next_noted(notekeeper& nkpr, nkref& ref);
@@ -1980,6 +2030,9 @@ class leveldat {
 	row_quanton_t		ld_semi_monos_to_update;
 
 	quanton*		ld_first_learned;
+	
+	row<neuromap*>	ld_all_nmps_to_write;
+	neuromap*		ld_nmp_of_lv;
 
 	leveldat(brain* pt_brn = NULL) {
 		init_leveldat(pt_brn);
@@ -2002,6 +2055,9 @@ class leveldat {
 		ld_semi_monos_to_update.clear();
 
 		ld_first_learned = NULL_PT;
+		
+		ld_all_nmps_to_write.clear();
+		ld_nmp_of_lv = NULL_PT;
 	}
 	
 	brain*	get_dbg_brn(){
@@ -2021,6 +2077,8 @@ class leveldat {
 	static
 	void release_leveldat(leveldat* lv){
 		BRAIN_CK(lv != NULL_PT);
+		BRAIN_CK(lv->ld_all_nmps_to_write.is_empty());
+		BRAIN_CK(lv->ld_nmp_of_lv == NULL_PT);
 		lv->~leveldat();
 		tpl_free<leveldat>(lv);
 	}
