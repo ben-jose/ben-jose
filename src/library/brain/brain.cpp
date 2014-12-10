@@ -741,9 +741,9 @@ brain::choose_quanton(){
 	brain& brn = *this;
 
 	while(! br_maps_active.is_empty()){
-		memap* pt_mpp = br_maps_active.last();
+		neuromap* pt_mpp = br_maps_active.last();
 		BRAIN_CK(pt_mpp != NULL_PT);
-		memap& mpp_dom = *pt_mpp;
+		neuromap& mpp_dom = *pt_mpp;
 		qua = mpp_dom.map_choose_quanton(brn);
 		if(qua != NULL_PT){
 			return qua;
@@ -1482,172 +1482,6 @@ brain::dbg_ck_deducs(deduction& dct1, deduction& dct2){
 }
 
 void
-memap::map_make_dominated(brain& brn){
-}
-
-void
-memap::map_activate(brain& brn){
-
-	BRAIN_CK(! is_ma_virgin());
-	BRAIN_CK(! ma_active);
-
-	BRAIN_CK(map_ck_all_qu_dominated(brn));
-	BRAIN_CK(map_ck_all_ne_dominated(brn));
-
-	brn.br_maps_active.push(this);
-	ma_active = true;
-
-	map_set_all_qu_curr_dom(brn);
-	map_set_all_ne_curr_dom(brn);
-
-	BRAIN_CK(map_ck_all_qu_dominated(brn));
-	BRAIN_CK(map_ck_all_ne_dominated(brn));
-
-	BRAIN_CK(! brn.br_maps_active.is_empty());
-	BRAIN_CK(brn.br_maps_active.last() == this);
-
-	DBG_PRT(110, os << "ACTIVATING " << this);
-}
-
-void
-memap::map_deactivate(brain& brn){
-	//DBG_PRT(110, os << "DEACTivating " << this << bj_eol << STACK_STR);
-	DBG_PRT(110, os << "DEACTivating " << this);
-
-	BRAIN_CK(ma_active);
-	BRAIN_CK(! brn.br_maps_active.is_empty());
-
-	BRAIN_CK(brn.br_maps_active.last() == this);
-	BRAIN_CK(map_ck_all_qu_dominated(brn));
-	BRAIN_CK(map_ck_all_ne_dominated(brn));
-
-	brn.br_maps_active.pop();
-	ma_active = false;
-
-	map_reset_all_qu_curr_dom(brn);
-	map_reset_all_ne_curr_dom(brn);
-
-	BRAIN_CK(map_ck_all_qu_dominated(brn));
-	BRAIN_CK(map_ck_all_ne_dominated(brn));
-}
-
-void
-brain::deactivate_last_map(){
-	BRAIN_CK(! br_maps_active.is_empty());
-	brain& brn = *this;
-	memap* pt_mpp = br_maps_active.last();
-	BRAIN_CK(pt_mpp != NULL_PT);
-	memap& mpp = *pt_mpp;
-
-	DBG_PRT(112, os << "DEACTIVATING MEMAP=" << (void*)(&(mpp)));
-
-	mpp.map_deactivate(brn);
-}
-
-void
-brain::close_all_maps(){
-	while(! br_maps_active.is_empty()){
-		deactivate_last_map();
-	}
-	BRAIN_CK(br_maps_active.is_empty());
-}
-
-void
-memap::map_set_all_qu_curr_dom(brain& brn){
-	row<prop_signal>& sgls = ma_dotted;
-	for(long aa = 0; aa < sgls.size(); aa++){
-		prop_signal& q_sig = sgls[aa];
-
-		quanton* qua = q_sig.ps_quanton;
-		BRAIN_CK(qua != NULL_PT);
-		//BRAIN_CK(qua->is_pos());
-
-		quanton* inv = qua->qu_inverse;
-
-		BRAIN_CK(qua->qu_curr_map != this);
-		BRAIN_CK(inv->qu_curr_map != this);
-
-		qua->qu_curr_map = this;
-		inv->qu_curr_map = this;
-	}
-}
-
-void
-memap::map_reset_all_qu_curr_dom(brain& brn){
-	memap* upper_map = brn.get_last_upper_map();
-	row<prop_signal>& sgls = ma_dotted;
-	for(long aa = 0; aa < sgls.size(); aa++){
-		prop_signal& q_sig = sgls[aa];
-		quanton* qua = q_sig.ps_quanton;
-		BRAIN_CK(qua != NULL_PT);
-
-		quanton* inv = qua->qu_inverse;
-
-		BRAIN_CK(qua->qu_curr_map != upper_map);
-		BRAIN_CK(inv->qu_curr_map != upper_map);
-
-		qua->qu_curr_map = upper_map;
-		inv->qu_curr_map = upper_map;
-	}
-}
-
-void
-memap::map_set_all_ne_curr_dom(brain& brn){
-	row<neuron*>& filled = ma_filled;
-	for(long ii = 0; ii < filled.size(); ii++){
-		BRAIN_CK(filled[ii] != NULL_PT);
-		neuron& fll_neu = *(filled[ii]);
-		if(fll_neu.ne_original){
-			BRAIN_CK(fll_neu.ne_curr_map != this);
-			fll_neu.ne_curr_map = this;
-		}
-	}
-}
-
-void
-memap::map_reset_all_ne_curr_dom(brain& brn){
-	memap* upper_map = brn.get_last_upper_map();
-	row<neuron*>& filled = ma_filled;
-	for(long ii = 0; ii < filled.size(); ii++){
-		BRAIN_CK(filled[ii] != NULL_PT);
-		neuron& fll_neu = *(filled[ii]);
-		if(fll_neu.ne_original){
-			BRAIN_CK(fll_neu.ne_curr_map != upper_map);
-			fll_neu.ne_curr_map = upper_map;
-		}
-	}
-}
-
-bool
-quanton::in_qu_dominated(brain& brn){
-	memap* up_dom = brn.get_last_upper_map();
-	bool in_dom = (up_dom == qu_curr_map);
-
-	return in_dom;
-}
-
-void
-quanton::make_qu_dominated(brain& brn){
-	while(! in_qu_dominated(brn)){
-		brn.deactivate_last_map();
-	}
-}
-
-bool
-neuron::in_ne_dominated(brain& brn){
-	memap* up_dom = brn.get_last_upper_map();
-	bool in_dom = (up_dom == ne_curr_map);
-	return in_dom;
-}
-
-void
-neuron::make_ne_dominated(brain& brn){
-	while(! in_ne_dominated(brn)){
-		brn.deactivate_last_map();
-	}
-}
-
-void
 memap::set_filled(brain& brn){
 	row<neuron*>& all_neus = ma_fll_in_lv;
 	row<neuron*>& sel_neus = brn.br_tmp_selected;
@@ -1773,29 +1607,6 @@ notekeeper::restart_with(brain& brn, row_quanton_t& bak_upper){
 		long until = bak_upper.size();
 		set_motive_notes(bak_upper, from, until);
 	}
-}
-
-quanton*	
-memap::map_choose_quanton(brain& brn){ 
-	row<prop_signal>& trace = ma_dotted;
-	quanton* qua = NULL;
-
-	long max_ii = trace.last_idx();
-	for(long ii = max_ii; ii >= 0; ii--){
-		quanton* qua_ii = trace[ii].ps_quanton;
-		if(qua_ii->get_charge() == cg_neutral){
-			if(! qua_ii->is_semi_mono()){
-				qua = qua_ii; 
-				break;
-			}
-			//if(qua == NULL_PT){ qua = qua_ii; }
-		}
-	}
-
-	BRAIN_CK_0((qua == NULL) || (qua->get_charge() == cg_neutral));
-	BRAIN_CK_0((qua == NULL) || 
-			(qua->qu_spin == cg_positive) || (qua->qu_spin == cg_negative));
-	return qua;
 }
 
 quanton*
@@ -2452,38 +2263,5 @@ memap::map_add_lv_filled(brain& brn){ // new set_filled version
 	disca_neus.move_to(ma_discarded);
 	not_sel_neus.move_to(ma_fll_in_lv);
 	sel_neus.append_to(ma_filled);
-}
-
-void
-memap::map_make_all_qu_dominated(brain& brn){
-	row<prop_signal>& sgls = ma_dotted;
-	for(long aa = 0; aa < sgls.size(); aa++){
-		prop_signal& q_sig = sgls[aa];
-
-		BRAIN_CK(q_sig.ps_quanton != NULL_PT);
-		quanton& qua = *(q_sig.ps_quanton);
-		qua.make_qu_dominated(brn);
-	}
-}
-
-void
-memap::map_make_all_ne_dominated(brain& brn){
-	
-	if(ma_confl.ps_source != NULL_PT){
-		neuron& neu = *(ma_confl.ps_source);
-		neu.make_ne_dominated(brn);
-	}
-	
-	row<prop_signal>& sgls = ma_dotted;
-	for(long aa = 0; aa < sgls.size(); aa++){
-		prop_signal& q_sig = sgls[aa];
-		BRAIN_CK(q_sig.ps_source != NULL_PT);
-		neuron& neu = *(q_sig.ps_source);
-		neu.make_ne_dominated(brn);
-	}
-
-	//row<neuron*>& sel_neus = brn.br_tmp_selected;
-	//row<neuron*>& disca_neus = brn.br_tmp_discarded;
-	
 }
 

@@ -430,7 +430,7 @@ class quanton {
 
 	// maps in
 	neuromap*		qu_curr_nemap;
-	memap*			qu_curr_map;
+	//memap*			qu_curr_map;
 	
 	prop_signal*	qu_tmp_psig;
 
@@ -510,7 +510,7 @@ class quanton {
 		qu_source = NULL;
 
 		qu_curr_nemap = NULL_PT;
-		qu_curr_map = NULL_PT;
+		//qu_curr_map = NULL_PT;
 		
 		qu_tmp_psig = NULL_PT;
 
@@ -702,7 +702,7 @@ class neuron {
 	sortrel			ne_reltee;
 
 	neuromap*		ne_curr_nemap;
-	memap*			ne_curr_map;
+	//memap*			ne_curr_map;
 
 	ticket			ne_recoil_tk;		// srcs of the confl are updated at recoil time
 	ticket			ne_deduc_tk;		// srcs of the confl are updated at deduction time
@@ -768,7 +768,7 @@ class neuron {
 		ne_tee.so_ccl.cc_me = this;
 
 		ne_curr_nemap = NULL_PT;
-		ne_curr_map = NULL_PT;
+		//ne_curr_map = NULL_PT;
 
 		ne_recoil_tk.init_ticket();
 		ne_deduc_tk.init_ticket();
@@ -796,10 +796,10 @@ class neuron {
 		bool c7 = (ne_is_conflict == false);
 		bool c8 = true; BRAIN_DBG(c8 = (ne_dbg_used_no_orig == false);)
 		bool c9 = (ne_curr_nemap == NULL_PT);
-		bool c10 = (ne_curr_map == NULL_PT);
-		bool c11 = (! ne_recoil_tk.is_valid());
+		//bool c10 = (ne_curr_map == NULL_PT);
+		bool c10 = (! ne_recoil_tk.is_valid());
 
-		return (c1 && c2 && c3 && c4 && c5 && c6 && c7 && c8 && c9 && c10 && c11);
+		return (c1 && c2 && c3 && c4 && c5 && c6 && c7 && c8 && c9 && c10);
 	}
 
 	long	fib_sz(){ return ne_fibres.size(); }
@@ -1288,6 +1288,8 @@ class neuromap {
 		return (c1 && c2 && c3 && c4 && c5);
 	}
 
+	void	reset_neuromap(brain& brn);
+	
 	brain&	get_brn(){
 		BRAIN_CK(na_brn != NULL);
 		return (*na_brn);
@@ -1298,6 +1300,24 @@ class neuromap {
 		BRAIN_DBG(the_brn = na_brn);
 		return the_brn;
 	}
+
+	quanton*	map_choose_quanton(brain& brn);
+	
+	void	map_make_all_qu_dominated(brain& brn);
+	void	map_make_all_ne_dominated(brain& brn);
+
+	void	map_set_all_qu_curr_dom(brain& brn);
+	void	map_reset_all_qu_curr_dom(brain& brn);
+
+	void	map_set_all_ne_curr_dom(brain& brn);
+	void	map_reset_all_ne_curr_dom(brain& brn);
+
+	bool	map_ck_all_qu_dominated(brain& brn);
+	bool	map_ck_all_ne_dominated(brain& brn);
+
+	void	map_make_dominated(brain& brn);
+	void	map_activate(brain& brn);
+	void	map_deactivate(brain& brn);
 
 	bj_ostream&	print_neuromap(bj_ostream& os, bool from_pt = false);
 };
@@ -1442,28 +1462,11 @@ class memap {
 
 	void	map_dbg_print(bj_ostream& os, mem_op_t mm, brain& brn);
 
-	void	map_make_all_qu_dominated(brain& brn);
-	void	map_make_all_ne_dominated(brain& brn);
-
-	void	map_set_all_qu_curr_dom(brain& brn);
-	void	map_reset_all_qu_curr_dom(brain& brn);
-
-	void	map_set_all_ne_curr_dom(brain& brn);
-	void	map_reset_all_ne_curr_dom(brain& brn);
-
-	bool	map_ck_all_qu_dominated(brain& brn);
-	bool	map_ck_all_ne_dominated(brain& brn);
-
-	void	map_make_dominated(brain& brn);
-	void	map_activate(brain& brn);
-	void	map_deactivate(brain& brn);
-
 	//void	map_get_layer_quas(brain& brn, row_quanton_t& quas, long lyr_idx1, 
 	//						   long lyr_idx2);
 	void	map_get_layer_neus(row<neuron*>& neus, long lyr_idx1, long lyr_idx2, 
 							   bool ck_tks);
 
-	quanton*	map_choose_quanton(brain& brn);
 
 	void	get_initial_guide_coloring(brain& brn, coloring& clr, long idx_szs);
 	void	get_initial_tauto_coloring(brain& brn, coloring& stab_guide_clr, 
@@ -2267,7 +2270,7 @@ public:
 
 	prop_signal		br_conflict_found;
 
-	row<memap*>		br_maps_active;
+	row<neuromap*>	br_maps_active;
 
 	sort_glb 		br_forced_srg;
 	sort_glb 		br_filled_srg;
@@ -2673,8 +2676,8 @@ public:
 	
 	bj_satisf_val_t 	solve_instance();
 
-	memap*	get_last_upper_map(){
-		memap* up_dom = NULL_PT;
+	neuromap*	get_last_upper_map(){
+		neuromap* up_dom = NULL_PT;
 		if(! br_maps_active.is_empty()){
 			up_dom = br_maps_active.last();
 			BRAIN_CK(up_dom != NULL_PT);
@@ -2838,8 +2841,15 @@ neuron::reset_spot(brain& brn){
 inline
 void
 memap::reset_memap(brain& brn){
-	BRAIN_CK(map_ck_all_qu_dominated(brn));
+	//BRAIN_CK(map_ck_all_qu_dominated(brn));
 	init_memap(&brn);
+}
+
+inline
+void
+neuromap::reset_neuromap(brain& brn){
+	BRAIN_CK(map_ck_all_qu_dominated(brn));
+	init_neuromap(&brn);
 }
 
 inline

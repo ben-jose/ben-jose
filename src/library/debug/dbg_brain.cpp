@@ -703,47 +703,6 @@ dbg_run_satex_on(brain& brn, ch_string f_nam){
 	return true;
 }
 
-bool
-memap::map_ck_all_qu_dominated(brain& brn){
-#ifdef FULL_DEBUG
-	row<prop_signal>& sgls = ma_dotted;
-	for(long aa = 0; aa < sgls.size(); aa++){
-		quanton* qua = sgls[aa].ps_quanton;
-		MARK_USED(qua);
-		BRAIN_CK(qua != NULL_PT);
-		BRAIN_CK(qua->in_qu_dominated(brn));
-	}
-#endif
-	return true;
-}
-
-bool
-memap::map_ck_all_ne_dominated(brain& brn){
-#ifdef FULL_DEBUG
-	row<neuron*>& filled = ma_filled;
-	for(long ii = 0; ii < filled.size(); ii++){
-		BRAIN_CK(filled[ii] != NULL_PT);
-		neuron& fll_neu = *(filled[ii]);
-		if(fll_neu.ne_original){
-			MARK_USED(fll_neu);
-
-			DBG_COND_COMM(! (fll_neu.in_ne_dominated(brn)) ,
-				os << "ABORTING_DATA " << bj_eol;
-				os << " br_maps_active=" << brn.br_maps_active << bj_eol;
-				os << " THIS_MEMAP=" << this << bj_eol;
-				brn.print_trail(os);
-				os << " up_dom=" << (void*)(brn.get_last_upper_map()) << bj_eol;
-				os << " this_map=" << (void*)(this) << bj_eol;
-				os << " NO_DOM neu==" << &fll_neu << bj_eol;
-				os << "END_OF_aborting_data" << bj_eol;
-			);
-			BRAIN_CK(fll_neu.in_ne_dominated(brn));
-		}
-	}
-#endif
-	return true;
-}
-
 void
 brain::dbg_check_sat_assig(){
 #ifdef FULL_DEBUG
@@ -1227,7 +1186,7 @@ brain::print_active_maps(bj_ostream& os){
 #ifdef FULL_DEBUG
 	os << "[";
 	for(long aa = 0; aa < br_maps_active.size(); aa++){
-		memap* mpp = br_maps_active[aa];
+		neuromap* mpp = br_maps_active[aa];
 		os << " " << (void*)(mpp);
 	}
 	os << " ]";

@@ -1083,8 +1083,8 @@ brain::reverse(){
 				BRAIN_CK(lv_map0.ck_last_szs());
 				BRAIN_CK(! lv_map0.is_ma_virgin());
 				/* NO_DEACT */
-				BRAIN_CK(lv_map0.map_ck_all_qu_dominated(brn));
-				BRAIN_CK(lv_map0.map_ck_all_ne_dominated(brn));
+				//BRAIN_CK(lv_map0.map_ck_all_qu_dominated(brn));
+				//BRAIN_CK(lv_map0.map_ck_all_ne_dominated(brn));
 				
 				BRAIN_CK(lv_has_learned());
 				BRAIN_CK(! dct.is_dt_virgin());

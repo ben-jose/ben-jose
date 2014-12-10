@@ -41,9 +41,10 @@ void
 brain::new_reverse(){
 	BRAIN_CK(! has_psignals());
 	brain& brn = *this;
+	MARK_USED(brn);
+	
 	notekeeper& nke0 = br_retract_nke0;
 	deduction& dct = br_retract_dct;
-	memap& mpp0 = br_retract_map0;
 	long& all_notes0 = br_qu_tot_note0;
 	MARK_USED(all_notes0);
 
@@ -51,18 +52,16 @@ brain::new_reverse(){
 
 	dct.init_deduction();
 	nke0.init_notes(level());
-	mpp0.reset_memap(brn);
 
 	BRAIN_CK(dct.is_dt_virgin());
 	BRAIN_CK(nke0.dk_tot_noted == 0);
-	BRAIN_CK(mpp0.is_ma_virgin());
 	BRAIN_CK(level() != ROOT_LEVEL);
 	BRAIN_CK(all_notes0 == 0);
 	BRAIN_CK(br_semi_monos_to_update.is_empty());
 
 	DBG_PRT(122, print_trail(os));
 
-	// START REVERSE (init mpp0 and nke0)
+	// START REVERSE (init nke0)
 
 	BRAIN_CK(found_conflict());
 	BRAIN_DBG(br_dbg.dbg_before_retract_lv = level());
@@ -78,10 +77,6 @@ brain::new_reverse(){
 	
 	BRAIN_CK(br_conflict_found.ps_source != NULL_PT);
 	BRAIN_CK(br_conflict_found.ps_source->ne_original);
-	
-	//mpp0.ma_confl = br_conflict_found;
-	//mpp0.ma_before_retract_tk.update_ticket(brn);
-	//BRAIN_CK(! mpp0.is_ma_virgin());
 	
 	// analize
 
@@ -112,22 +107,7 @@ brain::new_reverse(){
 
 	// update leveldat
 	
-	memap& lv_map0 = data_level().ld_map0;
-	if(! mpp0.is_ma_virgin() && lv_map0.is_ma_virgin()){
-		BRAIN_CK(false);
-		//ticket& n_tk = mpp0.ma_after_retract_tks.inc_sz();
-		//n_tk.update_ticket(brn);
-
-		BRAIN_CK(mpp0.ck_map_guides(dbg_call_2));
-		//lv_map0.map_replace_with(brn, mpp0, dbg_call_2);
-		//lv_map0.map_activate(brn);
-		DBG_PRT(122, os << "Updated " << &(data_level()) << " with " << &lv_map0);
-	}
-	DBG(	
-		if(! mpp0.is_ma_virgin() && ! lv_map0.is_ma_virgin()){
-			BRAIN_CK(mpp0.map_ck_all_qu_dominated(brn));
-		}
-	); 
+	//memap& lv_map0 = data_level().ld_map0;
 
 	// learn motives
 
