@@ -562,18 +562,18 @@ public:
 		OBJECT_COPY_ERROR; 
 	}
 
-    	// Duplication (preferred instead):
-    	void copy_to(row_data<obj_t>& dest, 
-				row_index first_ii = 0, row_index last_ii = -1,
-				bool inv = false)
+	// Duplication (preferred instead):
+	void copy_to(row_data<obj_t>& dest, 
+			row_index first_ii = 0, row_index last_ii = -1,
+			bool inv = false)
 	{ 
 		dest.clear(true, true); 
 		append_to(dest, first_ii, last_ii, inv);
 	}
 
-    	void append_to(row_data<obj_t>& dest, 
-				row_index first_ii = 0, row_index last_ii = -1,
-				bool inv = false)
+	void append_to(row_data<obj_t>& dest, 
+			row_index first_ii = 0, row_index last_ii = -1,
+			bool inv = false)
 	{ 
 		if((last_ii < 0) || (last_ii > sz)){
 			last_ii = sz;

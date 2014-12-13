@@ -1579,10 +1579,11 @@ neuron::is_filled_of_marks(quanton& nxt_qua){
 	return is_fll;
 }
 
+/*
 void
 notekeeper::restart_with(brain& brn, row_quanton_t& bak_upper){
 	BRAIN_CK(dk_num_noted_in_layer == 0);
-	BRAIN_CK(get_layer_motives(dk_note_layer).is_empty());
+	BRAIN_CK(get_layer(dk_note_layer).is_empty());
 	BRAIN_CK(dk_note_layer >= brn.level());
 	BRAIN_CK(dk_has_note_fn == &quanton::has_note0);
 
@@ -1607,7 +1608,7 @@ notekeeper::restart_with(brain& brn, row_quanton_t& bak_upper){
 		long until = bak_upper.size();
 		set_motive_notes(bak_upper, from, until);
 	}
-}
+}*/
 
 quanton*
 brain::receive_psignal(bool only_in_dom){

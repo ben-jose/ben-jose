@@ -1079,10 +1079,9 @@ brain::reverse(){
 			DBG(bool m_cw = false);
 			if(lv_map0.ma_active){
 				BRAIN_CK(false);
-				
+				/*
 				BRAIN_CK(lv_map0.ck_last_szs());
 				BRAIN_CK(! lv_map0.is_ma_virgin());
-				/* NO_DEACT */
 				//BRAIN_CK(lv_map0.map_ck_all_qu_dominated(brn));
 				//BRAIN_CK(lv_map0.map_ck_all_ne_dominated(brn));
 				
@@ -1129,6 +1128,7 @@ brain::reverse(){
 				BRAIN_CK(mpp0.ck_last_szs());
 
 				DBG_PRT(120, os << "mpp0.reset_memap (end_lv)");
+				*/
 			} // lv_map0.ma_active
 
 			dec_level();
