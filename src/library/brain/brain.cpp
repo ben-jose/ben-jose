@@ -738,13 +738,13 @@ brain::choose_quanton(){
 	BRAIN_CK(ck_trail());
 
 	quanton* qua = NULL;
-	brain& brn = *this;
+	//brain& brn = *this;
 
 	while(! br_maps_active.is_empty()){
 		neuromap* pt_mpp = br_maps_active.last();
 		BRAIN_CK(pt_mpp != NULL_PT);
 		neuromap& mpp_dom = *pt_mpp;
-		qua = mpp_dom.map_choose_quanton(brn);
+		qua = mpp_dom.map_choose_quanton();
 		if(qua != NULL_PT){
 			return qua;
 		}
@@ -2213,56 +2213,5 @@ brain::solve_instance(){
 	o_info.bjo_avg_variants = iinfo.ist_num_variants_stat.avg.get_d();
 
 	return o_info.bjo_result;
-}
-
-void
-memap::map_add_lv_filled(brain& brn){ // new set_filled version
-	row<neuron*>& all_neus = ma_fll_in_lv;
-	row<neuron*>& sel_neus = brn.br_tmp_selected;
-	row<neuron*>& not_sel_neus = brn.br_tmp_not_selected;
-	row<neuron*>& disca_neus = brn.br_tmp_discarded;
-
-	BRAIN_CK(brn.br_tot_qu_marks == 0);
-
-	quanton& nxt_qua = map_last_dotted();
-	MARK_USED(nxt_qua);
-
-	BRAIN_CK(nxt_qua.is_pos());
-	BRAIN_CK(! nxt_qua.has_source());
-
-	sel_neus.clear();
-	not_sel_neus.clear();
-	disca_neus.clear();
-
-	set_marks_of(brn, ma_dotted);
-
-	for(long aa = 0; aa < all_neus.size(); aa++){
-		BRAIN_CK(all_neus[aa] != NULL_PT);
-		neuron& neu = *(all_neus[aa]);
-
-		if(! neu.ne_original){
-			disca_neus.push(&neu);
-			continue;
-		}
-
-		BRAIN_CK(neu.ne_original);
-
-		bool is_fll = neu.is_filled_of_marks(nxt_qua);
-		if(is_fll){
-			sel_neus.push(&neu);
-		} else {
-			not_sel_neus.push(&neu);
-		}
-	}
-
-	reset_marks_of(brn, ma_dotted);
-
-	BRAIN_CK(brn.br_tot_qu_marks == 0);
-
-	// finalize
-
-	disca_neus.move_to(ma_discarded);
-	not_sel_neus.move_to(ma_fll_in_lv);
-	sel_neus.append_to(ma_filled);
 }
 

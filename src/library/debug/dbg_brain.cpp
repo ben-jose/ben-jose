@@ -587,7 +587,7 @@ dbg_find_not_in_rr1(brain& brn, row<neuron*>& rr1, row<neuron*>& rr2,
 	not_in_rr1.clear();
 
 	BRAIN_CK(brn.br_tot_ne_spots == 0);
-	dbg_set_spots_of(brn, rr1);
+	set_spots_of(brn, rr1);
 
 	for(long aa = 0; aa < rr2.size(); aa++){
 		BRAIN_CK(rr2[aa] != NULL_PT);
@@ -598,7 +598,7 @@ dbg_find_not_in_rr1(brain& brn, row<neuron*>& rr1, row<neuron*>& rr2,
 		} 
 	}
 
-	dbg_reset_spots_of(brn, rr1);
+	reset_spots_of(brn, rr1);
 	BRAIN_CK(brn.br_tot_ne_spots == 0);
 #endif
 }
@@ -790,34 +790,6 @@ brain::brn_dbg_compute_dots_of(row<neuron*>& neus, row_quanton_t& assig){
 	BRAIN_CK(br_tot_qu_dots == 0);
 #endif
 	return resp;
-}
-
-long	dbg_set_spots_of(brain& brn, row<neuron*>& neus){
-	long num_neu = 0;
-#ifdef FULL_DEBUG
-	for(long ii = 0; ii < neus.size(); ii++){
-		neuron* neu = neus[ii];
-		if(! neu->ne_spot){
-			neu->set_spot(brn);
-			num_neu++;
-		}
-	}
-#endif
-	return num_neu;
-}
-
-long	dbg_reset_spots_of(brain& brn, row<neuron*>& neus){
-	long num_neu = 0;
-#ifdef FULL_DEBUG
-	for(long ii = 0; ii < neus.size(); ii++){
-		neuron* neu = neus[ii];
-		if(neu->ne_spot){
-			neu->reset_spot(brn);
-			num_neu++;
-		}
-	}
-#endif
-	return num_neu;
 }
 
 //============================================================
