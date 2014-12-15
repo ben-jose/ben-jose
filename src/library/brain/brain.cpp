@@ -504,7 +504,8 @@ brain::init_brain(solver& ss){
 							   &quanton::set_note0, &quanton::reset_its_note0, 
 								&set_all_note0, &reset_all_its_note0);
 
-	br_deducer.init_deducer(this);
+	br_deducer.init_analyser(this);
+	br_neuromaper.init_analyser(this);
 	
 	br_retract_map0.init_memap(this);
 	
@@ -691,6 +692,7 @@ quanton::set_charge(brain& brn, neuron* neu, charge_t cha, long n_tier){
 long
 brain::brn_tunnel_signals(bool only_in_dom){
 	brain& brn = *this;
+	MARK_USED(brn);
 	BRAIN_CK(! found_conflict());
 	BRAIN_CK(ck_trail());
 	DBG(
@@ -893,7 +895,7 @@ brain::learn_mots(row_quanton_t& the_mots, quanton& forced_qua){
 	DBG(
 		if(br_dbg.dbg_ic_active && br_dbg.dbg_ic_after){
 			row_quanton_t& the_trl = br_tmp_trail;
-			br_charge_trail.get_all_ordered_motives(the_trl);
+			br_charge_trail.get_all_ordered_quantons(the_trl);
 			dbg_ic_print(*this, the_trl);
 		}
 	)
@@ -1210,7 +1212,7 @@ brain::aux_solve_instance(){
 
 	if(inst_info.ist_with_assig){
 		row_quanton_t& the_assig = br_tmp_assig_quantons;
-		br_charge_trail.get_all_ordered_motives(the_assig);
+		br_charge_trail.get_all_ordered_quantons(the_assig);
 		get_ids_of(the_assig, inst_info.ist_assig);
 		inst_info.ist_assig.push(0);	// means the last lit
 	}
@@ -1236,7 +1238,7 @@ brain::aux_solve_instance(){
 
 		if(br_dbg.dbg_ic_active){
 			row_quanton_t& the_trl = br_tmp_trail;
-			br_charge_trail.get_all_ordered_motives(the_trl);
+			br_charge_trail.get_all_ordered_quantons(the_trl);
 			dbg_ic_print(*this, the_trl);
 		}
 	);
@@ -1299,7 +1301,7 @@ notekeeper::set_motive_notes(row_quanton_t& rr_qua, long from, long until){
 			);
 			DBG_PRT(20, os << dbg_msg << qua << " num_notes_in_lv " << dk_num_noted_in_layer 
 					<< "lv=" << dk_note_layer << bj_eol
-					<< "motives_by_lv= " << dk_motives_by_layer);
+					<< "motives_by_lv= " << dk_quas_by_layer);
 			
 		}
 	}
@@ -1324,12 +1326,12 @@ notekeeper::clear_all_motives(long lim_lv, bool reset_notes){
 
 	brain& brn = get_dk_brain();
 	if(lim_lv < 0){
-		lim_lv = dk_motives_by_layer.size();
+		lim_lv = dk_quas_by_layer.size();
 	}
-	BRAIN_CK(lim_lv <= dk_motives_by_layer.size());
+	BRAIN_CK(lim_lv <= dk_quas_by_layer.size());
 	for(long aa = 0; aa < lim_lv; aa++){
-		BRAIN_CK(dk_motives_by_layer.is_valid_idx(aa));
-		row_quanton_t& mots = dk_motives_by_layer[aa];
+		BRAIN_CK(dk_quas_by_layer.is_valid_idx(aa));
+		row_quanton_t& mots = dk_quas_by_layer[aa];
 
 		if(reset_notes){
 			long num_re = (*dk_reset_all_fn)(brn, mots);
@@ -1338,9 +1340,9 @@ notekeeper::clear_all_motives(long lim_lv, bool reset_notes){
 		mots.clear();
 	}
 	DBG(
-		for(long bb = lim_lv; bb < dk_motives_by_layer.size(); bb++){
-			BRAIN_CK(dk_motives_by_layer.is_valid_idx(bb));
-			row_quanton_t& mots = dk_motives_by_layer[bb];
+		for(long bb = lim_lv; bb < dk_quas_by_layer.size(); bb++){
+			BRAIN_CK(dk_quas_by_layer.is_valid_idx(bb));
+			row_quanton_t& mots = dk_quas_by_layer[bb];
 			BRAIN_CK(mots.is_empty());
 		}
 	);
@@ -1360,9 +1362,9 @@ deduction::set_with(brain& brn, notekeeper& nke, quanton& nxt_qua){
 	BRAIN_CK(opp_nxt.qlevel() == nke.dk_note_layer);
 	BRAIN_CK(opp_nxt.get_charge() == cg_negative);
 
-	nke.get_all_ordered_motives(dt_motives);
+	nke.get_all_ordered_quantons(dt_motives);
 
-	DBG_PRT(51, os << " motives_by_lv= " << nke.dk_motives_by_layer);
+	DBG_PRT(51, os << " motives_by_lv= " << nke.dk_quas_by_layer);
 	DBG_PRT(52, os << "LV=" <<  nke.dk_note_layer << " motives " 
 		<< dt_motives << " opp_nxt=" << &opp_nxt);
 
@@ -1583,12 +1585,12 @@ neuron::is_filled_of_marks(quanton& nxt_qua){
 void
 notekeeper::restart_with(brain& brn, row_quanton_t& bak_upper){
 	BRAIN_CK(dk_num_noted_in_layer == 0);
-	BRAIN_CK(get_layer(dk_note_layer).is_empty());
+	BRAIN_CK(get_qu_layer(dk_note_layer).is_empty());
 	BRAIN_CK(dk_note_layer >= brn.level());
 	BRAIN_CK(dk_has_note_fn == &quanton::has_note0);
 
 	row_quanton_t rr_upper;
-	get_all_ordered_motives(rr_upper);
+	get_all_ordered_quantons(rr_upper);
 	BRAIN_CK(ck_motives(brn, rr_upper));
 	set_all_note3(brn, rr_upper);
 

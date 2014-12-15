@@ -1348,7 +1348,7 @@ brain::reverse(){
 	// update notes3
 
 	row_quanton_t& rr_upper = data_level().ld_upper_quas;
-	nke0.get_all_ordered_motives(rr_upper);
+	nke0.get_all_ordered_quantons(rr_upper);
 	BRAIN_CK(ck_motives(brn, rr_upper));
 	set_all_note3(brn, rr_upper);
 	*/

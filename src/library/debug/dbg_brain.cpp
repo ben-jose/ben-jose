@@ -95,7 +95,7 @@ brain::ck_trail(){
 	brain& brn = *this;
 
 	row_quanton_t& the_trl = br_tmp_trail;
-	br_charge_trail.get_all_ordered_motives(the_trl);
+	br_charge_trail.get_all_ordered_quantons(the_trl);
 
 	long num_null_src = 0;
 	BRAIN_CK(br_tot_qu_dots == 0);
@@ -708,7 +708,7 @@ brain::dbg_check_sat_assig(){
 #ifdef FULL_DEBUG
 	row_quanton_t& the_assig = br_tmp_assig_quantons;
 	if(the_assig.is_empty()){
-		br_charge_trail.get_all_ordered_motives(the_assig);
+		br_charge_trail.get_all_ordered_quantons(the_assig);
 	}
 	
 	row<neuron*>& neus = br_tmp_ck_sat_neus;
@@ -885,7 +885,7 @@ void
 brain::print_trail(bj_ostream& os, bool no_src_only){
 #ifdef FULL_DEBUG
 	row_quanton_t& the_trl = br_tmp_trail;
-	br_charge_trail.get_all_ordered_motives(the_trl);
+	br_charge_trail.get_all_ordered_quantons(the_trl);
 	os << "TRAIL=[";
 	for(long kk = 0; kk < the_trl.size(); kk++){
 		quanton* qua = the_trl[kk];
