@@ -115,6 +115,7 @@ class quanton;
 class neuron;
 class deduction;
 class coloring;
+class neurolayers;
 class neuromap;
 class memap;
 class analyser;
@@ -208,7 +209,7 @@ long	reset_dots_of(brain& brn, row_quanton_t& quans);
 void	negate_quantons(row_quanton_t& qua_row);
 void	get_ids_of(row_quanton_t& quans, row_long_t& the_ids);
 void	elim_until_dominated(brain& brn, quanton& qua);
-void	find_max_level(row_quanton_t& tmp_mots, long& max_lev);
+long	find_max_level(row_quanton_t& tmp_mots);
 
 void	split_tees(sort_glb& srg, row<sortee*>& sorted_tees, row<sortee*>& sub_tees, 
 			row<canon_clause*>& ccls_in, row<canon_clause*>& ccls_not_in);
@@ -725,7 +726,7 @@ class neuron {
 	long			ne_index;		//idx in br_neurons
 	bool			ne_original;
 
-	row_quanton_t		ne_fibres;		// used in forward propagation of negative signls
+	row_quanton_t	ne_fibres;		// used in forward propagation of negative signls
 
 	long			ne_fibre_0_idx;		// this == fibres[0]->tunnels[fibre_0_idx]
 	long			ne_fibre_1_idx;		// this == fibres[1]->tunnels[fibre_1_idx]
@@ -948,7 +949,7 @@ class neuron {
 
 	bool	all_marked_after_idx(brain& brn, long trl_idx);
 	bool	is_filled_of_marks(quanton& nxt_qua);
-	bool	in_neuromap(long min_tier, long max_tier, bool& has_upper_pos);
+	bool	in_neuromap(long min_tier, long max_tier, long& upper_pos_ti);
 
 	//for IS_SAT_CK
 	bool	neu_compute_dots(){
@@ -1055,6 +1056,14 @@ class prop_signal {
 		bool c3 = (ps_tier == INVALID_TIER);
 
 		return (c1 && c2 && c3);
+	}
+	
+	long get_level() const {
+		long lv = INVALID_LEVEL;
+		if(ps_quanton != NULL_PT){
+			lv = ps_quanton->qlevel();
+		}
+		return lv;
 	}
 
 	void	make_ps_dominated(brain& brn){
@@ -1451,10 +1460,8 @@ class neuromap {
 	void	map_make_dominated();
 	void	map_activate();
 	void	map_deactivate();
-	
+
 	void	set_all_filled_in_propag();
-	void	fill_non_forced_from(row<neuron*>& all_neus, long min_ti, long max_ti);
-	void	fill_non_forced();
 	
 	long	get_min_tier(){
 		long mti = INVALID_TIER;
@@ -1668,6 +1675,74 @@ class memap {
 };
 
 //=============================================================================
+// neurolayers
+
+class neurolayers {
+	public:
+	brain*				nl_brain;
+	row_row_neuron_t	nl_neus_by_layer;
+	
+	neurolayers(brain* the_brn = NULL_PT)
+	{
+		init_neurolayers(the_brn);
+	}
+
+	~neurolayers(){
+		init_neurolayers();
+	}
+	
+	void	init_neurolayers(brain* the_brn = NULL_PT){
+		nl_brain = the_brn;
+		nl_neus_by_layer.clear(true, true);
+	}
+	
+	brain&	get_nl_brain();
+	
+	brain*	get_dbg_brn(){
+		brain* the_brn = NULL;
+		BRAIN_DBG(the_brn = nl_brain);
+		return the_brn;
+	}
+
+	void	get_all_ordered_neurons(row_neuron_t& all_neus, long min_ly = 0, 
+						long max_ly = -1)
+	{
+		int the_sz = nl_neus_by_layer.size();
+		if(max_ly < min_ly){ max_ly = the_sz; }
+		if(max_ly > the_sz){ max_ly = the_sz; }
+
+		BRAIN_CK(min_ly <= max_ly);
+		BRAIN_CK(all_neus.is_valid_idx(min_ly));
+		BRAIN_CK((max_ly == all_neus.size()) || all_neus.is_valid_idx(max_ly));
+		
+		all_neus.clear();
+		for(long aa = min_ly; aa < max_ly; aa++){
+			row_neuron_t& lv_neus = nl_neus_by_layer[aa];
+			lv_neus.append_to(all_neus);
+		}
+	}
+	
+	row<neuron*>&	get_ne_layer(long lv){
+		BRAIN_CK(lv >= 0); 
+		BRAIN_CK(lv < MAX_LAYERS); 
+		while(nl_neus_by_layer.size() <= lv){
+			nl_neus_by_layer.inc_sz();
+		}
+		BRAIN_CK(lv >= 0);
+		BRAIN_CK(lv < MAX_LAYERS); 
+		BRAIN_CK(nl_neus_by_layer.is_valid_idx(lv));
+		row<neuron*>& ly_neus = nl_neus_by_layer[lv];
+		return ly_neus;
+	}
+	
+	void	clear_all_neurons(){
+		nl_neus_by_layer.clear_each();
+		nl_neus_by_layer.clear();
+	}
+	
+};
+
+//=============================================================================
 // notekeeper
 
 class notekeeper {
@@ -1691,7 +1766,6 @@ class notekeeper {
 	long 			dk_num_noted_in_layer;
 
 	row_row_quanton_t	dk_quas_by_layer;
-	row_row_neuron_t	dk_neus_by_layer;
 
 	notekeeper(brain* brn = NULL_PT, long tg_lv = INVALID_LEVEL)
 	{
@@ -1775,7 +1849,6 @@ class notekeeper {
 		dk_num_noted_in_layer = 0;
 
 		dk_quas_by_layer.clear(true, true);
-		dk_neus_by_layer.clear(true, true);
 	}
 
 	bool	ck_funcs(){
@@ -1797,10 +1870,9 @@ class notekeeper {
 
 	long 	get_lv_idx(long lv);
 
-	void	clear_all_motives(long lim_lv = INVALID_LEVEL, bool reset_notes = true);
+	long	clear_all_quantons(long lim_lv = INVALID_LEVEL, bool reset_notes = true);
 	
 	row_quanton_t&	get_qu_layer(long q_layer);
-	row<neuron*>&	get_ne_layer(long n_layer);
 
 	bool	ck_notes(row_quanton_t& mots, bool val){
 
@@ -1826,7 +1898,7 @@ class notekeeper {
 		}
 	}
 	
-	long	get_num_motives(){
+	long	get_tot_quantons(){
 		long nmm = 0;
 		for(long aa = 0; aa < dk_quas_by_layer.size(); aa++){
 			row_quanton_t& lv_mots = dk_quas_by_layer[aa];
@@ -1836,26 +1908,8 @@ class notekeeper {
 
 	}
 	
-	void	get_all_ordered_neurons(row_neuron_t& all_neus, long min_ly = 0, 
-						long max_ly = -1)
-	{
-		int the_sz = dk_neus_by_layer.size();
-		if(max_ly < min_ly){ max_ly = the_sz; }
-		if(max_ly > the_sz){ max_ly = the_sz; }
-
-		BRAIN_CK(min_ly <= max_ly);
-		BRAIN_CK(all_neus.is_valid_idx(min_ly));
-		BRAIN_CK((max_ly == all_neus.size()) || all_neus.is_valid_idx(max_ly));
-		
-		all_neus.clear();
-		for(long aa = min_ly; aa < max_ly; aa++){
-			row_neuron_t& lv_neus = dk_neus_by_layer[aa];
-			lv_neus.append_to(all_neus);
-		}
-	}
-	
 	bool	is_empty(){
-		return (get_num_motives() == 0);
+		return (get_tot_quantons() == 0);
 	}
 
 	void	dec_notes(){
@@ -1951,7 +2005,7 @@ class notekeeper {
 		return qua;
 	}
 
-	quanton*	last_motive(){
+	quanton*	last_quanton(){
 		row_row_quanton_t& mots_by_ly = dk_quas_by_layer;
 		BRAIN_CK(ck_pop_layer());
 		if(! mots_by_ly.is_valid_idx(dk_pop_layer)){
@@ -1993,7 +2047,7 @@ class notekeeper {
 	}
 
 	long	last_qlevel(){
-		quanton* qua = last_motive();
+		quanton* qua = last_quanton();
 		if(qua == NULL_PT){
 			return 0;
 		}
@@ -2001,7 +2055,7 @@ class notekeeper {
 	}
 
 	long	last_qtier(){
-		quanton* qua = last_motive();
+		quanton* qua = last_quanton();
 		if(qua == NULL_PT){
 			return 0;
 		}
@@ -2129,6 +2183,7 @@ class analyser {
 	brain*			de_brain;
 
 	notekeeper		de_nkpr;
+	neurolayers 	de_not_sel_neus;
 	nkref			de_ref;
 	row<prop_signal>	de_all_noted;
 
@@ -2183,10 +2238,14 @@ class analyser {
 		return eonm;
 	}
 	
-	void	fill_dct(notekeeper& nkpr, nkref& nkr, deduction& dct);
+	void	fill_dct(deduction& dct);
 	void	update_all_deduction_noted();
 	//void	fill_nmp(notekeeper& nkpr, nkref& nkr);
 	
+	bool		ck_deduction_init(long deduc_lv);
+	
+	void		deduction_init(row_quanton_t& causes);
+	void		deduction_init(prop_signal const & confl_sg);
 	void 		deduction_analysis(prop_signal const & confl, deduction& dct);
 	void 		neuromap_write_analysis(deduction& dct, row<neuromap*>& all_nmps);
 	neuromap* 	neuromap_find_analysis(deduction& dct);
@@ -2194,7 +2253,15 @@ class analyser {
 	
 	void		find_next_source(bool only_origs = false);
 	void		find_next_noted();
+	void		update_noted();
+	void 		set_notes_of(row_quanton_t& causes, bool is_first);
 
+	static
+	void		fill_non_forced_from(row<neuron*>& all_neus, 
+							row<neuron*>& sel_neus, neurolayers& not_sel_neus, 
+							long min_ti, long max_ti);
+	
+	void		fill_non_forced(neuromap& nxt_nmp);
 	neuromap*	update_neuromap(neuromap* prev_nmp);
 	neuromap*	calc_neuromap(prop_signal const & confl_sg, long min_lv, 
 							  neuromap* prev_nmp);
@@ -2491,6 +2558,7 @@ public:
 	row<neuron*>		br_tmp_found_neus;
 	row<neuron*>		br_tmp_selected;
 	row<neuron*>		br_tmp_not_selected;
+	row<neuron*>		br_tmp_fill_non_forced;
 	row<neuron*>		br_tmp_discarded;
 	row<neuron*>		br_tmp_ck_sat_neus;
 	row<neuron*>		br_tmp_prt_neus;
@@ -2824,7 +2892,7 @@ public:
 	}
 
 	quanton&	trail_last(){
-		quanton* qua = br_charge_trail.last_motive();
+		quanton* qua = br_charge_trail.last_quanton();
 		BRAIN_CK(qua != NULL_PT);
 		return *qua;
 	}
@@ -3042,6 +3110,13 @@ memap::reset_memap(brain& brn){
 }
 
 inline
+brain&
+neurolayers::get_nl_brain(){
+	BRAIN_CK(nl_brain != NULL_PT);
+	return *nl_brain;
+}
+
+inline
 void
 neuromap::reset_neuromap(brain& brn){
 	BRAIN_CK(map_ck_all_qu_dominated());
@@ -3070,20 +3145,6 @@ notekeeper::get_qu_layer(long lv){
 	BRAIN_CK(dk_quas_by_layer.is_valid_idx(lv_idx));
 	row_quanton_t& mots = dk_quas_by_layer[lv_idx];
 	return mots;
-}
-
-inline
-row<neuron*>&	
-notekeeper::get_ne_layer(long lv){
-	BRAIN_CK(lv >= 0); 
-	BRAIN_CK(lv < MAX_LAYERS); 
-	while(dk_neus_by_layer.size() <= lv){
-		dk_neus_by_layer.inc_sz();
-	}
-	long lv_idx = get_lv_idx(lv);
-	BRAIN_CK(dk_neus_by_layer.is_valid_idx(lv_idx));
-	row<neuron*>& ly_neus = dk_neus_by_layer[lv_idx];
-	return ly_neus;
 }
 
 inline
@@ -3176,15 +3237,15 @@ void	get_ids_of(row_quanton_t& quans, row_long_t& the_ids){
 }
 
 inline
-void	find_max_level(row_quanton_t& tmp_mots, long& max_lev){
-	//max_lev = INVALID_LEVEL;
-	max_lev = ROOT_LEVEL;
+long	find_max_level(row_quanton_t& tmp_mots){
+	long max_lev = ROOT_LEVEL;
 
 	for(long aa = 0; aa < tmp_mots.size(); aa++){
 
 		quanton& qua = *(tmp_mots[aa]);
 		max_lev = max(max_lev, qua.qlevel());
 	}
+	return max_lev;
 }
 
 //=============================================================================

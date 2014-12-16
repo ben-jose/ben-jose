@@ -928,6 +928,12 @@ public:
 		SZ_ATTRIB = n_sz;
 	}
 
+	void	clear_each(row_index from = 0){ 
+		for(row_index ii = from; ii < SZ_ATTRIB; ii++){ 
+			pos(ii).clear();
+		}
+	}
+	
 	virtual void	clear(bool destroy = false, bool dealloc = false, row_index from = 0){ 
 		if(data != NULL_PT){
 			if(from != 0){

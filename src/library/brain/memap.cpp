@@ -1063,15 +1063,6 @@ brain::reverse(){
 			BRAIN_CK(nke0.dk_num_noted_in_layer == 0);
 			BRAIN_CK(level() <= nke0.dk_note_layer);
 
-			/* NO_DEACT 
-			BRAIN_CK(mpp0.map_ck_all_qu_dominated(brn));
-			BRAIN_CK(mpp0.map_ck_all_ne_dominated(brn));
-
-			if(lv_has_learned()){
-				mpp0.reset_memap(brn);
-				DBG_PRT(121, os << "mpp0.reset_memap (has_learnd)");
-			}*/
-			
 			DBG(bool wrote = false);
 			memap& lv_map0 = data_level().ld_map0;
 			
@@ -1079,56 +1070,7 @@ brain::reverse(){
 			DBG(bool m_cw = false);
 			if(lv_map0.ma_active){
 				BRAIN_CK(false);
-				/*
-				BRAIN_CK(lv_map0.ck_last_szs());
-				BRAIN_CK(! lv_map0.is_ma_virgin());
-				//BRAIN_CK(lv_map0.map_ck_all_qu_dominated(brn));
-				//BRAIN_CK(lv_map0.map_ck_all_ne_dominated(brn));
-				
-				BRAIN_CK(lv_has_learned());
-				BRAIN_CK(! dct.is_dt_virgin());
-				bool can_write = can_write_reverse_map(dct);
-				if(can_write){
-					DBG(m_cw = true);
-					//brn.init_forced_sorter();
-
-					DBG(br_dbg.dbg_save_id++; br_dbg.dbg_canon_save_id = br_dbg.dbg_save_id);
-					
-					BRAIN_CK(lv_map0.dbg_ck_used_simple_no_satisf(mo_save, brn));
-					BRAIN_CK(lv_map0.map_ck_simple_no_satisf(mo_save, brn));
-
-					DBG_PRT(122, os << "SAVING MAP" << bj_eol;
-						//os << (&(lv_map0)) << bj_eol;
-						os << lv_map0 << bj_eol;
-						brn.print_trail(os);
-					);
-					DBG_PRT(123, os << "HIT RETURN TO CONTINUE...");
-					DBG_COMMAND(123, getchar());
-
-					bool sv_ok = lv_map0.map_save(brn);
-					if(sv_ok){
-						DBG(wrote = true);
-						brn.br_num_memo++;
-					}
-
-					DBG_PRT(54, os << "writing LV=" << level() << bj_eol;
-						os << data_level()
-					);
-				}
-				//lv_map0.map_deactivate(brn);
-
-				BRAIN_CK(mpp0.is_ma_virgin());
-				BRAIN_CK(level() > dct.dt_target_level);
-
-				row_quanton_t& bak_upper = data_level().ld_upper_quas;
-				nke0.restart_with(brn, bak_upper);
-
-				mpp0.reset_memap(brn);
-				mpp0.map_replace_with(brn, lv_map0, dbg_call_1);
-				BRAIN_CK(mpp0.ck_last_szs());
-
-				DBG_PRT(120, os << "mpp0.reset_memap (end_lv)");
-				*/
+				// OLD WRITE MAMAP
 			} // lv_map0.ma_active
 
 			dec_level();
@@ -1183,30 +1125,6 @@ brain::reverse(){
 
 		DBG(bool had_n3 = false);
 		DBG(bool had_n0 = false);
-		/* NO_DEACT 
-		if(qua.has_note3()){
-			qua.reset_its_note3(brn);
-			DBG(had_n3 = true);
-			while(! qua.in_qu_dominated(brn)){
-				DBG_PRT(112, os << "NOT dom (case 1) qua=" << &qua << 
-						" up_dom=" << get_last_upper_map());
-				DBG_PRT(54, os << "NOT dom (case 1) qua=" << &qua << bj_eol;
-					print_trail(os);
-
-					os << " up_dom=" << get_last_upper_map() 
-					<< " qu_curr_map=" << qua.qu_curr_map << bj_eol
-					<< " br_maps_active=" << br_maps_active
-				);
-				deactivate_last_map();
-			}
-			BRAIN_CK(qua.in_qu_dominated(brn));
-
-			if(! qua.has_note0()){
-				mpp0.reset_memap(brn);
-				BRAIN_CK(mpp0.is_ma_virgin());
-				DBG_PRT(120, os << "mpp0.reset_memap (has_3 && ! has_0)");
-			}
-		}*/
 
 		if(qua.has_note0()){
 			long qlv = qua.qlevel();
@@ -1215,20 +1133,6 @@ brain::reverse(){
 
 			qua.reset_its_note0(brn);
 			
-			/* NO_DEACT 
-			DBG(had_n0 = true);
-			while(! qua.in_qu_dominated(brn)){
-				DBG_PRT(112, os << "NOT dom (case 2) qua=" << &qua << 
-						" up_dom=" << get_last_upper_map());
-				DBG_PRT(54, os << "NOT dom (case 2) qua=" << &qua << bj_eol;
-					print_trail(os);
-					os << " up_dom=" << get_last_upper_map() 
-					<< " qu_curr_map=" << qua.qu_curr_map << bj_eol
-					<< " br_maps_active=" << br_maps_active
-				);
-				deactivate_last_map();
-			}
-			*/
 			BRAIN_CK(qua.in_qu_dominated(brn));
 		
 			BRAIN_CK(qua.qlevel() == nke0.dk_note_layer);
@@ -1301,7 +1205,6 @@ brain::reverse(){
 		
 		// reset charge
 
-		BRAIN_CK(! qua.has_note3());
 		BRAIN_CK(! qua.has_note0());
 		BRAIN_CK(! (had_n3 || had_n0) || qua.in_qu_dominated(brn));
 
@@ -1337,25 +1240,8 @@ brain::reverse(){
 		//lv_map0.map_activate(brn);
 		DBG_PRT(122, os << "Updated " << &(data_level()) << " with " << &lv_map0);
 	}
-	/* NO_DEACT 
-	DBG(	
-		if(! mpp0.is_ma_virgin() && ! lv_map0.is_ma_virgin()){
-			BRAIN_CK(mpp0.map_ck_all_qu_dominated(brn));
-			//BRAIN_CK(mpp0.map_ck_all_ne_dominated(brn));
-		}
-	); 
 
-	// update notes3
-
-	row_quanton_t& rr_upper = data_level().ld_upper_quas;
-	nke0.get_all_ordered_quantons(rr_upper);
-	BRAIN_CK(ck_motives(brn, rr_upper));
-	set_all_note3(brn, rr_upper);
-	*/
-
-	DBG(long old_num3 = brn.br_qu_tot_note3);
-	nke0.clear_all_motives();
-	BRAIN_CK(old_num3 == brn.br_qu_tot_note3);
+	nke0.clear_all_quantons();
 	BRAIN_CK(all_notes0 == 0);
 
 	// learn motives
@@ -1367,16 +1253,6 @@ brain::reverse(){
 	}
 	neuron* lnd_neu = learn_mots(dct.dt_motives, *dct.dt_forced);
 	
-	/*
-	// rev all quas
-	
-	for(int aa = 0; aa < all_rev.size(); aa++){
-		quanton& to_rev = *(all_rev[aa]);
-		to_rev.set_charge(brn, NULL_PT, cg_neutral, INVALID_TIER);
-	}
-	all_rev.clear();
-	*/
-
 	// send forced learned
 
 	quanton* nxt_qua = dct.dt_forced;
@@ -1384,17 +1260,6 @@ brain::reverse(){
 		BRAIN_CK(nxt_qua != NULL_PT);
 		send_psignal(*nxt_qua, lnd_neu, tier() + 1);
 	}
-
-	/*
-	// resend chosen
-
-	quanton* nxt_qua = chosen_qua;
-	if(! dct.dt_motives.is_empty()){
-		BRAIN_CK(data_level().ld_chosen == nxt_qua);
-		BRAIN_CK(nxt_qua != NULL_PT);
-		DBG_PRT(25, os << "**RETRACTED TO chosen=" << data_level().ld_chosen);
-		send_psignal(*nxt_qua, NULL, tier() + 1);
-	}*/
 
 	update_semi_monos();
 
