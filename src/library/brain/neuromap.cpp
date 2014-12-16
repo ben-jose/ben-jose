@@ -457,7 +457,7 @@ analyser::ck_deduction_init(long deduc_lv){
 	notekeeper& nkpr = de_nkpr;
 	BRAIN_CK(deduc_lv != INVALID_LEVEL);
 	BRAIN_CK(nkpr.nk_get_counter() == 0);
-	BRAIN_CK(nkpr.is_empty());
+	BRAIN_CK(nkpr.dk_quas_lyrs.is_empty());
 	BRAIN_CK(nkpr.dk_note_layer > 0);
 	BRAIN_CK(nkpr.dk_note_layer == deduc_lv);
 	BRAIN_CK(nkr.has_curr_quanton());
@@ -533,7 +533,7 @@ analyser::deduction_analysis(prop_signal const & confl_sg, deduction& dct){
 	
 	// reset all
 	nkpr.clear_all_quantons();
-	BRAIN_CK(nkpr.is_empty());
+	BRAIN_CK(nkpr.dk_quas_lyrs.is_empty());
 	BRAIN_CK(nkpr.nk_get_counter() == 0);
 }
 
@@ -570,7 +570,7 @@ analyser::fill_dct(deduction& dct){
 	dct.init_deduction();
 	dct.dt_motives.set_cap(nkpr.dk_tot_noted + 1);
 
-	nkpr.get_all_ordered_quantons(dct.dt_motives);
+	nkpr.dk_quas_lyrs.get_all_ordered_quantons(dct.dt_motives);
 
 	dct.dt_target_level = find_max_level(dct.dt_motives);
 
@@ -786,7 +786,7 @@ analyser::calc_neuromap(prop_signal const & confl_sg, long min_lv, neuromap* pre
 		BRAIN_CK(confl_sg.ps_quanton->get_charge() == cg_negative);
 		BRAIN_CK(confl_sg.ps_source != NULL);
 		BRAIN_CK(nkpr.nk_get_counter() == 0);
-		BRAIN_CK(nkpr.is_empty());
+		BRAIN_CK(nkpr.dk_quas_lyrs.is_empty());
 		BRAIN_CK(nkpr.dk_note_layer > 0);
 		BRAIN_CK(nkpr.dk_note_layer <= get_de_brain().level());
 		BRAIN_CK(! tg_confl()->ne_fibres.is_empty());
@@ -811,7 +811,7 @@ void
 analyser::end_calc_neuromap(neuromap& out_nmp){
 	notekeeper& nkpr = de_nkpr;
 	nkpr.clear_all_quantons();
-	BRAIN_CK(nkpr.is_empty());
+	BRAIN_CK(nkpr.dk_quas_lyrs.is_empty());
 	BRAIN_CK(nkpr.nk_get_counter() == 0);	
 }
 

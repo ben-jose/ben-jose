@@ -1743,6 +1743,180 @@ class neurolayers {
 };
 
 //=============================================================================
+// qulayers
+
+class qulayers {
+	public:
+		
+	brain*			ql_brain;
+	row_row_quanton_t	dk_quas_by_layer;
+	long			dk_pop_layer;
+
+	qulayers(brain* the_brn = NULL_PT)
+	{
+		init_qulayers(the_brn);
+	}
+
+	~qulayers(){
+		init_qulayers();
+	}
+	
+	void	init_qulayers(brain* the_brn = NULL_PT){
+		ql_brain = the_brn;
+		dk_quas_by_layer.clear(true, true);
+		dk_pop_layer = INVALID_IDX;
+	}
+	
+	brain&	get_ql_brain();
+	
+	brain*	get_dbg_brn(){
+		brain* the_brn = NULL;
+		BRAIN_DBG(the_brn = ql_brain);
+		return the_brn;
+	}
+
+	quanton*	pop_motive(){
+		row_row_quanton_t& mots_by_ly = dk_quas_by_layer;
+		BRAIN_CK(ck_pop_layer());
+		if(! mots_by_ly.is_valid_idx(dk_pop_layer)){
+			return NULL_PT;
+		}
+		row_quanton_t& mots = mots_by_ly[dk_pop_layer];
+		if(mots.is_empty()){
+			return NULL_PT;
+		}
+		quanton* qua = mots.pop();
+		if(mots.is_empty()){
+			update_pop_layer();
+		}
+		return qua;
+	}
+
+	void		update_pop_layer(bool with_restart = false){
+		dk_pop_layer = get_nxt_busy_layer(dk_pop_layer, with_restart);
+	}
+
+	quanton*	last_quanton(){
+		row_row_quanton_t& mots_by_ly = dk_quas_by_layer;
+		BRAIN_CK(ck_pop_layer());
+		if(! mots_by_ly.is_valid_idx(dk_pop_layer)){
+			return NULL_PT;
+		}
+		row_quanton_t& mots = mots_by_ly[dk_pop_layer];
+		if(mots.is_empty()){
+			return NULL_PT;
+		}
+		quanton* qua = mots.last();
+		return qua;
+	}
+
+	bool		ck_pop_layer(){
+		row_row_quanton_t& mots_by_ly = dk_quas_by_layer;
+		if(mots_by_ly.is_empty()){
+			BRAIN_CK(dk_pop_layer == INVALID_IDX);
+			return true;
+		}
+		long p_ly = mots_by_ly.last_idx();
+		while(mots_by_ly.is_valid_idx(p_ly) && (p_ly > dk_pop_layer)){
+			BRAIN_CK(mots_by_ly[p_ly].is_empty());
+			p_ly--;
+		}
+		BRAIN_CK(p_ly == dk_pop_layer);
+		if(mots_by_ly.is_valid_idx(dk_pop_layer)){
+			BRAIN_CK(! mots_by_ly[dk_pop_layer].is_empty());
+
+		}
+		return true;
+	}
+
+	bool	has_motives(){
+		BRAIN_CK(ck_pop_layer());
+		if(dk_pop_layer == INVALID_IDX){
+			return false;
+		}
+		return true;
+	}
+
+	long	last_qlevel(){
+		quanton* qua = last_quanton();
+		if(qua == NULL_PT){
+			return 0;
+		}
+		return qua->qlevel();
+	}
+
+	long	last_qtier(){
+		quanton* qua = last_quanton();
+		if(qua == NULL_PT){
+			return 0;
+		}
+		return qua->qu_tier;
+	}
+	
+	void	add_motive(quanton& qua, long q_layer){
+		row_quanton_t& layer_mots = get_qu_layer(q_layer);
+		layer_mots.push(&qua);
+		if(q_layer > dk_pop_layer){
+			dk_pop_layer = q_layer;
+		}
+	}
+
+	long	get_nxt_busy_layer(long lyr, bool with_restart = false){
+		row_row_quanton_t& mots_by_ly = dk_quas_by_layer;
+		if(mots_by_ly.is_empty()){
+			return INVALID_IDX;
+		}
+		long nxt_lyr = lyr;
+		if(with_restart){
+			nxt_lyr = mots_by_ly.last_idx();
+		}
+		while(mots_by_ly.is_valid_idx(nxt_lyr) && mots_by_ly[nxt_lyr].is_empty()){
+			nxt_lyr--;
+		}
+		BRAIN_CK((nxt_lyr == INVALID_IDX) || mots_by_ly.is_valid_idx(nxt_lyr));
+		return nxt_lyr;
+	}
+
+	void	get_all_ordered_quantons(row_quanton_t& mots){
+		mots.clear();
+		for(long aa = 0; aa < dk_quas_by_layer.size(); aa++){
+			row_quanton_t& lv_mots = dk_quas_by_layer[aa];
+			lv_mots.append_to(mots);
+		}
+	}
+	
+	long	get_tot_quantons(){
+		long nmm = 0;
+		for(long aa = 0; aa < dk_quas_by_layer.size(); aa++){
+			row_quanton_t& lv_mots = dk_quas_by_layer[aa];
+			nmm += lv_mots.size();
+		}
+		return nmm;
+
+	}
+	
+	bool	is_empty(){
+		return (get_tot_quantons() == 0);
+	}
+
+	row_quanton_t&	get_qu_layer(long q_layer);
+
+	bool	ck_empty_layers(long q_layer){
+		BRAIN_CK(q_layer >= 0);
+		BRAIN_CK(! dk_quas_by_layer.is_empty());
+		
+		long l_idx = dk_quas_by_layer.last_idx();
+		BRAIN_CK(q_layer <= l_idx);
+		for(long ii = l_idx; ii > q_layer; ii--){
+			BRAIN_CK(get_qu_layer(ii).is_empty());
+		}
+		return true;
+	}
+
+	
+};
+
+//=============================================================================
 // notekeeper
 
 class notekeeper {
@@ -1760,12 +1934,11 @@ class notekeeper {
 	do_row_fn_pt_t		dk_set_all_fn;
 	do_row_fn_pt_t		dk_reset_all_fn;
 
-	long			dk_pop_layer;
 	long			dk_note_layer;
 	long			dk_tot_noted;
 	long 			dk_num_noted_in_layer;
 
-	row_row_quanton_t	dk_quas_by_layer;
+	qulayers		dk_quas_lyrs;
 
 	notekeeper(brain* brn = NULL_PT, long tg_lv = INVALID_LEVEL)
 	{
@@ -1843,12 +2016,11 @@ class notekeeper {
 	}
 
 	void	init_notes(long tg_lv){
-		dk_pop_layer = INVALID_IDX;
 		dk_note_layer = tg_lv;
 		dk_tot_noted = 0;
 		dk_num_noted_in_layer = 0;
 
-		dk_quas_by_layer.clear(true, true);
+		dk_quas_lyrs.init_qulayers(dk_brain);
 	}
 
 	bool	ck_funcs(){
@@ -1868,12 +2040,8 @@ class notekeeper {
 		return (*dk_note_counter);
 	}
 
-	long 	get_lv_idx(long lv);
-
 	long	clear_all_quantons(long lim_lv = INVALID_LEVEL, bool reset_notes = true);
 	
-	row_quanton_t&	get_qu_layer(long q_layer);
-
 	bool	ck_notes(row_quanton_t& mots, bool val){
 
 		BRAIN_CK(ck_funcs());
@@ -1890,28 +2058,6 @@ class notekeeper {
 		return true;
 	}
 
-	void	get_all_ordered_quantons(row_quanton_t& mots){
-		mots.clear();
-		for(long aa = 0; aa < dk_quas_by_layer.size(); aa++){
-			row_quanton_t& lv_mots = dk_quas_by_layer[aa];
-			lv_mots.append_to(mots);
-		}
-	}
-	
-	long	get_tot_quantons(){
-		long nmm = 0;
-		for(long aa = 0; aa < dk_quas_by_layer.size(); aa++){
-			row_quanton_t& lv_mots = dk_quas_by_layer[aa];
-			nmm += lv_mots.size();
-		}
-		return nmm;
-
-	}
-	
-	bool	is_empty(){
-		return (get_tot_quantons() == 0);
-	}
-
 	void	dec_notes(){
 		BRAIN_CK(dk_tot_noted > 0);
 		BRAIN_CK(dk_num_noted_in_layer > 0);
@@ -1921,7 +2067,7 @@ class notekeeper {
 
 		dk_num_noted_in_layer--;
 		if(dk_num_noted_in_layer == 0){
-			row_quanton_t& mots = get_qu_layer(dk_note_layer);
+			row_quanton_t& mots = dk_quas_lyrs.get_qu_layer(dk_note_layer);
 			BRAIN_CK(ck_notes(mots, false));
 			mots.clear();
 		}
@@ -1933,10 +2079,11 @@ class notekeeper {
 		BRAIN_CK(q_layer >= 0);
 		BRAIN_CK(q_layer <= dk_note_layer);
 		if(q_layer < dk_note_layer){
-			row_quanton_t& nxt_mots = get_qu_layer(q_layer);
+			row_quanton_t& nxt_mots = dk_quas_lyrs.get_qu_layer(q_layer);
 
 			BRAIN_CK(dk_num_noted_in_layer == 0);
-			BRAIN_CK(ck_empty_layers(q_layer));
+			BRAIN_CK(q_layer < dk_note_layer);
+			BRAIN_CK(dk_quas_lyrs.ck_empty_layers(q_layer));
 			BRAIN_CK(ck_notes(nxt_mots, true));
 
 			dk_note_layer = q_layer;
@@ -1945,122 +2092,8 @@ class notekeeper {
 		BRAIN_CK(q_layer == dk_note_layer);
 	}
 
-	bool	ck_empty_layers(long q_layer){
-		BRAIN_CK(q_layer >= 0);
-		BRAIN_CK(q_layer < dk_note_layer);
-		BRAIN_CK(! dk_quas_by_layer.is_empty());
-		
-		long l_idx = dk_quas_by_layer.last_idx();
-		BRAIN_CK(q_layer <= l_idx);
-		for(long ii = l_idx; ii > q_layer; ii--){
-			BRAIN_CK(get_qu_layer(ii).is_empty());
-		}
-		return true;
-	}
-
 	void	set_motive_notes(row_quanton_t& rr_qua, long from, long until);
 
-	void	add_motive(quanton& qua, long q_layer){
-		row_quanton_t& layer_mots = get_qu_layer(q_layer);
-		layer_mots.push(&qua);
-		if(q_layer > dk_pop_layer){
-			dk_pop_layer = q_layer;
-		}
-	}
-
-	long	get_nxt_busy_layer(long lyr, bool with_restart = false){
-		row_row_quanton_t& mots_by_ly = dk_quas_by_layer;
-		if(mots_by_ly.is_empty()){
-			return INVALID_IDX;
-		}
-		long nxt_lyr = lyr;
-		if(with_restart){
-			nxt_lyr = mots_by_ly.last_idx();
-		}
-		while(mots_by_ly.is_valid_idx(nxt_lyr) && mots_by_ly[nxt_lyr].is_empty()){
-			nxt_lyr--;
-		}
-		BRAIN_CK((nxt_lyr == INVALID_IDX) || mots_by_ly.is_valid_idx(nxt_lyr));
-		return nxt_lyr;
-	}
-
-	void		update_pop_layer(bool with_restart = false){
-		dk_pop_layer = get_nxt_busy_layer(dk_pop_layer, with_restart);
-	}
-
-	quanton*	pop_motive(){
-		row_row_quanton_t& mots_by_ly = dk_quas_by_layer;
-		BRAIN_CK(ck_pop_layer());
-		if(! mots_by_ly.is_valid_idx(dk_pop_layer)){
-			return NULL_PT;
-		}
-		row_quanton_t& mots = mots_by_ly[dk_pop_layer];
-		if(mots.is_empty()){
-			return NULL_PT;
-		}
-		quanton* qua = mots.pop();
-		if(mots.is_empty()){
-			update_pop_layer();
-		}
-		return qua;
-	}
-
-	quanton*	last_quanton(){
-		row_row_quanton_t& mots_by_ly = dk_quas_by_layer;
-		BRAIN_CK(ck_pop_layer());
-		if(! mots_by_ly.is_valid_idx(dk_pop_layer)){
-			return NULL_PT;
-		}
-		row_quanton_t& mots = mots_by_ly[dk_pop_layer];
-		if(mots.is_empty()){
-			return NULL_PT;
-		}
-		quanton* qua = mots.last();
-		return qua;
-	}
-
-	bool		ck_pop_layer(){
-		row_row_quanton_t& mots_by_ly = dk_quas_by_layer;
-		if(mots_by_ly.is_empty()){
-			BRAIN_CK(dk_pop_layer == INVALID_IDX);
-			return true;
-		}
-		long p_ly = mots_by_ly.last_idx();
-		while(mots_by_ly.is_valid_idx(p_ly) && (p_ly > dk_pop_layer)){
-			BRAIN_CK(mots_by_ly[p_ly].is_empty());
-			p_ly--;
-		}
-		BRAIN_CK(p_ly == dk_pop_layer);
-		if(mots_by_ly.is_valid_idx(dk_pop_layer)){
-			BRAIN_CK(! mots_by_ly[dk_pop_layer].is_empty());
-
-		}
-		return true;
-	}
-
-	bool	has_motives(){
-		BRAIN_CK(ck_pop_layer());
-		if(dk_pop_layer == INVALID_IDX){
-			return false;
-		}
-		return true;
-	}
-
-	long	last_qlevel(){
-		quanton* qua = last_quanton();
-		if(qua == NULL_PT){
-			return 0;
-		}
-		return qua->qlevel();
-	}
-
-	long	last_qtier(){
-		quanton* qua = last_quanton();
-		if(qua == NULL_PT){
-			return 0;
-		}
-		return qua->qu_tier;
-	}
 };
 
 //=============================================================================
@@ -2068,11 +2101,11 @@ class notekeeper {
 
 class nkref {
 	public:
-	notekeeper*	nr_keeper;
+	qulayers*	nr_keeper;
 	long		nr_curr_qua_layer;
 	long		nr_curr_qua_idx;
 	
-	nkref(notekeeper* the_kpr = NULL_PT){
+	nkref(qulayers* the_kpr = NULL_PT){
 		init_nkref(the_kpr);
 	}
 
@@ -2080,7 +2113,7 @@ class nkref {
 		init_nkref();
 	}
 
-	void	init_nkref(notekeeper* the_kpr = NULL_PT){
+	void	init_nkref(qulayers* the_kpr = NULL_PT){
 		nr_keeper = the_kpr;
 		nr_curr_qua_layer = INVALID_IDX;
 		nr_curr_qua_idx = INVALID_IDX;
@@ -2094,7 +2127,7 @@ class nkref {
 		return (c1 && c2 && c3);
 	}
 	
-	notekeeper& 	get_keeper(){
+	qulayers& 	get_keeper(){
 		BRAIN_CK(nr_keeper != NULL_PT);
 		return *nr_keeper;
 	}
@@ -2213,7 +2246,7 @@ class analyser {
 	}
 
 	brain&		get_de_brain();
-	notekeeper& get_orig_trail();
+	qulayers& 	get_orig_trail();
 	
 	neuron* 	tg_confl(){
 		BRAIN_CK(de_first_bk_psig.ps_source != NULL_PT);
@@ -2481,7 +2514,7 @@ public:
 	k_row<quanton>		br_positons;	// all quantons with positive charge
 	k_row<quanton>		br_negatons;	// all quantons with negative charge
 
-	notekeeper		br_charge_trail;
+	qulayers		br_charge_trail;
 	row_quanton_t		br_tmp_trail;		// in time of charging order
 
 	charge_t		br_choice_spin;
@@ -3124,26 +3157,17 @@ neuromap::reset_neuromap(brain& brn){
 }
 
 inline
-long 
-notekeeper::get_lv_idx(long lv){
-	BRAIN_CK(lv >= 0);
-	BRAIN_CK(lv < MAX_LAYERS); 
-
-	long lv_idx = lv;
-	return lv_idx;
-}
-
-inline
 row_quanton_t&	
-notekeeper::get_qu_layer(long lv){
+qulayers::get_qu_layer(long lv){
 	BRAIN_CK(lv >= 0); 
 	BRAIN_CK(lv < MAX_LAYERS); 
 	while(dk_quas_by_layer.size() <= lv){
 		dk_quas_by_layer.inc_sz();
 	}
-	long lv_idx = get_lv_idx(lv);
-	BRAIN_CK(dk_quas_by_layer.is_valid_idx(lv_idx));
-	row_quanton_t& mots = dk_quas_by_layer[lv_idx];
+	BRAIN_CK(lv >= 0);
+	BRAIN_CK(lv < MAX_LAYERS); 
+	BRAIN_CK(dk_quas_by_layer.is_valid_idx(lv));
+	row_quanton_t& mots = dk_quas_by_layer[lv];
 	return mots;
 }
 
@@ -3162,7 +3186,14 @@ analyser::get_de_brain(){
 }
 
 inline
-notekeeper& 
+brain&
+qulayers::get_ql_brain(){
+	BRAIN_CK(ql_brain != NULL_PT);
+	return *ql_brain;	
+}
+
+inline
+qulayers& 
 analyser::get_orig_trail(){
 	return get_de_brain().br_charge_trail;
 }
