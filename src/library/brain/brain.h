@@ -1372,8 +1372,9 @@ class neuromap {
 	public:
 	long			na_index;		//idx in br_neuromaps
 	
-	brain*			na_brn;	
+	brain*			na_brn;
 	bool			na_active;
+	bool			na_has_marks_and_spots;
 	long			na_deact_tier;
 	long			na_orig_lv;
 	quanton*		na_orig_cho;
@@ -1401,6 +1402,7 @@ class neuromap {
 	void	init_neuromap(brain* pt_brn = NULL){
 		na_brn = pt_brn;		
 		na_active = false;
+		na_has_marks_and_spots = false;
 		na_deact_tier = INVALID_TIER;
 		na_orig_lv = INVALID_LEVEL;
 		na_orig_cho = NULL_PT;
@@ -1419,12 +1421,13 @@ class neuromap {
 	bool	is_na_virgin(){
 		bool c1 = (na_brn == NULL_PT);
 		bool c2 = (na_active == false);
-		bool c3 = (na_deact_tier == INVALID_TIER);
-		bool c4 = (na_orig_lv == INVALID_LEVEL);
-		bool c5 = (na_orig_cho == NULL_PT);
-		bool c6 = (na_submap == NULL_PT);
+		bool c3 = (na_has_marks_and_spots == false);
+		bool c4 = (na_deact_tier == INVALID_TIER);
+		bool c5 = (na_orig_lv == INVALID_LEVEL);
+		bool c6 = (na_orig_cho == NULL_PT);
+		bool c7 = (na_submap == NULL_PT);
 
-		return (c1 && c2 && c3 && c4 && c5 && c6);
+		return (c1 && c2 && c3 && c4 && c5 && c6 && c7);
 	}
 
 	void	reset_neuromap(brain& brn);
@@ -1457,7 +1460,6 @@ class neuromap {
 	bool	map_ck_all_qu_dominated();
 	bool	map_ck_all_ne_dominated();
 
-	void	map_make_dominated();
 	void	map_activate();
 	void	map_deactivate();
 
@@ -1485,6 +1487,9 @@ class neuromap {
 		return mti;
 	}
 
+	bool	map_find();
+	bool	map_write();
+	
 	bj_ostream&	print_neuromap(bj_ostream& os, bool from_pt = false);
 };
 
@@ -2216,8 +2221,8 @@ class analyser {
 	brain*			de_brain;
 
 	notekeeper		de_nkpr;
-	neurolayers 	de_not_sel_neus;
 	nkref			de_ref;
+	neurolayers 	de_not_sel_neus;
 	row<prop_signal>	de_all_noted;
 
 	prop_signal 	de_first_bk_psig;
@@ -2279,10 +2284,8 @@ class analyser {
 	
 	void		deduction_init(row_quanton_t& causes);
 	void		deduction_init(prop_signal const & confl_sg);
+	void 		deduction_analysis(row_quanton_t& causes, deduction& dct);
 	void 		deduction_analysis(prop_signal const & confl, deduction& dct);
-	void 		neuromap_write_analysis(deduction& dct, row<neuromap*>& all_nmps);
-	neuromap* 	neuromap_find_analysis(deduction& dct);
-	void 		neuromap_setup_analysis(deduction& dct, row<neuromap*>& all_nmps);
 	
 	void		find_next_source(bool only_origs = false);
 	void		find_next_noted();
@@ -2299,6 +2302,13 @@ class analyser {
 	neuromap*	calc_neuromap(prop_signal const & confl_sg, long min_lv, 
 							  neuromap* prev_nmp);
 	void 		end_calc_neuromap(neuromap& out_nmp);
+	
+	long		find_min_lv_to_setup(long tg_lv);
+
+	void 		neuromap_write_analysis(long tg_lv, row<neuromap*>& all_nmps);
+	neuromap* 	neuromap_find_analysis(prop_signal const & confl_sg, 
+									   long nxt_lv, deduction& nxt_dct);
+	void 		neuromap_setup_analysis(long tg_lv, neuromap* in_nmp);
 };
 
 //=============================================================================
@@ -2496,8 +2506,10 @@ public:
 	row_quanton_t		br_tmp_choose;
 	row_quanton_t		br_tmp_qu_fill_nmp;
 	row_quanton_t		br_tmp_qu_activate;
-	row<neuron*>		br_tmp_ne_activate;
+	row_quanton_t		br_tmp_f_analysis;
 	row_quanton_t		br_tmp_qu_dom;
+	
+	row<neuron*>		br_tmp_ne_activate;
 	row<neuron*>		br_tmp_ne_dom;
 	row<neuron*>		br_tmp_ne_fill_nmp;
 
@@ -2843,6 +2855,17 @@ public:
 		return br_current_ticket.tk_level;
 	}
 
+	leveldat&	get_data_level(long lv){
+		row<leveldat*>& all_lv = br_data_levels;
+		BRAIN_CK(all_lv.is_valid_idx(lv));
+		BRAIN_CK(all_lv[lv] != NULL_PT);
+		
+		leveldat& lv_dat = *(all_lv[lv]);
+		BRAIN_CK(lv_dat.ld_chosen != NULL_PT);
+		BRAIN_CK(lv_dat.ld_chosen->qlevel() == lv_dat.ld_idx);
+		return lv_dat;
+	}
+	
 	leveldat&	data_level(){
 		BRAIN_CK(! br_data_levels.is_empty());
 		leveldat* pt_lv = br_data_levels.last();
