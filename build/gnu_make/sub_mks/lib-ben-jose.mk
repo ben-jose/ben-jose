@@ -7,6 +7,7 @@ SOURCES := \
 	$(SRC_BASE_DIR)/external/bj_mem.cpp \
 	$(SRC_BASE_DIR)/external/stack_trace.cpp \
 	$(SRC_BASE_DIR)/external/top_exception.cpp \
+	$(SRC_BASE_DIR)/library/brain/analyser.cpp \
 	$(SRC_BASE_DIR)/library/brain/brain.cpp \
 	$(SRC_BASE_DIR)/library/brain/sortor.cpp \
 	$(SRC_BASE_DIR)/library/brain/neuromap.cpp \
@@ -22,6 +23,7 @@ SOURCES := \
 	$(SRC_BASE_DIR)/library/debug/dbg_run_satex.cpp \
 	$(SRC_BASE_DIR)/library/debug/dbg_prt.cpp \
 	$(SRC_BASE_DIR)/utils/parse_funcs.cpp \
+	$(SRC_BASE_DIR)/utils/binder.cpp \
 	$(SRC_BASE_DIR)/utils/file_funcs.cpp \
 	$(SRC_BASE_DIR)/utils/util_funcs.cpp \
 	$(SRC_BASE_DIR)/utils/tak_mak.cpp \

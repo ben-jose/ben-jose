@@ -805,15 +805,6 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 		os.flush();
 		return os;
 	}
-	prop_signal		na_confl;
-
-	row<neuron*>		na_candidates;
-	row<neuron*>		na_not_selected;
-	
-	row<prop_signal>	na_forced;
-	row<neuron*>		na_non_forced;
-	
-	coloring		ma_guide_col;
 	os << "MEMAP(" << (void*)this <<")={ " << bj_eol;
 	
 	os << " active=" << na_active << bj_eol;
@@ -821,8 +812,6 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 	os << " cho=" << na_orig_cho << bj_eol;
 	os << " na_submap=" << na_submap << bj_eol;
 	
-	os << " na_confl=" << na_confl << bj_eol;
-
 	os << " na_forced=" << bj_eol;
 	os << na_forced << bj_eol;
 	os << " na_non_forced=" << bj_eol;
@@ -831,10 +820,8 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 	os << " ma_guide_col=" << bj_eol;
 	os << ma_guide_col << bj_eol;
 	
-	os << " na_candidates=" << bj_eol;
-	na_candidates.print_row_data(os, true, "\n");
-	os << " na_not_selected=" << bj_eol;
-	na_not_selected.print_row_data(os, true, "\n");
+	os << " na_all_filled_in_propag=" << bj_eol;
+	na_all_filled_in_propag.print_row_data(os, true, "\n");
 	os << "}";
 	os.flush();
 #endif

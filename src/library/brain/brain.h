@@ -36,6 +36,7 @@ Declarations of classes and that implement the neural network.
 //=================================================================
 
 #include "tools.h"
+#include "binder.h"
 #include "ben_jose.h"
 #include "instance_info.h"
 #include "sortor.h"
@@ -1367,23 +1368,32 @@ class coloring {
 //=============================================================================
 // neuromap
 
+typedef receptor<neuromap> recemap_t;
+
 // coding this replacement for memaps
 class neuromap {
 	public:
+	static
+	char*	CL_NAME;
+
+	virtual
+	char*	get_cls_name(){
+		return neuromap::CL_NAME;
+	}
+
 	long			na_index;		//idx in br_neuromaps
 	
 	brain*			na_brn;
+	bool			na_is_head;
 	bool			na_active;
 	bool			na_has_marks_and_spots;
 	long			na_deact_tier;
 	long			na_orig_lv;
 	quanton*		na_orig_cho;
 	neuromap*		na_submap;
+	recemap_t		na_mates;
 	
-	prop_signal		na_confl;
-
 	row<neuron*>		na_all_filled_in_propag;
-	row<neuron*>		na_not_selected;
 	
 	row<prop_signal>	na_forced;
 	row<neuron*>		na_non_forced;
@@ -1400,18 +1410,19 @@ class neuromap {
 	}
 
 	void	init_neuromap(brain* pt_brn = NULL){
-		na_brn = pt_brn;		
+		na_brn = pt_brn;
+		na_is_head = false;
 		na_active = false;
 		na_has_marks_and_spots = false;
 		na_deact_tier = INVALID_TIER;
 		na_orig_lv = INVALID_LEVEL;
 		na_orig_cho = NULL_PT;
 		na_submap = NULL_PT;
-		
-		na_confl.init_prop_signal();
+
+		na_mates.re_me = this;
+		BRAIN_CK(na_mates.is_alone());
 		
 		na_all_filled_in_propag.clear();
-		na_not_selected.clear();
 		na_forced.clear(true);
 		na_non_forced.clear();
 		
@@ -1441,6 +1452,10 @@ class neuromap {
 		brain* the_brn = NULL;
 		BRAIN_DBG(the_brn = na_brn);
 		return the_brn;
+	}
+
+	bool		has_mates(){
+		return ! na_mates.is_alone();
 	}
 
 	void	map_get_all_quas(row_quanton_t& all_quas);
@@ -1492,6 +1507,14 @@ class neuromap {
 	
 	bj_ostream&	print_neuromap(bj_ostream& os, bool from_pt = false);
 };
+
+inline
+neuromap&
+as_neuromap(binder* bdr){
+	BRAIN_CK(bdr != NULL_PT);
+	BRAIN_CK(bdr->get_cls_name() == neuromap::CL_NAME);
+	return *((neuromap*)(bdr));
+}
 
 //=============================================================================
 // memap
@@ -2330,8 +2353,8 @@ class leveldat {
 
 	quanton*		ld_first_learned;
 	
-	row<neuromap*>	ld_all_nmps_to_write;
-	neuromap*		ld_nmp_of_lv;
+	grip			ld_nmps_to_write;
+	grip			ld_nmp_setup;
 
 	leveldat(brain* pt_brn = NULL) {
 		init_leveldat(pt_brn);
@@ -2355,8 +2378,8 @@ class leveldat {
 
 		ld_first_learned = NULL_PT;
 		
-		ld_all_nmps_to_write.clear();
-		ld_nmp_of_lv = NULL_PT;
+		ld_nmps_to_write.let_all_go();
+		ld_nmp_setup.let_all_go();
 	}
 	
 	brain*	get_dbg_brn(){
@@ -2376,8 +2399,8 @@ class leveldat {
 	static
 	void release_leveldat(leveldat* lv){
 		BRAIN_CK(lv != NULL_PT);
-		BRAIN_CK(lv->ld_all_nmps_to_write.is_empty());
-		BRAIN_CK(lv->ld_nmp_of_lv == NULL_PT);
+		BRAIN_CK(lv->ld_nmps_to_write.is_alone());
+		BRAIN_CK(lv->ld_nmp_setup.is_alone());
 		lv->~leveldat();
 		tpl_free<leveldat>(lv);
 	}

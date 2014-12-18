@@ -35,8 +35,6 @@ Classes and that implement a sortor.
 
 #include "brain.h"	// only needed for print_sortee
 
-char* binder::CL_NAME = as_pt_char("{binder}");
-char* grip::CL_NAME = as_pt_char("{grip}");
 char* sortee::CL_NAME = as_pt_char("{sortee}");
 char* sorset::CL_NAME = as_pt_char("{sorset}");
 
