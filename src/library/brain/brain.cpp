@@ -42,12 +42,14 @@ Classes and that implement the neural network.
 #include "dbg_ic.h"
 #include "dbg_config.h"
 
-DEFINE_NI_FLAG_FUNCS(qu_flags, note0, br_qu_tot_note0, true);
-DEFINE_NI_FLAG_FUNCS(qu_flags, note1, br_qu_tot_note1, true);
-DEFINE_NI_FLAG_FUNCS(qu_flags, note2, br_qu_tot_note2, true);
-DEFINE_NI_FLAG_FUNCS(qu_flags, note3, br_qu_tot_note3, true);
-DEFINE_NI_FLAG_FUNCS(qu_flags, note4, br_qu_tot_note4, false);
-DEFINE_NI_FLAG_FUNCS(qu_flags, note5, br_qu_tot_note5, false);
+//br_qu_tot_note0;
+
+DEFINE_NI_FLAG_FUNCS(qu_flags, note0, true);
+DEFINE_NI_FLAG_FUNCS(qu_flags, note1, true);
+DEFINE_NI_FLAG_FUNCS(qu_flags, note2, true);
+DEFINE_NI_FLAG_FUNCS(qu_flags, note3, true);
+DEFINE_NI_FLAG_FUNCS(qu_flags, note4, false);
+DEFINE_NI_FLAG_FUNCS(qu_flags, note5, false);
 
 DEFINE_NI_FLAG_ALL_FUNCS(note0);
 DEFINE_NI_FLAG_ALL_FUNCS(note1);
@@ -504,7 +506,9 @@ brain::init_brain(solver& ss){
 	br_retract_nke0.init_notekeeper(this);
 	br_retract_nke0.init_funcs(&br_qu_tot_note0, &quanton::has_note0, 
 							   &quanton::set_note0, &quanton::reset_its_note0, 
-								&set_all_note0, &reset_all_its_note0);
+								&set_all_note0, &reset_all_its_note0,
+								&append_all_not_note0, &same_quantons_note0
+  							);
 
 	br_deducer.init_analyser(this);
 	br_neuromaper.init_analyser(this);

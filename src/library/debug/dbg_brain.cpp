@@ -215,15 +215,7 @@ ck_motives(brain& brn, row_quanton_t& mots){
 		MARK_USED(mot);
 		BRAIN_CK(mot != NULL_PT);
 		BRAIN_CK(mot->qlevel() <= brn.level());
-		BRAIN_CK(mot->qlevel() < brn.br_dbg.dbg_before_retract_lv);
 
-		DBG_COND_COMM(! (mot->get_charge() == cg_negative) ,
-			os << "ABORTING_DATA " << bj_eol;
-			os << "mots=" << mots << bj_eol;
-			os << "mot=" << mot << bj_eol;
-			brn.print_trail(os);
-			os << "END_OF_aborting_data" << bj_eol;
-		);
 		BRAIN_CK(mot->get_charge() == cg_negative);
 	}
 #endif
