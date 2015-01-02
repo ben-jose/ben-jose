@@ -524,6 +524,15 @@ memap::ck_guide_idx(coloring& guide_col, dbg_call_id dbg_id){
 }
 
 bool
+memap::ck_map_guides(dbg_call_id dbg_id){
+#ifdef FULL_DEBUG
+	BRAIN_CK(ck_guide_idx(ma_save_guide_col, dbg_id));
+	BRAIN_CK(ck_guide_idx(ma_find_guide_col, dbg_id));
+#endif
+	return true;
+}
+
+bool
 memap::map_ck_contained_in(brain& brn, coloring& colr, dbg_call_id dbg_id){
 #ifdef FULL_DEBUG
 	long szs_idx = colr.co_szs_idx;
@@ -623,15 +632,6 @@ dbg_prt_diff_tauto_vs_simple_neus(bj_ostream& os, brain& brn){
 	os << "not_in_simple=" << bj_eol;
 	os << not_in_simple << bj_eol;
 
-#endif
-	return true;
-}
-
-bool
-memap::ck_map_guides(dbg_call_id dbg_id){
-#ifdef FULL_DEBUG
-	BRAIN_CK(ck_guide_idx(ma_save_guide_col, dbg_id));
-	BRAIN_CK(ck_guide_idx(ma_find_guide_col, dbg_id));
 #endif
 	return true;
 }

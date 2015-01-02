@@ -1343,7 +1343,7 @@ class coloring {
 		return is_vg;
 	}
 
-	bool	has_diff_col(row<long>& the_colors, long col_idx);
+	bool	has_diff_col_than_prev(row<long>& the_colors, long col_idx);
 
 	void	save_colors_from(sort_glb& neus_srg, sort_glb& quas_srg);
 	void	load_colors_into(brain& brn, sort_glb& neus_srg, sort_glb& quas_srg, 
@@ -1405,6 +1405,8 @@ class neuromap {
 	quanton*		na_orig_cho;
 	neuromap*		na_submap;
 	recemap_t		na_mates;
+	ticket			na_setup_tk;
+	ticket			na_guide_tk;
 	
 	row<neuron*>		na_all_filled_in_propag;
 	
@@ -1481,6 +1483,8 @@ class neuromap {
 	bool		has_mates(){
 		return ! na_mates.is_alone();
 	}
+	
+	bool	has_stab_guide();
 
 	void	map_get_all_quas(row_quanton_t& all_quas);
 	void	map_get_all_forced_neus(row<neuron*>& all_neus);
@@ -1535,9 +1539,23 @@ class neuromap {
 		}
 		return mti;
 	}
+	
+	bool 	map_ck_guide_idx(coloring& guide_col, dbg_call_id dbg_id);
+	bool 	map_ck_guides(dbg_call_id dbg_id);
+	bool	map_ck_contained_in(coloring& colr, dbg_call_id dbg_id);
+	void	map_dbg_print(bj_ostream& os, mem_op_t mm);
 
-	bool	map_find();
-	bool	map_write();
+	bool 	map_find();
+	bool 	map_write();
+	bool 	map_oper(mem_op_t mm);
+	bool 	map_prepare_mem_oper(mem_op_t mm);
+	void 	map_set_stab_guide();
+	void 	map_init_stab_guide();	
+	void 	map_get_initial_tauto_coloring(coloring& stab_guide_clr, 
+									   coloring& base_final_clr, bool ck_tks);
+	void	map_get_initial_guide_coloring(coloring& clr);
+	void	map_get_layer_neus(row<neuron*>& neus, bool ck_tks);
+	
 	
 	bj_ostream&	print_neuromap(bj_ostream& os, bool from_pt = false);
 };
@@ -2357,7 +2375,7 @@ class analyser {
 	}
 	
 	void	fill_dct(deduction& dct);
-	void	update_all_deduction_noted();
+	void	make_noted_dominated();
 	//void	fill_nmp(notekeeper& nkpr, nkref& nkr);
 	
 	bool		ck_deduction_init(long deduc_lv);
@@ -2388,7 +2406,8 @@ class analyser {
 	//void 		neuromap_write_analysis(long tg_lv, row<neuromap*>& all_nmps);
 	neuromap* 	neuromap_find_analysis(prop_signal const & confl_sg, 
 									   long& nxt_lv, deduction& nxt_dct);
-	void 		neuromap_setup_analysis(long tg_lv, neuromap* in_nmp);
+	neuromap* 	neuromap_setup_analysis(prop_signal const & confl_sg, long tg_lv, 
+										neuromap* in_nmp);
 	
 	//bool		set_writing_neuromap(long nxt_lv, neuromap* in_nmp);
 };
@@ -3056,6 +3075,13 @@ public:
 	
 	void	neuromap_write_analysis(long tg_lv, row<neuromap*>& all_nmps);
 	bool	set_writing_neuromap(long nxt_lv, neuromap* in_nmp);
+	
+	bool 	lv_has_setup_nmp(long nxt_lv){
+		leveldat& lv_s = get_data_level(nxt_lv);
+		bool h_s = lv_s.has_setup_neuromap();
+		return h_s;
+	}
+
 	void	analyse(prop_signal const & confl, deduction& dct);
 
 	//void	stab_it();

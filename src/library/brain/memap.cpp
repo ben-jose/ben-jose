@@ -130,175 +130,6 @@ memap::map_guide_coloring(mem_op_t mm){
 }
 
 void
-coloring::save_colors_from(sort_glb& neus_srg, sort_glb& quas_srg){
-	SORTER_CK(! neus_srg.sg_step_has_diff);
-	SORTER_CK(! quas_srg.sg_step_has_diff);
-
-	co_all_neu_consec = srt_row_as_colors<neuron>(neus_srg.sg_step_sortees, 
-												  co_neus, co_neu_colors);
-	co_all_qua_consec = srt_row_as_colors<quanton>(quas_srg.sg_step_sortees, 
-												   co_quas, co_qua_colors);
-
-	BRAIN_CK(ck_cols());
-}
-
-bool
-coloring::has_diff_col(row<long>& the_colors, long col_idx){
-	BRAIN_CK(the_colors.is_valid_idx(col_idx));
-	bool diff_col = false;
-	if(col_idx > 0){
-		long col0 = the_colors[col_idx - 1];
-		long col1 = the_colors[col_idx];
-		BRAIN_CK(col0 >= 0);
-		BRAIN_CK(col1 >= 0);
-		if(col0 != col1){
-			BRAIN_CK(col0 < col1);
-			diff_col = true;
-		}
-	}
-	return diff_col;
-}
-
-void
-quanton::reset_and_add_tee(sort_glb& quas_srg, sort_id_t quas_consec){
-	BRAIN_CK(qu_tee.so_related == &qu_reltee);
-	qu_tee.reset_sort_info();
-	qu_tee.sort_from(quas_srg, quas_consec);
-}
-
-void
-coloring::load_colors_into(brain& brn, sort_glb& neus_srg, sort_glb& quas_srg, dima_dims& dims){
-	BRAIN_CK(ck_cols());
-
-	row_quanton_t&	all_quas = co_quas;
-	row<long>&	qua_colors = co_qua_colors;
-
-	row<neuron*>&	all_neus = co_neus;
-	row<long>&	neu_colors = co_neu_colors;
-
-	//BRAIN_CK(qua_colors.is_sorted(cmp_long));
-	//BRAIN_CK(neu_colors.is_sorted(cmp_long));
-
-	BRAIN_CK(brn.br_qu_tot_note4 == 0);
-	BRAIN_CK(neus_srg.sg_dbg_num_items == 0);
-	BRAIN_CK(quas_srg.sg_dbg_num_items == 0);
-
-	sort_id_t& quas_consec = neus_srg.sg_curr_stab_consec;
-	quas_consec++;
-
-	DBG(
-		for(long aa = 0; aa < all_quas.size(); aa++){
-			BRAIN_CK(all_quas[aa] != NULL_PT);
-			quanton& qua = *(all_quas[aa]);
-			BRAIN_CK(qua.qu_tee.is_unsorted());
-		}
-	);
-
-	for(long aa = 0; aa < all_quas.size(); aa++){
-		BRAIN_CK(all_quas[aa] != NULL_PT);
-		quanton& qua = *(all_quas[aa]);
-
-		BRAIN_CK(! qua.is_note4());
-		qua.set_note4(brn);
-
-		bool inc_consec = has_diff_col(qua_colors, aa);
-		if(inc_consec){ quas_consec++; }
-
-		qua.reset_and_add_tee(quas_srg, quas_consec);
-	}
-
-	sort_id_t& neus_consec = quas_srg.sg_curr_stab_consec;
-	neus_consec++;
-
-	for(long bb = 0; bb < all_neus.size(); bb++){
-		BRAIN_CK(all_neus[bb] != NULL_PT);
-		neuron& neu = *(all_neus[bb]);
-
-		bool inc_consec = has_diff_col(neu_colors, bb);
-		if(inc_consec){ neus_consec++; }
-
-		sortee& neu_tee = neu.ne_tee;
-		neu_tee.so_ccl.cc_clear(false);
-		neu_tee.so_tee_consec = 0;
-
-		neu.fill_mutual_sortees(brn);
-
-		row<sortee*>& neu_mates = neu.ne_reltee.so_mates;
-		if(! neu_mates.is_empty()){
-			BRAIN_CK(neu_tee.is_unsorted());
-			neu_tee.sort_from(neus_srg, neus_consec);
-		}
-	}
-
-	reset_all_note4(brn, all_quas);
-	BRAIN_CK(brn.br_qu_tot_note4 == 0);
-	BRAIN_CK(ck_cols());
-}
-
-void
-coloring::add_coloring(brain& brn, coloring& clr){
-	BRAIN_CK(ck_cols());
-	BRAIN_CK(clr.ck_cols());
-
-	row_quanton_t&	all_quas1 = co_quas;
-	row<long>&	qua_colors1 = co_qua_colors;
-	row_quanton_t&	all_quas2 = clr.co_quas;
-	row<long>&	qua_colors2 = clr.co_qua_colors;
-
-	long qua_col = 0;
-	if(! co_qua_colors.is_empty()){
-		qua_col = co_qua_colors.last();
-	}
-
-	qua_col++;
-
-	BRAIN_CK(brn.br_qu_tot_note1 == 0);
-	DBG(set_all_note1(brn, all_quas1));
-
-	for(long aa = 0; aa < all_quas2.size(); aa++){
-		BRAIN_CK(all_quas2[aa] != NULL_PT);
-		quanton& qua = *(all_quas2[aa]);
-
-		bool inc_consec = has_diff_col(qua_colors2, aa);
-		if(inc_consec){ qua_col++; }
-
-		BRAIN_CK(! qua.has_note1());
-
-		all_quas1.push(&qua);
-		qua_colors1.push(qua_col);
-	}
-
-	DBG(reset_all_note1(brn, all_quas1));
-	BRAIN_CK(brn.br_qu_tot_note1 == 0);
-
-	row<neuron*>&	all_neus1 = co_neus;
-	row<long>&	neu_colors1 = co_neu_colors;
-	row<neuron*>&	all_neus2 = clr.co_neus;
-	row<long>&	neu_colors2 = clr.co_neu_colors;
-	BRAIN_CK(all_neus2.size() == neu_colors2.size());
-
-	long neu_col = 0;
-	if(! co_neu_colors.is_empty()){
-		neu_col = co_neu_colors.last();
-	}
-
-	neu_col++;
-
-	for(long bb = 0; bb < all_neus2.size(); bb++){
-		BRAIN_CK(all_neus2[bb] != NULL_PT);
-		neuron& neu = *(all_neus2[bb]);
-
-		bool inc_consec = has_diff_col(neu_colors2, bb);
-		if(inc_consec){ neu_col++; }
-
-		all_neus1.push(&neu);
-		neu_colors1.push(neu_col);
-	}
-
-	BRAIN_CK(ck_cols());
-}
-
-void
 memap::get_initial_guide_coloring(brain& brn, coloring& clr, long idx_szs){
 	BRAIN_CK(&ma_save_guide_col != &clr);
 	BRAIN_CK(&ma_find_guide_col != &clr);
@@ -411,26 +242,6 @@ memap::map_get_layer_neus(row<neuron*>& neus, long lyr_idx1, long lyr_idx2, bool
 }
 
 void
-neuron::fill_mutual_sortees(brain& brn){
-	row<sortee*>& neu_mates = ne_reltee.so_mates;
-
-	neu_mates.clear();
-	BRAIN_CK(ne_reltee.so_opposite == NULL_PT);
-
-	for(long aa = 0; aa < fib_sz(); aa++){
-		BRAIN_CK(ne_fibres[aa] != NULL_PT);
-		quanton& qua = *(ne_fibres[aa]);
-
-		if(qua.has_note4()){
-			sortrel& qua_sre = qua.qu_reltee;
-			row<sortee*>& qua_mates = qua_sre.so_mates;
-			qua_mates.push(&ne_tee);
-			neu_mates.push(&(qua.qu_tee));
-		}
-	}
-}
-
-void
 memap::map_replace_with(brain& brn, memap& mpp, dbg_call_id call_id){
 
 	DBG_PRT(113, os << "before_replace call_id=" << call_id << 
@@ -477,38 +288,6 @@ memap::map_replace_with(brain& brn, memap& mpp, dbg_call_id call_id){
 }
 
 void
-coloring::move_co_to(coloring& col2){
-	BRAIN_CK(col2.is_co_virgin());
-
-	co_quas.move_to(col2.co_quas);
-	co_qua_colors.move_to(col2.co_qua_colors);
-	col2.co_all_qua_consec = co_all_qua_consec;
-
-	co_neus.move_to(col2.co_neus);
-	co_neu_colors.move_to(col2.co_neu_colors);
-	col2.co_all_neu_consec = co_all_neu_consec;
-
-	col2.co_szs_idx = co_szs_idx;
-
-	init_coloring();
-}
-
-void
-coloring::copy_co_to(coloring& col2){
-	BRAIN_CK(col2.is_co_virgin());
-
-	co_quas.copy_to(col2.co_quas);
-	co_qua_colors.copy_to(col2.co_qua_colors);
-	col2.co_all_qua_consec = co_all_qua_consec;
-
-	co_neus.copy_to(col2.co_neus);
-	co_neu_colors.copy_to(col2.co_neu_colors);
-	col2.co_all_neu_consec = co_all_neu_consec;
-
-	col2.co_szs_idx = co_szs_idx;
-}
-
-void
 memap::get_initial_tauto_coloring(brain& brn, coloring& stab_guide_clr, 
 								  coloring& base_tauto_clr, bool ck_tks)
 {
@@ -529,119 +308,6 @@ memap::get_initial_tauto_coloring(brain& brn, coloring& stab_guide_clr,
 	base_tauto_clr.co_szs_idx = guide_idx;
 
 	BRAIN_CK(base_tauto_clr.ck_cols());
-}
-
-void
-split_tees(sort_glb& srg, row<sortee*>& sorted_tees, row<sortee*>& sub_tees, 
-		row<canon_clause*>& ccls_in, row<canon_clause*>& ccls_not_in)
-{
-	ccls_in.clear();
-	ccls_not_in.clear();
-
-	long d_sz = sorted_tees.size() - sub_tees.size();
-	ccls_not_in.set_cap(d_sz);
-
-	ccls_in.set_cap(sub_tees.size());
-
-	BRAIN_CK(srg.sg_tot_ss_marks == 0);
-
-	// result in all_ccls
-	for(long aa = 0; aa < sub_tees.size(); aa++){
-		BRAIN_CK(sub_tees[aa] != NULL_PT);
-		sortee& rmv1 = *(sub_tees[aa]);
-		sorset& ss1 = rmv1.get_vessel();
-		ss1.set_ss_mark(srg);	
-	}
-
-	long last_tee_id = INVALID_NATURAL;
-
-	for(long bb = 0; bb < sorted_tees.size(); bb++){
-		BRAIN_CK(sorted_tees[bb] != NULL_PT);
-		sortee& tee1 = *(sorted_tees[bb]);
-		
-		if(tee1.so_tee_consec != last_tee_id){
-			BRAIN_CK(last_tee_id < tee1.so_tee_consec);
-			last_tee_id = tee1.so_tee_consec;
-
-			sorset& ss2 = tee1.get_vessel();
-			if(ss2.ss_mark){
-				ccls_in.push(&(tee1.so_ccl));
-			} else {
-				ccls_not_in.push(&(tee1.so_ccl));
-			}
-		}
-	}
-
-	for(long cc = 0; cc < sub_tees.size(); cc++){
-		BRAIN_CK(sub_tees[cc] != NULL_PT);
-		sortee& rmv1 = *(sub_tees[cc]);
-		sorset& ss1 = rmv1.get_vessel();
-		ss1.reset_ss_mark(srg);	
-	}
-
-	BRAIN_CK(srg.sg_tot_ss_marks == 0);
-}
-
-void
-coloring::get_initial_sorting_coloring(brain& brn, coloring& ini_clr, bool fill_neus){
-	BRAIN_CK(this != &ini_clr);
-	BRAIN_CK(ck_cols());
-
-	ini_clr.init_coloring();
-
-	row_quanton_t&	my_quas = co_quas;
-
-	row_quanton_t&	all_quas = ini_clr.co_quas;
-	row<long>&	qua_colors = ini_clr.co_qua_colors;
-
-	row<neuron*>&	all_neus = ini_clr.co_neus;
-	row<long>&	neu_colors = ini_clr.co_neu_colors;
-
-	row_quanton_t	all_opp;
-
-	BRAIN_CK(ck_cols());
-	BRAIN_CK(all_quas.is_empty());
-	BRAIN_CK(all_neus.is_empty());
-	
-	all_quas.clear();
-	all_neus.clear();
-
-	// select quas
-
-	BRAIN_CK(brn.br_qu_tot_note2 == 0);
-
-	long curr_col = 0;
-
-	for(long aa = 0; aa < my_quas.size(); aa++){
-		BRAIN_CK(my_quas[aa] != NULL_PT);
-		quanton& qua = *(my_quas[aa]);
-
-		if(! qua.has_note2()){
-			qua.set_note2(brn);
-
-			quanton& opp = qua.opposite();
-			all_quas.push(&qua);
-			all_opp.push(&opp);
-
-			curr_col++;
-			qua_colors.push(curr_col);
-			curr_col++;
-			qua_colors.push(curr_col);
-		}
-	}
-
-	reset_all_note2(brn, all_quas);
-	BRAIN_CK(brn.br_qu_tot_note2 == 0);
-
-	all_opp.append_to(all_quas);
-
-	if(fill_neus){
-		row<neuron*>&	my_neus = co_neus;
-		my_neus.copy_to(all_neus);
-		neu_colors.fill(1, all_neus.size());
-	}
-
-	BRAIN_CK(ini_clr.ck_cols());
 }
 
 bool
@@ -925,6 +591,33 @@ memap::map_oper(mem_op_t mm, brain& brn){
 		}
 	}
 	return oper_ok;
+}
+
+bool
+brain::in_edge_of_level(){
+	long trl_lv = trail_level();
+	long b_lv = level();
+	bool in_edge = (trl_lv != b_lv);
+	BRAIN_CK(! in_edge || ((trl_lv + 1) == b_lv));
+	return in_edge;
+}
+
+bool
+brain::can_write_reverse_map(deduction& dct){
+	if(dct.is_dt_virgin()){ return false; }
+	//bool can_write = (dct.dt_forced_level == level());
+	//return can_write;
+	return false;
+}
+
+bool
+brain::in_edge_of_target_lv(deduction& dct){
+	if(dct.is_dt_virgin()){ return false; }
+	long trl_lv = trail_level();
+	//bool in_tg_lv = (trl_lv < dct.dt_target_level);
+	bool in_tg_lv = (trl_lv <= dct.dt_target_level);
+	BRAIN_CK(! in_tg_lv || ((trl_lv + 1) == level()));
+	return in_tg_lv;
 }
 
 void
@@ -1302,29 +995,3 @@ brain::reverse(){
 	BRAIN_CK(! found_conflict());
 } // END of reverse
 
-bool
-brain::in_edge_of_level(){
-	long trl_lv = trail_level();
-	long b_lv = level();
-	bool in_edge = (trl_lv != b_lv);
-	BRAIN_CK(! in_edge || ((trl_lv + 1) == b_lv));
-	return in_edge;
-}
-
-bool
-brain::can_write_reverse_map(deduction& dct){
-	if(dct.is_dt_virgin()){ return false; }
-	//bool can_write = (dct.dt_forced_level == level());
-	//return can_write;
-	return false;
-}
-
-bool
-brain::in_edge_of_target_lv(deduction& dct){
-	if(dct.is_dt_virgin()){ return false; }
-	long trl_lv = trail_level();
-	//bool in_tg_lv = (trl_lv < dct.dt_target_level);
-	bool in_tg_lv = (trl_lv <= dct.dt_target_level);
-	BRAIN_CK(! in_tg_lv || ((trl_lv + 1) == level()));
-	return in_tg_lv;
-}
