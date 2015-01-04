@@ -797,7 +797,7 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 		os.flush();
 		return os;
 	}
-	os << "MEMAP(" << (void*)this <<")={ " << bj_eol;
+	os << "NEUMAP(" << (void*)this <<")={ " << bj_eol;
 	
 	os << " active=" << na_active << bj_eol;
 	os << " na_deact_tier=" << na_deact_tier << bj_eol;

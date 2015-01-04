@@ -673,6 +673,28 @@ class quanton {
 
 inline
 void
+set_marks_of(brain& brn, row_quanton_t& all_quas)
+{
+	for(long ii = 0; ii < all_quas.size(); ii++){
+		BRAIN_CK(all_quas[ii] != NULL_PT);
+		quanton& q_sig = *(all_quas[ii]);
+		q_sig.set_mark(brn);
+	}
+}
+
+inline
+void
+reset_marks_of(brain& brn, row_quanton_t& all_quas)
+{
+	for(long ii = 0; ii < all_quas.size(); ii++){
+		BRAIN_CK(all_quas[ii] != NULL_PT);
+		quanton& q_sig = *(all_quas[ii]);
+		q_sig.reset_mark(brn);
+	}
+}
+
+inline
+void
 set_all_qu_nemap(row_quanton_t& all_quas, neuromap* nmp)
 {
 	for(long ii = 0; ii < all_quas.size(); ii++){
@@ -1351,7 +1373,7 @@ class coloring {
 	void	add_coloring(brain& brn, coloring& clr);
 	//void	calc_dims(brain& brn, dima_dims& dims);
 
-	void	get_initial_sorting_coloring(brain& brn, coloring& clr, bool fill_neus);
+	//void	get_initial_sorting_coloring(brain& brn, coloring& clr, bool fill_neus);
 
 	void	move_co_to(coloring& col2);
 	void	copy_co_to(coloring& col2);
@@ -1540,8 +1562,6 @@ class neuromap {
 		return mti;
 	}
 	
-	bool 	map_ck_guide_idx(coloring& guide_col, dbg_call_id dbg_id);
-	bool 	map_ck_guides(dbg_call_id dbg_id);
 	bool	map_ck_contained_in(coloring& colr, dbg_call_id dbg_id);
 	void	map_dbg_print(bj_ostream& os, mem_op_t mm);
 
@@ -1554,8 +1574,14 @@ class neuromap {
 	void 	map_get_initial_tauto_coloring(coloring& stab_guide_clr, 
 									   coloring& base_final_clr, bool ck_tks);
 	void	map_get_initial_guide_coloring(coloring& clr);
-	void	map_get_layer_neus(row<neuron*>& neus, bool ck_tks);
+	void	map_get_tauto_neus(row<neuron*>& neus, bool ck_tks);
 	
+	static
+	void		map_fill_non_forced_from(brain& brn, row<neuron*>& all_neus, 
+							row<neuron*>& sel_neus, neurolayers& not_sel_neus, 
+							row_quanton_t& nmp_upper_quas, long min_ti, long max_ti);
+	
+	void		map_fill_non_forced(neurolayers& not_sel_neus);
 	
 	bj_ostream&	print_neuromap(bj_ostream& os, bool from_pt = false);
 };
@@ -2390,12 +2416,6 @@ class analyser {
 	void		update_noted();
 	void 		set_notes_of(row_quanton_t& causes, bool is_first);
 
-	static
-	void		fill_non_forced_from(brain& brn, row<neuron*>& all_neus, 
-							row<neuron*>& sel_neus, neurolayers& not_sel_neus, 
-							row_quanton_t& nmp_upper_quas, long min_ti, long max_ti);
-	
-	void		fill_non_forced(neuromap& nxt_nmp);
 	neuromap*	update_neuromap(neuromap* prev_nmp);
 	neuromap*	calc_neuromap(prop_signal const & confl_sg, long min_lv, 
 							  neuromap* prev_nmp);
@@ -2638,6 +2658,7 @@ public:
 	row_quanton_t 	br_tmp_qu_activate;
 	row_quanton_t 	br_tmp_f_analysis;
 	row_quanton_t 	br_tmp_qu_dom;
+	row_quanton_t 	br_tmp_ck_col;
 	
 	row<neuron*> 	br_tmp_ne_activate;
 	row<neuron*> 	br_tmp_ne_dom;
@@ -2743,6 +2764,8 @@ public:
 	row_quanton_t	br_tmp_sorted_quas;
 
 	row<neuromap*>	br_tmp_maps_to_write;
+	
+	coloring		br_tmp_tauto_col;
 	
 	// these var MUST start with 'br_qu_tot_' 
 	long			br_qu_tot_note0;

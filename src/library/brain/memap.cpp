@@ -287,6 +287,69 @@ memap::map_replace_with(brain& brn, memap& mpp, dbg_call_id call_id){
 	BRAIN_CK(ck_map_guides(dbg_call_2));
 }
 
+/*
+void
+coloring::get_initial_sorting_coloring(brain& brn, coloring& ini_clr, bool fill_neus){
+	BRAIN_CK(this != &ini_clr);
+	BRAIN_CK(ck_cols());
+
+	ini_clr.init_coloring();
+
+	row_quanton_t&	my_quas = co_quas;
+
+	row_quanton_t&	all_quas = ini_clr.co_quas;
+	row<long>&	qua_colors = ini_clr.co_qua_colors;
+
+	row<neuron*>&	all_neus = ini_clr.co_neus;
+	row<long>&	neu_colors = ini_clr.co_neu_colors;
+
+	row_quanton_t	all_opp;
+
+	BRAIN_CK(ck_cols());
+	BRAIN_CK(all_quas.is_empty());
+	BRAIN_CK(all_neus.is_empty());
+	
+	all_quas.clear();
+	all_neus.clear();
+
+	// select quas
+
+	BRAIN_CK(brn.br_qu_tot_note2 == 0);
+
+	long curr_col = 0;
+
+	for(long aa = 0; aa < my_quas.size(); aa++){
+		BRAIN_CK(my_quas[aa] != NULL_PT);
+		quanton& qua = *(my_quas[aa]);
+
+		if(! qua.has_note2()){
+			qua.set_note2(brn);
+
+			quanton& opp = qua.opposite();
+			all_quas.push(&qua);
+			all_opp.push(&opp);
+
+			curr_col++;
+			qua_colors.push(curr_col);
+			curr_col++;
+			qua_colors.push(curr_col);
+		}
+	}
+
+	reset_all_note2(brn, all_quas);
+	BRAIN_CK(brn.br_qu_tot_note2 == 0);
+
+	all_opp.append_to(all_quas);
+
+	if(fill_neus){
+		row<neuron*>&	my_neus = co_neus;
+		my_neus.copy_to(all_neus);
+		neu_colors.fill(1, all_neus.size());
+	}
+
+	BRAIN_CK(ini_clr.ck_cols());
+}*/
+
 void
 memap::get_initial_tauto_coloring(brain& brn, coloring& stab_guide_clr, 
 								  coloring& base_tauto_clr, bool ck_tks)
@@ -295,7 +358,7 @@ memap::get_initial_tauto_coloring(brain& brn, coloring& stab_guide_clr,
 
 	base_tauto_clr.init_coloring();
 
-	stab_guide_clr.get_initial_sorting_coloring(brn, base_tauto_clr, false);
+	//stab_guide_clr.get_initial_sorting_coloring(brn, base_tauto_clr, false);
 
 	long guide_idx = stab_guide_clr.co_szs_idx;
 
