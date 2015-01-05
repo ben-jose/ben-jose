@@ -337,13 +337,12 @@ analyser::deduction_analysis(prop_signal const & confl_sg, deduction& dct){
 }
 
 void
-analyser::make_noted_dominated(){
+analyser::make_noted_dominated_and_deduced(){
 	brain& brn = get_de_brain();
 	nkref& nkr = de_ref;
 	row<prop_signal>& all_noted = de_all_noted;
 	
-	make_all_ps_dominated(brn, all_noted, 0, all_noted.last_idx());
-	update_all_ps_deduc_tk(brn, all_noted, 0, all_noted.last_idx());
+	make_all_ps_dominated_and_deduced(brn, all_noted, 0, all_noted.last_idx());
 
 	quanton* qua = nkr.get_curr_quanton();
 	BRAIN_CK(qua != NULL_PT);	
@@ -545,12 +544,15 @@ analyser::neuromap_find_analysis(prop_signal const & confl_sg,
 	
 	nxt_dct.init_deduction();
 	
+	neuromap* last_found = NULL_PT;
 	neuromap* out_nmp = calc_neuromap(confl_sg, nxt_lv, NULL_PT);
 	BRAIN_CK(out_nmp != NULL_PT);
 	while(out_nmp != NULL_PT){
 		if(! out_nmp->map_find()){
 			break;
 		}
+		last_found = out_nmp;
+		
 		if(nxt_lv <= 0){
 			break;
 		}
@@ -560,6 +562,7 @@ analyser::neuromap_find_analysis(prop_signal const & confl_sg,
 		
 		nxt_dct.init_deduction();
 		deduction_analysis(nmp_causes, nxt_dct);
+		
 		nxt_lv = nxt_dct.dt_target_level;
 
 		if(brn.lv_has_setup_nmp(nxt_lv + 1)){
@@ -568,6 +571,12 @@ analyser::neuromap_find_analysis(prop_signal const & confl_sg,
 		
 		out_nmp = calc_neuromap(confl_sg, nxt_lv, out_nmp);
 		BRAIN_CK(out_nmp != NULL_PT);
+	}
+	if(last_found != NULL){
+		last_found->map_make_guide_dominated_and_deduced();
+	}
+	if(! nxt_dct.is_dt_virgin()){
+		make_noted_dominated_and_deduced();
 	}
 	return out_nmp;
 }
@@ -661,7 +670,7 @@ write_neuromaps(row<neuromap*>& to_wrt){
 void
 brain::analyse(prop_signal const & confl, deduction& out_dct){
 	br_deducer.deduction_analysis(confl, out_dct);
-	br_deducer.make_noted_dominated();
+	br_deducer.make_noted_dominated_and_deduced();
 	
 	long tg_lv = out_dct.dt_target_level;
 	

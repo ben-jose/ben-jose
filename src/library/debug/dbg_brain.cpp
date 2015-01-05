@@ -810,7 +810,7 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 	na_non_forced.print_row_data(os, true, "\n");
 	
 	os << " ma_guide_col=" << bj_eol;
-	os << ma_guide_col << bj_eol;
+	os << na_guide_col << bj_eol;
 	
 	os << " na_all_filled_in_propag=" << bj_eol;
 	na_all_filled_in_propag.print_row_data(os, true, "\n");

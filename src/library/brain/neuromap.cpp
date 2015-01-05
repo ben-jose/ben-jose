@@ -63,6 +63,15 @@ neuromap::map_write(){
 }
 
 void
+neuromap::map_make_guide_dominated_and_deduced(){
+	if(na_submap != NULL_PT){
+		na_submap->map_make_guide_dominated_and_deduced();
+	}
+	brain& brn = get_brn();
+	make_all_ps_dominated_and_deduced(brn, na_forced);
+}
+
+void
 neuromap::map_set_all_marks_and_spots(){
 	if(na_has_marks_and_spots){
 		return;
@@ -827,6 +836,7 @@ neuromap::map_oper(mem_op_t mm){
 	if(mm == mo_find){
 		instance_info& iinfo = brn.get_my_inst();
 
+		// This func sets cc_spot==true to tmp_diff_cnf clauses in the found vnt.
 		long fst_idx = tmp_diff_cnf.first_vnt_i_super_of(skg, &iinfo);
 
 		///////  start of debug of NO DEBUG
@@ -857,17 +867,20 @@ neuromap::map_oper(mem_op_t mm){
 			
 			o_info.bjo_sub_cnf_hits++;
 
-			row<neuron*>& all_tmp_found = brn.br_tmp_found_neus;
-			all_tmp_found.clear();
-
-			// BJ_FIX_THIS
-			ccl_row_as<neuron>(tmp_diff_cnf.cf_clauses, all_tmp_found, true);
+			row<neuron*>& all_neus_in_vnt = brn.br_tmp_found_neus;
+			all_neus_in_vnt.clear();
 			
-			for(long aa = 0; aa < all_tmp_found.size(); aa++){
-				BRAIN_CK(all_tmp_found[aa] != NULL_PT);
-				neuron& neu = *(all_tmp_found[aa]);			
-				neu.ne_recoil_tk.update_ticket(brn);
-			}			
+			bool only_with_spot = true; // only clauses with cc_spot==true
+			ccl_row_as<neuron>(tmp_diff_cnf.cf_clauses, all_neus_in_vnt, only_with_spot);
+
+			make_all_ne_dominated_and_deduced(brn, all_neus_in_vnt);
+			/*
+			for(long aa = 0; aa < all_neus_in_vnt.size(); aa++){
+				BRAIN_CK(all_neus_in_vnt[aa] != NULL_PT);
+				neuron& neu = *(all_neus_in_vnt[aa]);
+				neu.ne_recoil_tk.update_ticket(brn); // FIX_THIS_CODE
+				neu.make_ne_dominated(brn);
+			}*/
 		}
 	} else {
 		ref_strs& phd = tmp_diff_cnf.cf_phdat;
@@ -914,10 +927,10 @@ bool
 neuromap::map_prepare_mem_oper(mem_op_t mm){
 	brain& brn = get_brn();
 	DBG_PRT(110, os << "map_mem_oper=" << ((void*)this));
-	BRAIN_CK(ma_guide_col.co_szs_idx == INVALID_IDX);
+	BRAIN_CK(na_guide_col.co_szs_idx == INVALID_IDX);
 	DBG_PRT(110, os << "map_mem_oper=" << this);
 
-	coloring& guide_col = ma_guide_col;
+	coloring& guide_col = na_guide_col;
 	MARK_USED(guide_col);
 	sort_glb& neus_srg = brn.br_guide_neus_srg;
 	sort_glb& quas_srg = brn.br_guide_quas_srg;
@@ -932,12 +945,12 @@ neuromap::map_prepare_mem_oper(mem_op_t mm){
 		dima_dims dims0;
 		
 		neus_srg.sg_one_ccl_per_ss = false;
-		ma_guide_col.load_colors_into(brn, neus_srg, quas_srg, dims0);
+		na_guide_col.load_colors_into(brn, neus_srg, quas_srg, dims0);
 	}
 	
 	
 	BRAIN_CK(! guide_col.is_co_virgin());
-	BRAIN_CK(ma_guide_col.co_szs_idx == INVALID_IDX);
+	BRAIN_CK(na_guide_col.co_szs_idx == INVALID_IDX);
 	BRAIN_CK(map_ck_contained_in(guide_col, dbg_call_1));
 
 	// stab uni_guide
@@ -1080,7 +1093,7 @@ neuromap::map_prepare_mem_oper(mem_op_t mm){
 
 void
 neuromap::map_get_initial_guide_coloring(coloring& clr){
-	BRAIN_CK(&ma_guide_col != &clr);
+	BRAIN_CK(&na_guide_col != &clr);
 
 	brain& brn = get_brn();
 	MARK_USED(brn);
@@ -1193,7 +1206,7 @@ neuromap::map_get_tauto_neus(row<neuron*>& neus, bool ck_tks){
 		BRAIN_CK(m_neus[bb] != NULL_PT);
 		neuron& neu = *(m_neus[bb]);
 
-		bool ck_val = neu.recoiled_in_or_after(na_setup_tk); 
+		bool ck_val = neu.deduced_in_or_after(na_setup_tk); 
 		if(ck_val){ neus.push(&neu); }
 	}
 }
@@ -1227,17 +1240,17 @@ neuromap::map_set_stab_guide(){
 void
 neuromap::map_init_stab_guide(){
 	brain& brn = get_brn();
-	BRAIN_CK(ma_guide_col.co_szs_idx == INVALID_IDX);
+	BRAIN_CK(na_guide_col.co_szs_idx == INVALID_IDX);
 
 	coloring ini_guide_col(&brn);
 
 	map_get_initial_guide_coloring(ini_guide_col);
 	
-	coloring& guide_col = ma_guide_col;
+	coloring& guide_col = na_guide_col;
 	guide_col.init_coloring(&brn);
 	
 	if(na_submap != NULL_PT){
-		na_submap->ma_guide_col.copy_co_to(guide_col);
+		na_submap->na_guide_col.copy_co_to(guide_col);
 	}
 	
 	guide_col.add_coloring(brn, ini_guide_col);
@@ -1264,7 +1277,7 @@ neuromap::map_init_stab_guide(){
 	BRAIN_CK(old_quas_sz == guide_col.co_quas.size());
 	BRAIN_CK(old_neus_sz == guide_col.co_neus.size());
 
-	BRAIN_CK(ma_guide_col.co_szs_idx == INVALID_IDX);
+	BRAIN_CK(na_guide_col.co_szs_idx == INVALID_IDX);
 }
 
 void

@@ -583,7 +583,7 @@ cmp_trails(row_long_t& trl1, row_long_t& trl2){
 }
 
 comparison
-cmp_clauses(canon_clause* const& ccl1, canon_clause* const& ccl2){
+cmp_canon_clauses(canon_clause* const& ccl1, canon_clause* const& ccl2, bool with_spot){
 	SKELETON_CK(ccl1 != NULL_PT);
 	SKELETON_CK(ccl2 != NULL_PT);
 
@@ -597,19 +597,23 @@ cmp_clauses(canon_clause* const& ccl1, canon_clause* const& ccl2){
 
 	comparison v_cc = 0;
 	v_cc = cmp_lit_rows(trl1, trl2);
-	/*
-	DBG_PRT_COND(71, (v_cc > 0), os << "cmp ccl trails" << bj_eol
-		<< "trl1" << trl1 << bj_eol
-		<< "trl2" << trl2 << bj_eol
-		<< "cmp_1=" << (int)v_cc;
-	);*/
 
-	if(v_cc == 0){
+	if(with_spot && (v_cc == 0)){
 		ccl1->cc_spot = true;
 		ccl2->cc_spot = true;
 	}
 
 	return v_cc;
+}
+
+comparison
+cmp_clauses_with_spot(canon_clause* const& ccl1, canon_clause* const& ccl2){
+	return cmp_canon_clauses(ccl1, ccl2, true);
+}
+
+comparison
+cmp_clauses(canon_clause* const& ccl1, canon_clause* const& ccl2){
+	return cmp_canon_clauses(ccl1, ccl2, false);
 }
 
 comparison
@@ -1096,7 +1100,9 @@ canon_cnf::calc_sha_in(ch_string& sha_str){
 // canon search funcs
 
 long
-canon_purge_clauses(skeleton_glb& skg, row<canon_clause*>& all_ccl, long& tot_lits, long& tot_twolits){
+canon_purge_clauses(skeleton_glb& skg, row<canon_clause*>& all_ccl, 
+					long& tot_lits, long& tot_twolits)
+{
 	long num_pp = 0;
 
 	long idx1 = 0;
@@ -1346,14 +1352,16 @@ canon_cnf::clear_all_spots(){
 
 bool
 canon_cnf::i_am_super_of(canon_cnf& the_cnf, bool& are_eq){
-	clear_all_spots();
-
 	row<canon_clause*>& all_my_ccls = cf_clauses;
 	row<canon_clause*>& all_cnn_ccls = the_cnf.cf_clauses;
 
 	are_eq = false;
+	
+	clear_all_spots();
+	//the_cnf.clear_all_spots();
+	
 	cmp_is_sub cmp_resp =
-		all_my_ccls.sorted_set_is_subset(all_cnn_ccls, cmp_clauses, are_eq);
+		all_my_ccls.sorted_set_is_subset(all_cnn_ccls, cmp_clauses_with_spot, are_eq);
 
 	bool is_sub = (are_eq || (cmp_resp == k_rgt_is_sub));
 

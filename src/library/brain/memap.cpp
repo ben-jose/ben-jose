@@ -233,9 +233,9 @@ memap::map_get_layer_neus(row<neuron*>& neus, long lyr_idx1, long lyr_idx2, bool
 		neuron& neu = *(m_neus[bb]);
 
 		bool ck_val = true;
-		if(ck_tks){ 
-			ck_val = neu.recoiled_in_or_after(ma_before_retract_tk); 
-		}
+		//if(ck_tks){ 
+		//	ck_val = neu.recoiled_in_or_after(ma_before_retract_tk); 
+		//}
 
 		if(ck_val){ neus.push(&neu); }
 	}
@@ -606,7 +606,6 @@ memap::map_oper(mem_op_t mm, brain& brn){
 			row<neuron*>& all_tmp_found = brn.br_tmp_found_neus;
 			all_tmp_found.clear();
 
-			// BJ_FIX_THIS
 			ccl_row_as<neuron>(tmp_diff_cnf.cf_clauses, all_tmp_found, true);
 			
 			for(long aa = 0; aa < all_tmp_found.size(); aa++){

@@ -986,9 +986,9 @@ class neuron {
 		return false;
 	}
 
-	bool	recoiled_in_or_after(ticket tik){
+	/*bool	recoiled_in_or_after(ticket tik){
 		return (ne_recoil_tk.tk_recoil >= tik.tk_recoil);
-	}
+	}*/
 
 	bool	deduced_in_or_after(ticket tik){
 		return (ne_deduc_tk.tk_recoil >= tik.tk_recoil);
@@ -996,6 +996,10 @@ class neuron {
 
 	bool	in_ne_dominated(brain& brn);
 	void	make_ne_dominated(brain& brn);
+	
+	void	make_ne_deduced(brain& brn){
+		ne_deduc_tk.update_ticket(brn);
+	}
 
 	void	fill_mutual_sortees(brain& brn);
 
@@ -1090,18 +1094,13 @@ class prop_signal {
 		return lv;
 	}
 
-	void	make_ps_dominated(brain& brn){
+	void	make_ps_dominated_and_deduced(brain& brn){
 		if(ps_quanton != NULL_PT){
 			ps_quanton->make_qu_dominated(brn);
 		}
 		if(ps_source != NULL_PT){
 			ps_source->make_ne_dominated(brn);
-		}
-	}
-	
-	void	update_ps_deduc_tk(brain& brn){
-		if(ps_source != NULL_PT){
-			ps_source->ne_deduc_tk.update_ticket(brn);
+			ps_source->make_ne_deduced(brn);
 		}
 	}
 	
@@ -1145,7 +1144,7 @@ class prop_signal {
 
 inline
 void
-make_all_ps_dominated(brain& brn, row<prop_signal>& trace, 
+make_all_ps_dominated_and_deduced(brain& brn, row<prop_signal>& trace, 
 			long first_idx = 0, long last_idx = -1)
 {
 	if(last_idx < 0){ last_idx = trace.size(); }
@@ -1156,7 +1155,26 @@ make_all_ps_dominated(brain& brn, row<prop_signal>& trace,
 
 	for(long ii = first_idx; ii < last_idx; ii++){
 		prop_signal& q_sig = trace[ii];
-		q_sig.make_ps_dominated(brn);
+		q_sig.make_ps_dominated_and_deduced(brn);
+	}
+}
+
+inline
+void
+make_all_ne_dominated_and_deduced(brain& brn, row_neuron_t& all_neus, 
+			long first_idx = 0, long last_idx = -1)
+{
+	if(last_idx < 0){ last_idx = all_neus.size(); }
+
+	BRAIN_CK(first_idx <= last_idx);
+	BRAIN_CK(all_neus.is_valid_idx(first_idx));
+	BRAIN_CK((last_idx == all_neus.size()) || all_neus.is_valid_idx(last_idx));
+
+	for(long ii = first_idx; ii < last_idx; ii++){
+		BRAIN_CK(all_neus[ii] != NULL_PT);
+		neuron& neu = *(all_neus[ii]);
+		neu.make_ne_dominated(brn);
+		neu.make_ne_deduced(brn);
 	}
 }
 
@@ -1200,23 +1218,6 @@ append_all_trace_neus(row<prop_signal>& trace, row_neuron_t& all_neus)
 		if(q_sig.ps_source != NULL_PT){
 			all_neus.push(q_sig.ps_source);
 		}
-	}
-}
-
-inline
-void
-update_all_ps_deduc_tk(brain& brn, row<prop_signal>& trace, 
-			long first_idx = 0, long last_idx = -1)
-{
-	if(last_idx < 0){ last_idx = trace.size(); }
-
-	BRAIN_CK(first_idx <= last_idx);
-	BRAIN_CK(trace.is_valid_idx(first_idx));
-	BRAIN_CK((last_idx == trace.size()) || trace.is_valid_idx(last_idx));
-
-	for(long ii = first_idx; ii < last_idx; ii++){
-		prop_signal& q_sig = trace[ii];
-		q_sig.update_ps_deduc_tk(brn);
 	}
 }
 
@@ -1438,7 +1439,9 @@ class neuromap {
 	row_quanton_t		na_fo_upper_quas;
 	row_quanton_t		na_nf_upper_quas;
 	
-	coloring		ma_guide_col;
+	coloring		na_guide_col;
+	
+	row_neuron_t	na_all_neus_in_vnt;
 	
 	neuromap(brain* pt_brn = NULL) {
 		na_index = INVALID_IDX;
@@ -1470,7 +1473,9 @@ class neuromap {
 		na_fo_upper_quas.clear();
 		na_nf_upper_quas.clear();
 		
-		ma_guide_col.init_coloring();
+		na_guide_col.init_coloring();
+		
+		na_all_neus_in_vnt.clear();
 	}
 	
 	bool	is_na_virgin(){
@@ -1521,6 +1526,7 @@ class neuromap {
 	void	dbg_get_fo_upper_quas(row_quanton_t& fo_upper_quas);
 	void	map_get_all_upper_quas(notekeeper& nkpr, row_quanton_t& all_upper_quas);
 	
+	void	map_make_guide_dominated_and_deduced();
 	void	map_set_all_marks_and_spots();
 	void	map_reset_all_marks_and_spots();
 
@@ -2401,7 +2407,7 @@ class analyser {
 	}
 	
 	void	fill_dct(deduction& dct);
-	void	make_noted_dominated();
+	void	make_noted_dominated_and_deduced();
 	//void	fill_nmp(notekeeper& nkpr, nkref& nkr);
 	
 	bool		ck_deduction_init(long deduc_lv);
