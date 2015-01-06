@@ -698,13 +698,13 @@ neuron::in_neuromap(long min_tier, long max_tier, row_quanton_t& neu_upper_quas,
 		DBG(if(qua.has_mark() && is_part){ dbg_num_after++; });
 
 		if(! qua.has_mark() && is_part){
-			// qua is not in memap (! has_mark) so candidate subset is not in memap
+			// qua is not in neumap (! has_mark) so candidate subset is not in neumap
 			is_fll = false;
 			break;
 		}
 
 		if(qua.is_pos() && is_upper){
-			// neu is sat in upper level so candidate subset is not in memap
+			// neu is sat in upper level so candidate subset is not in neumap
 			if(upper_pos_ti == INVALID_TIER){
 				upper_pos_ti = qti;
 			}
@@ -873,14 +873,10 @@ neuromap::map_oper(mem_op_t mm){
 			bool only_with_spot = true; // only clauses with cc_spot==true
 			ccl_row_as<neuron>(tmp_diff_cnf.cf_clauses, all_neus_in_vnt, only_with_spot);
 
+			// old code updated ne_recoil_tk of all_neus_in_vnt
+			// this code updates ne_deduc_tk of all_neus_in_vnt
 			make_all_ne_dominated_and_deduced(brn, all_neus_in_vnt);
-			/*
-			for(long aa = 0; aa < all_neus_in_vnt.size(); aa++){
-				BRAIN_CK(all_neus_in_vnt[aa] != NULL_PT);
-				neuron& neu = *(all_neus_in_vnt[aa]);
-				neu.ne_recoil_tk.update_ticket(brn); // FIX_THIS_CODE
-				neu.make_ne_dominated(brn);
-			}*/
+			map_make_guide_dominated_and_deduced();
 		}
 	} else {
 		ref_strs& phd = tmp_diff_cnf.cf_phdat;

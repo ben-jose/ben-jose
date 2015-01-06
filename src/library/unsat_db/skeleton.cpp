@@ -583,7 +583,7 @@ cmp_trails(row_long_t& trl1, row_long_t& trl2){
 }
 
 comparison
-cmp_canon_clauses(canon_clause* const& ccl1, canon_clause* const& ccl2, bool with_spot){
+cmp_clauses(canon_clause* const& ccl1, canon_clause* const& ccl2){
 	SKELETON_CK(ccl1 != NULL_PT);
 	SKELETON_CK(ccl2 != NULL_PT);
 
@@ -598,22 +598,7 @@ cmp_canon_clauses(canon_clause* const& ccl1, canon_clause* const& ccl2, bool wit
 	comparison v_cc = 0;
 	v_cc = cmp_lit_rows(trl1, trl2);
 
-	if(with_spot && (v_cc == 0)){
-		ccl1->cc_spot = true;
-		ccl2->cc_spot = true;
-	}
-
 	return v_cc;
-}
-
-comparison
-cmp_clauses_with_spot(canon_clause* const& ccl1, canon_clause* const& ccl2){
-	return cmp_canon_clauses(ccl1, ccl2, true);
-}
-
-comparison
-cmp_clauses(canon_clause* const& ccl1, canon_clause* const& ccl2){
-	return cmp_canon_clauses(ccl1, ccl2, false);
 }
 
 comparison
@@ -1350,6 +1335,12 @@ canon_cnf::clear_all_spots(){
 	}
 }
 
+void set_clause_spot(canon_clause* const & cls){
+	if(cls != NULL_PT){
+		cls->cc_spot = true;
+	}
+}
+
 bool
 canon_cnf::i_am_super_of(canon_cnf& the_cnf, bool& are_eq){
 	row<canon_clause*>& all_my_ccls = cf_clauses;
@@ -1360,8 +1351,8 @@ canon_cnf::i_am_super_of(canon_cnf& the_cnf, bool& are_eq){
 	clear_all_spots();
 	//the_cnf.clear_all_spots();
 	
-	cmp_is_sub cmp_resp =
-		all_my_ccls.sorted_set_is_subset(all_cnn_ccls, cmp_clauses_with_spot, are_eq);
+	cmp_is_sub cmp_resp = all_my_ccls.sorted_set_is_subset(all_cnn_ccls, 
+										cmp_clauses, are_eq, &set_clause_spot);
 
 	bool is_sub = (are_eq || (cmp_resp == k_rgt_is_sub));
 

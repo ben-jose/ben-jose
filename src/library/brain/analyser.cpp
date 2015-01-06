@@ -544,15 +544,12 @@ analyser::neuromap_find_analysis(prop_signal const & confl_sg,
 	
 	nxt_dct.init_deduction();
 	
-	neuromap* last_found = NULL_PT;
 	neuromap* out_nmp = calc_neuromap(confl_sg, nxt_lv, NULL_PT);
 	BRAIN_CK(out_nmp != NULL_PT);
 	while(out_nmp != NULL_PT){
 		if(! out_nmp->map_find()){
 			break;
 		}
-		last_found = out_nmp;
-		
 		if(nxt_lv <= 0){
 			break;
 		}
@@ -562,6 +559,7 @@ analyser::neuromap_find_analysis(prop_signal const & confl_sg,
 		
 		nxt_dct.init_deduction();
 		deduction_analysis(nmp_causes, nxt_dct);
+		make_noted_dominated_and_deduced();
 		
 		nxt_lv = nxt_dct.dt_target_level;
 
@@ -571,12 +569,6 @@ analyser::neuromap_find_analysis(prop_signal const & confl_sg,
 		
 		out_nmp = calc_neuromap(confl_sg, nxt_lv, out_nmp);
 		BRAIN_CK(out_nmp != NULL_PT);
-	}
-	if(last_found != NULL){
-		last_found->map_make_guide_dominated_and_deduced();
-	}
-	if(! nxt_dct.is_dt_virgin()){
-		make_noted_dominated_and_deduced();
 	}
 	return out_nmp;
 }

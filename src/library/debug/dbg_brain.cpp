@@ -258,192 +258,6 @@ neuron::add_dbg_ccl(brain& brn, row<canon_clause*>& the_ccls,
 }
 
 void
-memap::map_set_dbg_cnf(mem_op_t mm, brain& brn, row<canon_clause*>& the_ccls, 
-					   row<neuron*>& the_neus, dima_dims& dims)
-{
-#ifdef FULL_DEBUG
-	the_ccls.clear();
-	the_neus.clear();
-
-	dims.init_dima_dims(0);
-
-	long trace_sz = get_trace_sz(mm);
-	long filled_sz = get_filled_sz(mm);
-
-	row<prop_signal>& trace = ma_dotted;
-	BRAIN_CK((trace_sz == trace.size()) || trace.is_valid_idx(trace_sz));
-
-	BRAIN_CK(brn.br_tot_ne_spots == 0);
-	BRAIN_CK(brn.br_tot_qu_marks == 0);
-	set_marks_of(brn, trace, 0, trace_sz);
-
-	neuron* cfl_neu = ma_confl.ps_source;
-	BRAIN_CK(cfl_neu != NULL_PT);
-	cfl_neu->map_set_dbg_ccl(mm, brn);
-	cfl_neu->add_dbg_ccl(brn, the_ccls, the_neus, dims);
-	
-	for(long aa = 0; aa < trace_sz; aa++){
-		prop_signal& q_sig = trace[aa];
-		BRAIN_CK(q_sig.ps_quanton != NULL_PT);
-
-		if(q_sig.ps_source != NULL_PT){
-			neuron& src = *(q_sig.ps_source);
-
-			src.map_set_dbg_ccl(mm, brn);
-			src.add_dbg_ccl(brn, the_ccls, the_neus, dims);
-		}
-	}
-
-	row<neuron*>& filled = ma_filled;
-	BRAIN_CK((filled_sz == filled.size()) || filled.is_valid_idx(filled_sz));
-
-	for(long bb = 0; bb < filled_sz; bb++){
-		BRAIN_CK(filled[bb] != NULL_PT);
-		neuron& neu = *(filled[bb]);
-
-		neu.map_set_dbg_ccl(mm, brn);
-		neu.add_dbg_ccl(brn, the_ccls, the_neus, dims);
-	}
-
-	for(long cc = 0; cc < the_neus.size(); cc++){
-		BRAIN_CK(the_neus[cc] != NULL_PT);
-		neuron& neu = *(the_neus[cc]);
-		BRAIN_CK(neu.ne_spot);
-		neu.reset_spot(brn);
-	}
-
-	reset_marks_of(brn, trace, 0, trace_sz);
-	BRAIN_CK(brn.br_tot_ne_spots == 0);
-	BRAIN_CK(brn.br_tot_qu_marks == 0);
-
-	the_ccls.mix_sort(cmp_clauses);
-#endif
-}
-
-bool
-memap::map_ck_simple_no_satisf(mem_op_t mm, brain& brn){
-#ifdef FULL_DEBUG
-	//long tot_vars = brn.br_positons.size();
-	//long tot_lits = 0;
-	//long tot_twolits = 0;
-	row<neuron*>& dbg_neus = brn.br_dbg.dbg_simple_neus;
-	row<canon_clause*>& dbg_ccls = brn.br_dbg.dbg_ccls;
-	skeleton_glb& skg = brn.get_skeleton();
-	canon_cnf& dbg_cnf = brn.br_dbg.dbg_cnf;
-
-	dima_dims dbg_dims;
-
-	map_set_dbg_cnf(mm, brn, dbg_ccls, dbg_neus, dbg_dims);
-	//dbg_cnf.init_with(skg, dbg_ccls, INVALID_NATURAL, 
-	//		INVALID_NATURAL, INVALID_NATURAL, false);
-	dbg_cnf.init_with(skg, dbg_ccls, INVALID_NATURAL, INVALID_NATURAL, INVALID_NATURAL);
-
-	BRAIN_CK(dbg_cnf.cf_dims.dd_tot_ccls == dbg_cnf.cf_clauses.size());
-
-	//DBG_PRT(106, os << "MAP NEURONS=" << bj_eol; 
-	//		dbg_print_ccls_neus(os, dbg_cnf.cf_clauses));
-	//DBG_PRT(106, os << "tot_ccls=" << dbg_cnf.cf_dims.dd_tot_ccls);
-
-	ch_string dbg_cnf_nm = skg.kg_root_path + "/DBG_CNF_CK_SAVE.yos";
-	write_file(dbg_cnf_nm, dbg_cnf.cf_chars, false);
-
-	BRAIN_CK(dbg_cnf.cf_dims.dd_tot_ccls == dbg_cnf.cf_clauses.size());
-
-	DBG_CHECK_SAVED(dbg_run_satex_on(brn, dbg_cnf_nm));
-
-	//DBG_PRT(106, 
-	//	os << "dbg_cnf_nm=" << dbg_cnf_nm << bj_eol;
-		//map_dbg_prt(os, mm, brn);
-	//);
-
-	dbg_cnf.clear_cnf();
-#endif
-	return true;
-}
-
-void
-dbg_prepare_used_dbg_ccl(row_quanton_t& rr_qua, canon_clause& dbg_ccl){
-#ifdef FULL_DEBUG
-	dbg_ccl.cc_clear(false);
-
-
-	for(long aa = 0; aa < rr_qua.size(); aa++){
-		BRAIN_CK(rr_qua[aa] != NULL_PT);
-		quanton& qua = *(rr_qua[aa]);
-
-		if(qua.has_mark()){ 
-			dbg_ccl.cc_push(qua.qu_id);
-		}
-	}
-#endif
-}
-
-void
-memap::dbg_prepare_used_dbg_cnf(mem_op_t mm, brain& brn, row<canon_clause*>& the_ccls){
-#ifdef FULL_DEBUG
-	long trace_sz = get_trace_sz(mm);
-	long filled_sz = get_filled_sz(mm);
-	MARK_USED(filled_sz);
-
-	row<prop_signal>& trace = ma_dotted;
-	BRAIN_CK((trace_sz == trace.size()) || trace.is_valid_idx(trace_sz));
-
-	BRAIN_CK(brn.br_tot_ne_spots == 0);
-	BRAIN_CK(brn.br_tot_qu_marks == 0);
-	set_marks_of(brn, trace, 0, trace_sz);
-
-	the_ccls.clear();
-
-	row<neuron*>& all_orig = brn.br_dbg.dbg_original_used;
-
-	for(long aa = 0; aa < all_orig.size(); aa++){
-		BRAIN_CK(all_orig[aa] != NULL_PT);
-		neuron& neu = *(all_orig[aa]);
-		canon_clause& dbg_ccl = neu.ne_dbg_ccl;
-
-		dbg_prepare_used_dbg_ccl(neu.ne_fibres, dbg_ccl);
-		if(! dbg_ccl.cc_size() == 0){
-			the_ccls.push(&dbg_ccl);
-		}
-	}
-
-	reset_marks_of(brn, trace, 0, trace_sz);
-
-	BRAIN_CK(brn.br_tot_ne_spots == 0);
-	BRAIN_CK(brn.br_tot_qu_marks == 0);
-#endif
-}
-
-bool
-memap::dbg_ck_used_simple_no_satisf(mem_op_t mm, brain& brn){
-#ifdef FULL_DEBUG
-	row<canon_clause*>& dbg_ccls = brn.br_dbg.dbg_ccls;
-	skeleton_glb& skg = brn.get_skeleton();
-	canon_cnf& dbg_cnf = brn.br_dbg.dbg_cnf;
-
-	dbg_prepare_used_dbg_cnf(mm, brn, dbg_ccls);
-
-	if(dbg_ccls.is_empty()){
-		return true;
-	}
-
-	dbg_cnf.init_with(skg, dbg_ccls, INVALID_NATURAL, INVALID_NATURAL, 
-					  INVALID_NATURAL, false);
-
-	ch_string dbg_cnf_nm = skg.kg_root_path + "/DBG_CNF_CK_USED.yos";
-	write_file(dbg_cnf_nm, dbg_cnf.cf_chars, false);
-
-	DBG_CHECK_SAVED(dbg_run_satex_on(brn, dbg_cnf_nm));
-
-	//DBG_PRT(106, os << "dbg_cnf_nm=" << dbg_cnf_nm);
-
-	dbg_cnf.clear_cnf();
-
-#endif
-	return true;
-}
-
-void
 brain::dbg_add_to_used(neuron& neu){
 #ifdef FULL_DEBUG
 	if(! neu.ne_dbg_in_used){
@@ -497,90 +311,6 @@ dbg_inst_info::init_dbg_inst_info(){
 }
 #endif
 
-bool
-memap::ck_guide_idx(coloring& guide_col, dbg_call_id dbg_id){
-#ifdef FULL_DEBUG
-	long g_idx = guide_col.co_szs_idx;
-	if(g_idx == INVALID_IDX){
-		BRAIN_CK(guide_col.is_co_virgin());
-		return true;
-	}
-	BRAIN_CK(ma_szs_dotted.is_valid_idx(g_idx));
-	long qua_sz = ma_szs_dotted[g_idx];
-	MARK_USED(qua_sz);
-
-	DBG_PRT_COND(DBG_ALL_LVS, ! ((qua_sz * 2) == guide_col.co_quas.size()) ,
-		os << "ABORTING_DATA " << bj_eol;
-		os << " dbg_id=" << dbg_id << bj_eol;
-		os << " qua_sz=" << qua_sz << bj_eol;
-		os << " guide_sz=" << guide_col.co_quas.size() << bj_eol;
-		os << " guide=" << guide_col << bj_eol;
-		os << " map=" << *this << bj_eol;
-		os << "END_OF_aborting_data" << bj_eol;
-	);
-	BRAIN_CK((qua_sz * 2) == guide_col.co_quas.size());
-#endif
-	return true;
-}
-
-bool
-memap::ck_map_guides(dbg_call_id dbg_id){
-#ifdef FULL_DEBUG
-	BRAIN_CK(ck_guide_idx(ma_save_guide_col, dbg_id));
-	BRAIN_CK(ck_guide_idx(ma_find_guide_col, dbg_id));
-#endif
-	return true;
-}
-
-bool
-memap::map_ck_contained_in(brain& brn, coloring& colr, dbg_call_id dbg_id){
-#ifdef FULL_DEBUG
-	long szs_idx = colr.co_szs_idx;
-	row<neuron*>& all_neus = colr.co_neus;
-
-	DBG_PRT_COND(DBG_ALL_LVS, ! (ma_szs_dotted.is_valid_idx(szs_idx)) ,
-		os << "ABORTING_DATA " << bj_eol;
-		os << " dbg_id=" << dbg_id << bj_eol;
-		os << " szs_idx=" << szs_idx << bj_eol;
-		os << " ma_szs_dotted=" << ma_szs_dotted << bj_eol;
-	);
-	BRAIN_CK(ma_szs_dotted.is_valid_idx(szs_idx));
-	BRAIN_CK(brn.br_tot_ne_spots == 0);
-
-	for(long ii = 0; ii < all_neus.size(); ii++){
-		neuron& fll_neu = *(all_neus[ii]);
-		fll_neu.set_spot(brn);
-		DBG_PRT(103, os << "spot " << &fll_neu);
-	}
-	
-	neuron* cfl_neu = ma_confl.ps_source;
-	BRAIN_CK(cfl_neu != NULL_PT);
-
-	DBG_PRT(103, os << "CK spot confl " << cfl_neu);
-	BRAIN_CK(cfl_neu->ne_spot);
-
-	long trace_sz = ma_szs_dotted[szs_idx];
-	row<prop_signal>& trace = ma_dotted;
-
-	BRAIN_CK((trace_sz == trace.size()) || trace.is_valid_idx(trace_sz));
-	for(long ii = 0; ii < trace_sz; ii++){
-		prop_signal& q_sig = trace[ii];
-		if(q_sig.ps_source != NULL_PT){
-			DBG_PRT(103, os << "CK spot " << q_sig.ps_source);
-			BRAIN_CK(q_sig.ps_source->ne_spot);
-		}
-	}
-
-	for(long ii = 0; ii < all_neus.size(); ii++){
-		neuron& fll_neu = *(all_neus[ii]);
-		fll_neu.reset_spot(brn);
-	}
-
-	BRAIN_CK(brn.br_tot_ne_spots == 0);
-#endif
-	return true;
-}
-
 void
 dbg_find_not_in_rr1(brain& brn, row<neuron*>& rr1, row<neuron*>& rr2, 
 					row<neuron*>& not_in_rr1){
@@ -632,65 +362,6 @@ dbg_prt_diff_tauto_vs_simple_neus(bj_ostream& os, brain& brn){
 	os << "not_in_simple=" << bj_eol;
 	os << not_in_simple << bj_eol;
 
-#endif
-	return true;
-}
-
-void
-memap::map_dbg_print(bj_ostream& os, mem_op_t mm, brain& brn){
-#ifdef FULL_DEBUG
-	canon_cnf& tmp_tauto_cnf = brn.br_tmp_wrt_tauto_cnf;
-	canon_cnf& tmp_diff_cnf = brn.br_tmp_wrt_diff_cnf;
-	canon_cnf& tmp_guide_cnf = brn.br_tmp_wrt_guide_cnf;
-
-	//os << STACK_STR << bj_eol;
-	os << "DBG_PRT=" << bj_eol;
-	os << this << bj_eol;
-	os << "brn_tk=" << brn.br_current_ticket << bj_eol;
-	if(mm == mo_save){ os << "SAVE "; }
-	if(mm == mo_find){ os << "FIND "; }
-
-	//os << "CERO FILLED___________________________________________ " << bj_eol;
-	sort_glb& tauto_srg = brn.br_tauto_neus_srg;
-	os << " sg_dbg_cnf_tot_onelit=" << tauto_srg.sg_dbg_cnf_tot_onelit << bj_eol;
-
-	os << " TATUTO_STEP_SORTEES (after step)=" << bj_eol;
-	for(long aa = 0; aa < tauto_srg.sg_step_sortees.size(); aa++){
-		os << *(tauto_srg.sg_step_sortees[aa]) << bj_eol;
-	}
-
-	os << " TAUTO_CNF=" << bj_eol;
-	os << tmp_tauto_cnf << bj_eol;
-	os << " DIFF_CNF=" << bj_eol;
-	os << tmp_diff_cnf << bj_eol;
-	os << " GUIDE_CNF=" << bj_eol;
-	os << tmp_guide_cnf << bj_eol;
-
-	os << bj_eol;
-	BRAIN_DBG(os << " RECOIL_LV=" << brn.br_dbg.dbg_last_recoil_lv);
-
-	os << bj_eol;
-	os << brn.get_my_inst().get_f_nam() << bj_eol;
-	os << "=========================================================" << bj_eol;
-#endif
-}
-
-bool
-dbg_run_satex_on(brain& brn, ch_string f_nam){
-#ifdef FULL_DEBUG
-	bool is_no = dbg_run_satex_is_no_sat(f_nam);
-	MARK_USED(is_no);
-	DBG_COND_COMM(! is_no ,
-		os << "ABORTING_DATA " << bj_eol;
-		//os << "mmap_before_tk=" << ma_before_retract_tk << bj_eol;
-		//os << "mmap_after_tks=" << ma_after_retract_tks << bj_eol;
-		os << " brn_tk=" << brn.br_current_ticket << bj_eol;
-		os << "	LV=" << brn.level() << bj_eol;
-		os << " f_nam=" << f_nam << bj_eol;
-		os << " save_consec=" << brn.br_dbg.dbg_canon_save_id << bj_eol;
-		os << "END_OF_aborting_data" << bj_eol;
-	);
-	BRAIN_CK(is_no);
 #endif
 	return true;
 }
@@ -820,46 +491,6 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 	return os;
 }
 	
-bj_ostream&
-memap::print_memap(bj_ostream& os, bool from_pt){
-#ifdef FULL_DEBUG
-	MARK_USED(from_pt);
-	if(from_pt){
-		os << "MM(" << (void*)this <<")";
-		os << " cho=" << ma_cho;
-		os << " szs_dotted=";
-		os << ma_szs_dotted;
-		os << " bef_rtct_tk=" << ma_before_retract_tk;
-		os << " aft_rtct_tks=" << ma_after_retract_tks;
-		os.flush();
-		return os;
-	}
-	os << "MEMAP(" << (void*)this <<")={ " << bj_eol;
-	os << " cho=" << ma_cho << bj_eol;
-	os << " dotted=" << bj_eol;
-	os << ma_dotted << bj_eol;
-	os << " filled=" << bj_eol;
-	ma_filled.print_row_data(os, true, "\n");
-	os << " szs_dotted=" << bj_eol;
-	os << ma_szs_dotted << bj_eol;
-	os << " szs_filled=" << bj_eol;
-	os << ma_szs_filled << bj_eol;
-	os << " fll_in_lv=" << bj_eol;
-	ma_fll_in_lv.print_row_data(os, true, "\n");
-	os << " save_guide_col=" << bj_eol;
-	os << ma_save_guide_col;
-	os << " find_guide_col=" << bj_eol;
-	os << ma_find_guide_col;
-	os << "bef_rtct_tk=" << ma_before_retract_tk << bj_eol;
-	os << "aft_rtct_tks=" << ma_after_retract_tks << bj_eol;
-	os << "confl=" << ma_confl << bj_eol;
-	os << "active=" << ma_active << bj_eol;
-	os << "}";
-	os.flush();
-#endif
-	return os;
-}
-
 void
 brain::print_trail(bj_ostream& os, bool no_src_only){
 #ifdef FULL_DEBUG
@@ -1249,25 +880,7 @@ brain::dbg_prt_lvs_active(bj_ostream& os){
 	row<leveldat*>& all_lv = br_data_levels;
 	for(int aa = 0; aa < all_lv.size(); aa++){
 		leveldat& lv = *(all_lv[aa]);
-		if(lv.ld_map0.ma_active){
-			os << "1.";
-		} else {
-			os << "0.";
-		}
-	}
-	os << "]";
-#endif
-}
-
-void 
-brain::dbg_prt_lvs_virgin(bj_ostream& os){
-#ifdef FULL_DEBUG
-	os << "vrgn=[";
-	
-	row<leveldat*>& all_lv = br_data_levels;
-	for(int aa = 0; aa < all_lv.size(); aa++){
-		leveldat& lv = *(all_lv[aa]);
-		if(lv.ld_map0.is_ma_virgin()){
+		if(lv.has_active_neuromaps()){
 			os << "1.";
 		} else {
 			os << "0.";
@@ -1285,7 +898,11 @@ brain::dbg_prt_lvs_cho(bj_ostream& os){
 	row<leveldat*>& all_lv = br_data_levels;
 	for(int aa = 0; aa < all_lv.size(); aa++){
 		leveldat& lv = *(all_lv[aa]);
-		quanton* ch2 = lv.ld_map0.ma_cho;
+		quanton* ch2 = NULL_PT;
+		if(lv.has_setup_neuromap()){
+			neuromap& nmp1 = lv.get_setup_neuromap();
+			ch2 = nmp1.na_orig_cho;
+		}
 		os << lv.ld_chosen;
 		if(ch2 != NULL){ os << "."; } else { os << ","; }
 		if((ch2 != NULL) && (ch2 != lv.ld_chosen)){
@@ -1294,5 +911,25 @@ brain::dbg_prt_lvs_cho(bj_ostream& os){
 	}
 	os << "]";
 #endif
+}
+
+bool
+dbg_run_satex_on(brain& brn, ch_string f_nam){
+#ifdef FULL_DEBUG
+	bool is_no = dbg_run_satex_is_no_sat(f_nam);
+	MARK_USED(is_no);
+	DBG_COND_COMM(! is_no ,
+		os << "ABORTING_DATA " << bj_eol;
+		//os << "mmap_before_tk=" << ma_before_retract_tk << bj_eol;
+		//os << "mmap_after_tks=" << ma_after_retract_tks << bj_eol;
+		os << " brn_tk=" << brn.br_current_ticket << bj_eol;
+		os << "	LV=" << brn.level() << bj_eol;
+		os << " f_nam=" << f_nam << bj_eol;
+		os << " save_consec=" << brn.br_dbg.dbg_canon_save_id << bj_eol;
+		os << "END_OF_aborting_data" << bj_eol;
+	);
+	BRAIN_CK(is_no);
+#endif
+	return true;
 }
 

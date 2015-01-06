@@ -849,6 +849,7 @@ protected:
 
 public:
 	typedef comparison (*cmp_func_t)(obj_t const & obj1, obj_t const & obj2);
+	typedef void (*in_both_func_t)(obj_t const & obj1);
 
 	// Don't allow copying (error prone):
 	// force use of referenced rows
@@ -1032,7 +1033,7 @@ public:
 				row<obj_t>& set, cmp_func_t cmp_fn);
 
 	cmp_is_sub		sorted_set_is_subset(row<obj_t>& set, 
-						cmp_func_t cmp_fn, bool& are_eq);
+						cmp_func_t cmp_fn, bool& are_eq, in_both_func_t both_fn = NULL_PT);
 
 	long	shuffle(row_index from = 0, bool init_random = true);
 
@@ -1472,11 +1473,13 @@ ch_string	subset_cmp_str(cmp_is_sub val){
 }
 
 #define decl_cmp_fn(o_t, nam) comparison (*nam)(o_t const & obj1, o_t const & obj2)
+#define decl_both_fn(o_t, nam) void (*nam)(o_t const & obj1)
 
 template<class obj_t, class iter_t>
 cmp_is_sub 
 is_subset_cmp(iter_t& iter1, iter_t& iter2, 
-		decl_cmp_fn(obj_t, cmp_fn), bool& are_eq)
+		decl_cmp_fn(obj_t, cmp_fn), bool& are_eq, 
+		decl_both_fn(obj_t, both_fn) = NULL_PT)
 {
 	are_eq = false;
 
@@ -1556,6 +1559,17 @@ is_subset_cmp(iter_t& iter1, iter_t& iter2,
 
 		cmp_lo = (*cmp_fn)(lo_sub_obj, lo_set_obj);
 		cmp_hi = (*cmp_fn)(hi_sub_obj, hi_set_obj);
+		
+		if(both_fn != NULL_PT){
+			if(cmp_lo == 0){
+				(*both_fn)(lo_sub_obj);
+				(*both_fn)(lo_set_obj);
+			}
+			if(cmp_hi == 0){
+				(*both_fn)(hi_sub_obj);
+				(*both_fn)(hi_set_obj);
+			}
+		}
 
 		if((sub_to_ck == 0) && ((cmp_lo == 0) || (cmp_hi == 0))){
 			are_eq = (sz1 == sz2); 
@@ -1592,13 +1606,14 @@ is_subset_cmp(iter_t& iter1, iter_t& iter2,
 template<class obj_t>
 cmp_is_sub	
 cmp_sorted_rows(row_data<obj_t>& r1, row_data<obj_t>& r2,
-			decl_cmp_fn(obj_t, cmp_fn), bool& are_eq)
+			decl_cmp_fn(obj_t, cmp_fn), bool& are_eq, 
+			decl_both_fn(obj_t, both_fn) = NULL_PT)
 {
 	row_iter<obj_t>	iter1(r1);
 	row_iter<obj_t>	iter2(r2);
 
 	return is_subset_cmp<obj_t, row_iter<obj_t> >(iter1, 
-		iter2, cmp_fn, are_eq); 
+		iter2, cmp_fn, are_eq, both_fn); 
 }
 
 #define decl_cmp_sm_fn(o_t, nam) cmp_subsume_t (*nam)(o_t const & obj1, o_t const & obj2)
@@ -1660,9 +1675,9 @@ get_last_eq_obj_pos(row_index from_pos,
 template<class obj_t>
 cmp_is_sub
 row<obj_t>::sorted_set_is_subset(row<obj_t>& set, 
-					 cmp_func_t cmp_fn, bool& are_eq)
+					 cmp_func_t cmp_fn, bool& are_eq, in_both_func_t both_fn)
 {
-	return cmp_sorted_rows(*this, set, cmp_fn, are_eq);
+	return cmp_sorted_rows(*this, set, cmp_fn, are_eq, both_fn);
 }
 
 template<class obj_t>

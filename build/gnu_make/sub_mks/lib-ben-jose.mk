@@ -11,8 +11,6 @@ SOURCES := \
 	$(SRC_BASE_DIR)/library/brain/brain.cpp \
 	$(SRC_BASE_DIR)/library/brain/sortor.cpp \
 	$(SRC_BASE_DIR)/library/brain/neuromap.cpp \
-	$(SRC_BASE_DIR)/library/brain/memap.cpp \
-	$(SRC_BASE_DIR)/library/brain/reverse.cpp \
 	$(SRC_BASE_DIR)/library/dimacs/dimacs.cpp \
 	$(SRC_BASE_DIR)/library/interface/ben_jose.cpp \
 	$(SRC_BASE_DIR)/library/shuffler/shuffler.cpp \

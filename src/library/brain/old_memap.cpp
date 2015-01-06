@@ -30,7 +30,10 @@ memap related funcs.
 
 --------------------------------------------------------------*/
 
+#include "file_funcs.h"
 #include "stack_trace.h"
+#include "dbg_run_satex.h"
+
 #include "dimacs.h"
 #include "brain.h"
 #include "solver.h"
@@ -655,405 +658,681 @@ memap::map_oper(mem_op_t mm, brain& brn){
 	return oper_ok;
 }
 
-bool
-brain::in_edge_of_level(){
-	long trl_lv = trail_level();
-	long b_lv = level();
-	bool in_edge = (trl_lv != b_lv);
-	BRAIN_CK(! in_edge || ((trl_lv + 1) == b_lv));
-	return in_edge;
+void
+memap::reset_memap(brain& brn){
+	//BRAIN_CK(map_ck_all_qu_dominated(brn));
+	init_memap(&brn);
 }
 
-bool
-brain::can_write_reverse_map(deduction& dct){
-	if(dct.is_dt_virgin()){ return false; }
-	//bool can_write = (dct.dt_forced_level == level());
-	//return can_write;
-	return false;
+long
+memap::get_trace_sz(mem_op_t mm){
+	BRAIN_CK(ck_last_szs());
+	BRAIN_CK(ma_szs_dotted.size() > 1);
+
+	long t_sz = ma_dotted.size();
+	if(mm == mo_save){
+		long sz_idx = ma_szs_dotted.last_idx() - 1;
+		BRAIN_CK(ma_szs_dotted.is_valid_idx(sz_idx));
+		t_sz = ma_szs_dotted[sz_idx];
+
+		BRAIN_CK(t_sz >= 0);
+		BRAIN_CK(t_sz <= t_sz);
+	} 
+	BRAIN_CK((mm != mo_find) || (t_sz > ma_szs_dotted.first()));
+
+	return t_sz;
 }
 
-bool
-brain::in_edge_of_target_lv(deduction& dct){
-	if(dct.is_dt_virgin()){ return false; }
-	long trl_lv = trail_level();
-	//bool in_tg_lv = (trl_lv < dct.dt_target_level);
-	bool in_tg_lv = (trl_lv <= dct.dt_target_level);
-	BRAIN_CK(! in_tg_lv || ((trl_lv + 1) == level()));
-	return in_tg_lv;
+long 
+memap::get_filled_sz(mem_op_t mm){
+	BRAIN_CK(ck_last_szs());
+	BRAIN_CK(ma_szs_filled.size() > 1);
+
+	long f_sz = ma_filled.size();
+	if(mm == mo_save){
+		long sz_idx = ma_szs_filled.last_idx() - 1;
+		BRAIN_CK(ma_szs_filled.is_valid_idx(sz_idx));
+		f_sz = ma_szs_filled[sz_idx];
+
+		BRAIN_CK(f_sz >= 0);
+		BRAIN_CK(f_sz <= f_sz);
+	} 
+
+	return f_sz;
 }
 
 void
-brain::reverse(){
-	DEDUC_DBG(deduction& dct2 = br_dbg.dbg_deduc);
-	//long dbg_old_lv = level();
+memap::set_filled(brain& brn){
+	row<neuron*>& all_neus = ma_fll_in_lv;
+	row<neuron*>& sel_neus = brn.br_tmp_selected;
+	row<neuron*>& not_sel_neus = brn.br_tmp_not_selected;
+	row<neuron*>& disca_neus = brn.br_tmp_discarded;
 
-	BRAIN_CK(! has_psignals());
-	brain& brn = *this;
-	notekeeper& nke0 = br_retract_nke0;
-	deduction& dct = br_retract_dct;
-	memap& mpp0 = br_retract_map0;
-	long& all_notes0 = br_qu_tot_note0;
-	//row_quanton_t& all_rev = br_tmp_rever_quas;
-	//MARK_USED(all_rev);
-	MARK_USED(all_notes0);
+	BRAIN_CK(brn.br_tot_qu_marks == 0);
 
-	br_retract_is_first_lv = true;
+	quanton& nxt_qua = map_last_dotted();
+	MARK_USED(nxt_qua);
 
-	dct.init_deduction();
-	nke0.init_notes(level());
-	mpp0.reset_memap(brn);
+	BRAIN_CK(nxt_qua.is_pos());
+	BRAIN_CK(! nxt_qua.has_source());
 
-	BRAIN_CK(dct.is_dt_virgin());
-	BRAIN_CK(nke0.dk_tot_noted == 0);
-	BRAIN_CK(mpp0.is_ma_virgin());
-	BRAIN_CK(level() != ROOT_LEVEL);
-	BRAIN_CK(all_notes0 == 0);
-	BRAIN_CK(br_semi_monos_to_update.is_empty());
-	//BRAIN_CK(all_rev.is_empty());
+	sel_neus.clear();
+	not_sel_neus.clear();
+	disca_neus.clear();
 
-	DBG_PRT(110, os << "BEFORE_REVERSE " << br_current_ticket << bj_eol; 
-		print_trail(os);
-		os << " trl_lv" << trail_level()
-		<< " brn_lv" << level()
-	);
-	DBG_PRT(112,
-		os << "BEFORE_REVERSE" << bj_eol;
-		print_trail(os);
-		os << "brn_tk=" << br_current_ticket << bj_eol;
-		os << "learned=" << bj_eol;
-		data_level().ld_learned.print_row_data(os, true, "\n");
-		os << " trl_lv" << trail_level() << " brn_lv" << level();
-		os << "cfl=" << br_conflict_found << bj_eol;
-		//os << "pulsate. BEFORE conflit treatment. Type ENTER to continue..." << bj_eol;
-		//DO_GETCHAR
-	);
-	DBG_PRT(131, print_trail(os));
-	DBG_PRT(122, print_trail(os));
-	DBG_PRT(14, print_trail(os));
-	DBG_PRT(14, os << "chosen " << br_chosen);
+	set_marks_of(brn, ma_dotted);
 
-	// START REVERSE (init mpp0 and nke0)
+	for(long aa = 0; aa < all_neus.size(); aa++){
+		BRAIN_CK(all_neus[aa] != NULL_PT);
+		neuron& neu = *(all_neus[aa]);
 
-	BRAIN_CK(found_conflict());
-	
-	BRAIN_DBG(br_dbg.dbg_before_retract_lv = level());
+		if(! neu.ne_original){
+			disca_neus.push(&neu);
+			continue;
+		}
 
-	DEDUC_DBG(br_deducer.deduction_analysis(br_conflict_found, dct2));
-	BRAIN_CK_PRT(dct2.dt_target_level >= ROOT_LEVEL, 
-		os << recoil() << ".dct2=" << dct2
-	);
+		BRAIN_CK(neu.ne_original);
 
-	mpp0.ma_confl = br_conflict_found;
-	mpp0.ma_before_retract_tk.update_ticket(brn);
-	
-	neuron& cfl = *(br_conflict_found.ps_source);
-	DBG_PRT_COND(122, ! cfl.in_ne_dominated(brn), os << "NOT_DOM cfl=" << cfl);
-	cfl.set_motives(brn, nke0, true); // init nke0 with confl
+		bool is_fll = neu.is_filled_of_marks(nxt_qua);
+		bool in_dom = neu.in_ne_dominated(brn);
+		//bool in_dom = true;
 
-	BRAIN_CK(all_notes0 > 0);
-
-	BRAIN_CK(! mpp0.is_ma_virgin());
-
-	//BRAIN_CK(cfl.ne_original);
-	if(! cfl.ne_original){ 
-		mpp0.reset_memap(brn);
-		DBG_PRT(117, os << "mpp0.reset_memap (! orig)");
+		if(is_fll){
+			if(in_dom){
+				sel_neus.push(&neu);
+			} else {
+				disca_neus.push(&neu);
+			}
+		} else {
+			not_sel_neus.push(&neu);
+		}
 	}
 
-	DBG_PRT(122, dbg_prt_lvs_active(os));
-	DBG_PRT(122, dbg_prt_lvs_have_learned(os));
-	//DBG_PRT(122, dbg_prt_lvs_virgin(os));
-	
-	// REVERSE LOOP
+	reset_marks_of(brn, ma_dotted);
 
-	//quanton* chosen_qua = NULL_PT;
-	bool has_in_mem = false;
-	MARK_USED(has_in_mem);
+	BRAIN_CK(brn.br_tot_qu_marks == 0);
 
-	while(true){
-		BRAIN_CK(! mpp0.ma_active);
-		BRAIN_CK(mpp0.ck_map_guides(dbg_call_1));
+	// finalize
+
+	disca_neus.move_to(ma_discarded);
+	not_sel_neus.move_to(ma_fll_in_lv);
+	sel_neus.append_to(ma_filled);
+}
+
+bool
+neuron::is_filled_of_marks(quanton& nxt_qua){
+	// nxt_qua is cho of level
+	BRAIN_CK(nxt_qua.is_pos());
+	BRAIN_CK(! nxt_qua.has_source());
+
+	bool is_fll = true;
+	DBG(long dbg_num_after = 0);
+	for(long ii = 0; ii < fib_sz(); ii++){
+		BRAIN_CK(ne_fibres[ii] != NULL_PT);
 		
-		DBG(int vg_m0 = ((mpp0.is_ma_virgin())?(1):(0)));
-
-		bool end_of_recoil = in_edge_of_target_lv(dct);
-		if(end_of_recoil){
-			DBG_PRT(110, os << "end_of_recoil " << br_current_ticket 
-				<< " trl_lv" << trail_level()
-				<< " brn_lv" << level()
-			);
-			BRAIN_CK(! dct.is_dt_virgin());
-			bool in_mm = false;
-			memap& lv_map0 = data_level().ld_map0;
-			if(lv_map0.is_ma_virgin() && ! mpp0.ma_dotted.is_empty()){
-				BRAIN_CK(mpp0.ck_last_szs());
-				//BRAIN_CK(! mpp0.ma_dotted.is_empty());
-
-				DBG(br_dbg.dbg_find_id++; br_dbg.dbg_canon_find_id = br_dbg.dbg_find_id;)
-
-				in_mm = mpp0.map_find(brn);
-			}
-			if(! in_mm){ 
-				BRAIN_CK((trail_level() + 1) == level());
-				DBG_PRT(122, os << "!ff." << vg_m0);
-				//break;
-			} else {
-				DBG_PRT(122, os << "FF." << vg_m0);
-				has_in_mem = true;
-				dct.init_deduction();
-				BRAIN_CK(dct.is_dt_virgin());
-			}
-		}
-		
-		BRAIN_CK(level() != ROOT_LEVEL);
-
-		bool end_of_lev = in_edge_of_level();
-		if(end_of_lev){
-			DBG_PRT(110, os << "end_of_lev " << br_current_ticket 
-				<< " trl_lv" << trail_level()
-				<< " brn_lv" << level()
-				<< " " << dct
-			);
-			BRAIN_CK(level() != ROOT_LEVEL);
-			BRAIN_CK(nke0.dk_num_noted_in_layer == 0);
-			BRAIN_CK(level() <= nke0.dk_note_layer);
-
-			DBG(bool wrote = false);
-			memap& lv_map0 = data_level().ld_map0;
-			
-			DBG(bool m_act = lv_map0.ma_active);
-			DBG(bool m_cw = false);
-			if(lv_map0.ma_active){
-				BRAIN_CK(false);
-				// OLD WRITE MAMAP
-			} // lv_map0.ma_active
-
-			dec_level();
-			br_retract_is_first_lv = false;
-
-			DBG(int vg2_m0 = ((mpp0.is_ma_virgin())?(1):(0)));
-			DBG_PRT(122, if(wrote){ os << "WW."; } else { os << "!ww."; }
-				os << vg_m0 << '.' << vg2_m0 << ".a." << m_act << ".c." << m_cw;
-			);
-
-			
-		} // end_of_lev
-
-		BRAIN_CK(! mpp0.ma_active);
-		BRAIN_CK(trail_level() == level());
-
-		if(end_of_recoil){ break; }
-		
-		if(level() == ROOT_LEVEL){
-			break;
-		}
-
-		if(lv_has_learned()){
-			mpp0.reset_memap(brn);
-			DBG_PRT(121, os << "mpp0.reset_memap (has_learnd)");
-		}
-
-		if(! br_charge_trail.has_motives()){
-			ch_string ab_mm = brn.br_file_name;
-			abort_func(-1, ab_mm.c_str());
-			break;
-		}
-		
-		// set qua
-		quanton& qua = trail_last();
-		
-		BRAIN_CK(qua.has_charge());
-		BRAIN_CK(qua.has_tier());
-
-		BRAIN_CK(qua.qu_inverse != NULL_PT);
+		// qua was charged in last propagate.
+		quanton& qua = *(ne_fibres[ii]);
 		quanton& opp = *(qua.qu_inverse);
 
-		neuron* src = qua.get_source();
-
-		BRAIN_CK(qua.is_pos());
-		BRAIN_CK(dct.is_dt_virgin() || (level() >= dct.dt_target_level));
-
-		// notes
-
-		//BRAIN_CK((dbg_old_lv != level()) || qua.has_source() || qua.has_note0());
-		BRAIN_CK(! br_retract_is_first_lv || qua.has_source() || qua.has_note0());
-
-		DBG(bool had_n3 = false);
-		DBG(bool had_n0 = false);
-
-		if(qua.has_note0()){
-			long qlv = qua.qlevel();
-			nke0.update_notes_layer(qlv);
-			BRAIN_CK(nke0.dk_num_noted_in_layer > 0);
-
-			qua.reset_its_note0(brn);
-			
-			BRAIN_CK(qua.in_qu_dominated(brn));
+		bool has_chg = qua.has_charge();
+		bool is_nxt = ((&qua == &nxt_qua) || (&opp == &nxt_qua));
 		
-			BRAIN_CK(qua.qlevel() == nke0.dk_note_layer);
+		// is_part tells if qua is in candidate subset
+		bool is_part = (! has_chg || is_nxt);  
 
-			nke0.dec_notes();
+		DBG(if(qua.has_mark() && is_part){ dbg_num_after++; });
 
-			if(! mpp0.is_ma_virgin()){
-				qua.qu_full_charged.append_to(mpp0.ma_fll_in_lv);
-				opp.qu_full_charged.append_to(mpp0.ma_fll_in_lv);
-
-				prop_signal& n_sig = mpp0.ma_dotted.inc_sz();
-				n_sig.init_qua_signal(qua);
-
-				BRAIN_CK(! qua.has_source() || (! src->ne_original) || 
-						has_neu(mpp0.ma_fll_in_lv, src));
-			}
-
-			if(nke0.dk_num_noted_in_layer == 0){
-				DBG_PRT(14, os << "SETTING DCT=" << &qua);
-				if(dct.is_dt_virgin()){
-					dct.set_with(brn, nke0, qua);
-				}
-
-				BRAIN_CK(! dct.is_dt_virgin());
-			}
-
-			BRAIN_CK(mpp0.is_ma_virgin() || (mpp0.ma_dotted.last().ps_quanton == &qua));
-
-			if(src != NULL_PT){
-				BRAIN_CK(mpp0.is_ma_virgin() || (! src->ne_original) || 
-						has_neu(mpp0.ma_fll_in_lv, src));
-				if(! src->ne_original){ 
-					mpp0.reset_memap(brn);
-					DBG_PRT(121, os << "mpp0.reset_memap (! orig)");
-					//all_src_orig = false; 
-				}
-
-				src->set_motives(brn, nke0, false);
-				BRAIN_CK(nke0.dk_num_noted_in_layer > 0);
-				BRAIN_CK(! src->ne_original || has_neu(qua.qu_full_charged, src));
-			} else {
-				BRAIN_CK(! qua.has_source());
-				BRAIN_CK(! dct.is_dt_virgin());
-				BRAIN_CK(nke0.dk_num_noted_in_layer == 0);
-
-				if(! mpp0.is_ma_virgin()){
-
-					BRAIN_CK(! mpp0.ma_dotted.is_empty());
-					BRAIN_CK(! mpp0.ma_dotted.last().ps_quanton->has_source());
-					BRAIN_CK(mpp0.ma_dotted.last().ps_quanton == &qua);
-
-					mpp0.ma_cho = &qua;
-					mpp0.set_filled(brn); // old update_filled
-
-					DBG_PRT(110, os << "rec_szs " << br_current_ticket << " " << &mpp0);
-					mpp0.map_record_szs();
-				}
-			}
-
-		} // qua.has_note0()
-
-		// chosen
-
-		if(! qua.has_source()){
-			BRAIN_CK(nke0.dk_num_noted_in_layer == 0);
-			BRAIN_CK(! dct.is_dt_virgin());
-
-			//chosen_qua = &qua;
+		if(! qua.has_mark() && is_part){
+			// qua is not in memap (! has_mark) so candidate subset is not in memap
+			is_fll = false;
+			break;
 		}
+
+		if(qua.is_pos() && ! is_part){
+			// neu is sat in upper level so candidate subset is not in memap
+			is_fll = false;
+			break;
+		}
+	}
+
+	BRAIN_CK(! is_fll || (dbg_num_after >= 2));
+	return is_fll;
+}
+
+void
+memap::map_set_dbg_cnf(mem_op_t mm, brain& brn, row<canon_clause*>& the_ccls, 
+					   row<neuron*>& the_neus, dima_dims& dims)
+{
+#ifdef FULL_DEBUG
+	the_ccls.clear();
+	the_neus.clear();
+
+	dims.init_dima_dims(0);
+
+	long trace_sz = get_trace_sz(mm);
+	long filled_sz = get_filled_sz(mm);
+
+	row<prop_signal>& trace = ma_dotted;
+	BRAIN_CK((trace_sz == trace.size()) || trace.is_valid_idx(trace_sz));
+
+	BRAIN_CK(brn.br_tot_ne_spots == 0);
+	BRAIN_CK(brn.br_tot_qu_marks == 0);
+	set_marks_of(brn, trace, 0, trace_sz);
+
+	neuron* cfl_neu = ma_confl.ps_source;
+	BRAIN_CK(cfl_neu != NULL_PT);
+	cfl_neu->map_set_dbg_ccl(mm, brn);
+	cfl_neu->add_dbg_ccl(brn, the_ccls, the_neus, dims);
+	
+	for(long aa = 0; aa < trace_sz; aa++){
+		prop_signal& q_sig = trace[aa];
+		BRAIN_CK(q_sig.ps_quanton != NULL_PT);
+
+		if(q_sig.ps_source != NULL_PT){
+			neuron& src = *(q_sig.ps_source);
+
+			src.map_set_dbg_ccl(mm, brn);
+			src.add_dbg_ccl(brn, the_ccls, the_neus, dims);
+		}
+	}
+
+	row<neuron*>& filled = ma_filled;
+	BRAIN_CK((filled_sz == filled.size()) || filled.is_valid_idx(filled_sz));
+
+	for(long bb = 0; bb < filled_sz; bb++){
+		BRAIN_CK(filled[bb] != NULL_PT);
+		neuron& neu = *(filled[bb]);
+
+		neu.map_set_dbg_ccl(mm, brn);
+		neu.add_dbg_ccl(brn, the_ccls, the_neus, dims);
+	}
+
+	for(long cc = 0; cc < the_neus.size(); cc++){
+		BRAIN_CK(the_neus[cc] != NULL_PT);
+		neuron& neu = *(the_neus[cc]);
+		BRAIN_CK(neu.ne_spot);
+		neu.reset_spot(brn);
+	}
+
+	reset_marks_of(brn, trace, 0, trace_sz);
+	BRAIN_CK(brn.br_tot_ne_spots == 0);
+	BRAIN_CK(brn.br_tot_qu_marks == 0);
+
+	the_ccls.mix_sort(cmp_clauses);
+#endif
+}
+
+bool
+memap::map_ck_simple_no_satisf(mem_op_t mm, brain& brn){
+#ifdef FULL_DEBUG
+	//long tot_vars = brn.br_positons.size();
+	//long tot_lits = 0;
+	//long tot_twolits = 0;
+	row<neuron*>& dbg_neus = brn.br_dbg.dbg_simple_neus;
+	row<canon_clause*>& dbg_ccls = brn.br_dbg.dbg_ccls;
+	skeleton_glb& skg = brn.get_skeleton();
+	canon_cnf& dbg_cnf = brn.br_dbg.dbg_cnf;
+
+	dima_dims dbg_dims;
+
+	map_set_dbg_cnf(mm, brn, dbg_ccls, dbg_neus, dbg_dims);
+	//dbg_cnf.init_with(skg, dbg_ccls, INVALID_NATURAL, 
+	//		INVALID_NATURAL, INVALID_NATURAL, false);
+	dbg_cnf.init_with(skg, dbg_ccls, INVALID_NATURAL, INVALID_NATURAL, INVALID_NATURAL);
+
+	BRAIN_CK(dbg_cnf.cf_dims.dd_tot_ccls == dbg_cnf.cf_clauses.size());
+
+	//DBG_PRT(106, os << "MAP NEURONS=" << bj_eol; 
+	//		dbg_print_ccls_neus(os, dbg_cnf.cf_clauses));
+	//DBG_PRT(106, os << "tot_ccls=" << dbg_cnf.cf_dims.dd_tot_ccls);
+
+	ch_string dbg_cnf_nm = skg.kg_root_path + "/DBG_CNF_CK_SAVE.yos";
+	write_file(dbg_cnf_nm, dbg_cnf.cf_chars, false);
+
+	BRAIN_CK(dbg_cnf.cf_dims.dd_tot_ccls == dbg_cnf.cf_clauses.size());
+
+	DBG_CHECK_SAVED(dbg_run_satex_on(brn, dbg_cnf_nm));
+
+	//DBG_PRT(106, 
+	//	os << "dbg_cnf_nm=" << dbg_cnf_nm << bj_eol;
+		//map_dbg_prt(os, mm, brn);
+	//);
+
+	dbg_cnf.clear_cnf();
+#endif
+	return true;
+}
+
+void
+dbg_prepare_used_dbg_ccl(row_quanton_t& rr_qua, canon_clause& dbg_ccl){
+#ifdef FULL_DEBUG
+	dbg_ccl.cc_clear(false);
+
+
+	for(long aa = 0; aa < rr_qua.size(); aa++){
+		BRAIN_CK(rr_qua[aa] != NULL_PT);
+		quanton& qua = *(rr_qua[aa]);
+
+		if(qua.has_mark()){ 
+			dbg_ccl.cc_push(qua.qu_id);
+		}
+	}
+#endif
+}
+
+void
+memap::dbg_prepare_used_dbg_cnf(mem_op_t mm, brain& brn, row<canon_clause*>& the_ccls){
+#ifdef FULL_DEBUG
+	long trace_sz = get_trace_sz(mm);
+	long filled_sz = get_filled_sz(mm);
+	MARK_USED(filled_sz);
+
+	row<prop_signal>& trace = ma_dotted;
+	BRAIN_CK((trace_sz == trace.size()) || trace.is_valid_idx(trace_sz));
+
+	BRAIN_CK(brn.br_tot_ne_spots == 0);
+	BRAIN_CK(brn.br_tot_qu_marks == 0);
+	set_marks_of(brn, trace, 0, trace_sz);
+
+	the_ccls.clear();
+
+	row<neuron*>& all_orig = brn.br_dbg.dbg_original_used;
+
+	for(long aa = 0; aa < all_orig.size(); aa++){
+		BRAIN_CK(all_orig[aa] != NULL_PT);
+		neuron& neu = *(all_orig[aa]);
+		canon_clause& dbg_ccl = neu.ne_dbg_ccl;
+
+		dbg_prepare_used_dbg_ccl(neu.ne_fibres, dbg_ccl);
+		if(! dbg_ccl.cc_size() == 0){
+			the_ccls.push(&dbg_ccl);
+		}
+	}
+
+	reset_marks_of(brn, trace, 0, trace_sz);
+
+	BRAIN_CK(brn.br_tot_ne_spots == 0);
+	BRAIN_CK(brn.br_tot_qu_marks == 0);
+#endif
+}
+
+bool
+memap::dbg_ck_used_simple_no_satisf(mem_op_t mm, brain& brn){
+#ifdef FULL_DEBUG
+	row<canon_clause*>& dbg_ccls = brn.br_dbg.dbg_ccls;
+	skeleton_glb& skg = brn.get_skeleton();
+	canon_cnf& dbg_cnf = brn.br_dbg.dbg_cnf;
+
+	dbg_prepare_used_dbg_cnf(mm, brn, dbg_ccls);
+
+	if(dbg_ccls.is_empty()){
+		return true;
+	}
+
+	dbg_cnf.init_with(skg, dbg_ccls, INVALID_NATURAL, INVALID_NATURAL, 
+					  INVALID_NATURAL, false);
+
+	ch_string dbg_cnf_nm = skg.kg_root_path + "/DBG_CNF_CK_USED.yos";
+	write_file(dbg_cnf_nm, dbg_cnf.cf_chars, false);
+
+	DBG_CHECK_SAVED(dbg_run_satex_on(brn, dbg_cnf_nm));
+
+	//DBG_PRT(106, os << "dbg_cnf_nm=" << dbg_cnf_nm);
+
+	dbg_cnf.clear_cnf();
+
+#endif
+	return true;
+}
+
+bool
+memap::ck_guide_idx(coloring& guide_col, dbg_call_id dbg_id){
+#ifdef FULL_DEBUG
+	long g_idx = guide_col.co_szs_idx;
+	if(g_idx == INVALID_IDX){
+		BRAIN_CK(guide_col.is_co_virgin());
+		return true;
+	}
+	BRAIN_CK(ma_szs_dotted.is_valid_idx(g_idx));
+	long qua_sz = ma_szs_dotted[g_idx];
+	MARK_USED(qua_sz);
+
+	DBG_PRT_COND(DBG_ALL_LVS, ! ((qua_sz * 2) == guide_col.co_quas.size()) ,
+		os << "ABORTING_DATA " << bj_eol;
+		os << " dbg_id=" << dbg_id << bj_eol;
+		os << " qua_sz=" << qua_sz << bj_eol;
+		os << " guide_sz=" << guide_col.co_quas.size() << bj_eol;
+		os << " guide=" << guide_col << bj_eol;
+		os << " map=" << *this << bj_eol;
+		os << "END_OF_aborting_data" << bj_eol;
+	);
+	BRAIN_CK((qua_sz * 2) == guide_col.co_quas.size());
+#endif
+	return true;
+}
+
+bool
+memap::ck_map_guides(dbg_call_id dbg_id){
+#ifdef FULL_DEBUG
+	BRAIN_CK(ck_guide_idx(ma_save_guide_col, dbg_id));
+	BRAIN_CK(ck_guide_idx(ma_find_guide_col, dbg_id));
+#endif
+	return true;
+}
+
+bool
+memap::map_ck_contained_in(brain& brn, coloring& colr, dbg_call_id dbg_id){
+#ifdef FULL_DEBUG
+	long szs_idx = colr.co_szs_idx;
+	row<neuron*>& all_neus = colr.co_neus;
+
+	DBG_PRT_COND(DBG_ALL_LVS, ! (ma_szs_dotted.is_valid_idx(szs_idx)) ,
+		os << "ABORTING_DATA " << bj_eol;
+		os << " dbg_id=" << dbg_id << bj_eol;
+		os << " szs_idx=" << szs_idx << bj_eol;
+		os << " ma_szs_dotted=" << ma_szs_dotted << bj_eol;
+	);
+	BRAIN_CK(ma_szs_dotted.is_valid_idx(szs_idx));
+	BRAIN_CK(brn.br_tot_ne_spots == 0);
+
+	for(long ii = 0; ii < all_neus.size(); ii++){
+		neuron& fll_neu = *(all_neus[ii]);
+		fll_neu.set_spot(brn);
+		DBG_PRT(103, os << "spot " << &fll_neu);
+	}
+	
+	neuron* cfl_neu = ma_confl.ps_source;
+	BRAIN_CK(cfl_neu != NULL_PT);
+
+	DBG_PRT(103, os << "CK spot confl " << cfl_neu);
+	BRAIN_CK(cfl_neu->ne_spot);
+
+	long trace_sz = ma_szs_dotted[szs_idx];
+	row<prop_signal>& trace = ma_dotted;
+
+	BRAIN_CK((trace_sz == trace.size()) || trace.is_valid_idx(trace_sz));
+	for(long ii = 0; ii < trace_sz; ii++){
+		prop_signal& q_sig = trace[ii];
+		if(q_sig.ps_source != NULL_PT){
+			DBG_PRT(103, os << "CK spot " << q_sig.ps_source);
+			BRAIN_CK(q_sig.ps_source->ne_spot);
+		}
+	}
+
+	for(long ii = 0; ii < all_neus.size(); ii++){
+		neuron& fll_neu = *(all_neus[ii]);
+		fll_neu.reset_spot(brn);
+	}
+
+	BRAIN_CK(brn.br_tot_ne_spots == 0);
+#endif
+	return true;
+}
+
+void
+memap::map_dbg_print(bj_ostream& os, mem_op_t mm, brain& brn){
+#ifdef FULL_DEBUG
+	canon_cnf& tmp_tauto_cnf = brn.br_tmp_wrt_tauto_cnf;
+	canon_cnf& tmp_diff_cnf = brn.br_tmp_wrt_diff_cnf;
+	canon_cnf& tmp_guide_cnf = brn.br_tmp_wrt_guide_cnf;
+
+	//os << STACK_STR << bj_eol;
+	os << "DBG_PRT=" << bj_eol;
+	os << this << bj_eol;
+	os << "brn_tk=" << brn.br_current_ticket << bj_eol;
+	if(mm == mo_save){ os << "SAVE "; }
+	if(mm == mo_find){ os << "FIND "; }
+
+	//os << "CERO FILLED___________________________________________ " << bj_eol;
+	sort_glb& tauto_srg = brn.br_tauto_neus_srg;
+	os << " sg_dbg_cnf_tot_onelit=" << tauto_srg.sg_dbg_cnf_tot_onelit << bj_eol;
+
+	os << " TATUTO_STEP_SORTEES (after step)=" << bj_eol;
+	for(long aa = 0; aa < tauto_srg.sg_step_sortees.size(); aa++){
+		os << *(tauto_srg.sg_step_sortees[aa]) << bj_eol;
+	}
+
+	os << " TAUTO_CNF=" << bj_eol;
+	os << tmp_tauto_cnf << bj_eol;
+	os << " DIFF_CNF=" << bj_eol;
+	os << tmp_diff_cnf << bj_eol;
+	os << " GUIDE_CNF=" << bj_eol;
+	os << tmp_guide_cnf << bj_eol;
+
+	os << bj_eol;
+	BRAIN_DBG(os << " RECOIL_LV=" << brn.br_dbg.dbg_last_recoil_lv);
+
+	os << bj_eol;
+	os << brn.get_my_inst().get_f_nam() << bj_eol;
+	os << "=========================================================" << bj_eol;
+#endif
+}
+
+bj_ostream&
+memap::print_memap(bj_ostream& os, bool from_pt){
+#ifdef FULL_DEBUG
+	MARK_USED(from_pt);
+	if(from_pt){
+		os << "MM(" << (void*)this <<")";
+		os << " cho=" << ma_cho;
+		os << " szs_dotted=";
+		os << ma_szs_dotted;
+		os << " bef_rtct_tk=" << ma_before_retract_tk;
+		os << " aft_rtct_tks=" << ma_after_retract_tks;
+		os.flush();
+		return os;
+	}
+	os << "MEMAP(" << (void*)this <<")={ " << bj_eol;
+	os << " cho=" << ma_cho << bj_eol;
+	os << " dotted=" << bj_eol;
+	os << ma_dotted << bj_eol;
+	os << " filled=" << bj_eol;
+	ma_filled.print_row_data(os, true, "\n");
+	os << " szs_dotted=" << bj_eol;
+	os << ma_szs_dotted << bj_eol;
+	os << " szs_filled=" << bj_eol;
+	os << ma_szs_filled << bj_eol;
+	os << " fll_in_lv=" << bj_eol;
+	ma_fll_in_lv.print_row_data(os, true, "\n");
+	os << " save_guide_col=" << bj_eol;
+	os << ma_save_guide_col;
+	os << " find_guide_col=" << bj_eol;
+	os << ma_find_guide_col;
+	os << "bef_rtct_tk=" << ma_before_retract_tk << bj_eol;
+	os << "aft_rtct_tks=" << ma_after_retract_tks << bj_eol;
+	os << "confl=" << ma_confl << bj_eol;
+	os << "active=" << ma_active << bj_eol;
+	os << "}";
+	os.flush();
+#endif
+	return os;
+}
+
+/*
+//=============================================================================
+// memap
+
+class memap {
+	public:
 		
-		// reset charge
+	brain*			ma_brn;
 
-		BRAIN_CK(! qua.has_note0());
-		BRAIN_CK(! (had_n3 || had_n0) || qua.in_qu_dominated(brn));
+	ticket			ma_before_retract_tk;
+	row<ticket>		ma_after_retract_tks;
 
-		qua.set_charge(brn, NULL_PT, cg_neutral, INVALID_TIER);
-		//all_rev.push(&qua);
+	long			ma_tier;
+	prop_signal		ma_confl;
+	quanton*		ma_cho;
 
-	} // true
+	row<prop_signal>	ma_dotted;
+	row<neuron*>		ma_filled;
 
-	DBG_PRT(131, 
-			print_trail(os);
-			dbg_prt_lvs_cho(os);
-			os << "tr_lv=" << trail_level() << " tg_lv=" << dct.dt_target_level;
-	);
-	BRAIN_DBG(br_dbg.dbg_last_recoil_lv = dct.dt_target_level);
+	row<long>		ma_szs_dotted;
+	row<long>		ma_szs_filled;
 
-	//BRAIN_CK(! has_in_mem);	// DBG purposes
-	
-	DEDUC_DBG(has_in_mem || dbg_ck_deducs(dct, dct2));
-	DBG(long rr_lv = trail_level());
-	//BRAIN_CK((level() == ROOT_LEVEL) || ((rr_lv + 1) == dct.dt_target_level));
-	BRAIN_CK((level() == ROOT_LEVEL) || (level() == dct.dt_target_level));
-	BRAIN_CK((level() == ROOT_LEVEL) || (rr_lv == dct.dt_target_level));
+	row<neuron*>		ma_fll_in_lv;
+	row<neuron*>		ma_discarded;
 
-	// update leveldat
-	
-	memap& lv_map0 = data_level().ld_map0;
-	if(! mpp0.is_ma_virgin() && lv_map0.is_ma_virgin()){
-		ticket& n_tk = mpp0.ma_after_retract_tks.inc_sz();
-		n_tk.update_ticket(brn);
+	coloring		ma_save_guide_col;
+	coloring		ma_find_guide_col;
 
-		BRAIN_CK(mpp0.ck_map_guides(dbg_call_2));
-		//lv_map0.map_replace_with(brn, mpp0, dbg_call_2);
-		//lv_map0.map_activate(brn);
-		DBG_PRT(122, os << "Updated " << &(data_level()) << " with " << &lv_map0);
+	bool			ma_active;
+
+	memap() {
+		ma_active = false;
+		init_memap();
 	}
 
-	nke0.clear_all_quantons();
-	BRAIN_CK(all_notes0 == 0);
-
-	// learn motives
-
-	BRAIN_CK(dct.dt_forced != NULL_PT);
-
-	if(data_level().ld_first_learned == NULL_PT){
-		data_level().ld_first_learned = dct.dt_forced;
+	~memap(){
+		init_memap();
 	}
-	neuron* lnd_neu = learn_mots(dct.dt_motives, *dct.dt_forced);
+
+	void	init_memap(brain* pt_brn = NULL){
+		BRAIN_CK(! ma_active);
+		
+		ma_brn = pt_brn;
+
+		ma_before_retract_tk.init_ticket();
+		
+		ma_tier = INVALID_TIER;
+		ma_confl.init_prop_signal();
+		ma_cho = NULL_PT;
+
+		ma_dotted.clear();
+		ma_filled.clear();
+
+		ma_szs_dotted.clear();
+		ma_szs_filled.clear();
+
+		ma_fll_in_lv.clear();
+		ma_discarded.clear();
+
+		ma_save_guide_col.init_coloring(pt_brn);
+		ma_find_guide_col.init_coloring(pt_brn);
+
+		ma_active = false;
+	}
+
+	brain*	get_dbg_brn(){
+		brain* the_brn = NULL;
+		BRAIN_DBG(the_brn = ma_brn);
+		return the_brn;
+	}
+
+	void	reset_memap(brain& brn);
+
+	bool	is_ma_virgin(){
+		bool c2 = ! ma_before_retract_tk.is_valid();
+		bool c3 = (ma_confl.is_ps_virgin());
+		bool c4 = (ma_cho == NULL_PT);
+
+		bool c5 = (ma_dotted.is_empty());
+		bool c6 = (ma_filled.is_empty());
+
+		bool c7 = (ma_szs_dotted.is_empty());
+		bool c8 = (ma_szs_filled.is_empty());
+
+		bool c9 = (ma_fll_in_lv.is_empty());
+		bool c10 = (ma_discarded.is_empty());
+
+		bool c11 = (ma_save_guide_col.is_co_virgin());
+		bool c12 = (ma_find_guide_col.is_co_virgin());
+
+		bool c13 = (ma_active == false);
+
+		bool is_vg = (c2 && c3 && c4 && c5 && c6 && c7 && 
+			c8 && c9 && c10 && c11 && c12 && c13);
 	
-	// send forced learned
-
-	quanton* nxt_qua = dct.dt_forced;
-	if(! dct.dt_motives.is_empty()){
-		BRAIN_CK(nxt_qua != NULL_PT);
-		send_psignal(*nxt_qua, lnd_neu, tier() + 1);
+		return is_vg;
 	}
 
-	update_semi_monos();
+	quanton&	map_last_dotted(){
+		BRAIN_CK(! ma_dotted.is_empty());
+		quanton* pt_nxt_qua = ma_dotted.last().ps_quanton;
+		BRAIN_CK(pt_nxt_qua != NULL_PT);
 
-	// inc recoil
+		quanton& nxt_qua = *pt_nxt_qua;
+		return nxt_qua;
+	}
 
-	inc_recoil();
+	void	move_data_to(memap& mpp);
 
-	DBG(
-		dbg_update_config_entries(*this);
-	);
-	check_timeout();
+	void	map_record_szs();
 
-	BRAIN_CK((level() == ROOT_LEVEL) || lv_has_learned());
+	void	set_filled(brain& brn);
 
-	DBG_PRT(131, 
-			os << " f_qu=" << nxt_qua; 
-			DO_GETCHAR()
-	);
-	DBG_PRT(111, os << "AFTER_REVERSE" << bj_eol; 
-		print_trail(os);
-		//os << " br_maps_active=" << br_maps_active << bj_eol;
-		os << "brn_tk=" << br_current_ticket << bj_eol;
-		os << "lv_map=" << data_level().ld_map0 << bj_eol;
-		os << "learned=" << bj_eol;
-		data_level().ld_learned.print_row_data(os, true, "\n");
-		os << "dct=" << bj_eol;
-		os << dct;
-		os << "AFTER_REVERSE. Type ENTER to continue..." << bj_eol;
-		DO_GETCHAR();
-	);
-	DBG_PRT(110, os << "AFTER_REVERSE " << br_current_ticket << bj_eol;
-		print_trail(os);
-		os << " trl_lv" << trail_level()
-		<< " brn_lv" << level()
-	);
-	DBG_PRT(122, dbg_prt_lvs_active(os));
-	DBG_PRT(122, print_trail(os); os << dct << bj_eol);
+	void	map_replace_with(brain& brn, memap& mpp, dbg_call_id dbg_id);
 
-	reset_conflict();
-	BRAIN_CK(! found_conflict());
-} // END of reverse
+	void	map_set_dbg_cnf(mem_op_t mm, brain& brn, row<canon_clause*>& the_ccls,
+							row<neuron*>& the_neus, dima_dims& dims);
+
+	bool	map_ck_simple_no_satisf(mem_op_t mm, brain& brn);
+	void	dbg_prepare_used_dbg_cnf(mem_op_t mm, brain& brn, row<canon_clause*>& the_ccls);
+	bool	dbg_ck_used_simple_no_satisf(mem_op_t mm, brain& brn);
+
+	void	map_assemble_tees_related(mem_op_t mm, brain& brn);
+	void	map_assemble_forced_sorter(mem_op_t mm, brain& brn, long first_idx);
+
+	coloring&	map_guide_coloring(mem_op_t mm);
+
+	void	map_inc_stab_guide(brain& brn, coloring& guide_col);
+	bool 	map_prepare_mem_oper(mem_op_t mm, brain& brn);
+
+	void	map_prepare_tees_related(mem_op_t mm, brain& brn);
+	void	map_prepare_forced_sorter(mem_op_t mm, brain& brn, long first_idx);
+
+	bool	map_find(brain& brn);
+	bool	map_save(brain& brn);
+	bool	map_oper(mem_op_t mm, brain& brn);
+	bool	map_ck_contained_in(brain& brn, coloring& colr, dbg_call_id dbg_id);
+
+	void	map_dbg_print(bj_ostream& os, mem_op_t mm, brain& brn);
+
+	void	map_get_layer_neus(row<neuron*>& neus, long lyr_idx1, long lyr_idx2, 
+							   bool ck_tks);
+
+
+	void	get_initial_guide_coloring(brain& brn, coloring& clr, long idx_szs);
+	void	get_initial_tauto_coloring(brain& brn, coloring& stab_guide_clr, 
+									   coloring& base_final_clr, bool ck_tks);
+
+	long	get_save_idx();
+	long	get_find_idx();
+
+	long 	get_last_trace_sz(){
+		long t_sz = 0;
+		if(! ma_szs_dotted.is_empty()){
+			t_sz = ma_szs_dotted.last();
+		}
+		return t_sz;
+	}
+
+	long 	get_last_filled_sz(){
+		long f_sz = 0;
+		if(! ma_szs_filled.is_empty()){
+			f_sz = ma_szs_filled.last();
+		}
+		return f_sz;
+	}
+
+	long 	get_trace_sz(mem_op_t mm);
+	long 	get_filled_sz(mem_op_t mm);
+
+	bool	in_last2(){
+		return (ma_szs_dotted.size() == 2);
+	}
+
+	bool 	ck_last_szs(){
+		BRAIN_CK(ma_szs_dotted.size() == ma_szs_filled.size());
+		BRAIN_CK(get_last_trace_sz() == ma_dotted.size());
+		BRAIN_CK(get_last_filled_sz() == ma_filled.size());
+		return true;
+	}
+
+	bool 	ck_guide_idx(coloring& guide_col, dbg_call_id id);
+	bool 	ck_map_guides(dbg_call_id dbg_id);
+
+	bj_ostream&	print_memap(bj_ostream& os, bool from_pt = false);
+};
+*/
 
