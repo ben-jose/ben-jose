@@ -76,11 +76,18 @@ neuromap::map_set_all_marks_and_spots(){
 	if(na_has_marks_and_spots){
 		return;
 	}
-	if(na_submap != NULL_PT){
+	bool has_sub = (na_submap != NULL_PT);
+	if(has_sub){
 		na_submap->map_set_all_marks_and_spots();
 	}
 	brain& brn = get_brn();
-	set_marks_and_spots_of(brn, na_forced);
+	long fst_idx = (has_sub)?(0):(1);
+	set_marks_and_spots_of(brn, na_forced, fst_idx);
+	if(! has_sub){
+		prop_signal& fst_sig = na_forced.first();
+		BRAIN_CK(fst_sig.has_ps_mark());
+		fst_sig.set_ps_spot(brn);
+	}
 	na_has_marks_and_spots = true;
 }
 
@@ -89,11 +96,18 @@ neuromap::map_reset_all_marks_and_spots(){
 	if(! na_has_marks_and_spots){
 		return;
 	}
-	if(na_submap != NULL_PT){
+	bool has_sub = (na_submap != NULL_PT);
+	if(has_sub){
 		na_submap->map_reset_all_marks_and_spots();
 	}
 	brain& brn = get_brn();
-	reset_marks_and_spots_of(brn, na_forced);
+	long fst_idx = (has_sub)?(0):(1);
+	reset_marks_and_spots_of(brn, na_forced, fst_idx);
+	if(! has_sub){
+		prop_signal& fst_sig = na_forced.first();
+		BRAIN_CK(! fst_sig.has_ps_mark());
+		fst_sig.reset_ps_spot(brn);
+	}
 	na_has_marks_and_spots = false;
 }
 
@@ -717,7 +731,7 @@ neuron::in_neuromap(long min_tier, long max_tier, row_quanton_t& neu_upper_quas,
 		}
 	}
 	
-	BRAIN_CK(! is_fll || (dbg_num_after >= 2));
+	BRAIN_CK(! is_fll || (upper_pos_ti != INVALID_TIER) || (dbg_num_after >= 2));
 	return is_fll;
 }
 
@@ -726,6 +740,7 @@ neuromap::map_fill_non_forced_from(brain& brn, row<neuron*>& all_neus,
 							   row<neuron*>& sel_neus, neurolayers& not_sel_neus, 
 							   row_quanton_t& nmp_upper_quas, long min_ti, long max_ti)
 {
+	BRAIN_CK(min_ti <= max_ti);
 	for(long aa = 0; aa < all_neus.size(); aa++){
 		BRAIN_CK(all_neus[aa] != NULL_PT);
 		neuron& neu = *(all_neus[aa]);
@@ -760,6 +775,26 @@ neuromap::map_fill_non_forced_from(brain& brn, row<neuron*>& all_neus,
 }
 
 void
+neurolayers::get_all_ordered_neurons(row_neuron_t& all_neus, long min_ly, long max_ly)
+{
+	int the_sz = nl_neus_by_layer.size();
+	if(max_ly < 0){ max_ly = the_sz; }
+	if(max_ly < min_ly){ max_ly = min_ly; }
+	if(max_ly > the_sz){ max_ly = the_sz; }
+	if(min_ly > the_sz){ min_ly = the_sz; }
+
+	BRAIN_CK(min_ly <= max_ly);
+	BRAIN_CK((min_ly == the_sz) || nl_neus_by_layer.is_valid_idx(min_ly));
+	BRAIN_CK((max_ly == the_sz) || nl_neus_by_layer.is_valid_idx(max_ly));
+	
+	all_neus.clear();
+	for(long aa = min_ly; aa < max_ly; aa++){
+		row_neuron_t& lv_neus = nl_neus_by_layer[aa];
+		lv_neus.append_to(all_neus);
+	}
+}
+
+void
 neuromap::map_fill_non_forced(neurolayers& not_sel_neus){ 
 	brain& brn = get_brn();
 	row<neuron*>& all_fll_in_lower = brn.br_tmp_fill_non_forced;
@@ -773,7 +808,7 @@ neuromap::map_fill_non_forced(neurolayers& not_sel_neus){
 	
 	BRAIN_CK(min_ti != INVALID_TIER);
 	BRAIN_CK(max_ti != INVALID_TIER);
-	BRAIN_CK(max_ti >= min_ti);
+	BRAIN_CK(min_ti <= max_ti);
 	BRAIN_CK(brn.br_tot_qu_marks == 0);
 	BRAIN_CK(brn.br_tot_ne_spots == 0);
 	BRAIN_CK(brn.br_qu_tot_note3 == 0);
@@ -786,6 +821,7 @@ neuromap::map_fill_non_forced(neurolayers& not_sel_neus){
 						 nmp_upper_quas, min_ti, max_ti);
 	
 	all_fll_in_lower.clear();
+	BRAIN_CK(min_ti <= max_ti);
 	not_sel_neus.get_all_ordered_neurons(all_fll_in_lower, min_ti, max_ti + 1);
 	map_fill_non_forced_from(brn, all_fll_in_lower, sel_neus, not_sel_neus, nmp_upper_quas, 
 						 min_ti, max_ti);

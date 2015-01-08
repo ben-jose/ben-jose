@@ -821,7 +821,7 @@ memap::map_set_dbg_cnf(mem_op_t mm, brain& brn, row<canon_clause*>& the_ccls,
 
 	neuron* cfl_neu = ma_confl.ps_source;
 	BRAIN_CK(cfl_neu != NULL_PT);
-	cfl_neu->map_set_dbg_ccl(mm, brn);
+	cfl_neu->set_dbg_ccl(mm, brn);
 	cfl_neu->add_dbg_ccl(brn, the_ccls, the_neus, dims);
 	
 	for(long aa = 0; aa < trace_sz; aa++){
@@ -831,7 +831,7 @@ memap::map_set_dbg_cnf(mem_op_t mm, brain& brn, row<canon_clause*>& the_ccls,
 		if(q_sig.ps_source != NULL_PT){
 			neuron& src = *(q_sig.ps_source);
 
-			src.map_set_dbg_ccl(mm, brn);
+			src.set_dbg_ccl(mm, brn);
 			src.add_dbg_ccl(brn, the_ccls, the_neus, dims);
 		}
 	}
@@ -843,7 +843,7 @@ memap::map_set_dbg_cnf(mem_op_t mm, brain& brn, row<canon_clause*>& the_ccls,
 		BRAIN_CK(filled[bb] != NULL_PT);
 		neuron& neu = *(filled[bb]);
 
-		neu.map_set_dbg_ccl(mm, brn);
+		neu.set_dbg_ccl(mm, brn);
 		neu.add_dbg_ccl(brn, the_ccls, the_neus, dims);
 	}
 
@@ -1146,6 +1146,41 @@ memap::print_memap(bj_ostream& os, bool from_pt){
 	os.flush();
 #endif
 	return os;
+}
+
+void
+neuron::set_dbg_ccl(mem_op_t mm, brain& brn){
+#ifdef FULL_DEBUG
+	ne_dbg_ccl.cc_clear(false);
+
+	for(long aa = 0; aa < fib_sz(); aa++){
+		BRAIN_CK(ne_fibres[aa] != NULL_PT);
+		quanton& qua = *(ne_fibres[aa]);
+
+		if(qua.has_mark()){ 
+			ne_dbg_ccl.cc_push(qua.qu_id);
+		}
+	}
+
+	ne_dbg_ccl.cc_mix_sort(cmp_canon_ids);
+#endif
+}
+
+void
+neuron::add_dbg_ccl(brain& brn, row<canon_clause*>& the_ccls, 
+					row<neuron*>& the_neus, dima_dims& dims)
+{
+#ifdef FULL_DEBUG
+	canon_clause& ccl = ne_dbg_ccl;
+	if(! ne_spot){
+		set_spot(brn);
+		the_ccls.push(&ccl);
+		the_neus.push(this);
+
+		if(ccl.cc_size() == 2){ dims.dd_tot_twolits++; }
+		dims.dd_tot_lits += ccl.cc_size();
+	}
+#endif
 }
 
 /*

@@ -514,8 +514,6 @@ brain::init_brain(solver& ss){
 	br_deducer.init_analyser(this);
 	br_neuromaper.init_analyser(this);
 	
-	br_retract_is_first_lv = false;
-
 	reset_conflict();
 
 	br_num_memo = 0;
@@ -1616,8 +1614,8 @@ brain::pulsate(){
 			set_result(bjr_no_satisf);
 			return;
 		}
-		old_reverse();
-		//reverse();
+		//dbg_old_reverse();
+		reverse();
 		BRAIN_CK(has_psignals());
 
 	} else {
@@ -1909,236 +1907,7 @@ brain::retract_choice(){
 	BRAIN_CK(! has_psignals());
 	send_psignal(opp, NULL, tier() + 1);
 	BRAIN_CK(has_psignals());
-}
-
-bool
-brain::in_edge_of_level(){
-	long trl_lv = trail_level();
-	long b_lv = level();
-	bool in_edge = (trl_lv != b_lv);
-	BRAIN_CK(! in_edge || ((trl_lv + 1) == b_lv));
-	return in_edge;
-}
-
-bool
-brain::in_edge_of_target_lv(deduction& dct){
-	if(dct.is_dt_virgin()){ return false; }
-	long trl_lv = trail_level();
-	//bool in_tg_lv = (trl_lv < dct.dt_target_level);
-	bool in_tg_lv = (trl_lv <= dct.dt_target_level);
-	BRAIN_CK(! in_tg_lv || ((trl_lv + 1) == level()));
-	return in_tg_lv;
-}
-
-void
-brain::old_reverse(){
-	DEDUC_DBG(deduction& dct2 = br_dbg.dbg_deduc);
-	//long dbg_old_lv = level();
-
-	BRAIN_CK(! has_psignals());
-	brain& brn = *this;
-	notekeeper& nke0 = br_retract_nke0;
-	deduction& dct = br_retract_dct;
-	long& all_notes0 = br_qu_tot_note0;
-	//row_quanton_t& all_rev = br_tmp_rever_quas;
-	//MARK_USED(all_rev);
-	MARK_USED(all_notes0);
-
-	br_retract_is_first_lv = true;
-
-	dct.init_deduction();
-	nke0.init_notes(level());
-
-	BRAIN_CK(dct.is_dt_virgin());
-	BRAIN_CK(nke0.dk_tot_noted == 0);
-	BRAIN_CK(level() != ROOT_LEVEL);
-	BRAIN_CK(all_notes0 == 0);
-	BRAIN_CK(br_semi_monos_to_update.is_empty());
-	//BRAIN_CK(all_rev.is_empty());
-
-	// START REVERSE (init nke0)
-
-	BRAIN_CK(found_conflict());
-	
-	BRAIN_DBG(br_dbg.dbg_before_retract_lv = level());
-
-	DEDUC_DBG(br_deducer.deduction_analysis(br_conflict_found, dct2));
-	BRAIN_CK_PRT(dct2.dt_target_level >= ROOT_LEVEL, 
-		os << recoil() << ".dct2=" << dct2
-	);
-
-	neuron& cfl = *(br_conflict_found.ps_source);
-	cfl.old_set_motives(brn, nke0, true); // init nke0 with confl
-
-	BRAIN_CK(all_notes0 > 0);
-
-	// REVERSE LOOP
-
-	//quanton* chosen_qua = NULL_PT;
-	bool has_in_mem = false;
-	MARK_USED(has_in_mem);
-
-	while(true){
-		bool end_of_recoil = in_edge_of_target_lv(dct);
-		if(end_of_recoil){
-			BRAIN_CK(! dct.is_dt_virgin());
-			bool in_mm = false;
-			if(! in_mm){ 
-				BRAIN_CK((trail_level() + 1) == level());
-				//break;
-			} else {
-				has_in_mem = true;
-				dct.init_deduction();
-				BRAIN_CK(dct.is_dt_virgin());
-			}
-		}
-		
-		BRAIN_CK(level() != ROOT_LEVEL);
-
-		bool end_of_lev = in_edge_of_level();
-		if(end_of_lev){
-			BRAIN_CK(level() != ROOT_LEVEL);
-			BRAIN_CK(nke0.dk_num_noted_in_layer == 0);
-			BRAIN_CK(level() <= nke0.dk_note_layer);
-
-			dec_level();
-			br_retract_is_first_lv = false;
-		} // end_of_lev
-
-		BRAIN_CK(trail_level() == level());
-
-		if(end_of_recoil){ break; }
-		
-		if(level() == ROOT_LEVEL){
-			break;
-		}
-
-		if(! br_charge_trail.has_motives()){
-			ch_string ab_mm = brn.br_file_name;
-			abort_func(-1, ab_mm.c_str());
-			break;
-		}
-		
-		// set qua
-		quanton& qua = trail_last();
-		
-		BRAIN_CK(qua.has_charge());
-		BRAIN_CK(qua.has_tier());
-
-		BRAIN_CK(qua.qu_inverse != NULL_PT);
-		//quanton& opp = *(qua.qu_inverse);
-
-		neuron* src = qua.get_source();
-
-		BRAIN_CK(qua.is_pos());
-		BRAIN_CK(dct.is_dt_virgin() || (level() >= dct.dt_target_level));
-
-		// notes
-
-		BRAIN_CK(! br_retract_is_first_lv || qua.has_source() || qua.has_note0());
-
-		DBG(bool had_n3 = false);
-		DBG(bool had_n0 = false);
-
-		if(qua.has_note0()){
-			long qlv = qua.qlevel();
-			nke0.update_notes_layer(qlv);
-			BRAIN_CK(nke0.dk_num_noted_in_layer > 0);
-
-			qua.reset_its_note0(brn);
-			
-			BRAIN_CK(qua.in_qu_dominated(brn));
-		
-			BRAIN_CK(qua.qlevel() == nke0.dk_note_layer);
-
-			nke0.dec_notes();
-
-			if(nke0.dk_num_noted_in_layer == 0){
-				if(dct.is_dt_virgin()){
-					dct.set_with(brn, nke0, qua);
-				}
-
-				BRAIN_CK(! dct.is_dt_virgin());
-			}
-
-			if(src != NULL_PT){
-				src->old_set_motives(brn, nke0, false);
-				BRAIN_CK(nke0.dk_num_noted_in_layer > 0);
-				BRAIN_CK(! src->ne_original || has_neu(qua.qu_full_charged, src));
-			} else {
-				BRAIN_CK(! qua.has_source());
-				BRAIN_CK(! dct.is_dt_virgin());
-				BRAIN_CK(nke0.dk_num_noted_in_layer == 0);
-			}
-
-		} // qua.has_note0()
-
-		// chosen
-
-		if(! qua.has_source()){
-			BRAIN_CK(nke0.dk_num_noted_in_layer == 0);
-			BRAIN_CK(! dct.is_dt_virgin());
-
-			//chosen_qua = &qua;
-		}
-		
-		// reset charge
-
-		BRAIN_CK(! qua.has_note0());
-		BRAIN_CK(! (had_n3 || had_n0) || qua.in_qu_dominated(brn));
-
-		qua.set_charge(brn, NULL_PT, cg_neutral, INVALID_TIER);
-		//all_rev.push(&qua);
-
-	} // true
-
-	BRAIN_DBG(br_dbg.dbg_last_recoil_lv = dct.dt_target_level);
-
-	//BRAIN_CK(! has_in_mem);	// DBG purposes
-	
-	DEDUC_DBG(has_in_mem || dbg_ck_deducs(dct, dct2));
-	DBG(long rr_lv = trail_level());
-	BRAIN_CK((level() == ROOT_LEVEL) || (level() == dct.dt_target_level));
-	BRAIN_CK((level() == ROOT_LEVEL) || (rr_lv == dct.dt_target_level));
-
-	// update leveldat
-	
-	nke0.clear_all_quantons();
-	BRAIN_CK(all_notes0 == 0);
-
-	// learn motives
-
-	BRAIN_CK(dct.dt_forced != NULL_PT);
-
-	if(data_level().ld_first_learned == NULL_PT){
-		data_level().ld_first_learned = dct.dt_forced;
-	}
-	neuron* lnd_neu = learn_mots(dct.dt_motives, *dct.dt_forced);
-	
-	// send forced learned
-
-	quanton* nxt_qua = dct.dt_forced;
-	if(! dct.dt_motives.is_empty()){
-		BRAIN_CK(nxt_qua != NULL_PT);
-		send_psignal(*nxt_qua, lnd_neu, tier() + 1);
-	}
-
-	update_semi_monos();
-
-	// inc recoil
-
-	inc_recoil();
-
-	DBG(
-		dbg_update_config_entries(*this);
-	);
-	check_timeout();
-
-	BRAIN_CK((level() == ROOT_LEVEL) || lv_has_learned());
-
-	reset_conflict();
-	BRAIN_CK(! found_conflict());
-} // END of reverse
+} // retract_choice
 
 void 
 print_ex(top_exception& ex1){
@@ -2263,45 +2032,21 @@ brain::solve_instance(){
 void
 brain::reverse(){
 	BRAIN_CK(! has_psignals());
-	brain& brn = *this;
-	MARK_USED(brn);
 	
-	notekeeper& nke0 = br_retract_nke0;
-	deduction& dct = br_retract_dct;
-	long& all_notes0 = br_qu_tot_note0;
-	MARK_USED(all_notes0);
-
-	br_retract_is_first_lv = true;
-
-	dct.init_deduction();
-	nke0.init_notes(level());
-
-	BRAIN_CK(dct.is_dt_virgin());
-	BRAIN_CK(nke0.dk_tot_noted == 0);
-	BRAIN_CK(level() != ROOT_LEVEL);
-	BRAIN_CK(all_notes0 == 0);
-	BRAIN_CK(br_semi_monos_to_update.is_empty());
-
 	DBG_PRT(122, print_trail(os));
-
-	// START REVERSE (init nke0)
-
-	BRAIN_CK(found_conflict());
-	BRAIN_DBG(br_dbg.dbg_before_retract_lv = level());
-
-	DBG(
-		neuron* cfl = br_conflict_found.ps_source;
-		BRAIN_CK(cfl != NULL_PT);
-		if(! cfl->ne_original){ 
-			DBG_PRT(117, os << "NOT_ORIG_CONFL=" << cfl 
-				<< " creat_tk=" << cfl->ne_dbg_creation_tk);
-		}
-	)
 	
+	BRAIN_CK(level() != ROOT_LEVEL);
+	BRAIN_CK(br_qu_tot_note0 == 0);
+	BRAIN_CK(br_semi_monos_to_update.is_empty());
+	BRAIN_CK(found_conflict());
 	BRAIN_CK(br_conflict_found.ps_source != NULL_PT);
 	BRAIN_CK(br_conflict_found.ps_source->ne_original);
+
+	BRAIN_DBG(br_dbg.dbg_before_retract_lv = level());
 	
-	// analize
+	// analyse
+	
+	deduction& dct = br_retract_dct;
 
 	//br_deducer.deduction_analysis(br_conflict_found, dct);
 	analyse(br_conflict_found, dct);
@@ -2309,11 +2054,7 @@ brain::reverse(){
 	DBG_PRT(122, dbg_prt_lvs_active(os));
 	DBG_PRT(122, dbg_prt_lvs_have_learned(os));
 	
-	//quanton* chosen_qua = NULL_PT;
-	bool has_in_mem = false;
-	MARK_USED(has_in_mem);
-
-	// reverse loop
+	// retract
 	retract_to(dct.dt_target_level);
 	
 	// some checks
@@ -2324,20 +2065,14 @@ brain::reverse(){
 			os << "tr_lv=" << trail_level() << " tg_lv=" << dct.dt_target_level;
 	);
 	BRAIN_DBG(br_dbg.dbg_last_recoil_lv = dct.dt_target_level);
-
 	DBG(long rr_lv = trail_level());
+	
 	BRAIN_CK((level() == ROOT_LEVEL) || (level() == dct.dt_target_level));
 	BRAIN_CK((level() == ROOT_LEVEL) || (rr_lv == dct.dt_target_level));
-
-	// update leveldat
-	
-	// learn motives
-
 	BRAIN_CK(dct.dt_forced != NULL_PT);
 
-	if(data_level().ld_first_learned == NULL_PT){
-		data_level().ld_first_learned = dct.dt_forced;
-	}
+	// learn motives
+	
 	neuron* lnd_neu = learn_mots(dct.dt_motives, *dct.dt_forced);
 	
 	// send forced learned

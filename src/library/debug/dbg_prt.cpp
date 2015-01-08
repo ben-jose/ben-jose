@@ -103,21 +103,8 @@ bool	dbg_print_cond_func(brain* brn, bool prm, bool is_ck, const ch_string fnam,
 		
 		ch_string f_nam = "UNKNOWN_FILE_NAME";
 		if(brn != NULL){
-			
-			instance_info& inst_info = brn->get_my_inst();
-			if(inst_info.ist_group_id > 1){
-				os << "#" << inst_info.ist_id << ".";
-			}
-
-			f_nam = inst_info.ist_file_path;
-			
-			recoil_counter_t the_lap = brn->recoil();
-			if(the_lap > 0){
-				if(is_ck){ os << "LAP="; }
-				os << the_lap << ".";
-			}
+			f_nam = brn->dbg_prt_margin(is_ck);
 		}
-
 
 		if(is_ck){
 			os << "ASSERT '" << prm_str << "' FAILED (";
