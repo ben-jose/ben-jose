@@ -205,7 +205,7 @@ public:
 	}
 
 	template<class obj_t1>
-	void		fill_rcps_as(row<obj_t1*>& rr);
+	void		append_all_as(row<obj_t1*>& rr, bool clr = false);
 };
 
 inline
@@ -290,8 +290,10 @@ rcp_as(binder* bdr){
 
 template<class obj_t1>
 void
-grip::fill_rcps_as(row<obj_t1*>& rr){
-	rr.clear();
+grip::append_all_as(row<obj_t1*>& rr, bool clr){
+	if(clr){
+		rr.clear();
+	}
 
 	binder* fst_bdr = bn_right;
 	binder* lst_bdr = this;

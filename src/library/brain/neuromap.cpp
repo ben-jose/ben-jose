@@ -63,12 +63,20 @@ neuromap::map_write(){
 }
 
 void
-neuromap::map_make_guide_dominated_and_deduced(){
+neuromap::map_make_dominated(){
+	brain& brn = get_brn();
+	bool mk_deduc = false;
+	map_make_guide_dominated(mk_deduc);
+	make_all_ne_dominated(brn, na_non_forced, mk_deduc);
+}
+
+void
+neuromap::map_make_guide_dominated(bool mk_deduc){
 	if(na_submap != NULL_PT){
-		na_submap->map_make_guide_dominated_and_deduced();
+		na_submap->map_make_guide_dominated(mk_deduc);
 	}
 	brain& brn = get_brn();
-	make_all_ps_dominated_and_deduced(brn, na_forced);
+	make_all_ps_dominated(brn, na_forced, mk_deduc);
 }
 
 void
@@ -207,6 +215,10 @@ neuromap::map_ck_all_ne_dominated(){
 void
 neuromap::map_activate(){
 	brain& brn = get_brn();
+	leveldat& lv_dat = brn.get_data_level(na_orig_lv);
+	
+	BRAIN_CK(! lv_dat.has_setup_neuromap());
+	lv_dat.set_setup_neuromap(*this);
 
 	BRAIN_CK(! is_na_virgin());
 	BRAIN_CK(! na_active);
@@ -227,6 +239,18 @@ neuromap::map_activate(){
 	BRAIN_CK(brn.br_maps_active.last() == this);
 
 	DBG_PRT(110, os << "ACTIVATING " << this);
+}
+
+void
+neuromap::map_add_to_release(){
+	BRAIN_CK(na_is_head);
+	BRAIN_CK(na_release_idx == INVALID_IDX);
+	
+	na_mates.let_go();
+	
+	brain& brn = get_brn();
+	brn.br_nmps_to_release.push(this);
+	na_release_idx = brn.br_nmps_to_release.last_idx();
 }
 
 void
@@ -254,8 +278,7 @@ neuromap::map_deactivate(){
 	
 	na_mates.let_go();
 	if(na_is_head){
-		full_release(this);
-		BRAIN_CK(! na_is_head);
+		map_add_to_release();
 	}
 }
 
@@ -348,14 +371,17 @@ neuromap::set_all_filled_in_propag(){
 }
 
 void
-neuromap::full_release(neuromap* nmp){
-	if(nmp == NULL_PT){
-		return;
+neuromap::full_release(){
+	if(na_submap != NULL_PT){
+		na_submap->full_release();
 	}
-	full_release(nmp->na_submap);
 	
-	brain& brn = nmp->get_brn();
-	brn.release_neuromap(*nmp);
+	BRAIN_CK(! na_active);
+	BRAIN_CK(na_mates.is_alone());
+	//na_mates.let_go();
+	
+	brain& brn = get_brn();
+	brn.release_neuromap(*this);
 }
 
 void
@@ -911,8 +937,9 @@ neuromap::map_oper(mem_op_t mm){
 
 			// old code updated ne_recoil_tk of all_neus_in_vnt
 			// this code updates ne_deduc_tk of all_neus_in_vnt
-			make_all_ne_dominated_and_deduced(brn, all_neus_in_vnt);
-			map_make_guide_dominated_and_deduced();
+			bool mk_deduc = true;
+			make_all_ne_dominated(brn, all_neus_in_vnt, mk_deduc);
+			map_make_guide_dominated(mk_deduc);
 		}
 	} else {
 		ref_strs& phd = tmp_diff_cnf.cf_phdat;

@@ -1034,7 +1034,7 @@ set_all_ne_nemap(row<neuron*>& all_neus, neuromap* nmp)
 
 inline
 void
-make_all_ne_dominated(brain& brn, row<neuron*>& all_neus, 
+make_all_ne_dominated(brain& brn, row<neuron*>& all_neus, bool mk_deduc, 
 			long first_idx = 0, long last_idx = -1)
 {
 	if(last_idx < 0){ last_idx = all_neus.size(); }
@@ -1047,6 +1047,9 @@ make_all_ne_dominated(brain& brn, row<neuron*>& all_neus,
 		BRAIN_CK(all_neus[ii] != NULL_PT);
 		neuron& neu = *(all_neus[ii]);
 		neu.make_ne_dominated(brn);
+		if(mk_deduc){
+			neu.make_ne_deduced(brn);
+		}
 	}
 }
 
@@ -1096,13 +1099,15 @@ class prop_signal {
 		return lv;
 	}
 
-	void	make_ps_dominated_and_deduced(brain& brn){
+	void	make_ps_dominated(brain& brn, bool mk_deduc){
 		if(ps_quanton != NULL_PT){
 			ps_quanton->make_qu_dominated(brn);
 		}
 		if(ps_source != NULL_PT){
 			ps_source->make_ne_dominated(brn);
-			ps_source->make_ne_deduced(brn);
+			if(mk_deduc){
+				ps_source->make_ne_deduced(brn);
+			}
 		}
 	}
 	
@@ -1148,7 +1153,7 @@ class prop_signal {
 
 inline
 void
-make_all_ps_dominated_and_deduced(brain& brn, row<prop_signal>& trace, 
+make_all_ps_dominated(brain& brn, row<prop_signal>& trace, bool mk_deduc, 
 			long first_idx = 0, long last_idx = -1)
 {
 	if(last_idx < 0){ last_idx = trace.size(); }
@@ -1159,26 +1164,7 @@ make_all_ps_dominated_and_deduced(brain& brn, row<prop_signal>& trace,
 
 	for(long ii = first_idx; ii < last_idx; ii++){
 		prop_signal& q_sig = trace[ii];
-		q_sig.make_ps_dominated_and_deduced(brn);
-	}
-}
-
-inline
-void
-make_all_ne_dominated_and_deduced(brain& brn, row_neuron_t& all_neus, 
-			long first_idx = 0, long last_idx = -1)
-{
-	if(last_idx < 0){ last_idx = all_neus.size(); }
-
-	BRAIN_CK(first_idx <= last_idx);
-	BRAIN_CK(all_neus.is_valid_idx(first_idx));
-	BRAIN_CK((last_idx == all_neus.size()) || all_neus.is_valid_idx(last_idx));
-
-	for(long ii = first_idx; ii < last_idx; ii++){
-		BRAIN_CK(all_neus[ii] != NULL_PT);
-		neuron& neu = *(all_neus[ii]);
-		neu.make_ne_dominated(brn);
-		neu.make_ne_deduced(brn);
+		q_sig.make_ps_dominated(brn, mk_deduc);
 	}
 }
 
@@ -1447,6 +1433,7 @@ class neuromap {
 	quanton*		na_orig_cho;
 	neuromap*		na_submap;
 	recemap_t		na_mates;
+	long			na_release_idx;
 	ticket			na_setup_tk;
 	ticket			na_guide_tk;
 	
@@ -1485,6 +1472,8 @@ class neuromap {
 		na_mates.let_go();
 		BRAIN_CK(na_mates.is_alone());
 		
+		na_release_idx = INVALID_IDX;
+		
 		na_all_filled_in_propag.clear();
 		na_forced.clear(true);
 		na_non_forced.clear();
@@ -1510,8 +1499,7 @@ class neuromap {
 		return (c1 && c2 && c3 && c4 && c5 && c6 && c7 && c8);
 	}
 
-	static
-	void	full_release(neuromap* nmp);
+	void	full_release();
 	
 	void	reset_neuromap(brain& brn);
 	
@@ -1544,8 +1532,10 @@ class neuromap {
 	
 	void	dbg_get_fo_upper_quas(row_quanton_t& fo_upper_quas);
 	void	map_get_all_upper_quas(notekeeper& nkpr, row_quanton_t& all_upper_quas);
+
+	void	map_make_dominated();
 	
-	void	map_make_guide_dominated_and_deduced();
+	void	map_make_guide_dominated(bool mk_deduc);
 	void	map_set_all_marks_and_spots();
 	void	map_reset_all_marks_and_spots();
 
@@ -1559,6 +1549,12 @@ class neuromap {
 
 	bool	map_ck_all_qu_dominated();
 	bool	map_ck_all_ne_dominated();
+	
+	bool	map_is_to_release(){
+		return (na_release_idx != INVALID_IDX);
+	}
+	
+	void	map_add_to_release();
 
 	void	map_activate();
 	void	map_deactivate();
@@ -2249,13 +2245,10 @@ class analyser {
 	
 	long		find_min_lv_to_setup(long tg_lv);
 
-	//void 		neuromap_write_analysis(long tg_lv, row<neuromap*>& all_nmps);
-	neuromap* 	neuromap_find_analysis(prop_signal const & confl_sg, 
-									   long& nxt_lv, deduction& nxt_dct);
+	neuromap* 	neuromap_find_analysis(prop_signal const & confl_sg, long& nxt_lv, 
+									   deduction& nxt_dct, row<neuromap*>& to_wrt);
 	neuromap* 	neuromap_setup_analysis(prop_signal const & confl_sg, long tg_lv, 
 										neuromap* in_nmp);
-	
-	//bool		set_writing_neuromap(long nxt_lv, neuromap* in_nmp);
 };
 
 //=============================================================================
@@ -2337,7 +2330,6 @@ class leveldat {
 
 	bool 	has_to_write_neuromaps(){
 		bool h_w = ! ld_nmps_to_write.is_alone();
-		BRAIN_CK(! h_w || ld_nmps_to_write.is_single());
 		return h_w;
 	}
 
@@ -2347,17 +2339,12 @@ class leveldat {
 		return h_s;
 	}
 
-	void	add_setup_neuromap(neuromap& nmp){
+	void	set_setup_neuromap(neuromap& nmp){
 		BRAIN_CK(ld_nmp_setup.is_alone());
 		BRAIN_CK(nmp.na_mates.is_alone());
 		ld_nmp_setup.bind_to_my_right(nmp.na_mates);
 	}
 	
-	void	add_write_neuromap(neuromap& nmp){
-		nmp.na_mates.let_go();
-		ld_nmps_to_write.bind_to_my_right(nmp.na_mates);
-	}
-
 	neuromap&	get_setup_neuromap(){
 		BRAIN_CK(has_setup_neuromap());
 		binder* fst = ld_nmp_setup.bn_right;
@@ -2478,6 +2465,7 @@ public:
 	double 			br_start_solve_tm;
 
 	row<leveldat*>		br_data_levels;
+	row<neuromap*>		br_nmps_to_release;
 	
 	// temporal attributes
 	deduction 		br_tmp_first_dct;
@@ -2928,8 +2916,8 @@ public:
 	void	fill_mutual_tees(sort_glb& neus_srg, sort_glb& quas_srg, 
 							 row<neuron*>& all_neus, row_quanton_t& all_quas);
 	
-	void	neuromap_write_analysis(long tg_lv, row<neuromap*>& all_nmps);
-	bool	set_writing_neuromap(long nxt_lv, neuromap* in_nmp);
+	void	append_all_to_write(long fst_lv, long tg_lv, row<neuromap*>& all_nmps);
+	void	add_lv_neuromap_to_write(long nxt_lv);
 	
 	bool 	lv_has_setup_nmp(long nxt_lv){
 		leveldat& lv_s = get_data_level(nxt_lv);
@@ -2938,6 +2926,7 @@ public:
 	}
 
 	void	analyse(prop_signal const & confl, deduction& dct);
+	void	release_all_neuromaps();
 
 	//void	stab_it();
 
