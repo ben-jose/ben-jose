@@ -126,7 +126,7 @@ neuromap::map_get_all_quas(row_quanton_t& all_quas){
 	} else {
 		na_submap->map_get_all_quas(all_quas);
 	}
-	append_all_trace_quas(na_forced, all_quas);
+	append_all_pos_trace_quas(na_forced, all_quas);
 }
 
 void
@@ -288,6 +288,9 @@ neuromap::map_set_all_qu_curr_dom(){
 	row_quanton_t& all_quas = brn.br_tmp_qu_dom;
 	all_quas.clear();
 	map_get_all_quas(all_quas);
+	
+	//DBG_PRT(123, os << "activ{ all_quas=" << all_quas << "}");
+	
 	set_all_qu_nemap(all_quas, this);
 }
 
@@ -358,7 +361,7 @@ neuromap::set_all_filled_in_propag(){
 	
 	row_quanton_t& nmp_quas = brn.br_tmp_qu_fill_nmp;
 	nmp_quas.clear();
-	append_all_trace_quas(na_forced, nmp_quas);
+	append_all_pos_trace_quas(na_forced, nmp_quas);
 	
 	for(int aa = 0; aa < nmp_quas.size(); aa++){
 		BRAIN_CK(nmp_quas[aa] != NULL_PT);
@@ -762,7 +765,7 @@ neuron::in_neuromap(long min_tier, long max_tier, row_quanton_t& neu_upper_quas,
 }
 
 void
-neuromap::map_fill_non_forced_from(brain& brn, row<neuron*>& all_neus, 
+neuromap::map_append_non_forced_from(brain& brn, row<neuron*>& all_neus, 
 							   row<neuron*>& sel_neus, neurolayers& not_sel_neus, 
 							   row_quanton_t& nmp_upper_quas, long min_ti, long max_ti)
 {
@@ -835,21 +838,19 @@ neuromap::map_fill_non_forced(neurolayers& not_sel_neus){
 	BRAIN_CK(min_ti != INVALID_TIER);
 	BRAIN_CK(max_ti != INVALID_TIER);
 	BRAIN_CK(min_ti <= max_ti);
-	BRAIN_CK(brn.br_tot_qu_marks == 0);
-	BRAIN_CK(brn.br_tot_ne_spots == 0);
 	BRAIN_CK(brn.br_qu_tot_note3 == 0);
 
 	map_set_all_marks_and_spots();
 	
 	sel_neus.clear();
 
-	map_fill_non_forced_from(brn, na_all_filled_in_propag, sel_neus, not_sel_neus, 
+	map_append_non_forced_from(brn, na_all_filled_in_propag, sel_neus, not_sel_neus, 
 						 nmp_upper_quas, min_ti, max_ti);
 	
 	all_fll_in_lower.clear();
 	BRAIN_CK(min_ti <= max_ti);
 	not_sel_neus.get_all_ordered_neurons(all_fll_in_lower, min_ti, max_ti + 1);
-	map_fill_non_forced_from(brn, all_fll_in_lower, sel_neus, not_sel_neus, nmp_upper_quas, 
+	map_append_non_forced_from(brn, all_fll_in_lower, sel_neus, not_sel_neus, nmp_upper_quas, 
 						 min_ti, max_ti);
 
 	// finalize

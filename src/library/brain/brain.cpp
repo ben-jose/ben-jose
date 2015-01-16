@@ -1427,7 +1427,7 @@ brain::retract_to(long tg_lv){
 		BRAIN_CK_PRT(br_charge_trail.has_motives(),
 			os << recoil() << ".lv=" << level() << " tg_lv=" << tg_lv;
 			os << " trail_lv=" << trail_level() << bj_eol;
-			print_trail(os)			
+			print_trail(os)
 		);
 
 		quanton& qua = trail_last();

@@ -110,6 +110,8 @@ void* bj_memset(void *s, int c, size_t n){
 #define DBG_CK_2(prm, comms1) \
 	DBG_COND_COMM((! (prm)), \
 		comms1; \
+		os << bj_eol; \
+		os.flush(); \
 		glb_assert(prm); \
 	) \
 	

@@ -450,6 +450,7 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 	MARK_USED(from_pt);
 	if(from_pt){
 		os << "NA(" << (void*)this <<")";
+		os << " lv=" << na_orig_lv;
 		os << " cho=" << na_orig_cho;
 		os.flush();
 		return os;
@@ -567,6 +568,7 @@ quanton::print_quanton(bj_ostream& os, bool from_pt){
 	//bool has_src = has_source();
 	bool dominated = false;
 	neuron* neu = qu_source;
+	bool n0 = has_note0();
 	
 	if(pt_brn != NULL_PT){
 		dominated = in_qu_dominated(*(pt_brn));
@@ -597,6 +599,10 @@ quanton::print_quanton(bj_ostream& os, bool from_pt){
 		
 		os << ".t" << qu_tier;
 		os << ".l" << qlevel();
+		
+		if(n0){
+			os << ".n0";
+		}
 
 		if(! qu_tee.is_unsorted()){ os << ".q" << qu_tee.so_qua_id; }
 		if(is_posi){ os << '\\';  }
@@ -1146,3 +1152,15 @@ prop_signal::print_prop_signal(bj_ostream& os, bool from_pt){
 	os.flush();
 	return os;
 }
+
+bj_ostream&
+qulayers::print_qulayers(bj_ostream& os, bool from_pt){
+	MARK_USED(from_pt);
+	os << "ql={";
+	dk_quas_by_layer.print_row_data(os, true, "\n");
+	os << "}";
+	os.flush();
+	return os;
+}
+
+

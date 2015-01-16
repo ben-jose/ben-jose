@@ -127,8 +127,8 @@ class neuron;
 class deduction;
 class coloring;
 class neurolayers;
+class qulayers;
 class neuromap;
-//class memap;
 class analyser;
 class notekeeper;
 class prop_signal;
@@ -149,8 +149,8 @@ DECLARE_PRINT_FUNCS(neuron)
 DECLARE_PRINT_FUNCS(deduction)
 DECLARE_PRINT_FUNCS(prop_signal)
 DECLARE_PRINT_FUNCS(coloring)
+DECLARE_PRINT_FUNCS(qulayers)
 DECLARE_PRINT_FUNCS(neuromap)
-//DECLARE_PRINT_FUNCS(memap)
 DECLARE_PRINT_FUNCS(leveldat)
 
 //=================================================================
@@ -710,7 +710,7 @@ set_all_qu_nemap(row_quanton_t& all_quas, neuromap* nmp)
 		BRAIN_CK(all_quas[ii] != NULL_PT);
 		quanton& qua = *(all_quas[ii]);
 		quanton& opp = qua.opposite();
-		BRAIN_CK(qua.qu_curr_nemap != nmp);
+		BRAIN_CK_PRT((qua.qu_curr_nemap != nmp), os << "___" << bj_eol << "qu=" << qua);
 		BRAIN_CK(opp.qu_curr_nemap != nmp);
 		qua.qu_curr_nemap = nmp;
 		opp.qu_curr_nemap = nmp;
@@ -725,7 +725,7 @@ make_all_qu_dominated(brain& brn, row_quanton_t& all_quas,
 	if(last_idx < 0){ last_idx = all_quas.size(); }
 
 	BRAIN_CK(first_idx <= last_idx);
-	BRAIN_CK(all_quas.is_valid_idx(first_idx));
+	BRAIN_CK((first_idx == all_quas.size()) || all_quas.is_valid_idx(first_idx));
 	BRAIN_CK((last_idx == all_quas.size()) || all_quas.is_valid_idx(last_idx));
 
 	for(long ii = first_idx; ii < last_idx; ii++){
@@ -1040,7 +1040,7 @@ make_all_ne_dominated(brain& brn, row<neuron*>& all_neus, bool mk_deduc,
 	if(last_idx < 0){ last_idx = all_neus.size(); }
 
 	BRAIN_CK(first_idx <= last_idx);
-	BRAIN_CK(all_neus.is_valid_idx(first_idx));
+	BRAIN_CK((first_idx == all_neus.size()) || all_neus.is_valid_idx(first_idx));
 	BRAIN_CK((last_idx == all_neus.size()) || all_neus.is_valid_idx(last_idx));
 
 	for(long ii = first_idx; ii < last_idx; ii++){
@@ -1159,7 +1159,7 @@ make_all_ps_dominated(brain& brn, row<prop_signal>& trace, bool mk_deduc,
 	if(last_idx < 0){ last_idx = trace.size(); }
 
 	BRAIN_CK(first_idx <= last_idx);
-	BRAIN_CK(trace.is_valid_idx(first_idx));
+	BRAIN_CK((first_idx == trace.size()) || trace.is_valid_idx(first_idx));
 	BRAIN_CK((last_idx == trace.size()) || trace.is_valid_idx(last_idx));
 
 	for(long ii = first_idx; ii < last_idx; ii++){
@@ -1176,7 +1176,7 @@ set_marks_and_spots_of(brain& brn, row<prop_signal>& trace,
 	if(last_idx < 0){ last_idx = trace.size(); }
 
 	BRAIN_CK(first_idx <= last_idx);
-	BRAIN_CK(trace.is_valid_idx(first_idx));
+	BRAIN_CK((first_idx == trace.size()) || trace.is_valid_idx(first_idx));
 	BRAIN_CK((last_idx == trace.size()) || trace.is_valid_idx(last_idx));
 
 	for(long ii = first_idx; ii < last_idx; ii++){
@@ -1194,7 +1194,7 @@ reset_marks_and_spots_of(brain& brn, row<prop_signal>& trace,
 	if(last_idx < 0){ last_idx = trace.size(); }
 
 	BRAIN_CK(first_idx <= last_idx);
-	BRAIN_CK(trace.is_valid_idx(first_idx));
+	BRAIN_CK((first_idx == trace.size()) || trace.is_valid_idx(first_idx));
 	BRAIN_CK((last_idx == trace.size()) || trace.is_valid_idx(last_idx));
 
 	for(long ii = first_idx; ii < last_idx; ii++){
@@ -1206,11 +1206,15 @@ reset_marks_and_spots_of(brain& brn, row<prop_signal>& trace,
 
 inline
 void
-append_all_trace_quas(row<prop_signal>& trace, row_quanton_t& all_quas)
+append_all_pos_trace_quas(row<prop_signal>& trace, row_quanton_t& all_quas)
 {
 	for(long ii = 0; ii < trace.size(); ii++){
 		prop_signal& q_sig = trace[ii];
 		BRAIN_CK(q_sig.ps_quanton != NULL_PT);
+		if(q_sig.ps_quanton->is_neg()){
+			BRAIN_CK(ii == 0);
+			continue;
+		}
 		all_quas.push(q_sig.ps_quanton);
 	}
 }
@@ -1598,7 +1602,7 @@ class neuromap {
 	void	map_get_tauto_neus(row<neuron*>& neus, bool ck_tks);
 	
 	static
-	void		map_fill_non_forced_from(brain& brn, row<neuron*>& all_neus, 
+	void		map_append_non_forced_from(brain& brn, row<neuron*>& all_neus, 
 							row<neuron*>& sel_neus, neurolayers& not_sel_neus, 
 							row_quanton_t& nmp_upper_quas, long min_ti, long max_ti);
 	
@@ -1839,6 +1843,7 @@ class qulayers {
 		return true;
 	}
 
+	bj_ostream&	print_qulayers(bj_ostream& os, bool from_pt = false);
 	
 };
 
@@ -2238,7 +2243,7 @@ class analyser {
 	void 		set_notes_of(row_quanton_t& causes, bool is_first);
 
 	neuromap*	update_neuromap(neuromap* prev_nmp);
-	void 		init_calc_neuromap(prop_signal const & confl_sg, long min_lv);
+	void 		init_calc_nmp(prop_signal const & confl_sg, long min_lv);
 	neuromap*	calc_neuromap(prop_signal const & confl_sg, long min_lv, 
 							  neuromap* prev_nmp);
 	void 		end_analysis();
@@ -3305,8 +3310,8 @@ DEFINE_PRINT_FUNCS(neuron)
 DEFINE_PRINT_FUNCS(deduction)
 DEFINE_PRINT_FUNCS(prop_signal)
 DEFINE_PRINT_FUNCS(coloring)
+DEFINE_PRINT_FUNCS(qulayers)
 DEFINE_PRINT_FUNCS(neuromap)
-//DEFINE_PRINT_FUNCS(memap)
 DEFINE_PRINT_FUNCS(leveldat)
 
 #endif		// BRAIN_H
