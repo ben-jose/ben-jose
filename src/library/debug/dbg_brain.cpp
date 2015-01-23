@@ -449,7 +449,9 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 #ifdef FULL_DEBUG
 	MARK_USED(from_pt);
 	if(from_pt){
-		os << "NA(" << (void*)this <<")";
+		os << "NA";
+		if(na_is_head){ os << ".h"; }
+		os << "(" << (void*)this << ")";
 		os << " lv=" << na_orig_lv;
 		os << " cho=" << na_orig_cho;
 		os.flush();
@@ -567,8 +569,12 @@ quanton::print_quanton(bj_ostream& os, bool from_pt){
 	bool with_mark = has_mark();
 	//bool has_src = has_source();
 	bool dominated = false;
+	MARK_USED(dominated);
 	neuron* neu = qu_source;
 	bool n0 = has_note0();
+	bool h_src = (neu != NULL_PT);
+	bool h_chg = has_charge();
+	long qlv = qlevel();
 	
 	if(pt_brn != NULL_PT){
 		dominated = in_qu_dominated(*(pt_brn));
@@ -582,34 +588,42 @@ quanton::print_quanton(bj_ostream& os, bool from_pt){
 
 	if(from_pt){
 		//if(qu_block != NULL_PT){ os << "b"; }
-		if(with_dot){ os << "d"; }
-		if(with_mark){ os << "m"; }
 		if((neu != NULL_PT) && ! neu->ne_original){ os << "+"; }
-		if((neu != NULL_PT) && neu->ne_original){ os << "o"; }
-		if(! has_source() && has_charge()){ os << "*"; }
+		//if((neu != NULL_PT) && neu->ne_original){ os << "o"; }
+		//if(! has_source() && has_charge()){ os << "*"; }
+		if(qlv == 0){ os << "#"; }
+		if(! h_src && h_chg){ os << "L" << qlv; }
 
-		if(! has_charge()){ os << "("; }
+		if(! h_chg){ os << "("; }
 		if(is_nega){ os << '\\';  }
 		if(is_posi){ os << '/';  }
-		if(qlevel() == 0){ os << "#"; }
 		os << qu_id; 
-
-		long the_tee_consec = qu_tee.so_tee_consec;
-		if(the_tee_consec == 0){ the_tee_consec = -(qu_inverse->qu_tee.so_tee_consec); } 
-		
-		os << ".t" << qu_tier;
-		os << ".l" << qlevel();
-		
-		if(n0){
-			os << ".n0";
-		}
-
-		if(! qu_tee.is_unsorted()){ os << ".q" << qu_tee.so_qua_id; }
 		if(is_posi){ os << '\\';  }
 		if(is_nega){ os << '/';  }
-		if(! has_charge()){ os << ")"; }
+		if(! h_chg){ os << ")"; }
 
-		if(dominated){ os << "DOM"; }
+		//os << ".t" << qu_tier;
+		if((! h_src) && (pt_brn != NULL_PT) && h_chg){ 
+			brain& brn = *pt_brn;
+			
+			leveldat& lv = brn.get_data_level(qlv);
+			if(lv.has_setup_neuromap()){ os << ".s"; }
+			if(lv.has_to_write_neuromaps()){ os << ".w"; }
+			if(lv.has_learned()){ 
+				os << ".l"; 
+				if(lv.ld_learned.size() > 1){
+					os << "l"; 
+				}
+			}
+		}
+		
+		if(n0){ os << ".n0"; }
+		if(with_dot){ os << ".d"; }
+		if(with_mark){ os << ".m"; }
+
+		if(! qu_tee.is_unsorted()){ os << ".q" << qu_tee.so_qua_id; }
+
+		//if(dominated){ os << ".DOM"; }
 
 		os.flush();
 		return os;
@@ -967,7 +981,7 @@ brain::dbg_old_reverse(){
 	
 	BRAIN_DBG(br_dbg.dbg_before_retract_lv = level());
 
-	DEDUC_DBG(br_deducer.deduction_analysis(br_conflict_found, dct2));
+	DEDUC_DBG(br_deducer_anlsr.deduction_analysis(br_conflict_found, dct2));
 	BRAIN_CK_PRT(dct2.dt_target_level >= ROOT_LEVEL, 
 		os << recoil() << ".dct2=" << dct2
 	);
@@ -1156,8 +1170,18 @@ prop_signal::print_prop_signal(bj_ostream& os, bool from_pt){
 bj_ostream&
 qulayers::print_qulayers(bj_ostream& os, bool from_pt){
 	MARK_USED(from_pt);
-	os << "ql={";
+	os << "qlys={";
 	dk_quas_by_layer.print_row_data(os, true, "\n");
+	os << "}";
+	os.flush();
+	return os;
+}
+
+bj_ostream&
+neurolayers::print_neurolayers(bj_ostream& os, bool from_pt){
+	MARK_USED(from_pt);
+	os << "nlys={";
+	nl_neus_by_layer.print_row_data(os, true, "\n");
 	os << "}";
 	os.flush();
 	return os;

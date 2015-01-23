@@ -59,6 +59,21 @@ DEFINE_NI_FLAG_ALL_FUNCS(note4);
 DEFINE_NI_FLAG_ALL_FUNCS(note5);
 
 
+DEFINE_NE_FLAG_FUNCS(ne_flags, tag0);
+DEFINE_NE_FLAG_FUNCS(ne_flags, tag1);
+DEFINE_NE_FLAG_FUNCS(ne_flags, tag2);
+DEFINE_NE_FLAG_FUNCS(ne_flags, tag3);
+DEFINE_NE_FLAG_FUNCS(ne_flags, tag4);
+DEFINE_NE_FLAG_FUNCS(ne_flags, tag5);
+
+DEFINE_NE_FLAG_ALL_FUNCS(tag0);
+DEFINE_NE_FLAG_ALL_FUNCS(tag1);
+DEFINE_NE_FLAG_ALL_FUNCS(tag2);
+DEFINE_NE_FLAG_ALL_FUNCS(tag3);
+DEFINE_NE_FLAG_ALL_FUNCS(tag4);
+DEFINE_NE_FLAG_ALL_FUNCS(tag5);
+
+
 #define PRINT_PERIOD			4.0
 #define SOLVING_TIMEOUT			0.0		// 0.0 if no timeout
 
@@ -511,8 +526,8 @@ brain::init_brain(solver& ss){
 								&append_all_not_note0, &same_quantons_note0
   							);
 
-	br_deducer.init_analyser(this);
-	br_neuromaper.init_analyser(this);
+	br_deducer_anlsr.init_analyser(this);
+	br_neuromaper_anlsr.init_analyser(this);
 	
 	reset_conflict();
 
@@ -530,6 +545,7 @@ brain::init_brain(solver& ss){
 	br_tot_ne_spots = 0;
 
 	init_tots_notes();
+	init_tots_tags();
 
 	DBG(
 		init_all_dbg_brn();  // sets br_pt_brn indicating it is readi for DBG_PRT
@@ -754,7 +770,7 @@ brain::choose_quanton(){
 			return qua;
 		}
 		BRAIN_CK(qua == NULL_PT);
-		//deactivate_last_map();
+		deactivate_last_map();
 		DBG_PRT(122, os << "deac_lst (choose)");
 	}
 
@@ -857,6 +873,7 @@ brain::init_loading(long num_qua, long num_neu){
 	br_tot_ne_spots = 0;
 
 	init_tots_notes();
+	init_tots_tags();
 
 	DBG(
 		br_dbg.dbg_all_chosen.clear();
@@ -1345,6 +1362,9 @@ notekeeper::clear_all_quantons(long lim_lv, bool reset_notes){
 			tot_reset += num_re;
 		}
 		mots.clear();
+	}
+	if(reset_notes){
+		dk_num_noted_in_layer = 0;
 	}
 	DBG(
 		for(long bb = lim_lv; bb < all_qu_lyrs.size(); bb++){
@@ -2059,11 +2079,6 @@ brain::reverse(){
 	
 	// some checks
 
-	DBG_PRT(131, 
-			print_trail(os);
-			dbg_prt_lvs_cho(os);
-			os << "tr_lv=" << trail_level() << " tg_lv=" << dct.dt_target_level;
-	);
 	BRAIN_DBG(br_dbg.dbg_last_recoil_lv = dct.dt_target_level);
 	DBG(long rr_lv = trail_level());
 	
@@ -2095,8 +2110,11 @@ brain::reverse(){
 	BRAIN_CK((level() == ROOT_LEVEL) || lv_has_learned());
 
 	DBG_PRT(131, 
+			print_trail(os);
+			dbg_prt_lvs_cho(os);
+			os << "tr_lv=" << trail_level() << " tg_lv=" << dct.dt_target_level;
 			os << " f_qu=" << nxt_qua; 
-			DO_GETCHAR()
+			//DO_GETCHAR()
 	);
 	DBG_PRT(122, dbg_prt_lvs_active(os));
 	DBG_PRT(122, print_trail(os); os << dct << bj_eol);

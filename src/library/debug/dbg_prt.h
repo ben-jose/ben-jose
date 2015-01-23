@@ -52,7 +52,9 @@ bool	dbg_check_lev(brain* brn, long lev);
 
 #define DBG_ALL_LVS -1
 
-#define	DBG_COND(lev, cond)	(dbg_check_lev(get_dbg_brn(), lev) && (cond))
+#define	DBG_BR_COND(pt_brn, lev, cond)	(dbg_check_lev(pt_brn, lev) && (cond))
+
+#define	DBG_COND(lev, cond)	DBG_BR_COND(get_dbg_brn(), lev, cond)
 
 #define INVALID_DBG_LV 		-123
 
@@ -65,15 +67,17 @@ bool	dbg_print_cond_func(
 	const ch_string prm_str = "NO_PRM",
 	long dbg_lv = INVALID_DBG_LV);
 
-#define	DBG_PRT_COND(lev, cond, comm)	\
-	DBG_COND_COMM(DBG_COND(lev, cond), \
-		dbg_print_cond_func(get_dbg_brn(), DBG_COND(lev, cond), \
+#define	DBG_BR_PRT_COND(pt_brn, lev, cond, comm) \
+	DBG_COND_COMM(DBG_BR_COND(pt_brn, lev, cond), \
+		dbg_print_cond_func(pt_brn, DBG_BR_COND(pt_brn, lev, cond), \
 			false, "NO_NAME", 0, #cond, lev); \
 		comm; \
 	) \
 
 //--end_of_def
 	
+#define	DBG_PRT_COND(lev, cond, comm)	DBG_BR_PRT_COND(get_dbg_brn(), lev, cond, comm)
+
 #define	DBG_PRT(lev, comm)	DBG_PRT_COND(lev, true, comm)
 
 #define	DBG_COMMAND(lev, comm) \
