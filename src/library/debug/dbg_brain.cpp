@@ -294,6 +294,8 @@ dbg_inst_info::init_dbg_inst_info(){
 	
 	dbg_bad_cycle1 = false;
 	dbg_levs_arr.fill(false, DBG_NUM_LEVS);
+	
+	dbg_tot_nmps = 0;
 }
 #endif
 
@@ -452,7 +454,7 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 		os << "NA";
 		if(na_is_head){ os << ".h"; }
 		os << "(" << (void*)this << ")";
-		os << " lv=" << na_orig_lv;
+		os << " o_lv=" << na_orig_lv;
 		os << " cho=" << na_orig_cho;
 		os.flush();
 		return os;
@@ -615,6 +617,9 @@ quanton::print_quanton(bj_ostream& os, bool from_pt){
 					os << "l"; 
 				}
 			}
+			if((qlv != ROOT_LEVEL) && (lv.ld_chosen == NULL_PT)){
+				os << "[NULL_CHO!!!]"; 
+			}
 		}
 		
 		if(n0){ os << ".n0"; }
@@ -664,25 +669,11 @@ neuron::print_neu_base(bj_ostream& os, bool detail, bool prt_src, bool sort_fib)
 		os << "ne={";
 		os << ((void*)(this)) << " ";
 		os << ne_index << " ";
+		os << "nmp=" << ((void*)ne_curr_nemap) << " ";
 		if(ne_original){
 			os << "o";
 		}
 		os << ne_fibres;
-		//os << " recoil_tk=" << ne_recoil_tk.tk_recoil;
-		//os << bj_eol;
-		//os << " ne_dbg_ccl=" << ne_dbg_ccl;
-		//os << bj_eol;
-		//os << " ne_tee so_ccl=" << ne_tee.so_ccl;
-		//os << " num_remote_tees=" << ne_num_remote_tees;
-
-		/*
-		if(! ne_fibres.is_empty() && (ne_fibres.first()->qu_source == this)){
-			os << "src_of:" << ne_fibres.first();
-		}
-		if((ne_fibres.size() > 1) && (ne_fibres[1]->qu_source == this)){
-			os << "src_of:" << ne_fibres[1] << " !!!!!!";
-		}*/
-		//os << bj_eol;
 		os << "}";
 
 		os.flush();

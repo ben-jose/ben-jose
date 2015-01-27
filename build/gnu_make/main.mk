@@ -6,6 +6,7 @@ TARGET_DIR := bin
 # DBG_FLAGS = -DFULL_DEBUG -rdynamic  
 
 CXXFLAGS := -DFULL_DEBUG -DDBG_GLB_MEM_USE -rdynamic -Wall 
+# CXXFLAGS := -DFULL_DEBUG -DDBG_GLB_MEM_USE -DDBG_GLB_MEM_WITH_PT_DIR -rdynamic -Wall 
 # CXXFLAGS := -DFULL_DEBUG -rdynamic -Wall 
 # CXXFLAGS := -rdynamic -Wall 
 

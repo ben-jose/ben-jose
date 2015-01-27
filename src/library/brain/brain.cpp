@@ -546,11 +546,15 @@ brain::init_brain(solver& ss){
 
 	init_tots_notes();
 	init_tots_tags();
+	
+	br_num_active_neurons = 0;
+	br_num_active_neuromaps = 0;
 
 	DBG(
 		init_all_dbg_brn();  // sets br_pt_brn indicating it is readi for DBG_PRT
 		dbg_init_dbg_conf(*this);	
 	);
+	BRAIN_CK(br_dbg.dbg_tot_nmps == 0);
 }
 
 void
@@ -588,6 +592,8 @@ brain::release_brain(){
 	br_psignals.clear(true, true);
 	br_delayed_psignals.clear(true, true);
 
+	br_neuromaps.clear(true, true);
+	
 	br_forced_srg.release_all();
 	br_filled_srg.release_all();
 
@@ -607,6 +613,8 @@ brain::release_brain(){
 	//BRAIN_CK(br_tot_ne_spots == 0);
 
 	//DBG_PRT(DBG_ALL_LVS, os << "release_brain 4");
+	BRAIN_CK(br_dbg.dbg_tot_nmps == 0);
+	BRAIN_CK(br_num_active_neuromaps == 0);
 }
 
 void
@@ -1276,6 +1284,21 @@ brain::aux_solve_instance(){
 	br_filled_srg.release_all();
 
 	all_mutual_init();
+}
+
+void
+brain::close_all_maps(){
+	while(! br_maps_active.is_empty()){
+		deactivate_last_map();
+	}
+	BRAIN_CK(br_maps_active.is_empty());
+	release_all_neuromaps();
+	BRAIN_CK_PRT((br_num_active_neuromaps == 0), 
+			os << "_______\n#act_nmps=" << br_num_active_neuromaps
+				<< " #fr_nmps=" << br_free_neuromaps.size() 
+				<< " #nmps=" << br_neuromaps.size() 
+				<< bj_eol;
+	);
 }
 
 void
@@ -2068,7 +2091,7 @@ brain::reverse(){
 	
 	deduction& dct = br_retract_dct;
 
-	//br_deducer.deduction_analysis(br_conflict_found, dct);
+	//br_deducer_anlsr.deduction_analysis(br_conflict_found, dct);
 	analyse(br_conflict_found, dct);
 
 	DBG_PRT(122, dbg_prt_lvs_active(os));

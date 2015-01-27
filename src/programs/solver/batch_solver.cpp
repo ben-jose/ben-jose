@@ -623,6 +623,7 @@ batch_solver::work_all_instances(){
 					os << "ABORTING_DATA " << bj_eol;
 					os << "mem_in_u=" << mem_in_u << bj_eol;
 					os << "mem_get_num_by_in_use()=" << mem_get_num_by_in_use() << bj_eol;
+					os << "DIFF=" << (mem_get_num_by_in_use() -  mem_in_u) << bj_eol;
 					MEM_PT_DIR(dbg_print_ptdir());
 					os << "END_OF_aborting_data" << bj_eol;
 				)

@@ -1178,7 +1178,9 @@ set_all_ne_nemap(row<neuron*>& all_neus, neuromap* nmp)
 	for(long ii = 0; ii < all_neus.size(); ii++){
 		BRAIN_CK(all_neus[ii] != NULL_PT);
 		neuron& neu = *(all_neus[ii]);
-		BRAIN_CK(neu.ne_curr_nemap != nmp);
+		BRAIN_CK_PRT((neu.ne_curr_nemap != nmp), 
+					 os << "____" << bj_eol << "curr_nmp=" << neu.ne_curr_nemap 
+					 << " nmp=" << nmp);
 		neu.ne_curr_nemap = nmp;
 	}
 }
@@ -1362,11 +1364,6 @@ append_all_trace_quas(row<prop_signal>& trace, row_quanton_t& all_quas)
 	for(long ii = 0; ii < trace.size(); ii++){
 		prop_signal& q_sig = trace[ii];
 		BRAIN_CK(q_sig.ps_quanton != NULL_PT);
-		/*
-		if(only_pos && q_sig.ps_quanton->is_neg()){
-			BRAIN_CK_PRT((ii == 0), os << "ii=" << ii);
-			continue;
-		}*/
 		all_quas.push(q_sig.ps_quanton);
 	}
 }
@@ -1377,7 +1374,7 @@ append_all_trace_neus(row<prop_signal>& trace, row_neuron_t& all_neus)
 {
 	for(long ii = 0; ii < trace.size(); ii++){
 		prop_signal& q_sig = trace[ii];
-		if(q_sig.ps_source != NULL_PT){
+		if((q_sig.ps_source != NULL_PT) && (q_sig.ps_source->ne_original)){
 			all_neus.push(q_sig.ps_source);
 		}
 	}
@@ -1833,7 +1830,8 @@ class neurolayers {
 	
 	void	clear_all_neurons(){
 		nl_neus_by_layer.clear_each();
-		nl_neus_by_layer.clear();
+		//nl_neus_by_layer.clear();
+		nl_neus_by_layer.clear(true, true);
 	}
 	
 	bj_ostream&	print_neurolayers(bj_ostream& os, bool from_pt = false);
@@ -2476,6 +2474,11 @@ class leveldat {
 		return the_brn;
 	}
 	
+	void	let_maps_go(){
+		ld_nmps_to_write.let_all_go();
+		ld_nmp_setup.let_all_go();
+	}
+	
 	static
 	leveldat* create_leveldat(brain* pt_brn = NULL){
 		leveldat* lv = tpl_malloc<leveldat>();
@@ -2593,6 +2596,8 @@ public:
 	
 	bool 		dbg_bad_cycle1;
 	row<bool>	dbg_levs_arr;
+
+	long	dbg_tot_nmps;
 	
 	dbg_inst_info(){
 		init_dbg_inst_info();
@@ -2813,12 +2818,16 @@ public:
 		br_tauto_neus_srg.stab_mutual_init();
 		br_tauto_quas_srg.stab_mutual_init();
 	}
+	
+	ch_string&	get_f_nam(){
+		return get_my_inst().get_f_nam();
+	}
 
 	void	release_brain();
 
 	solver& 		get_solver();
 	skeleton_glb& 	get_skeleton();
-	instance_info&	get_my_inst();	
+	instance_info&	get_my_inst();
 	bj_output_t&	get_out_info();
 
 	// core methods
@@ -3029,8 +3038,8 @@ public:
 		BRAIN_CK(all_lv[lv] != NULL_PT);
 		
 		leveldat& lv_dat = *(all_lv[lv]);
-		BRAIN_CK(lv_dat.ld_chosen != NULL_PT);
-		BRAIN_CK(lv_dat.ld_chosen->qlevel() == lv_dat.ld_idx);
+		BRAIN_CK((lv == ROOT_LEVEL) || (lv_dat.ld_chosen != NULL_PT));
+		BRAIN_CK((lv == ROOT_LEVEL) || (lv_dat.ld_chosen->qlevel() == lv_dat.ld_idx));
 		return lv_dat;
 	}
 	
@@ -3061,11 +3070,13 @@ public:
 		br_current_ticket.tk_level--;
 
 		brain& brn = *this;
-		data_level().reset_semi_monos(brn);
-		data_level().release_learned(brn);
+		leveldat& lv = data_level();
+		lv.reset_semi_monos(brn);
+		lv.release_learned(brn);
+		lv.let_maps_go();
 
-		leveldat* lv = br_data_levels.pop();
-		leveldat::release_leveldat(lv);
+		leveldat* pt_lv = br_data_levels.pop();
+		leveldat::release_leveldat(pt_lv);
 	}
 
 	long	trail_level(){
