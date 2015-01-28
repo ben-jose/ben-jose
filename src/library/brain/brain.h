@@ -1359,9 +1359,16 @@ reset_marks_and_spots_of(brain& brn, row<prop_signal>& trace,
 
 inline
 void
-append_all_trace_quas(row<prop_signal>& trace, row_quanton_t& all_quas)
+append_all_trace_quas(row<prop_signal>& trace, row_quanton_t& all_quas,
+			long first_idx = 0, long last_idx = -1)
 {
-	for(long ii = 0; ii < trace.size(); ii++){
+	if(last_idx < 0){ last_idx = trace.size(); }
+
+	BRAIN_CK(first_idx <= last_idx);
+	BRAIN_CK((first_idx == trace.size()) || trace.is_valid_idx(first_idx));
+	BRAIN_CK((last_idx == trace.size()) || trace.is_valid_idx(last_idx));
+
+	for(long ii = first_idx; ii < last_idx; ii++){
 		prop_signal& q_sig = trace[ii];
 		BRAIN_CK(q_sig.ps_quanton != NULL_PT);
 		all_quas.push(q_sig.ps_quanton);
@@ -1713,10 +1720,31 @@ class neuromap {
 	
 	void	map_add_to_release();
 
+	bool	map_can_activate();
 	void	map_activate(dbg_call_id dbg_id);
 	void	map_deactivate();
 
 	void	set_all_filled_in_propag();
+	
+	bool	ck_first_forced_idx(){
+		bool has_sub = (na_submap != NULL_PT);
+		if(has_sub){
+			return true;
+		}
+		BRAIN_CK(na_forced.is_valid_idx(0));
+		BRAIN_CK(na_forced.is_valid_idx(1));
+		quanton* qu0 = na_forced[0].ps_quanton;
+		quanton* qu1 = na_forced[1].ps_quanton;
+		BRAIN_CK(qu0->qu_inverse == qu1);
+		return true;
+	}
+	
+	long	first_forced_body_idx(){
+		bool has_sub = (na_submap != NULL_PT);
+		long fst_idx = (has_sub)?(0):(1);
+		BRAIN_CK(ck_first_forced_idx());
+		return fst_idx;
+	}
 	
 	long	get_min_tier(){
 		long mti = INVALID_TIER;
@@ -2370,6 +2398,14 @@ class analyser {
 	neuron* 	tg_confl(){
 		BRAIN_CK(de_first_bk_psig.ps_source != NULL_PT);
 		return de_first_bk_psig.ps_source;
+	}
+	
+	quanton*	last_qu_noted(){
+		if(de_all_noted.is_empty()){
+			return NULL_PT;
+		}
+		quanton* qua = de_all_noted.last().ps_quanton;
+		return qua;
 	}
 	
 	bool	is_end_of_dct(){
@@ -3331,7 +3367,8 @@ inline
 void
 quanton::set_mark(brain& brn){
 	BRAIN_CK(qu_inverse != NULL_PT);
-	BRAIN_CK(qu_mark == cg_neutral);
+	BRAIN_CK_PRT((qu_mark == cg_neutral), os << "_____" << bj_eol << this 
+			<< " mrk=" << qu_mark);
 	BRAIN_CK(qu_inverse->qu_mark == cg_neutral);
 	BRAIN_REL_CK(! has_mark());
 	

@@ -179,6 +179,7 @@ analyser::find_next_source(bool only_origs)
 
 	find_next_noted();
 	inc_all_noted();
+	BRAIN_CK(de_ref.get_curr_quanton() == last_qu_noted());
 }
 
 void
@@ -419,11 +420,11 @@ analyser::update_neuromap(neuromap* sub_nmp){
 	nxt_nmp.na_setup_tk.update_ticket(brn);
 	
 	quanton* qua = qlr.get_curr_quanton();
-	bool eolv = is_end_of_lv();
-	if(eolv){
+	//bool eolv = is_end_of_lv();
+	//if(eolv){
 		nxt_nmp.na_orig_lv = qua->qlevel();
 		nxt_nmp.na_orig_cho = qua;
-	}
+	//}
 	all_noted.move_to(nxt_nmp.na_forced);
 	
 	DBG_PRT(124, os << "tot_no_sel_neus_1=" << de_not_sel_neus.get_tot_neurons());
@@ -497,7 +498,6 @@ analyser::calc_neuromap(prop_signal const & confl_sg, long min_lv, neuromap* pre
 	if(out_nmp == NULL_PT){
 		init_calc_nmp(confl_sg, min_lv);
 	}
-	DBG_PRT(133, os << "prev_nmp=" << prev_nmp);
 	
 	DBG(bool just_updated = false);
 	while(qlr.get_curr_qlevel() > min_lv){
@@ -505,16 +505,6 @@ analyser::calc_neuromap(prop_signal const & confl_sg, long min_lv, neuromap* pre
 		if(is_end_of_nmp()){
 			DBG(just_updated = true);
 			out_nmp = update_neuromap(out_nmp);
-			DBG_PRT(133, 
-				brn.print_trail(os);
-				os << " min_lv=" << min_lv;
-				os << " cur_qu" << qlr.get_curr_quanton();
-				os << " cur_qlv" << qlr.get_curr_qlevel() << bj_eol;
-				os << " nxt_ps=" << de_next_bk_psig;
-				os << " out_nmp=" << out_nmp << bj_eol;
-				os << " eolv=" << is_end_of_lv();
-				os << " eonmp=" << is_end_of_nmp();
-			);
 		}
 		BRAIN_CK(! is_first_source());
 		find_next_source(true);
@@ -529,6 +519,7 @@ analyser::calc_neuromap(prop_signal const & confl_sg, long min_lv, neuromap* pre
 	BRAIN_CK(brn.br_tot_ne_spots == 0);
 
 	DBG_PRT(119, os << "CLC_NMP{" 
+			<< " just_updated=" << just_updated
 			<< " min_lv=" << min_lv
 			<< " cur_qu=" << de_ref.get_curr_quanton()
 			<< " cur_qlv=" << qlr.get_curr_qlevel() << bj_eol
@@ -796,8 +787,6 @@ brain::analyse(prop_signal const & confl, deduction& out_dct){
 		BRAIN_CK(tg_lv == out_dct.dt_target_level);
 	}
 
-	write_all_neuromaps(to_wrt); // deactivates final wrt maps
-	
 	f_nmp = mper.neuromap_setup_analysis(confl, tg_lv, f_nmp); // activates new maps
 	
 	add_lv_neuromap_to_write(tg_lv);
@@ -819,6 +808,8 @@ brain::analyse(prop_signal const & confl, deduction& out_dct){
 		}
 	)
 	BRAIN_CK(br_ne_tot_tag1 == 0);
+	
+	write_all_neuromaps(to_wrt); // deactivates final wrt maps
 	
 	release_all_neuromaps();
 	

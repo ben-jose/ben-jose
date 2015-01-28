@@ -73,7 +73,7 @@ brain::dbg_prt_margin(bool is_ck){
 #ifdef FULL_DEBUG
 	bj_ostream& os = bj_dbg;
 	instance_info& inst_info = get_my_inst();
-	if(inst_info.ist_group_id > 1){
+	if(inst_info.ist_id >= 0){
 		os << "#" << inst_info.ist_id << ".";
 	}
 

@@ -597,6 +597,7 @@ batch_solver::work_all_instances(){
 	BATCH_CK(all_insts.is_empty());
 	if(is_batch){
 		read_batch_file(all_insts);
+		bj_restart(bc_solver);
 	} else {
 		batch_entry& ist = all_insts.inc_sz();
 		ist.be_ff_nam = f_nam;
@@ -846,7 +847,7 @@ batch_solver::do_cnf_file()
 	bj_solve_file(bc_solver, ff);
 	
 	curr_inst.be_out = bj_get_output(bc_solver);
-	bj_restart(bc_solver);
+	//bj_restart(bc_solver);
 
 	count_instance(curr_inst);
 }

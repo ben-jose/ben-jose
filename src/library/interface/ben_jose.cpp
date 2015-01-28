@@ -110,9 +110,16 @@ bj_satisf_val_t 	bj_solve_file(bj_solver_t bjs, const char* f_path){
 	if(f_path == NULL){ return bjr_error; }
 	
 	solver& the_slvr = *((solver*)bjs);
+	instance_info& inst = the_slvr.slv_inst;
 	
-	the_slvr.slv_inst.init_instance_info(false, false);	
-	the_slvr.slv_inst.ist_file_path = f_path;
+	long nxt_id = inst.ist_id;
+	if(nxt_id >= 0){ nxt_id++; }
+	//DBG(bj_out << bj_eol << "PREV_ID=" << inst.ist_id << bj_eol);
+	
+	inst.init_instance_info(false, false);
+	inst.ist_file_path = f_path;
+	inst.ist_id = nxt_id;
+	//DBG(bj_out << bj_eol << "SOLVING_INSTANCE=" << inst.ist_id << bj_eol );
 	
 	brain the_brain(the_slvr);
 	bj_satisf_val_t res = the_brain.solve_instance();
@@ -171,7 +178,10 @@ void				bj_restart(bj_solver_t bjs){
 		return;
 	}
 	solver& the_slvr = *((solver*)bjs);
-	the_slvr.slv_inst.init_instance_info(true, true);
+	instance_info& inst = the_slvr.slv_inst;
+	
+	inst.init_instance_info(true, true);
+	inst.ist_id = 0;
 }
 
 int 	bj_update(bj_solver_t dest, bj_solver_t src){

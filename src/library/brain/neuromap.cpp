@@ -89,7 +89,7 @@ neuromap::map_set_all_marks_and_spots(){
 		na_submap->map_set_all_marks_and_spots();
 	}
 	brain& brn = get_brn();
-	long fst_idx = (has_sub)?(0):(1);
+	long fst_idx = first_forced_body_idx();
 	set_marks_and_spots_of(brn, na_forced, fst_idx);
 	if(! has_sub){
 		prop_signal& fst_sig = na_forced.first();
@@ -109,7 +109,7 @@ neuromap::map_reset_all_marks_and_spots(){
 		na_submap->map_reset_all_marks_and_spots();
 	}
 	brain& brn = get_brn();
-	long fst_idx = (has_sub)?(0):(1);
+	long fst_idx = first_forced_body_idx();
 	reset_marks_and_spots_of(brn, na_forced, fst_idx);
 	if(! has_sub){
 		prop_signal& fst_sig = na_forced.first();
@@ -126,6 +126,7 @@ neuromap::map_get_all_quas(row_quanton_t& all_quas){
 	} else {
 		na_submap->map_get_all_quas(all_quas);
 	}
+	//long fst_idx = first_forced_body_idx();
 	append_all_trace_quas(na_forced, all_quas);
 }
 
@@ -212,17 +213,26 @@ neuromap::map_ck_all_ne_dominated(){
 	return true;
 }
 
+bool
+neuromap::map_can_activate(){
+	if(na_orig_lv == INVALID_LEVEL){
+		return false;
+	}
+	BRAIN_CK(na_orig_lv != INVALID_LEVEL);
+	brain& brn = get_brn();
+	BRAIN_CK(brn.br_data_levels.is_valid_idx(na_orig_lv));
+	leveldat& lv_dat = brn.get_data_level(na_orig_lv);
+	bool can_act = ! lv_dat.has_setup_neuromap();
+	return can_act;
+}
+
 void
 neuromap::map_activate(dbg_call_id dbg_id){
 	brain& brn = get_brn();
 	
-	if(na_orig_lv == INVALID_LEVEL){
+	if(! map_can_activate()){
 		return;
 	}
-	BRAIN_CK_PRT(brn.br_data_levels.is_valid_idx(na_orig_lv), 
-		os << "_______" << bj_eol << "lv=" << na_orig_lv
-		<< " sz_lvs=" << brn.br_data_levels.size() << " dbg_id=" << dbg_id
-	);
 	
 	leveldat& lv_dat = brn.get_data_level(na_orig_lv);
 	
@@ -342,11 +352,7 @@ dbg_ck_all_diff_neus(brain& brn, row<neuron*>& all_neus){
 	}
 	reset_all_tag0(brn, all_neus);
 	BRAIN_CK(brn.br_ne_tot_tag0 == 0);
-	BRAIN_CK_PRT((bad_neu == NULL_PT), 
-		brn.print_trail(os);
-		os << "bad_neu=" << bad_neu << bj_eol; 
-		all_neus.print_row_data(os, true, "\n");
-	);
+	BRAIN_CK(bad_neu == NULL_PT);
 #endif
 	return true;
 }
@@ -1054,12 +1060,13 @@ neuromap::map_oper(mem_op_t mm){
 bool
 neuromap::map_prepare_mem_oper(mem_op_t mm){
 	brain& brn = get_brn();
-	DBG_PRT(110, os << "map_mem_oper=" << ((void*)this));
-	BRAIN_CK(na_guide_col.co_szs_idx == INVALID_IDX);
-	DBG_PRT(110, os << "map_mem_oper=" << this);
-
 	coloring& guide_col = na_guide_col;
 	MARK_USED(guide_col);
+	
+	DBG_PRT(110, os << "map_mem_oper=" << ((void*)this));
+	BRAIN_CK(guide_col.co_szs_idx == INVALID_IDX);
+	DBG_PRT(110, os << "map_mem_oper=" << this);
+
 	sort_glb& neus_srg = brn.br_guide_neus_srg;
 	sort_glb& quas_srg = brn.br_guide_quas_srg;
 
@@ -1073,12 +1080,12 @@ neuromap::map_prepare_mem_oper(mem_op_t mm){
 		dima_dims dims0;
 		
 		neus_srg.sg_one_ccl_per_ss = false;
-		na_guide_col.load_colors_into(brn, neus_srg, quas_srg, dims0);
+		guide_col.load_colors_into(brn, neus_srg, quas_srg, dims0);
 	}
 	
 	
 	BRAIN_CK(! guide_col.is_co_virgin());
-	BRAIN_CK(na_guide_col.co_szs_idx == INVALID_IDX);
+	BRAIN_CK(guide_col.co_szs_idx == INVALID_IDX);
 	BRAIN_CK(map_ck_contained_in(guide_col, dbg_call_1));
 
 	// stab uni_guide
@@ -1238,12 +1245,14 @@ neuromap::map_get_initial_guide_coloring(coloring& clr){
 	all_neus.clear();
 
 	row<prop_signal>& dtrace = na_forced;
-	long beg_sz = 0;
+	long beg_sz = first_forced_body_idx();
+	//long beg_sz = 0;
 	long end_sz = dtrace.size();
 
 	long sig_col = 1;
 
 	BRAIN_CK(brn.br_qu_tot_note1 == 0);
+	DBG_PRT(133, os << "beg_sz=" << beg_sz);
 
 	for(long ii = beg_sz; ii < end_sz; ii++){
 		prop_signal& q_sig1 = dtrace[ii];
@@ -1272,7 +1281,7 @@ neuromap::map_get_initial_guide_coloring(coloring& clr){
 		quanton& qua = *(q_sig1.ps_quanton);
 		quanton& opp = qua.opposite();
 
-		BRAIN_CK(! qua.has_note1());
+		BRAIN_CK_PRT(! qua.has_note1(), brn.dbg_prt_margin(true); os << "ii=" << ii);
 		DBG(qua.set_note1(brn));
 	
 		all_quas.push(&qua);
@@ -1456,6 +1465,8 @@ neuromap::map_ck_contained_in(coloring& colr, dbg_call_id dbg_id){
 	// CHECK QUAS
 	
 	row_quanton_t& all_quas = colr.co_quas;
+
+	DBG_PRT(133, os << "dbg_id=" << dbg_id << " all_quas=" << bj_eol << all_quas);
 	BRAIN_CK(brn.br_tot_qu_marks == 0);
 	set_marks_of(brn, all_quas);
 	

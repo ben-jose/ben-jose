@@ -94,7 +94,6 @@ private:
 public:
 	bool			ist_with_assig;
 	
-	long			ist_group_id;
 	long			ist_id;
 	
 	ch_string		ist_file_path;
@@ -120,7 +119,6 @@ public:
 	void	init_instance_info(bool reset_lims = false, bool free_mem = true){
 		ist_with_assig = false;
 		
-		ist_group_id = -1;
 		ist_id = -1;
 	
 		ist_file_path = "";
