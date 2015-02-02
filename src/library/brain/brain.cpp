@@ -558,6 +558,18 @@ brain::init_brain(solver& ss){
 }
 
 void
+brain::release_all_sortors(){
+	br_forced_srg.release_all();
+	br_filled_srg.release_all();
+
+	br_guide_neus_srg.release_all();
+	br_guide_quas_srg.release_all();
+
+	br_tauto_neus_srg.release_all();
+	br_tauto_quas_srg.release_all();
+}
+
+void
 brain::release_brain(){
 	BRAIN_DBG(br_pt_brn = NULL);
 	get_skeleton().set_dbg_brn(NULL);
@@ -594,14 +606,7 @@ brain::release_brain(){
 
 	br_neuromaps.clear(true, true);
 	
-	br_forced_srg.release_all();
-	br_filled_srg.release_all();
-
-	br_guide_neus_srg.release_all();
-	br_guide_quas_srg.release_all();
-
-	br_tauto_neus_srg.release_all();
-	br_tauto_quas_srg.release_all();
+	release_all_sortors();
 
 	get_skeleton().clear_all();
 
@@ -1217,9 +1222,11 @@ brain::aux_solve_instance(){
 		return;
 	}
 
+	DBG_PRT(140, br_dbg.dbg_just_read = true);
 	DBG(
 		if(br_dbg.dbg_just_read){
 			set_result(bjr_error);
+			DBG_PRT(140, os << "____\nFULL_BRAIN_STAB=\n"; dbg_prt_full_stab());
 			return;
 		} 
 	)
@@ -1280,8 +1287,7 @@ brain::aux_solve_instance(){
 	br_psignals.clear(true, true);
 	br_delayed_psignals.clear(true, true);
 
-	br_forced_srg.release_all();
-	br_filled_srg.release_all();
+	release_all_sortors();
 
 	all_mutual_init();
 }
@@ -1681,18 +1687,14 @@ brain::pulsate(){
 		BRAIN_CK((cho == &qua) || (&(qua.opposite()) == cho));
 
 		if(! cho->is_note5()){ 
-			cho->set_note5(brn); 
+			cho->set_binote5(brn); 
 			DBG(
 				cho->qu_dbg_fst_lap_cho = brn.br_current_ticket.tk_recoil;
 				br_dbg.dbg_all_chosen.push(cho);
 			)
 		}
-		if(cho->opposite().is_note5()){ 
-			DBG(cho->qu_dbg_num_laps_cho++);
-		}
-
+		DBG(if(cho->opposite().is_note5()){ cho->qu_dbg_num_laps_cho++; });
 		DBG_PRT(25, os << "**CHOICE** " << cho);
-
 	}
 }
 
@@ -2144,5 +2146,57 @@ brain::reverse(){
 
 	reset_conflict();
 	BRAIN_CK(! found_conflict());
+}
+
+void
+brain::dbg_prt_full_stab(){
+	binder pru_bb;
+	grip pru_gg;
+	ss_srs_t pru_rr;
+	sortee pru_tt;
+	sorset pru_ss;
+
+	brain& brn = *this;
+	coloring full_col;
+	full_col.init_coloring(this);
+	full_col.set_brain_coloring();
+
+	//bj_out << "COLS_BEF=" << bj_eol << full_col;
+	
+	sort_glb& neus_srg = brn.br_guide_neus_srg;
+	sort_glb& quas_srg = brn.br_guide_quas_srg;
+
+	all_mutual_init();
+	
+	dima_dims dims0;
+	full_col.load_colors_into(brn, neus_srg, quas_srg, dims0);
+
+	bj_out << "NEUS_SRG_BEFORE=" << bj_eol << neus_srg;
+	
+	neus_srg.sg_cnf_clauses.clear();
+	
+	neus_srg.stab_mutual(quas_srg);
+	
+	bj_out << "NEUS_SRG=" << bj_eol << neus_srg;
+	
+	bj_out << "stab_neus=" << bj_eol;
+	neus_srg.sg_cnf_clauses.print_row_data(bj_out, true, "\n");
+	
+	bool all_csc = false;
+	row_neuron_t all_nn;
+	bool h_dff = neus_srg.sort_to_row_and_all_consec<neuron>(all_nn, all_csc);
+	
+	bj_out << "SORTED_ALL_STAB_NEUS=" << bj_eol;
+	all_nn.print_row_data(bj_out, true, "\n");
+	bj_out << bj_eol << "END_OF_SORTED_stab_neus=" << bj_eol;
+
+	bj_out << "bb_cls=" << pru_bb.get_cls_name() << bj_eol;
+	bj_out << "gg_cls=" << pru_gg.get_cls_name() << bj_eol;
+	bj_out << "rr_cls=" << pru_rr.get_cls_name() << bj_eol;
+	bj_out << "tt_cls=" << pru_tt.get_cls_name() << bj_eol;
+	bj_out << "ss_cls=" << pru_ss.get_cls_name() << bj_eol;
+
+	release_all_sortors();
+	
 }
 

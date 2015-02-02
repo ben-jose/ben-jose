@@ -59,6 +59,7 @@ class skeleton_glb;
 
 #define SKELETON_DBG(prm) DBG(prm)
 #define SKELETON_CK(prm) 	DBG_BJ_LIB_CK(prm)
+#define SKELETON_CK_PRT(prm, comms1)  DBG_CK_2(prm, comms1)
 
 
 //=================================================================
@@ -163,9 +164,6 @@ print_hex_as_txt(row<uchar_t>& sha_rr);
 
 ch_string
 sha_txt_of_arr(uchar_t* to_sha, long to_sha_sz);
-
-void
-mix_sort_ccls(row<canon_clause*>& the_ccls);
 
 DECLARE_PRINT_FUNCS(canon_clause)
 DECLARE_PRINT_FUNCS(variant)
@@ -540,13 +538,7 @@ public:
 
 	void	clear_cnf(){
 		DIMACS_H_CK(ck_all_can_release(cf_clauses, false));
-		//DIMACS_H_CK(ck_all_can_release(cf_filled_clauses, false));
-		//DIMACS_H_CK(ck_all_can_release(cf_sample_clauses, false));
-
 		cf_clauses.clear();
-		//cf_filled_clauses.clear();
-		//cf_sample_clauses.clear();
-
 		init_canon_cnf(false);
 	}
 

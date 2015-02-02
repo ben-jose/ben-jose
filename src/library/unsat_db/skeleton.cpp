@@ -473,7 +473,8 @@ canon_lock_name(const dima_dims& dims, ch_string sha_str){
 	ch_string XX = SKG_LOCK_SEP_STR;
 	// SKG_LOCK_NAME
 
-	ch_string the_nm = XX + tv_str + XX + tt_str + XX + tc_str + XX + tl_str + XX + sha_str + XX;
+	ch_string the_nm = XX + tv_str + XX + tt_str + XX + tc_str + 
+			XX + tl_str + XX + sha_str + XX;
 	return the_nm;
 }
 */
@@ -787,7 +788,10 @@ bj_ostream&
 canon_clause::print_canon_clause(bj_ostream& os, bool from_pt){
 	MARK_USED(from_pt);
 
-	return print_row_data(os, true, " ");
+	os << "ccl{";
+	print_row_data(os, true, " ");
+	os << "}";
+	return os;
 }
 
 canon_clause::canon_clause(){
@@ -866,9 +870,6 @@ canon_clause::cc_clear(bool free_mem){
 
 void
 canon_cnf::release_all_clauses(skeleton_glb& skg, bool free_mem){
-	//SKELETON_CK(cf_filled_clauses.is_empty());
-	//SKELETON_CK(cf_sample_clauses.is_empty());
-
 	row<canon_clause*>& all_ccl = cf_clauses;
 	while(! all_ccl.is_empty()){
 		canon_clause& ccl = *(all_ccl.pop());
@@ -919,7 +920,9 @@ canon_cnf::add_clauses_as_chars_to(row<canon_clause*>& all_ccl, row<char>& cnn){
 		os << "add_clauses_as_chars=" << bj_eol; 
 		all_ccl.print_row_data(os, true, "\n");
 	);
-	SKELETON_CK(! cf_sorted || all_ccl.is_sorted(cmp_clauses));
+	SKELETON_CK_PRT((! cf_sorted || all_ccl.is_sorted(cmp_clauses)), 
+			os << "______\n ALL_CCL=" << bj_eol;
+			all_ccl.print_row_data(os, true, "\n"));
 
 	for(long ii = 0; ii < all_ccl.size(); ii++){
 		canon_clause& ccl1 = *(all_ccl[ii]);
@@ -1275,8 +1278,6 @@ canon_cnf::load_from(skeleton_glb& skg, ch_string& f_nam){
 		os << "ABORTING_DATA " << bj_eol;
 		os << "CLAUSES" << bj_eol;
 		cf_clauses.print_row_data(os, true, "\n");
-		//os << "FILLED" << bj_eol;
-		//cf_filled_clauses.print_row_data(os, true, "\n");
 		os << "END_OF_aborting_data" << bj_eol;
 	);
 	SKELETON_CK(cf_sha_str == ck_sha_str);
@@ -1440,7 +1441,6 @@ canon_cnf::i_super_of_vnt(skeleton_glb& skg, ch_string& vpth){
 bool
 canon_cnf::i_sub_of_vnt(skeleton_glb& skg, ch_string& vpth, bool& are_eq){
 	SKELETON_CK(cf_clauses.is_sorted(cmp_clauses));
-	//SKELETON_CK(cf_filled_clauses.is_sorted(cmp_clauses));
 
 	canon_cnf& the_cnf = skg.kg_tmp_cnf;
 	SKELETON_CK(this != &(the_cnf));
@@ -2237,17 +2237,6 @@ canon_clause::cc_is_full(){
 		}
 	}
 	return fchg;
-}
-
-void
-mix_sort_ccls(row<canon_clause*>& the_ccls){
-	for(long aa = 0; aa < the_ccls.size(); aa++){
-		SKELETON_CK(the_ccls[aa] != NULL_PT);
-		canon_clause& ccl = *(the_ccls[aa]);
-		ccl.cc_mix_sort(cmp_canon_ids);
-	}
-
-	the_ccls.mix_sort(cmp_clauses);
 }
 
 

@@ -44,6 +44,8 @@ classes to implement a sortor.
 
 #define SORTER_DBG(prm)	DBG(prm)
 #define SORTER_CK(prm) 	DBG_CK(prm)
+#define SORTER_CK_PRT(prm, comms1)  DBG_CK_2(prm, comms1)
+
 #define SORTER_CK_1(prm) 	DBG_CK(prm)
 #define SORTER_CK_2(prm) 	DBG_CK(prm)
 
@@ -419,6 +421,15 @@ public:
 		return ok;
 	}
 
+	bool	can_be_head(){
+		bool c1 = (! has_ss_parent());
+		bool c2 = (! has_items());
+		bool c3 = (! ss_has_val);
+		bool c4 = (! has_brothers());
+		bool all_c = (c1 && c2 && c3 && c4);
+		return all_c;
+	}
+
 	sorset&		first_subset(){
 		SORTER_CK(has_subsets());
 		sorset& fst = rcp_as<sorset>(ss_subsets.bn_right);
@@ -431,6 +442,12 @@ public:
 		return fst;
 	}
 
+	sortee&		last_item(){
+		SORTER_CK(has_items());
+		sortee& lst = as_sortee(ss_items.bn_left);
+		return lst;
+	}
+	
 	/*
 	bool		is_leaf(){
 		bool is_lf = ! has_subsets();
@@ -723,18 +740,25 @@ public:
 	bool	has_head(){
 		return (sg_head != NULL_PT);
 	}
-
-	sorset&	get_head_ss(){
-		if(! has_head()){
+	
+	sorset&	init_head_ss(){
+		SORTER_CK(! has_head());
+		if(sg_head == NULL_PT){ 
 			sorset& n_hd = add_sorset();
-			MARK_USED(n_hd);
+			sg_head = &n_hd; 
 			SORTER_CK(&n_hd == sg_head);
+			SORTER_CK(n_hd.can_be_head());
+		}
+		return *sg_head;
+	}
+	
+	sorset&	get_head_ss(){
+		SORTER_CK(has_head());
+		if(! has_head()){
+			init_head_ss();
 		}
 		sorset& hd = *sg_head;
-		SORTER_CK(! hd.has_ss_parent());
-		SORTER_CK(! hd.has_items());
-		SORTER_CK(! hd.ss_has_val);
-		SORTER_CK(! hd.has_brothers());
+		SORTER_CK(hd.can_be_head());
 		return hd;
 	}
 

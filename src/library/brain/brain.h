@@ -242,7 +242,7 @@ is_ticket_eq(ticket& x, ticket& y){
 //=============================================================================
 // quanton
 
-#define DECLARE_NI_FLAG_FUNCS(flag_attr, flag_nam, single) \
+#define DECLARE_NI_FLAG_FUNCS(flag_attr, flag_nam) \
 	bool	has_pos_##flag_nam(){ \
 		return is_##flag_nam(); \
 	} \
@@ -259,9 +259,11 @@ is_ticket_eq(ticket& x, ticket& y){
 	bool		has_##flag_nam(){ \
 		return (is_##flag_nam() || opposite().is_##flag_nam()); \
 	} \
+	\
 	void	reset_its_##flag_nam(brain& brn); \
-	void	reset_##flag_nam(brain& brn); \
 	void	set_##flag_nam(brain& brn); \
+	void	set_bi##flag_nam(brain& brn); \
+	void	reset_##flag_nam(brain& brn); \
 	\
 \
 
@@ -269,28 +271,42 @@ is_ticket_eq(ticket& x, ticket& y){
 
 #define DEFINE_NI_FLAG_FUNCS(flag_attr, flag_nam, single) \
 	void	quanton::reset_its_##flag_nam(brain& brn){ \
-		BRAIN_CK(has_##flag_nam()); \
-		if(is_##flag_nam()){ \
+		BRAIN_CK(! single || has_##flag_nam()); \
+		if(has_pos_##flag_nam()){ \
 			reset_##flag_nam(brn); \
-		} else { \
+		} \
+		if(has_neg_##flag_nam()){ \
 			opposite().reset_##flag_nam(brn); \
 		} \
 	} \
 	\
-	void	quanton::reset_##flag_nam(brain& brn){ \
-		BRAIN_CK(is_##flag_nam()); \
-		BRAIN_CK(! single || ! opposite().is_##flag_nam()); \
-		reset_flag(flag_attr, k_##flag_nam##_flag); \
-		brn.br_qu_tot_##flag_nam--; \
-	} \
-	\
 	void	quanton::set_##flag_nam(brain& brn){ \
-		BRAIN_CK(! is_##flag_nam()); \
-		BRAIN_CK(! single || ! opposite().is_##flag_nam()); \
-		set_flag(flag_attr, k_##flag_nam##_flag); \
-		brn.br_qu_tot_##flag_nam++; \
+		BRAIN_CK(single); \
+		BRAIN_CK(! has_##flag_nam()); \
+		if(! is_##flag_nam() && ! opposite().is_##flag_nam()){ \
+			set_flag(flag_attr, k_##flag_nam##_flag); \
+			brn.br_qu_tot_##flag_nam++; \
+		} \
 	} \
  	\
+	void	quanton::set_bi##flag_nam(brain& brn){ \
+		BRAIN_CK(! single); \
+		BRAIN_CK(! is_##flag_nam()); \
+		if(! is_##flag_nam()){ \
+			set_flag(flag_attr, k_##flag_nam##_flag); \
+			brn.br_qu_tot_##flag_nam++; \
+		} \
+	} \
+ 	\
+	void	quanton::reset_##flag_nam(brain& brn){ \
+		BRAIN_CK(is_##flag_nam()); \
+		if(is_##flag_nam()){ \
+			BRAIN_CK(! single || ! opposite().is_##flag_nam()); \
+			reset_flag(flag_attr, k_##flag_nam##_flag); \
+			brn.br_qu_tot_##flag_nam--; \
+		} \
+	} \
+	\
 \
 
 // end_of_define
@@ -479,12 +495,12 @@ class quanton {
 		init_quanton(NULL, cg_neutral, 0, NULL);
 	}
 
-	DECLARE_NI_FLAG_FUNCS(qu_flags, note0, true);
-	DECLARE_NI_FLAG_FUNCS(qu_flags, note1, true);
-	DECLARE_NI_FLAG_FUNCS(qu_flags, note2, true);
-	DECLARE_NI_FLAG_FUNCS(qu_flags, note3, true);
-	DECLARE_NI_FLAG_FUNCS(qu_flags, note4, false);
-	DECLARE_NI_FLAG_FUNCS(qu_flags, note5, false);
+	DECLARE_NI_FLAG_FUNCS(qu_flags, note0); // sngle
+	DECLARE_NI_FLAG_FUNCS(qu_flags, note1); // sngle
+	DECLARE_NI_FLAG_FUNCS(qu_flags, note2); // sngle
+	DECLARE_NI_FLAG_FUNCS(qu_flags, note3); // sngle
+	DECLARE_NI_FLAG_FUNCS(qu_flags, note4);
+	DECLARE_NI_FLAG_FUNCS(qu_flags, note5);
 
 	void	qua_tunnel_signals(brain* brn);
 	
@@ -893,9 +909,6 @@ class neuron {
 	BRAIN_DBG(
 		brain*		ne_pt_brn;
 	)
-
-	//static 
-	//long			NE_TOT_SPOTS;
 
 	long			ne_index;		//idx in br_neurons
 	bool			ne_original;
@@ -1486,8 +1499,6 @@ class coloring {
 	row<long>		co_neu_colors;
 	bool			co_all_neu_consec;
 
-	long			co_szs_idx;
-
 	coloring(brain* pt_brn = NULL_PT){
 		init_coloring(pt_brn);
 	}
@@ -1506,8 +1517,6 @@ class coloring {
 		co_neus.clear();
 		co_neu_colors.clear();
 		co_all_neu_consec = false;
-
-		co_szs_idx = INVALID_IDX;
 	}
 
 	brain*	get_dbg_brn(){
@@ -1525,22 +1534,19 @@ class coloring {
 		bool c5 = (co_neu_colors.is_empty());
 		bool c6 = (co_all_neu_consec == false);
 
-		bool c7 = (co_szs_idx == INVALID_IDX);
-
-		bool is_vg = (c1 && c2 && c3 && c4 && c5 && c6 && c7);
+		bool is_vg = (c1 && c2 && c3 && c4 && c5 && c6);
 	
 		return is_vg;
 	}
 
+	void	set_brain_coloring();
+	
 	bool	has_diff_col_than_prev(row<long>& the_colors, long col_idx);
 
 	void	save_colors_from(sort_glb& neus_srg, sort_glb& quas_srg);
 	void	load_colors_into(brain& brn, sort_glb& neus_srg, sort_glb& quas_srg, 
 							 dima_dims& dims);
 	void	add_coloring(brain& brn, coloring& clr);
-	//void	calc_dims(brain& brn, dima_dims& dims);
-
-	//void	get_initial_sorting_coloring(brain& brn, coloring& clr, bool fill_neus);
 
 	void	move_co_to(coloring& col2);
 	void	copy_co_to(coloring& col2);
@@ -1556,10 +1562,10 @@ class coloring {
 		os << "CO(" << (void*)this <<")={ " << bj_eol;
 		os << " quas=" << co_quas << bj_eol;
 		os << " cols_quas=" << co_qua_colors << bj_eol;
-		os << " neus=" << co_neus << bj_eol;
+		os << " neus=" << bj_eol;
+		co_neus.print_row_data(os, true, "\n");
 		os << " qu_all=" << co_all_qua_consec;
 		os << " ne_all=" << co_all_neu_consec;
-		os << " szs_idx=" << co_szs_idx;
 		os << bj_eol;
 		os << "}";
 		os.flush();
@@ -2719,7 +2725,6 @@ public:
 	// state attributes
 	ticket			br_current_ticket;
 
-	//row_quanton_t		satisfying;		// charges after finishing
 	k_row<quanton>		br_positons;	// all quantons with positive charge
 	k_row<quanton>		br_negatons;	// all quantons with negative charge
 
@@ -2785,8 +2790,6 @@ public:
 
 	long 			br_num_memo;
 
-	//neuron			br_root_conflict;
-	//quanton			br_conflict_quanton;
 	quanton			br_top_block;
 
 	long			br_tot_qu_dots;
@@ -2859,6 +2862,7 @@ public:
 		return get_my_inst().get_f_nam();
 	}
 
+	void	release_all_sortors();
 	void	release_brain();
 
 	solver& 		get_solver();
@@ -3260,6 +3264,7 @@ public:
 	void 	dbg_prt_lvs_have_learned(bj_ostream& os);
 	void 	dbg_prt_lvs_active(bj_ostream& os);
 	void 	dbg_prt_lvs_cho(bj_ostream& os);
+	void	dbg_prt_full_stab();
 
 	void		print_active_blocks(bj_ostream& os);
 

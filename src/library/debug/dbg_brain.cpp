@@ -467,7 +467,7 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 	os << " na_submap=" << na_submap << bj_eol;
 	
 	os << " na_forced=" << bj_eol;
-	os << na_forced << bj_eol;
+	na_forced.print_row_data(os, true, "\n");
 	os << " na_non_forced=" << bj_eol;
 	na_non_forced.print_row_data(os, true, "\n");
 	

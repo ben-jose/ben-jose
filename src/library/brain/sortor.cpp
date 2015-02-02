@@ -30,6 +30,8 @@ Classes and that implement a sortor.
 
 --------------------------------------------------------------*/
 
+#include "stack_trace.h"
+
 #include "skeleton.h"
 #include "sortor.h"
 
@@ -290,9 +292,14 @@ sortee::sort_me_to(sort_glb& srg, sorset& nsr){
 
 	SORTER_CK(is_alone());
 	SORTER_CK(! has_vessel());
+	SORTER_CK(get_cls_name() == sortee::CL_NAME);
 	nsr.ss_items.bind_to_my_left(*this);
 	so_vessel = &nsr;
+	
 	DBG(srg.sg_dbg_num_items++);
+	DBG(sortee& ll = nsr.last_item());
+	SORTER_CK(ll.get_cls_name() == sortee::CL_NAME);
+	SORTER_CK(&ll == this);
 }
 
 void
@@ -382,7 +389,10 @@ sorset::last_sub(){
 
 sorset&
 sorset::add_sub(sort_glb& srg, sort_id_t curr_id, void* id_src){
+	SORTER_CK(srg.has_head());
 	sorset& l_sub = srg.add_sorset();
+	DBG(sorset& hh = srg.get_head_ss());
+	SORTER_CK(&hh != &l_sub);
 
 	//long curr_sep = srg.sg_num_separations;
 
@@ -468,7 +478,10 @@ void
 sort_glb::release_sorset(sorset& srs){
 	SORTER_CK(! sg_sorsets.is_empty());
 
-	if(sg_head == &srs){ sg_head = NULL_PT; }
+	if(sg_head == &srs){ 
+		DBG_PRT(133, os << " RELEASING_HEAD !!! sortor=" << this);
+		sg_head = NULL_PT; 
+	}
 
 	srs.ss_id_src = NULL_PT;
 
@@ -510,7 +523,9 @@ sort_glb::release_all(){
 
 	stab_release_all_sorsets();
 
-	sg_sorsets.clear(true, false);
+	SORTER_CK(sg_num_active_ss == 0);
+	
+	sg_sorsets.clear(true, true);
 	sg_free_sorsets.clear();
 
 	SORTER_CK(sg_sorsets.is_empty());
@@ -594,12 +609,16 @@ sort_glb::release_head_sorsets(){
 
 void
 sort_glb::stab_release_all_sorsets(){
+	DBG_PRT(133, os << "ss_is_empty=" << sg_step_sorsets.is_empty());
+	
 	sort_glb& srg = *this;
 	row<sorset*>& all_ss = sg_step_sorsets;
 	while(! all_ss.is_empty()){
-		sorset& srs = *(all_ss.pop());
+		sorset& srs = *(all_ss.last());
 		srs.walk_release(srg);
+		all_ss.dec_sz();
 	}
+	SORTER_CK(sg_step_sorsets.is_empty());
 
 	release_head_sorsets();
 
@@ -618,16 +637,21 @@ sort_glb::stab_release_all_sorsets(){
 
 void
 sort_glb::stab_recover_it(){
+	
 	stab_release_all_sorsets();
 
 	sort_glb& srg = *this;
+	BRAIN_CK(! has_head());
 	sorset& hd_nsr = get_head_ss();
+	BRAIN_CK(has_head());
 
 	SORTER_CK(! hd_nsr.has_subsets());
 	SORTER_CK(! hd_nsr.has_items());
 
 	row<sortee*>& tees = sg_step_sortees;
+	BRAIN_CK(tees.is_empty());
 	for(long aa = 0; aa < tees.size(); aa++){
+		BRAIN_CK(false);
 		sortee& tee = *(tees[aa]);
 		SORTER_CK(tee.is_alone());
 
@@ -883,7 +907,7 @@ sorset::step_mutual_stabilize_rec(sort_glb& srg1, sort_glb& srg2)
 	if(! has_items()){
 		srg1.release_sorset(*this);
 	}
-}
+} // step.mutual.stabilize.rec
 
 void
 sort_glb::step_mutual_stabilize(sort_glb& mates_srg, step_mutual_op_t op){
@@ -918,12 +942,25 @@ sort_glb::step_mutual_stabilize(sort_glb& mates_srg, step_mutual_op_t op){
 	sg_step_sorsets.set_cap(sets.size());
 	SORTER_CK(sg_step_sorsets.is_empty());
 
-	DBG_PRT(61, os << " step_MUTUAL " << this);
-
+	DBG_PRT(133, os << " step_MUTUAL " << this << " OLD_ssorsets_sz=" << old_ss_sz
+		<< " ss_sz=" << sets.size()
+	);
+	
 	for(long aa = 0; aa < sets.size(); aa++){
 		SORTER_CK(sets[aa] != NULL_PT);
 		sorset& srs = *(sets[aa]);
 		sets[aa] = NULL_PT;
+
+		if(! srg.has_head()){
+			DBG_PRT(133, os << "INITING head of " << &srg);
+			srg.init_head_ss();
+		}
+		if(! mates_srg.has_head()){
+			DBG_PRT(133, os << "INITING head of " << &mates_srg);
+			mates_srg.init_head_ss();
+		}
+		//DBG_PRT(133, os << " step_MUTUAL_rec " << this);
+		
 		srs.step_mutual_stabilize_rec(srg, mates_srg);
 	}
 	sets.clear();
@@ -948,12 +985,18 @@ sort_glb::stab_mutual(sort_glb& srg2){
 	srg1.sg_tot_stab_steps = 0;
 	srg2.sg_tot_stab_steps = 0;
 
-	DBG_PRT(61, 
-			os << " STAB_MUTUAL srg1=" << ((void*)(&srg1)) << " srg2=" << ((void*)(&srg2))
+	DBG_PRT(133, 
+			os << " STAB_MUTUAL srg1=" << ((void*)(&srg1)) << " srg2=" << ((void*)(&srg2));
+			os << "\nSRG1_has_head=" << srg1.has_head();
+			os << "\nSRG2_has_head=" << srg2.has_head();
 	);
+	SORTER_CK(srg1.has_head());
+	SORTER_CK(srg2.has_head());
 
 	bool has_diff = true;
 	while(has_diff){
+		//DBG_PRT(133, os << "_stab_mutual_ \n SRG1=\n" << srg1 << "\n SRG2=\n" << srg2);
+		
 		srg1.step_neus(srg2);
 		bool diff1 = srg1.sg_step_has_diff;
 
@@ -1074,30 +1117,51 @@ sort_glb::step_quas(sort_glb& mates_srg){
 
 void
 sort_glb::stab_mutual_init(){
-	row<sortee*>& all_tees = sg_step_sortees;
-	row<sorset*>& all_ss = sg_step_sorsets;
-	sort_id_t& curr_stab_consec = sg_curr_stab_consec;
-
 	sg_one_ccl_per_ss = true;
 
-	all_tees.clear();
-	stab_recover_it();
-	BRAIN_CK(sg_num_active_ss == 1);
-	BRAIN_CK(sg_dbg_num_items == 0);
+	stab_release_all_sorsets();
+	sorset& hd_nsr = init_head_ss();
+	
+	SORTER_CK(sg_step_sorsets.is_empty());
+	sg_step_sorsets.push(&hd_nsr);
+	
+	SORTER_CK(sg_num_active_ss == 1);
+	SORTER_CK(sg_dbg_num_items == 0);
+	SORTER_CK(sg_step_sorsets.size() == 1);
+	SORTER_CK(has_head());
+	SORTER_CK(&(get_head_ss()) == sg_step_sorsets.first());
+	SORTER_CK(! sg_step_sortees.is_empty() || get_head_ss().is_ss_virgin());
+	SORTER_CK(sg_curr_stab_consec == 0);
+	SORTER_CK(sg_one_ccl_per_ss);
+	SORTER_CK(sg_dbg_num_saved_consec == 0);
 
-	MARK_USED(all_tees);
-	MARK_USED(all_ss);
-
-	BRAIN_CK(all_ss.size() == 1);
-	BRAIN_CK(has_head());
-	BRAIN_CK(&(get_head_ss()) == all_ss.first());
-	BRAIN_CK(! all_tees.is_empty() || get_head_ss().is_ss_virgin());
-	BRAIN_CK(curr_stab_consec == 0);
-	BRAIN_CK(sg_one_ccl_per_ss);
-
-	curr_stab_consec++;
+	sg_curr_stab_consec++;
 	init_counters();
 }
 
 
+void
+sorset::walk_to_srs_row_rec(long& consec, row<sorset*>& sorted)
+{
+	binder* fst = NULL_PT;
+	binder* lst = NULL_PT;
+	binder* rgt = NULL_PT;
+
+	// subsets
+
+	fst = ss_subsets.bn_right;
+	lst = &ss_subsets;
+	for(rgt = fst; rgt != lst; rgt = rgt->bn_right){
+		sorset& nsr = rcp_as<sorset>(rgt);
+		nsr.walk_to_srs_row_rec(consec, sorted);
+	}
+
+	// items
+
+	if(has_items()){
+		consec++;
+		sorted.push(this);
+	}
+
+}
 
