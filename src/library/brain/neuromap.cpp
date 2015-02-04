@@ -517,8 +517,8 @@ neuromap::map_get_all_upper_quas(notekeeper& nkpr, row_quanton_t& all_upper_quas
 
 void
 coloring::save_colors_from(sort_glb& neus_srg, sort_glb& quas_srg){
-	SORTER_CK(! neus_srg.sg_step_has_diff);
-	SORTER_CK(! quas_srg.sg_step_has_diff);
+	//SORTER_CK(! neus_srg.sg_step_has_diff);
+	//SORTER_CK(! quas_srg.sg_step_has_diff);
 
 	co_all_neu_consec = srt_row_as_colors<neuron>(neus_srg.sg_step_sortees, 
 												  co_neus, co_neu_colors);
@@ -546,9 +546,40 @@ coloring::has_diff_col_than_prev(row<long>& the_colors, long col_idx){
 }
 
 void
+quanton::reset_and_add_tee(sort_glb& quas_srg, sort_id_t quas_consec){
+	BRAIN_CK(qu_tee.is_unsorted());
+	BRAIN_CK(qu_tee.so_related == &qu_reltee);
+	
+	qu_tee.reset_sort_info();
+	qu_tee.sort_from(quas_srg, quas_consec);
+}
+
+void
+neuron::fill_mutual_sortees(brain& brn){
+	row<sortee*>& neu_mates = ne_reltee.so_mates;
+
+	neu_mates.clear();
+	BRAIN_CK(ne_reltee.so_opposite == NULL_PT);
+
+	for(long aa = 0; aa < fib_sz(); aa++){
+		BRAIN_CK(ne_fibres[aa] != NULL_PT);
+		quanton& qua = *(ne_fibres[aa]);
+
+		if(qua.has_note1()){
+			sortrel& qua_sre = qua.qu_reltee;
+			row<sortee*>& qua_mates = qua_sre.so_mates;
+			qua_mates.push(&ne_tee);
+			neu_mates.push(&(qua.qu_tee));
+		}
+	}
+}
+
+void
 coloring::load_colors_into(brain& brn, sort_glb& neus_srg, sort_glb& quas_srg, 
 						   dima_dims& dims)
 {
+	BRAIN_CK(neus_srg.has_head());
+	BRAIN_CK(quas_srg.has_head());
 	BRAIN_CK(ck_cols());
 
 	row_quanton_t&	all_quas = co_quas;
@@ -579,6 +610,7 @@ coloring::load_colors_into(brain& brn, sort_glb& neus_srg, sort_glb& quas_srg,
 		BRAIN_CK(all_quas[aa] != NULL_PT);
 		quanton& qua = *(all_quas[aa]);
 
+		BRAIN_CK(! qua.has_note1() || ((aa > 0) && (all_quas[aa - 1] == qua.qu_inverse)));
 		if(! qua.has_note1()){
 			qua.set_note1(brn);
 		}
@@ -592,10 +624,15 @@ coloring::load_colors_into(brain& brn, sort_glb& neus_srg, sort_glb& quas_srg,
 	sort_id_t& neus_consec = quas_srg.sg_curr_stab_consec;
 	neus_consec++;
 
+	BRAIN_CK(brn.br_ne_tot_tag0 == 0);
+	
 	for(long bb = 0; bb < all_neus.size(); bb++){
 		BRAIN_CK(all_neus[bb] != NULL_PT);
 		neuron& neu = *(all_neus[bb]);
 
+		BRAIN_CK(! neu.has_tag0());
+		DBG(neu.set_tag0(brn));
+		
 		bool inc_consec = has_diff_col_than_prev(neu_colors, bb);
 		if(inc_consec){ neus_consec++; }
 
@@ -603,7 +640,7 @@ coloring::load_colors_into(brain& brn, sort_glb& neus_srg, sort_glb& quas_srg,
 		neu_tee.so_ccl.cc_clear(false);
 		neu_tee.so_tee_consec = 0;
 
-		neu.fill_mutual_sortees(brn);
+		neu.fill_mutual_sortees(brn); // uses note1 of quas
 
 		row<sortee*>& neu_mates = neu.ne_reltee.so_mates;
 		if(! neu_mates.is_empty()){
@@ -612,6 +649,9 @@ coloring::load_colors_into(brain& brn, sort_glb& neus_srg, sort_glb& quas_srg,
 		}
 	}
 
+	DBG(reset_all_tag0(brn, all_neus));
+	BRAIN_CK(brn.br_ne_tot_tag0 == 0);
+	
 	reset_all_note1(brn, all_quas);
 	BRAIN_CK(brn.br_qu_tot_note1 == 0);
 	BRAIN_CK(ck_cols());
@@ -706,33 +746,6 @@ coloring::copy_co_to(coloring& col2){
 	co_neus.copy_to(col2.co_neus);
 	co_neu_colors.copy_to(col2.co_neu_colors);
 	col2.co_all_neu_consec = co_all_neu_consec;
-}
-
-void
-quanton::reset_and_add_tee(sort_glb& quas_srg, sort_id_t quas_consec){
-	BRAIN_CK(qu_tee.so_related == &qu_reltee);
-	qu_tee.reset_sort_info();
-	qu_tee.sort_from(quas_srg, quas_consec);
-}
-
-void
-neuron::fill_mutual_sortees(brain& brn){
-	row<sortee*>& neu_mates = ne_reltee.so_mates;
-
-	neu_mates.clear();
-	BRAIN_CK(ne_reltee.so_opposite == NULL_PT);
-
-	for(long aa = 0; aa < fib_sz(); aa++){
-		BRAIN_CK(ne_fibres[aa] != NULL_PT);
-		quanton& qua = *(ne_fibres[aa]);
-
-		if(qua.has_note1()){
-			sortrel& qua_sre = qua.qu_reltee;
-			row<sortee*>& qua_mates = qua_sre.so_mates;
-			qua_mates.push(&ne_tee);
-			neu_mates.push(&(qua.qu_tee));
-		}
-	}
 }
 
 void

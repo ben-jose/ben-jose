@@ -376,8 +376,8 @@ cmp_canon_ids(const long& id1, const long& id2);
 comparison
 cmp_lit_rows(row_long_t& trl1, row_long_t& trl2);
 
-comparison
-cmp_trails(row_long_t& trl1, row_long_t& trl2);
+//comparison
+//cmp_trails(row_long_t& trl1, row_long_t& trl2);
 
 comparison
 cmp_clauses(canon_clause* const& srt1, canon_clause* const& srt2);

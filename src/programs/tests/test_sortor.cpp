@@ -314,6 +314,8 @@ bool	test_nw_srt_from(long test_consec, long start_rnd, avg_stat& spd_avg,
 
 		os << " #elem=" << num_elem << " #ops=" << num_srt_from << " speed=" << run_speed 
 			<< " finite=" << finite(run_speed);
+
+		//os << "SIZE=" << s_rr.size() << bj_eol;
 		//s_rr.print_row_data(os, true, "\n");
 
 		//os << "NUM_ELEM=" << num_elem << std::endl;
@@ -372,8 +374,10 @@ void	test_full_srt_from(){
 	long start_rnd = time(0);
 	tak_mak g1(start_rnd);
 
+	long NUM_TESTS = 1000;
+	//long NUM_TESTS = 1;
 	long ii = 0;
-	for(ii = 0; ii < 1000; ii++){
+	for(ii = 0; ii < NUM_TESTS; ii++){
 		long start_val = g1.gen_rand_int32_ie(1, LONG_MAX);
 		//long start_val = 1202716915;
 

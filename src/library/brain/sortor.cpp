@@ -91,10 +91,16 @@ bj_ostream&
 sortee::print_sortee(bj_ostream& os, bool from_pt){
 	MARK_USED(from_pt);
 
-	os << "(" << so_dbg_extrn_id << ")";
+	//os << "(" << so_dbg_extrn_id << ")";
 	//os << "(" << (void*)this << ").";
-	os << so_tee_consec;
-	os << "[" << so_last_ccl_id << "]";
+	//os << so_tee_consec;
+	if(so_dbg_me_class == 1){
+		os << "." << so_qua_id;
+	}
+	if(so_dbg_me_class == 2){
+		os << "." << so_ccl;
+	}
+	//os << "[" << so_last_ccl_id << "]";
 	os << " ";
 
 	if(! from_pt){
@@ -159,9 +165,11 @@ get_indentation(long level){
 
 void
 sorset::print_data_sorset(bj_ostream& os){
+	/*
 	os << "(";
 	os << "pt=(" << (void*)this << "), ";
 	os << ")";
+	*/
 
 	// items
 
@@ -170,7 +178,8 @@ sorset::print_data_sorset(bj_ostream& os){
 	binder* rgt = NULL_PT;
 	for(rgt = fst; rgt != lst; rgt = rgt->bn_right){
 		sortee& srt = as_sortee(rgt);
-		os << "it=(" << (void*)(&srt) << "), ";		
+		//os << "it=(" << (void*)(&srt) << "), ";
+		os << &srt;
 	}
 }
 
@@ -207,7 +216,7 @@ sorset::print_sorset(bj_ostream& os, bool from_pt){
 
 		os << "ss={";
 		print_data_sorset(os);
-		os << " ids=" << ids;
+		//os << " ids=" << ids;
 		os << "}";
 
 		os.flush();
@@ -584,6 +593,8 @@ sort_glb::build_cnf(skeleton_glb& skg, canon_cnf& the_cnf, row<canon_clause*>& t
 	the_cnf.cf_phase_str = ph_str;
 	the_cnf.cf_dims = sg_cnf_dims;
 
+	DBG_PRT(133, os << "CLAUSES=" << bj_eol; the_ccls.print_row_data(os, true, "\n"));
+	
 	the_ccls.move_to(the_cnf.cf_clauses);
 
 	the_cnf.calc_sha();
@@ -791,7 +802,7 @@ sorset::step_mutual_stabilize_rec(sort_glb& srg1, sort_glb& srg2)
 	long& tee_consec = srg1.sg_step_consec;
 	bool& has_diff = srg1.sg_step_has_diff;
 	bool& all_consec = srg1.sg_step_all_consec;
-	row<sortee*>& sorted = srg1.sg_step_sortees;
+	row<sortee*>& sorted_tees = srg1.sg_step_sortees;
 
 	row<canon_clause*>& all_ccl = srg1.sg_step_mutual_clauses;
 
@@ -819,7 +830,8 @@ sorset::step_mutual_stabilize_rec(sort_glb& srg1, sort_glb& srg2)
 	}
 
 	//bool has_one_item = one_item();
-	if((oper == sm_walk) && (srg1.sg_step_first_multiple == NULL_PT) && is_multitem()){
+	bool set_mul_op = ((oper == sm_walk) || (oper == sm_get_ccls)); 
+	if(set_mul_op && (srg1.sg_step_first_multiple == NULL_PT) && is_multitem()){
 		srg1.sg_step_first_multiple = this;
 	}
 
@@ -846,8 +858,8 @@ sorset::step_mutual_stabilize_rec(sort_glb& srg1, sort_glb& srg2)
 			}
 	
 			if(all_consec){			
-				bool same_consec = (! sorted.is_empty() && 
-					(sorted.last()->so_tee_consec == srt.so_tee_consec));
+				bool same_consec = (! sorted_tees.is_empty() && 
+					(sorted_tees.last()->so_tee_consec == srt.so_tee_consec));
 				if(same_consec){ all_consec = false; }
 			}
 		}
@@ -855,21 +867,22 @@ sorset::step_mutual_stabilize_rec(sort_glb& srg1, sort_glb& srg2)
 		// all sortees
 
 		if(set_tee_consecs){
-			sorted.push(&srt);
+			sorted_tees.push(&srt);
 		}
 
-		// clear my ccls
-
-		canon_clause& the_ccl = srt.so_ccl;
-		the_ccl.cc_clear(false);
+		canon_clause& tee_ccl = srt.so_ccl;
+		if(oper == sm_get_ccls){
+			// one ccl by sorset
+			if(one_ccl){ if(rgt == fst){ all_ccl.push(&tee_ccl); } }
+			else { all_ccl.push(&tee_ccl); }
+		} else {
+			// clear my ccls
+			tee_ccl.cc_clear(false);
+		}
 
 		// sort oper
 
 		if(oper == sm_with_neus){
-			// one ccl by sorset
-			if(one_ccl){ if(rgt == fst){ all_ccl.push(&the_ccl); } }
-			else { all_ccl.push(&the_ccl); }
-
 			row<sortee*>& all_mates = srt.so_related->so_mates;
 			srg2.sort_all_from(all_mates, curr_stab_consec, false, 0, true);
 		}
@@ -888,9 +901,9 @@ sorset::step_mutual_stabilize_rec(sort_glb& srg1, sort_glb& srg2)
 		}
 
 		if(oper == sm_with_quas){
-			row<sortee*>& all_mates = srt.so_related->so_mates;
-
 			long qua_id = srt.get_qua_id(srg1);
+			
+			row<sortee*>& all_mates = srt.so_related->so_mates;
 			srg2.sort_all_from(all_mates, curr_stab_consec, true, qua_id, false, tc_mates);
 		}
 	}
@@ -921,8 +934,8 @@ sort_glb::step_mutual_stabilize(sort_glb& mates_srg, step_mutual_op_t op){
 	sg_step_all_consec = true;
 	sg_step_sortees.clear();
 	sg_step_first_multiple = NULL_PT;
-	//sg_step_neg_clauses.clear();
-	//sg_step_pos_clauses.clear();
+	sg_step_neg_sorsets.clear();
+	sg_step_pos_sorsets.clear();
 
 	sg_step_mutual_op = op;
 	sg_step_mutual_clauses.clear();
@@ -968,9 +981,9 @@ sort_glb::step_mutual_stabilize(sort_glb& mates_srg, step_mutual_op_t op){
 	SORTER_CK(old_ss_sz <= sg_step_sorsets.size());
 	SORTER_CK(sg_cnf_dims.is_dd_virgin());
 	SORTER_CK(sg_cnf_clauses.is_empty());
-	SORTER_CK((op == sm_with_neus) || sg_step_mutual_clauses.is_empty());
+	SORTER_CK((op == sm_get_ccls) || sg_step_mutual_clauses.is_empty());
 
-	if(op == sm_with_neus){
+	if(op == sm_get_ccls){
 		sg_step_mutual_clauses.move_to(sg_cnf_clauses);
 		sg_cnf_dims.dd_tot_ccls = sg_cnf_clauses.size();
 	}
@@ -1009,25 +1022,56 @@ sort_glb::stab_mutual(sort_glb& srg2){
 	}
 	SORTER_CK(! srg1.sg_step_has_diff);
 	SORTER_CK(! srg2.sg_step_has_diff);
+	
+	stab_mutual_end(srg2);
+}
+
+void
+sort_glb::stab_mutual_end(sort_glb& srg2){
+	SORTER_CK(&srg2 != this);
+	sort_glb& srg1 = *this;
+
+	srg1.join_all_tees_in_head();
+	srg2.add_neg_and_pos_to(srg2.sg_step_sorsets);
+	srg2.step_quas(srg1);
+	
+	SORTER_CK(srg1.sg_step_sorsets.size() == 1);
+	srg1.step_mutual_stabilize(srg2, sm_get_ccls);
 }
 
 long
 sortee::get_qua_id(sort_glb& srg){
 	if(so_qua_id == 0){
 		SORTER_CK(so_tee_consec > 0);
-		SORTER_CK(! is_unsorted());
+		SORTER_CK(! is_alone());
+		SORTER_CK(has_vessel());
 
 		sortee& opp = opposite();
 		SORTER_CK(opp.so_qua_id == 0);
-		SORTER_CK(! opp.is_unsorted());
-
+		SORTER_CK(! opp.is_alone());
+		SORTER_CK(opp.has_vessel());
+		
+		row<sorset*>& all_neg = srg.sg_step_neg_sorsets;
+		row<sorset*>& all_pos = srg.sg_step_pos_sorsets;
+		
+		bool in_same = (so_vessel == opp.so_vessel);
+		
+		bool added_vsl = (all_neg.is_empty() || (so_vessel != all_neg.last()));
+		if(added_vsl){
+			all_neg.push(so_vessel);
+		}
 		so_qua_id = -so_tee_consec;
-		if(so_vessel != opp.so_vessel){
-			opp.so_qua_id = so_tee_consec;
-		} else {
+		
+		if(in_same){
 			opp.so_qua_id = -so_tee_consec;
+		} else {
+			if(added_vsl){
+				all_pos.push(opp.so_vessel);
+			}
+			opp.so_qua_id = so_tee_consec;
 		}
 	}
+	SORTER_CK(so_qua_id != 0);
 	return so_qua_id;
 }
 
@@ -1104,12 +1148,14 @@ sort_glb::step_neus(sort_glb& mates_srg){
 void
 sort_glb::step_opps(sort_glb& mates_srg){
 	step_mutual_stabilize(mates_srg, sm_with_opps);
+	SORTER_CK(sg_cnf_clauses.is_empty());
 }
 
 void
 sort_glb::step_quas(sort_glb& mates_srg){
 	step_mutual_stabilize(mates_srg, sm_with_quas);
-
+	SORTER_CK(sg_cnf_clauses.is_empty());
+	
 	DBG_PRT(62, os << " STEP_QUAS cnf=" << bj_eol;
 		mates_srg.sg_cnf_clauses.print_row_data(os, true, "\n");
 	);
@@ -1117,7 +1163,7 @@ sort_glb::step_quas(sort_glb& mates_srg){
 
 void
 sort_glb::stab_mutual_init(){
-	sg_one_ccl_per_ss = true;
+	sg_one_ccl_per_ss = false;
 
 	stab_release_all_sorsets();
 	sorset& hd_nsr = init_head_ss();
@@ -1132,7 +1178,7 @@ sort_glb::stab_mutual_init(){
 	SORTER_CK(&(get_head_ss()) == sg_step_sorsets.first());
 	SORTER_CK(! sg_step_sortees.is_empty() || get_head_ss().is_ss_virgin());
 	SORTER_CK(sg_curr_stab_consec == 0);
-	SORTER_CK(sg_one_ccl_per_ss);
+	SORTER_CK(! sg_one_ccl_per_ss);
 	SORTER_CK(sg_dbg_num_saved_consec == 0);
 
 	sg_curr_stab_consec++;
@@ -1164,4 +1210,123 @@ sorset::walk_to_srs_row_rec(long& consec, row<sorset*>& sorted)
 	}
 
 }
+
+void
+sort_glb::add_neg_and_pos_to(row<sorset*>& dest_ss){
+	// careful the behavior of this func must match the behavior of get_qua_id func
+	
+	dest_ss.clear();
+
+	sg_step_neg_sorsets.append_to(dest_ss, 0 , -1 , true);
+	sg_step_pos_sorsets.append_to(dest_ss);
+	
+	row<sorset*>& all_neg = sg_step_neg_sorsets;
+	long qu_id = -(all_neg.size());
+	for(long aa = all_neg.last_idx(); aa >= 0; aa--){
+		SORTER_CK(all_neg[aa] != NULL_PT);
+		sorset& srs = *(all_neg[aa]);
+		SORTER_CK(srs.is_final());
+		SORTER_CK(qu_id < 0);
+		
+		srs.set_all_items_qua_id(qu_id);
+		
+		sortee& srt = srs.first_item();
+		SORTER_CK(srt.so_vessel == &srs);
+		sortee& opp = srt.opposite();
+		SORTER_CK(opp.has_vessel());
+		if(opp.so_vessel != &srs){
+			opp.so_vessel->set_all_items_qua_id(-qu_id);
+		}
+		
+		qu_id++;
+	}
+	
+	SORTER_CK(ck_sorted_sorsets(dest_ss));
+}
+
+void 
+sort_glb::join_all_tees_in_head(){
+	sort_glb& srg1 = *this;
+	DBG(long old_num_tee = sg_step_sortees.size());
+	
+	stab_mutual_init();
+	
+	SORTER_CK(has_head());
+	SORTER_CK(old_num_tee == sg_step_sortees.size());
+	
+	row<sortee*>& all_tees = sg_step_sortees;
+	for(long aa = 0; aa < all_tees.size(); aa++){
+		SORTER_CK(all_tees[aa] != NULL_PT);
+		sortee& srt = *(all_tees[aa]);
+		srt.so_ccl.cc_clear(false);
+		SORTER_CK(srt.is_unsorted());
+		srt.sort_from(srg1, 1);
+	}
+}
+
+void
+sorset::set_all_items_qua_id(long qu_id){
+	SORTER_CK(qu_id != 0);
+	
+	binder* fst = ss_items.bn_right;
+	binder* lst = &(ss_items);
+	binder* rgt = NULL_PT;
+	for(rgt = fst; rgt != lst; rgt = rgt->bn_right){
+		sortee& srt = as_sortee(rgt);
+		SORTER_CK(srt.so_vessel == this);
+		srt.so_qua_id = qu_id;
+	}
+}
+
+bool
+sorset::ck_all_items_same_qua_id(){
+#ifdef FULL_DEBUG
+	long ss_id = 0;
+	
+	binder* fst = ss_items.bn_right;
+	binder* lst = &(ss_items);
+	binder* rgt = NULL_PT;
+	for(rgt = fst; rgt != lst; rgt = rgt->bn_right){
+		sortee& srt = as_sortee(rgt);
+		long qu_id = srt.so_qua_id;
+		SORTER_CK(qu_id != 0);
+		if(ss_id == 0){ ss_id = qu_id; }
+		SORTER_CK(qu_id == ss_id);
+	}
+#endif
+	return true;
+}
+
+bool 
+sort_glb::ck_sorted_sorsets(row<sorset*>& dest_ss){
+#ifdef FULL_DEBUG
+	DBG_PRT(133, os << "STAB_SETS=\n" << dest_ss);
+	
+	row_long_t& all_id = sg_tmp_id_trail;
+	all_id.clear();
+	
+	for(long aa = 0; aa < dest_ss.size(); aa++){
+		SORTER_CK(dest_ss[aa] != NULL_PT);
+		sorset& srs = *(dest_ss[aa]);
+		SORTER_CK(srs.is_final());
+		SORTER_CK((aa == 0) || (dest_ss[aa - 1] != &srs));
+		SORTER_CK(srs.ck_all_items_same_qua_id());
+		
+		sortee& srt = srs.first_item();
+		sortee& opp = srt.opposite();
+		long qu_id = srt.so_qua_id;
+		
+		SORTER_CK(qu_id != 0);
+		
+		bool sam_vsl = (srt.so_vessel == opp.so_vessel);
+		SORTER_CK(sam_vsl || (qu_id == -(opp.so_qua_id)));
+		SORTER_CK(! sam_vsl || (qu_id == opp.so_qua_id));
+		
+		all_id.push(qu_id);
+	}
+	SORTER_CK(all_id.is_sorted(cmp_canon_ids));
+#endif
+	return true;
+}
+
 

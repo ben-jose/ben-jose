@@ -2157,6 +2157,8 @@ brain::dbg_prt_full_stab(){
 	sorset pru_ss;
 
 	brain& brn = *this;
+	skeleton_glb& skg = get_skeleton();
+	
 	coloring full_col;
 	full_col.init_coloring(this);
 	full_col.set_brain_coloring();
@@ -2171,14 +2173,26 @@ brain::dbg_prt_full_stab(){
 	dima_dims dims0;
 	full_col.load_colors_into(brn, neus_srg, quas_srg, dims0);
 
-	bj_out << "NEUS_SRG_BEFORE=" << bj_eol << neus_srg;
+	//bj_out << "NEUS_SRG_BEFORE=" << bj_eol << neus_srg;
 	
 	neus_srg.sg_cnf_clauses.clear();
 	
 	neus_srg.stab_mutual(quas_srg);
 	
-	bj_out << "NEUS_SRG=" << bj_eol << neus_srg;
+	//row<canon_clause*>& all_ccl = neus_srg.sg_cnf_clauses;
 	
+	//bj_out << "ALL_CCL=\n";
+	//all_ccl.print_row_data(bj_out, true, "\n");;
+	
+	//bj_out << "NEUS_SRG=" << bj_eol << neus_srg;
+	
+	canon_cnf& the_cnf = neus_srg.stab_mutual_get_cnf(skg, "TEST_STAB", true);
+
+	bj_out << "THE_CNF=" << bj_eol;
+	bj_out << the_cnf;
+	bj_out << "END_of_cnf=" << bj_eol;
+	
+	/*
 	bj_out << "stab_neus=" << bj_eol;
 	neus_srg.sg_cnf_clauses.print_row_data(bj_out, true, "\n");
 	
@@ -2186,15 +2200,18 @@ brain::dbg_prt_full_stab(){
 	row_neuron_t all_nn;
 	bool h_dff = neus_srg.sort_to_row_and_all_consec<neuron>(all_nn, all_csc);
 	
+	//neus_srg.sg_step_sortees
+	
 	bj_out << "SORTED_ALL_STAB_NEUS=" << bj_eol;
 	all_nn.print_row_data(bj_out, true, "\n");
 	bj_out << bj_eol << "END_OF_SORTED_stab_neus=" << bj_eol;
-
+	
 	bj_out << "bb_cls=" << pru_bb.get_cls_name() << bj_eol;
 	bj_out << "gg_cls=" << pru_gg.get_cls_name() << bj_eol;
 	bj_out << "rr_cls=" << pru_rr.get_cls_name() << bj_eol;
 	bj_out << "tt_cls=" << pru_tt.get_cls_name() << bj_eol;
 	bj_out << "ss_cls=" << pru_ss.get_cls_name() << bj_eol;
+	*/
 
 	release_all_sortors();
 	

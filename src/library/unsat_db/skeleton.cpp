@@ -482,8 +482,9 @@ canon_lock_name(const dima_dims& dims, ch_string sha_str){
 //============================================================
 // comparison funcs
 
+/*
 comparison
-cmp_canon_ids(const long& id1, const long& id2){
+cmp_old_ids(const long& id1, const long& id2){
 	long id_p1 = id1;
 	long id_p2 = id2;
 
@@ -507,6 +508,14 @@ cmp_canon_ids(const long& id1, const long& id2){
 
 	SKELETON_CK(id_p1 == id_p2);
 	return 0;
+}*/
+
+comparison
+cmp_canon_ids(const long& id1, const long& id2){
+	SKELETON_CK(id2 != INVALID_QUANTON_ID);
+	SKELETON_CK(id2 != INVALID_QUANTON_ID);
+	comparison vv_cc = cmp_long(id1, id2);
+	return vv_cc;
 }
 
 comparison
@@ -547,6 +556,7 @@ cmp_lit_rows(row_long_t& trl1, row_long_t& trl2){
 	return 0;
 }
 
+/*
 comparison
 cmp_trails(row_long_t& trl1, row_long_t& trl2){
 	long ii = 0;
@@ -581,7 +591,7 @@ cmp_trails(row_long_t& trl1, row_long_t& trl2){
 
 	SKELETON_CK(trl1.size() == trl2.size());
 	return 0;
-}
+}*/
 
 comparison
 cmp_clauses(canon_clause* const& ccl1, canon_clause* const& ccl2){

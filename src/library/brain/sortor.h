@@ -210,7 +210,6 @@ public:
 	void		update_totals(sort_glb& srg, long tgt_sz);
 	bool		is_confl(sort_glb& srg);
 	bool		is_dual(sort_glb& srg);
-
 	long		get_qua_id(sort_glb& srg);
 
 	sortee&		opposite(){
@@ -421,6 +420,13 @@ public:
 		return ok;
 	}
 
+	bool		is_final(){
+		bool c1 = ! has_subsets();
+		bool c2 = ! has_ss_parent();
+		bool c3 = has_items();
+		return (c1 && c2 && c3);
+	}
+	
 	bool	can_be_head(){
 		bool c1 = (! has_ss_parent());
 		bool c2 = (! has_items());
@@ -526,6 +532,9 @@ public:
 	}
 
 	void		walk_to_srs_row_rec(long& consec, row<sorset*>& sorted);
+	
+	bool		ck_all_items_same_qua_id();
+	void		set_all_items_qua_id(long qu_id);
 
 	void		print_data_sorset(bj_ostream& os);
 	void		print_tree_sorset(bj_ostream& os, long level);
@@ -570,7 +579,8 @@ enum step_mutual_op_t {
 	sm_walk = 0,
 	sm_with_neus = 1,
 	sm_with_opps = 2,
-	sm_with_quas = 3
+	sm_with_quas = 3,
+	sm_get_ccls = 4
 };
 
 class sort_glb {
@@ -610,9 +620,9 @@ public:
 	row<sorset*>	sg_step_sorsets;
 	sorset*		sg_step_first_multiple;
 
-	//row<canon_clause*>	sg_step_neg_clauses;
-	//row<canon_clause*>	sg_step_pos_clauses;
-
+	row<sorset*>	sg_step_neg_sorsets;
+	row<sorset*>	sg_step_pos_sorsets;
+	
 	step_mutual_op_t	sg_step_mutual_op;
 	row<canon_clause*>	sg_step_mutual_clauses;
 
@@ -631,8 +641,8 @@ public:
 	row<sortee*>	sg_tmp_srts;
 	row<sorset*>	sg_tmp_srss;
 
+	row_long_t		sg_tmp_id_trail;
 	//row_long_t	sg_tmp_seps_trail;
-	//row_long_t	sg_tmp_id_trail;
 	//row<void*> 	sg_tmp_srcs_trail;
 
 	// cnf data
@@ -700,8 +710,6 @@ public:
 		sg_step_sortees.clear();
 		sg_step_sorsets.clear();
 		sg_step_first_multiple = NULL_PT;
-		//sg_step_neg_clauses.clear();
-		//sg_step_pos_clauses.clear();
 
 		sg_step_mutual_op = sm_walk;
 		sg_step_mutual_clauses.clear();
@@ -813,6 +821,7 @@ public:
 	void		stab_mutual_unique(sort_glb& mates_srg);
 	canon_cnf&	stab_mutual_get_cnf(skeleton_glb& skg, ch_string comment, bool sorted_cnf);
 	void		stab_mutual_choose_one(sort_glb& srg2);
+	void		stab_mutual_end(sort_glb& mates_srg);
 
 	bool		base_path_exists(skeleton_glb& skg);
 
@@ -845,11 +854,16 @@ public:
 		}
 	}
 
-	bool		ck_srss_sorted(){
+	bool	ck_srss_sorted(){
 		sort_to_tmp_srss();
 		bool ck1 = sg_tmp_srss.is_sorted(cmp_sorsets);
 		return ck1;
 	}
+	
+	bool 	ck_sorted_sorsets(row<sorset*>& dest_ss);
+	
+	void 	add_neg_and_pos_to(row<sorset*>& dest_ss);
+	void 	join_all_tees_in_head();
 
 	bj_ostream&	print_sort_glb(bj_ostream& os, bool from_pt = false);
 
