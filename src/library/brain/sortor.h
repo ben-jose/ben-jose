@@ -809,7 +809,7 @@ public:
 	void		stab_choose_one();
 	void		stab_release_all_sorsets();
 	void		stab_save_it();
-	void		stab_recover_it();
+	//void		stab_recover_it();
 
 	bool		all_flags_ccl(canon_clause& ccl, bool val);
 	bool		ck_step_sortees();

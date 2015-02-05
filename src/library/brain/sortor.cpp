@@ -488,7 +488,7 @@ sort_glb::release_sorset(sorset& srs){
 	SORTER_CK(! sg_sorsets.is_empty());
 
 	if(sg_head == &srs){ 
-		DBG_PRT(133, os << " RELEASING_HEAD !!! sortor=" << this);
+		DBG_PRT(128, os << " RELEASING_HEAD !!! sortor=" << this);
 		sg_head = NULL_PT; 
 	}
 
@@ -593,8 +593,6 @@ sort_glb::build_cnf(skeleton_glb& skg, canon_cnf& the_cnf, row<canon_clause*>& t
 	the_cnf.cf_phase_str = ph_str;
 	the_cnf.cf_dims = sg_cnf_dims;
 
-	DBG_PRT(133, os << "CLAUSES=" << bj_eol; the_ccls.print_row_data(os, true, "\n"));
-	
 	the_ccls.move_to(the_cnf.cf_clauses);
 
 	the_cnf.calc_sha();
@@ -620,8 +618,6 @@ sort_glb::release_head_sorsets(){
 
 void
 sort_glb::stab_release_all_sorsets(){
-	DBG_PRT(133, os << "ss_is_empty=" << sg_step_sorsets.is_empty());
-	
 	sort_glb& srg = *this;
 	row<sorset*>& all_ss = sg_step_sorsets;
 	while(! all_ss.is_empty()){
@@ -644,8 +640,11 @@ sort_glb::stab_release_all_sorsets(){
 	SORTER_CK(sg_dbg_last_id == 0);
 	SORTER_CK(sg_dbg_has_repeated_ids == false);
 	SORTER_CK(sg_curr_stab_consec == 0);
+
+	SORTER_CK(srg.sg_curr_stab_consec >= srg.sg_dbg_last_id);
 }
 
+/*
 void
 sort_glb::stab_recover_it(){
 	
@@ -678,7 +677,7 @@ sort_glb::stab_recover_it(){
 	sg_step_sorsets.push(&hd_nsr);
 
 	SORTER_CK(sg_dbg_num_saved_consec == 0);
-}
+}*/
 
 bool
 sort_glb::base_path_exists(skeleton_glb& skg){
@@ -787,12 +786,17 @@ void
 sorset::step_mutual_stabilize_rec(sort_glb& srg1, sort_glb& srg2)
 {
 	SORTER_CK(&srg1 != &srg2);
+	SORTER_CK(srg1.sg_curr_stab_consec >= srg1.sg_dbg_last_id);
+	SORTER_CK(srg2.sg_curr_stab_consec >= srg2.sg_dbg_last_id);
 	// subsets
 
 	while(has_subsets()){
 		sorset& nsr = first_subset();
 		nsr.step_mutual_stabilize_rec(srg1, srg2);
 	}
+	
+	SORTER_CK(srg1.sg_curr_stab_consec >= srg1.sg_dbg_last_id);
+	SORTER_CK(srg2.sg_curr_stab_consec >= srg2.sg_dbg_last_id);
 
 	// pre assigs
 
@@ -806,11 +810,12 @@ sorset::step_mutual_stabilize_rec(sort_glb& srg1, sort_glb& srg2)
 
 	row<canon_clause*>& all_ccl = srg1.sg_step_mutual_clauses;
 
-	sort_id_t* pt_stab_consec = &(srg1.sg_curr_stab_consec);
+	sort_id_t* pt_stab_consec = &(srg2.sg_curr_stab_consec); // matches sort_from srg param
 	bool& one_ccl = srg1.sg_one_ccl_per_ss;
 
 	if(oper == sm_with_opps){
-		pt_stab_consec = &(srg2.sg_curr_stab_consec);
+		// srg1 is passed to sort from
+		pt_stab_consec = &(srg1.sg_curr_stab_consec);
 	}
 
 	sort_id_t& curr_stab_consec = *pt_stab_consec;
@@ -923,9 +928,11 @@ sorset::step_mutual_stabilize_rec(sort_glb& srg1, sort_glb& srg2)
 } // step.mutual.stabilize.rec
 
 void
-sort_glb::step_mutual_stabilize(sort_glb& mates_srg, step_mutual_op_t op){
-	sg_tot_stab_steps++;
-	mates_srg.sg_tot_stab_steps++;
+sort_glb::step_mutual_stabilize(sort_glb& srg2, step_mutual_op_t op){
+	sort_glb& srg1 = *this;
+	
+	srg1.sg_tot_stab_steps++;
+	srg2.sg_tot_stab_steps++;
 
 	sg_step_op = po_walk;
 	sg_step_has_confl = false;
@@ -946,7 +953,6 @@ sort_glb::step_mutual_stabilize(sort_glb& mates_srg, step_mutual_op_t op){
 
 	sg_cnf_clauses.clear();
 
-	sort_glb& srg = *this;
 	row<sorset*> sets;
 
 	SORTER_CK(! sg_step_sorsets.is_empty());
@@ -955,26 +961,27 @@ sort_glb::step_mutual_stabilize(sort_glb& mates_srg, step_mutual_op_t op){
 	sg_step_sorsets.set_cap(sets.size());
 	SORTER_CK(sg_step_sorsets.is_empty());
 
-	DBG_PRT(133, os << " step_MUTUAL " << this << " OLD_ssorsets_sz=" << old_ss_sz
-		<< " ss_sz=" << sets.size()
-	);
+	SORTER_CK(srg1.sg_curr_stab_consec >= srg1.sg_dbg_last_id);
+	SORTER_CK(srg2.sg_curr_stab_consec >= srg2.sg_dbg_last_id);
 	
 	for(long aa = 0; aa < sets.size(); aa++){
 		SORTER_CK(sets[aa] != NULL_PT);
 		sorset& srs = *(sets[aa]);
 		sets[aa] = NULL_PT;
 
-		if(! srg.has_head()){
-			DBG_PRT(133, os << "INITING head of " << &srg);
-			srg.init_head_ss();
+		if(! srg1.has_head()){
+			DBG_PRT(128, os << "INITING head of " << &srg1);
+			srg1.init_head_ss();
 		}
-		if(! mates_srg.has_head()){
-			DBG_PRT(133, os << "INITING head of " << &mates_srg);
-			mates_srg.init_head_ss();
+		if(! srg2.has_head()){
+			DBG_PRT(128, os << "INITING head of " << &srg2);
+			srg2.init_head_ss();
 		}
-		//DBG_PRT(133, os << " step_MUTUAL_rec " << this);
 		
-		srs.step_mutual_stabilize_rec(srg, mates_srg);
+		srs.step_mutual_stabilize_rec(srg1, srg2);
+
+		SORTER_CK(srg1.sg_curr_stab_consec >= srg1.sg_dbg_last_id);
+		SORTER_CK(srg2.sg_curr_stab_consec >= srg2.sg_dbg_last_id);
 	}
 	sets.clear();
 
@@ -987,6 +994,16 @@ sort_glb::step_mutual_stabilize(sort_glb& mates_srg, step_mutual_op_t op){
 		sg_step_mutual_clauses.move_to(sg_cnf_clauses);
 		sg_cnf_dims.dd_tot_ccls = sg_cnf_clauses.size();
 	}
+	if(! srg1.has_head()){
+		DBG_PRT(128, os << "INITING head of " << &srg1);
+		srg1.init_head_ss();
+	}
+	if(! srg2.has_head()){
+		DBG_PRT(128, os << "INITING head of " << &srg2);
+		srg2.init_head_ss();
+	}
+	SORTER_CK(srg1.sg_curr_stab_consec >= srg1.sg_dbg_last_id);
+	SORTER_CK(srg2.sg_curr_stab_consec >= srg2.sg_dbg_last_id);
 }
 
 void
@@ -998,18 +1015,19 @@ sort_glb::stab_mutual(sort_glb& srg2){
 	srg1.sg_tot_stab_steps = 0;
 	srg2.sg_tot_stab_steps = 0;
 
-	DBG_PRT(133, 
-			os << " STAB_MUTUAL srg1=" << ((void*)(&srg1)) << " srg2=" << ((void*)(&srg2));
-			os << "\nSRG1_has_head=" << srg1.has_head();
-			os << "\nSRG2_has_head=" << srg2.has_head();
+	DBG_PRT(133, os << "______\n STAB_MUTUAL" << bj_eol;
+		os << (void*)(&srg1) << " consec=" << srg1.sg_curr_stab_consec 
+			<< " dbg_consec=" << srg1.sg_dbg_last_id << bj_eol;
+		os << (void*)(&srg2) << " consec=" << srg2.sg_curr_stab_consec 
+			<< " dbg_consec=" << srg2.sg_dbg_last_id << bj_eol;
 	);
+	SORTER_CK(srg1.sg_curr_stab_consec >= srg1.sg_dbg_last_id);
+	SORTER_CK(srg2.sg_curr_stab_consec >= srg2.sg_dbg_last_id);
 	SORTER_CK(srg1.has_head());
 	SORTER_CK(srg2.has_head());
 
 	bool has_diff = true;
 	while(has_diff){
-		//DBG_PRT(133, os << "_stab_mutual_ \n SRG1=\n" << srg1 << "\n SRG2=\n" << srg2);
-		
 		srg1.step_neus(srg2);
 		bool diff1 = srg1.sg_step_has_diff;
 
@@ -1031,12 +1049,18 @@ sort_glb::stab_mutual_end(sort_glb& srg2){
 	SORTER_CK(&srg2 != this);
 	sort_glb& srg1 = *this;
 
+	SORTER_CK(srg1.sg_curr_stab_consec >= srg1.sg_dbg_last_id);
+	SORTER_CK(srg2.sg_curr_stab_consec >= srg2.sg_dbg_last_id);
+	
 	srg1.join_all_tees_in_head();
 	srg2.add_neg_and_pos_to(srg2.sg_step_sorsets);
 	srg2.step_quas(srg1);
 	
 	SORTER_CK(srg1.sg_step_sorsets.size() == 1);
 	srg1.step_mutual_stabilize(srg2, sm_get_ccls);
+
+	SORTER_CK(srg1.sg_curr_stab_consec >= srg1.sg_dbg_last_id);
+	SORTER_CK(srg2.sg_curr_stab_consec >= srg2.sg_dbg_last_id);
 }
 
 long
@@ -1081,7 +1105,17 @@ sort_glb::stab_mutual_choose_one(sort_glb& srg2){
 	
 	sort_glb& srg1 = *this;
 
+	SORTER_CK(srg1.sg_curr_stab_consec >= srg1.sg_dbg_last_id);
+	SORTER_CK(srg2.sg_curr_stab_consec >= srg2.sg_dbg_last_id);
+	DBG_PRT(133, os << "______\n before_cho_one" << bj_eol;
+		os << (void*)(&srg1) << " consec=" << srg1.sg_curr_stab_consec 
+			<< " dbg_consec=" << srg1.sg_dbg_last_id << bj_eol;
+		os << (void*)(&srg2) << " consec=" << srg2.sg_curr_stab_consec 
+			<< " dbg_consec=" << srg2.sg_dbg_last_id << bj_eol;
+	);
+	
 	step_mutual_stabilize(srg2, sm_walk);
+	SORTER_CK(srg1.has_head());
 
 	SORTER_CK(sg_step_first_multiple != NULL_PT);
 
@@ -1090,7 +1124,7 @@ sort_glb::stab_mutual_choose_one(sort_glb& srg2){
 	//SORTER_CK(! ss_one.has_subsets());
 	SORTER_CK(ss_one.is_multitem());
 
-	sort_id_t& stab_consec = srg2.sg_curr_stab_consec;
+	sort_id_t& stab_consec = srg1.sg_curr_stab_consec;
 
 	stab_consec++;
 
@@ -1099,6 +1133,16 @@ sort_glb::stab_mutual_choose_one(sort_glb& srg2){
 	DBG_SORTOR_PRT(57, os << "choose one=" << to_sort);
 
 	to_sort.sort_from(srg1, stab_consec);
+	
+	SORTER_CK(srg1.has_head());
+	SORTER_CK(srg2.has_head());
+	
+	DBG_PRT(133, os << "______\n AFTER_CHO_ONE" << bj_eol;
+		os << (void*)(&srg1) << " consec=" << srg1.sg_curr_stab_consec 
+			<< " dbg_consec=" << srg1.sg_dbg_last_id << bj_eol;
+		os << (void*)(&srg2) << " consec=" << srg2.sg_curr_stab_consec 
+			<< " dbg_consec=" << srg2.sg_dbg_last_id << bj_eol;
+	);
 }
 
 void
@@ -1106,6 +1150,9 @@ sort_glb::stab_mutual_unique(sort_glb& srg2){
 	SORTER_CK(&srg2 != this);
 	sort_glb& srg1 = *this;
 
+	SORTER_CK(srg1.has_head());
+	SORTER_CK(srg2.has_head());
+	
 	srg2.sg_step_all_consec = false;
 
 	bool all_consec = false;
@@ -1119,8 +1166,6 @@ sort_glb::stab_mutual_unique(sort_glb& srg2){
 		}
 	}
 	SORTER_CK(srg2.sg_step_all_consec);
-	SORTER_CK(! srg1.sg_step_has_diff);
-	SORTER_CK(! srg2.sg_step_has_diff);
 
 	DBG_PRT(62, 
 			os << " UNIQUE cnf=" << bj_eol; sg_cnf_clauses.print_row_data(os, true, "\n");
@@ -1300,8 +1345,6 @@ sorset::ck_all_items_same_qua_id(){
 bool 
 sort_glb::ck_sorted_sorsets(row<sorset*>& dest_ss){
 #ifdef FULL_DEBUG
-	DBG_PRT(133, os << "STAB_SETS=\n" << dest_ss);
-	
 	row_long_t& all_id = sg_tmp_id_trail;
 	all_id.clear();
 	

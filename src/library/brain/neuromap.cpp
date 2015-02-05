@@ -595,7 +595,7 @@ coloring::load_colors_into(brain& brn, sort_glb& neus_srg, sort_glb& quas_srg,
 	BRAIN_CK(neus_srg.sg_dbg_num_items == 0);
 	BRAIN_CK(quas_srg.sg_dbg_num_items == 0);
 
-	sort_id_t& quas_consec = neus_srg.sg_curr_stab_consec;
+	sort_id_t& quas_consec = quas_srg.sg_curr_stab_consec;
 	quas_consec++;
 
 	DBG(
@@ -610,7 +610,6 @@ coloring::load_colors_into(brain& brn, sort_glb& neus_srg, sort_glb& quas_srg,
 		BRAIN_CK(all_quas[aa] != NULL_PT);
 		quanton& qua = *(all_quas[aa]);
 
-		BRAIN_CK(! qua.has_note1() || ((aa > 0) && (all_quas[aa - 1] == qua.qu_inverse)));
 		if(! qua.has_note1()){
 			qua.set_note1(brn);
 		}
@@ -621,7 +620,7 @@ coloring::load_colors_into(brain& brn, sort_glb& neus_srg, sort_glb& quas_srg,
 		qua.reset_and_add_tee(quas_srg, quas_consec);
 	}
 
-	sort_id_t& neus_consec = quas_srg.sg_curr_stab_consec;
+	sort_id_t& neus_consec = neus_srg.sg_curr_stab_consec;
 	neus_consec++;
 
 	BRAIN_CK(brn.br_ne_tot_tag0 == 0);

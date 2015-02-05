@@ -764,6 +764,7 @@ brain::analyse(prop_signal const & confl, deduction& out_dct){
 	long min_s_lv = append_all_to_write(fst_lv, tg_lv, to_wrt);
 	MARK_USED(min_s_lv);
 	BRAIN_CK_PRT((lv_has_setup_nmp(tg_lv + 1) == (min_s_lv != INVALID_LEVEL)), 
+		os << "______\n"; dbg_prt_margin();
 		os << " fst_lv=" << fst_lv << " tg_lv=" << tg_lv 
 		<< " min_s_lv=" << min_s_lv << " to_w_sz=" << to_wrt.size() << bj_eol;
 		print_trail(os);
