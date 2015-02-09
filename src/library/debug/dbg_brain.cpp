@@ -68,10 +68,9 @@ quanton::ck_charge(brain& brn){
 }
 
 ch_string
-brain::dbg_prt_margin(bool is_ck){
+brain::dbg_prt_margin(bj_ostream& os, bool is_ck){
 	ch_string f_nam = "INVALID_FILE_NAME";
 #ifdef FULL_DEBUG
-	bj_ostream& os = bj_dbg;
 	instance_info& inst_info = get_my_inst();
 	if(inst_info.ist_id >= 0){
 		os << "#" << inst_info.ist_id << ".";
@@ -449,17 +448,25 @@ brain::brn_dbg_compute_dots_of(row<neuron*>& neus, row_quanton_t& assig){
 bj_ostream&
 neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 #ifdef FULL_DEBUG
+	brain& brn = get_brn();
+	MARK_USED(brn);
 	MARK_USED(from_pt);
-	if(from_pt){
-		os << "NA";
+	/*if(from_pt){
+		row_quanton_t& all_qu = brn.br_tmp_prt_quas;
+		all_qu.clear();
+		map_get_all_quas(all_qu);
+		
+		os << "na{";
 		if(na_is_head){ os << ".h"; }
 		os << "(" << (void*)this << ")";
-		os << " o_lv=" << na_orig_lv;
-		os << " cho=" << na_orig_cho;
+		os << " quas=" << all_qu;
+		//os << " o_lv=" << na_orig_lv;
+		//os << " cho=" << na_orig_cho;
+		os << "}";
 		os.flush();
 		return os;
-	}
-	os << "NEUMAP(" << (void*)this <<")={ " << bj_eol;
+	}*/
+	os << "NMP(" << (void*)this <<")={ " << bj_eol;
 	
 	os << " active=" << na_active << bj_eol;
 	os << " na_deact_tier=" << na_deact_tier << bj_eol;
@@ -494,8 +501,11 @@ brain::print_trail(bj_ostream& os, bool no_src_only){
 			continue;
 		}
 
-		the_trl[kk]->print_quanton(os, true);
+		qua->print_quanton(os, true);
+		
+		//os << qua->qu_source;
 		os << " ";
+		//os << bj_eol;
 	}
 	os << "]";
 	os << bj_eol;
@@ -568,12 +578,15 @@ quanton::print_quanton(bj_ostream& os, bool from_pt){
 	bool is_nega = is_neg();
 	bool is_posi = is_pos();
 	bool with_dot = has_dot();
+	MARK_USED(with_dot);
 	bool with_mark = has_mark();
+	MARK_USED(with_mark);
 	//bool has_src = has_source();
 	bool dominated = false;
 	MARK_USED(dominated);
 	neuron* neu = qu_source;
 	bool n0 = has_note0();
+	MARK_USED(n0);
 	bool h_src = (neu != NULL_PT);
 	bool h_chg = has_charge();
 	long qlv = qlevel();
@@ -590,9 +603,9 @@ quanton::print_quanton(bj_ostream& os, bool from_pt){
 
 	if(from_pt){
 		//if(qu_block != NULL_PT){ os << "b"; }
-		if((neu != NULL_PT) && ! neu->ne_original){ os << "+"; }
-		//if((neu != NULL_PT) && neu->ne_original){ os << "o"; }
+		if((neu != NULL_PT) && neu->ne_original){ os << "o"; }
 		//if(! has_source() && has_charge()){ os << "*"; }
+		if((neu != NULL_PT) && ! neu->ne_original){ os << "+"; }
 		if(qlv == 0){ os << "#"; }
 		if(! h_src && h_chg){ os << "L" << qlv; }
 
@@ -605,6 +618,7 @@ quanton::print_quanton(bj_ostream& os, bool from_pt){
 		if(! h_chg){ os << ")"; }
 
 		//os << ".t" << qu_tier;
+		/*
 		if((! h_src) && (pt_brn != NULL_PT) && h_chg){ 
 			brain& brn = *pt_brn;
 			
@@ -625,8 +639,8 @@ quanton::print_quanton(bj_ostream& os, bool from_pt){
 		if(n0){ os << ".n0"; }
 		if(with_dot){ os << ".d"; }
 		if(with_mark){ os << ".m"; }
-
 		if(! qu_tee.is_unsorted()){ os << ".q" << qu_tee.so_qua_id; }
+		*/
 
 		//if(dominated){ os << ".DOM"; }
 
@@ -672,6 +686,8 @@ neuron::print_neu_base(bj_ostream& os, bool detail, bool prt_src, bool sort_fib)
 		os << "nmp=" << ((void*)ne_curr_nemap) << " ";
 		if(ne_original){
 			os << "o";
+		} else {
+			os << "+";
 		}
 		os << ne_fibres;
 		os << "}";

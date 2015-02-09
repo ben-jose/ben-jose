@@ -103,7 +103,7 @@ bool	dbg_print_cond_func(brain* brn, bool prm, bool is_ck, const ch_string fnam,
 		
 		ch_string f_nam = "UNKNOWN_FILE_NAME";
 		if(brn != NULL){
-			f_nam = brn->dbg_prt_margin(is_ck);
+			f_nam = brn->dbg_prt_margin(os, is_ck);
 		}
 
 		if(is_ck){

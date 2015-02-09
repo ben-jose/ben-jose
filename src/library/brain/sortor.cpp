@@ -94,35 +94,31 @@ sortee::print_sortee(bj_ostream& os, bool from_pt){
 	//os << "(" << so_dbg_extrn_id << ")";
 	//os << "(" << (void*)this << ").";
 	//os << so_tee_consec;
+	/*
 	if(so_dbg_me_class == 1){
 		os << "." << so_qua_id;
 	}
 	if(so_dbg_me_class == 2){
 		os << "." << so_ccl;
 	}
-	//os << "[" << so_last_ccl_id << "]";
 	os << " ";
+	*/
 
 	if(! from_pt){
-		os << "REL=";
 		// NEEDS_brain_h
+		os << "tee{";
 		
 		if(so_dbg_me_class == 1){
 			SORTER_CK(so_me != NULL_PT);
 			quanton& qua = *((quanton*)so_me);
-			os << " qua=" << &qua; // << " SRC=" << qua.qu_source;
-		}
-		if(so_dbg_extrn_src != NULL_PT){
-			neuron& neu = *((neuron*)so_dbg_extrn_src);	
-			os << " SRC=" << &neu;
-		} else {
-			os << " SRC=NULL_extrn_src";
+			os << &qua;
 		}
 		if(so_dbg_me_class == 2){
 			SORTER_CK(so_me != NULL_PT);
 			neuron& neu = *((neuron*)so_me);
-			os << " NEU=" << &neu;
+			os << &neu;
 		}
+		os << "}";
 		/* */
 	}
 
@@ -986,6 +982,7 @@ sort_glb::step_mutual_stabilize(sort_glb& srg2, step_mutual_op_t op){
 	sets.clear();
 
 	SORTER_CK(old_ss_sz <= sg_step_sorsets.size());
+	SORTER_CK((op == sm_with_opps) || (sg_step_sorsets.size() <= sg_step_sortees.size()));
 	SORTER_CK(sg_cnf_dims.is_dd_virgin());
 	SORTER_CK(sg_cnf_clauses.is_empty());
 	SORTER_CK((op == sm_get_ccls) || sg_step_mutual_clauses.is_empty());
@@ -1004,6 +1001,12 @@ sort_glb::step_mutual_stabilize(sort_glb& srg2, step_mutual_op_t op){
 	}
 	SORTER_CK(srg1.sg_curr_stab_consec >= srg1.sg_dbg_last_id);
 	SORTER_CK(srg2.sg_curr_stab_consec >= srg2.sg_dbg_last_id);
+	
+	SORTER_CK_PRT(((sm_with_opps == op) || 
+		(srg1.sg_step_sortees.size() == srg1.sg_dbg_fst_num_items)),
+			  os << " op=" << op << " i_sz=" << srg1.sg_dbg_fst_num_items
+			  << " sz=" << srg1.sg_step_sortees.size()
+	);
 }
 
 void
@@ -1011,16 +1014,15 @@ sort_glb::stab_mutual(sort_glb& srg2){
 	SORTER_CK(&srg2 != this);
 
 	sort_glb& srg1 = *this;
+	
+	DBG(
+		srg1.sg_dbg_fst_num_items = srg1.sg_dbg_num_items;
+		srg2.sg_dbg_fst_num_items = srg2.sg_dbg_num_items;
+	);
 
 	srg1.sg_tot_stab_steps = 0;
 	srg2.sg_tot_stab_steps = 0;
 
-	DBG_PRT(133, os << "______\n STAB_MUTUAL" << bj_eol;
-		os << (void*)(&srg1) << " consec=" << srg1.sg_curr_stab_consec 
-			<< " dbg_consec=" << srg1.sg_dbg_last_id << bj_eol;
-		os << (void*)(&srg2) << " consec=" << srg2.sg_curr_stab_consec 
-			<< " dbg_consec=" << srg2.sg_dbg_last_id << bj_eol;
-	);
 	SORTER_CK(srg1.sg_curr_stab_consec >= srg1.sg_dbg_last_id);
 	SORTER_CK(srg2.sg_curr_stab_consec >= srg2.sg_dbg_last_id);
 	SORTER_CK(srg1.has_head());
@@ -1042,6 +1044,9 @@ sort_glb::stab_mutual(sort_glb& srg2){
 	SORTER_CK(! srg2.sg_step_has_diff);
 	
 	stab_mutual_end(srg2);
+	
+	SORTER_CK(srg1.sg_step_sortees.size() == srg1.sg_dbg_fst_num_items);
+	SORTER_CK(srg2.sg_step_sortees.size() == srg2.sg_dbg_fst_num_items);
 }
 
 void
@@ -1107,12 +1112,6 @@ sort_glb::stab_mutual_choose_one(sort_glb& srg2){
 
 	SORTER_CK(srg1.sg_curr_stab_consec >= srg1.sg_dbg_last_id);
 	SORTER_CK(srg2.sg_curr_stab_consec >= srg2.sg_dbg_last_id);
-	DBG_PRT(133, os << "______\n before_cho_one" << bj_eol;
-		os << (void*)(&srg1) << " consec=" << srg1.sg_curr_stab_consec 
-			<< " dbg_consec=" << srg1.sg_dbg_last_id << bj_eol;
-		os << (void*)(&srg2) << " consec=" << srg2.sg_curr_stab_consec 
-			<< " dbg_consec=" << srg2.sg_dbg_last_id << bj_eol;
-	);
 	
 	step_mutual_stabilize(srg2, sm_walk);
 	SORTER_CK(srg1.has_head());
@@ -1136,13 +1135,8 @@ sort_glb::stab_mutual_choose_one(sort_glb& srg2){
 	
 	SORTER_CK(srg1.has_head());
 	SORTER_CK(srg2.has_head());
-	
-	DBG_PRT(133, os << "______\n AFTER_CHO_ONE" << bj_eol;
-		os << (void*)(&srg1) << " consec=" << srg1.sg_curr_stab_consec 
-			<< " dbg_consec=" << srg1.sg_dbg_last_id << bj_eol;
-		os << (void*)(&srg2) << " consec=" << srg2.sg_curr_stab_consec 
-			<< " dbg_consec=" << srg2.sg_dbg_last_id << bj_eol;
-	);
+	SORTER_CK(srg1.sg_curr_stab_consec >= srg1.sg_dbg_last_id);
+	SORTER_CK(srg2.sg_curr_stab_consec >= srg2.sg_dbg_last_id);
 }
 
 void

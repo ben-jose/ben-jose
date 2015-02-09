@@ -772,8 +772,8 @@ brain::choose_quanton(){
 	BRAIN_CK(ck_trail());
 
 	quanton* qua = NULL;
-	//brain& brn = *this;
 
+	/*
 	while(! br_maps_active.is_empty()){
 		neuromap* pt_mpp = br_maps_active.last();
 		BRAIN_CK(pt_mpp != NULL_PT);
@@ -785,9 +785,7 @@ brain::choose_quanton(){
 		BRAIN_CK(qua == NULL_PT);
 		deactivate_last_map();
 		DBG_PRT(122, os << "deac_lst (choose)");
-	}
-
-	//BRAIN_CK(ck_choices());
+	}*/
 
 	for(long ii = 0; ii < br_choices.size(); ii++){
 		quanton* qua_ii = br_choices[ii];
@@ -804,8 +802,6 @@ brain::choose_quanton(){
 	BRAIN_CK_0(	(qua == NULL) || 
 			(qua->qu_spin == cg_positive) || 
 			(qua->qu_spin == cg_negative));
-
-	//BRAIN_CK(ck_choices(true));
 
 	if((qua != NULL) && (br_choice_spin == cg_negative)){
 		qua = qua->qu_inverse;
@@ -1592,14 +1588,14 @@ brain::propagate_signals(){
 		BRAIN_CK(! has_psignals());
 		BRAIN_CK(has_reset_psignals());
 		send_row_psignals(br_delayed_psignals);
-		br_delayed_psignals.clear();
+		br_delayed_psignals.clear(true, true);
 
 		num_psigs2 = brn_tunnel_signals(false);
 
 		BRAIN_CK(br_delayed_psignals.is_empty());
 	}
 
-	br_delayed_psignals.clear();
+	br_delayed_psignals.clear(true, true);
 
 	BRAIN_CK(! has_psignals());
 	BRAIN_CK(num_psignals() == 0);
@@ -2093,8 +2089,15 @@ brain::reverse(){
 	
 	deduction& dct = br_retract_dct;
 
-	//br_deducer_anlsr.deduction_analysis(br_conflict_found, dct);
-	analyse(br_conflict_found, dct);
+	// JLQ
+	bool dbg_full_anls = true;
+	DBG_COMMAND(141, dbg_full_anls = false);
+	if(dbg_full_anls){
+		analyse(br_conflict_found, dct);
+	} else {
+		br_deducer_anlsr.deduction_analysis(br_conflict_found, dct);
+	}
+	DBG_PRT(122, os << "AFTE_ANALYSE \ncfl=" << br_conflict_found << "\ndct=" << dct);
 
 	DBG_PRT(122, dbg_prt_lvs_active(os));
 	DBG_PRT(122, dbg_prt_lvs_have_learned(os));
@@ -2191,6 +2194,12 @@ brain::dbg_prt_full_stab(){
 	bj_out << "THE_CNF=" << bj_eol;
 	bj_out << the_cnf;
 	bj_out << "END_of_cnf=" << bj_eol;
+	
+	coloring finl_col;
+	finl_col.save_colors_from(neus_srg, quas_srg);
+	
+	BRAIN_CK(finl_col.co_quas.size() == full_col.co_quas.size());
+	BRAIN_CK(finl_col.co_neus.size() == full_col.co_neus.size());
 	
 	/*
 	bj_out << "stab_neus=" << bj_eol;

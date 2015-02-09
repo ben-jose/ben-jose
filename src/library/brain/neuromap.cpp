@@ -180,7 +180,7 @@ neuromap::map_choose_quanton(){
 }
 
 bool
-neuromap::map_ck_all_qu_dominated(){
+neuromap::map_ck_all_qu_dominated(dbg_call_id dbg_id){
 #ifdef FULL_DEBUG
 	brain& brn = get_brn();
 	row_quanton_t& all_quas = brn.br_tmp_qu_dom;
@@ -190,25 +190,44 @@ neuromap::map_ck_all_qu_dominated(){
 		quanton* qua = all_quas[ii];
 		MARK_USED(qua);
 		BRAIN_CK(qua != NULL_PT);
-		BRAIN_CK(qua->in_qu_dominated(brn));
+		BRAIN_CK_PRT(qua->in_qu_dominated(brn), os << "___________" << dbg_id << "\n";
+				brn.dbg_prt_margin(os); 
+				os << "qua=" << qua;
+		);
 	}
 #endif
 	return true;
 }
 
 bool
-neuromap::map_ck_all_ne_dominated(){
+ck_all_neus_dominated(brain& brn, row<neuron*>& all_neus, dbg_call_id dbg_id){
 #ifdef FULL_DEBUG
-	brain& brn = get_brn();
-	row<neuron*>& all_neus = brn.br_tmp_ne_dom;
-	all_neus.clear();
-	map_get_all_neus(all_neus);
 	for(long ii = 0; ii < all_neus.size(); ii++){
 		BRAIN_CK(all_neus[ii] != NULL_PT);
 		neuron& neu = *(all_neus[ii]);
 		MARK_USED(neu);
-		BRAIN_CK(neu.in_ne_dominated(brn));
+		BRAIN_CK_PRT(neu.in_ne_dominated(brn), os << "___________" << dbg_id << "\n";
+				brn.dbg_prt_margin(os); 
+				os << "neu=" << &neu;
+		);
 	}
+#endif
+	return true;
+}
+
+bool
+neuromap::map_ck_all_ne_dominated(dbg_call_id dbg_id){
+#ifdef FULL_DEBUG
+	brain& brn = get_brn();
+	row<neuron*>& all_neus = brn.br_tmp_ne_dom;
+	
+	all_neus.clear();
+	map_get_all_forced_neus(all_neus);
+	BRAIN_CK(ck_all_neus_dominated(brn, all_neus, dbg_call_1));
+	
+	all_neus.clear();
+	map_get_all_non_forced_neus(all_neus);
+	BRAIN_CK(ck_all_neus_dominated(brn, all_neus, dbg_call_2));
 #endif
 	return true;
 }
@@ -242,8 +261,8 @@ neuromap::map_activate(dbg_call_id dbg_id){
 	BRAIN_CK(! is_na_virgin());
 	BRAIN_CK(! na_active);
 
-	BRAIN_CK(map_ck_all_qu_dominated());
-	BRAIN_CK(map_ck_all_ne_dominated());
+	BRAIN_CK(map_ck_all_qu_dominated(dbg_id));
+	BRAIN_CK(map_ck_all_ne_dominated(dbg_id));
 
 	brn.br_maps_active.push(this);
 	na_active = true;
@@ -251,13 +270,15 @@ neuromap::map_activate(dbg_call_id dbg_id){
 	map_set_all_qu_curr_dom();
 	map_set_all_ne_curr_dom();
 
-	BRAIN_CK(map_ck_all_qu_dominated());
-	BRAIN_CK(map_ck_all_ne_dominated());
+	BRAIN_CK(map_ck_all_qu_dominated(dbg_id));
+	BRAIN_CK(map_ck_all_ne_dominated(dbg_id));
 
 	BRAIN_CK(! brn.br_maps_active.is_empty());
 	BRAIN_CK(brn.br_maps_active.last() == this);
 
-	DBG_PRT(110, os << "ACTIVATING " << this);
+	DBG_PRT(134, os << "ACTIVATING " << this);
+	DBG_PRT(134, os << "ALL_ACTIVE\n"; brn.br_maps_active.print_row_data(os, true, "\n"));
+	
 }
 
 void
@@ -276,15 +297,15 @@ void
 neuromap::map_deactivate(){
 	brain& brn = get_brn();
 	
-	//DBG_PRT(110, os << "DEACTivating " << this << bj_eol << STACK_STR);
-	DBG_PRT(110, os << "DEACTivating " << this);
+	DBG_PRT(134, os << "DEACTivating " << this);
+	//DBG_PRT(134, os << "DEACTivating " << this);
 
 	BRAIN_CK(na_active);
 	BRAIN_CK(! brn.br_maps_active.is_empty());
 
 	BRAIN_CK(brn.br_maps_active.last() == this);
-	BRAIN_CK(map_ck_all_qu_dominated());
-	BRAIN_CK(map_ck_all_ne_dominated());
+	BRAIN_CK(map_ck_all_qu_dominated(dbg_call_1));
+	BRAIN_CK(map_ck_all_ne_dominated(dbg_call_2));
 
 	brn.br_maps_active.pop();
 	na_active = false;
@@ -292,15 +313,18 @@ neuromap::map_deactivate(){
 	map_reset_all_qu_curr_dom();
 	map_reset_all_ne_curr_dom();
 
-	BRAIN_CK(map_ck_all_qu_dominated());
-	BRAIN_CK(map_ck_all_ne_dominated());
+	BRAIN_CK(map_ck_all_qu_dominated(dbg_call_3));
+	BRAIN_CK(map_ck_all_ne_dominated(dbg_call_4));
 	
 	na_mates.let_go();
 	if(na_is_head){
 		map_add_to_release();
 	}
+	
+	//DBG_PRT(134, os << "all_active\n"; brn.br_maps_active.print_row_data(os, true, "\n"));
 }
 
+/*
 bool
 ck_map_first_quas(row_quanton_t& all_quas){
 #ifdef FULL_DEBUG
@@ -314,7 +338,7 @@ ck_map_first_quas(row_quanton_t& all_quas){
 	);
 #endif
 	return true;
-}
+}*/
 
 void
 neuromap::map_set_all_qu_curr_dom(){
@@ -322,7 +346,7 @@ neuromap::map_set_all_qu_curr_dom(){
 	row_quanton_t& all_quas = brn.br_tmp_qu_dom;
 	all_quas.clear();
 	map_get_all_quas(all_quas);
-	BRAIN_CK(ck_map_first_quas(all_quas));
+	BRAIN_CK(ck_first_forced_idx());
 	set_all_qu_nemap(all_quas, this, 1);
 }
 
@@ -333,7 +357,7 @@ neuromap::map_reset_all_qu_curr_dom(){
 	row_quanton_t& all_quas = brn.br_tmp_qu_dom;
 	all_quas.clear();
 	map_get_all_quas(all_quas);
-	BRAIN_CK(ck_map_first_quas(all_quas));
+	BRAIN_CK(ck_first_forced_idx());
 	set_all_qu_nemap(all_quas, upper_map, 1);
 }
 
@@ -400,6 +424,7 @@ quanton::in_qu_dominated(brain& brn){
 void
 quanton::make_qu_dominated(brain& brn){
 	while(! in_qu_dominated(brn)){
+		DBG_PRT(134, os << "deact_QU=" << this);
 		brn.deactivate_last_map();
 	}
 }
@@ -417,6 +442,7 @@ neuron::in_ne_dominated(brain& brn){
 void
 neuron::make_ne_dominated(brain& brn){
 	while(! in_ne_dominated(brn)){
+		DBG_PRT(134, os << "deact_NE=" << this);
 		brn.deactivate_last_map();
 	}
 }
@@ -538,7 +564,12 @@ coloring::has_diff_col_than_prev(row<long>& the_colors, long col_idx){
 		BRAIN_CK(col0 >= 0);
 		BRAIN_CK(col1 >= 0);
 		if(col0 != col1){
-			BRAIN_CK(col0 < col1);
+			DBG(brain* pt_brn = get_dbg_brn());
+			DBG(ch_string ff = "no_file");
+			BRAIN_CK_PRT((col0 < col1), 
+				if(pt_brn != NULL_PT){ ff = pt_brn->dbg_prt_margin(os); }
+				os << "\n file=" << ff;
+			);
 			diff_col = true;
 		}
 	}
@@ -606,6 +637,7 @@ coloring::load_colors_into(brain& brn, sort_glb& neus_srg, sort_glb& quas_srg,
 		}
 	);
 
+	DBG_PRT(129, os << "COL_QUAS=" << all_quas);
 	for(long aa = 0; aa < all_quas.size(); aa++){
 		BRAIN_CK(all_quas[aa] != NULL_PT);
 		quanton& qua = *(all_quas[aa]);
@@ -619,12 +651,14 @@ coloring::load_colors_into(brain& brn, sort_glb& neus_srg, sort_glb& quas_srg,
 
 		qua.reset_and_add_tee(quas_srg, quas_consec);
 	}
+	BRAIN_CK(quas_srg.sg_dbg_num_items == all_quas.size());
 
 	sort_id_t& neus_consec = neus_srg.sg_curr_stab_consec;
 	neus_consec++;
 
 	BRAIN_CK(brn.br_ne_tot_tag0 == 0);
 	
+	DBG_PRT(129, os << "COL_NEUS="; all_neus.print_row_data(os, true, "\n"); );
 	for(long bb = 0; bb < all_neus.size(); bb++){
 		BRAIN_CK(all_neus[bb] != NULL_PT);
 		neuron& neu = *(all_neus[bb]);
@@ -642,11 +676,13 @@ coloring::load_colors_into(brain& brn, sort_glb& neus_srg, sort_glb& quas_srg,
 		neu.fill_mutual_sortees(brn); // uses note1 of quas
 
 		row<sortee*>& neu_mates = neu.ne_reltee.so_mates;
+		BRAIN_CK_PRT(! neu_mates.is_empty(), os << "____\n neu=" << &neu);
 		if(! neu_mates.is_empty()){
 			BRAIN_CK(neu_tee.is_unsorted());
 			neu_tee.sort_from(neus_srg, neus_consec);
 		}
 	}
+	BRAIN_CK(neus_srg.sg_dbg_num_items == all_neus.size());
 
 	DBG(reset_all_tag0(brn, all_neus));
 	BRAIN_CK(brn.br_ne_tot_tag0 == 0);
@@ -952,6 +988,9 @@ neuromap::map_fill_non_forced(neurolayers& not_sel_neus){
 bool
 neuromap::map_oper(mem_op_t mm){
 	brain& brn = get_brn();
+
+	DBG_PRT(134, os << "MAP_OPER NMP=" << this);
+	
 	brn.init_mem_tmps();
 
 	bool prep_ok = map_prepare_mem_oper(mm);
@@ -1085,7 +1124,7 @@ neuromap::map_prepare_mem_oper(mem_op_t mm){
 	if(! has_stab_guide()){
 		map_set_stab_guide();
 	} else {
-		DBG_PRT(133, os << "HAD_STAB_GUIDE !!! nmp=(" << (void*)this << ")");
+		DBG_PRT(110, os << "HAD_STAB_GUIDE !!! nmp=(" << (void*)this << ")");
 		dima_dims dims0;
 		
 		neus_srg.sg_one_ccl_per_ss = false;
@@ -1267,6 +1306,7 @@ neuromap::map_get_initial_guide_coloring(coloring& clr){
 
 	BRAIN_CK(brn.br_qu_tot_note1 == 0);
 
+	DBG_PRT(110, os << "I_GUI_trace\n="; dtrace.print_row_data(os, true, "\n"); );
 	for(long ii = beg_sz; ii < end_sz; ii++){
 		prop_signal& q_sig1 = dtrace[ii];
 
@@ -1324,6 +1364,9 @@ neuromap::map_get_initial_guide_coloring(coloring& clr){
 	DBG(reset_all_note1(brn, all_quas));
 	BRAIN_CK(brn.br_qu_tot_note1 == 0);
 	BRAIN_CK(clr.ck_cols());
+	
+	DBG_PRT(110, os << "I_GUI_COL_QUAS=" << all_quas);
+	DBG_PRT(110, os << "I_GUI_COL_NEUS="; all_neus.print_row_data(os, true, "\n"); );
 }
 
 void
@@ -1425,19 +1468,27 @@ neuromap::map_init_stab_guide(){
 	
 	neus_srg.sg_one_ccl_per_ss = false;
 
-	DBG_PRT(61, os << " bef_load_col neus_srg=" << &neus_srg);
-	DBG_PRT(61, os << " bef_load_col quas_srg=" << &quas_srg);
+	DBG_PRT(129, os << " bef_load_col neus_srg=" << neus_srg);
+	DBG_PRT(129, os << " bef_load_col quas_srg=" << quas_srg);
 	guide_col.load_colors_into(brn, neus_srg, quas_srg, dims0);
-	DBG_PRT(61, os << " aft_load_col neus_srg=" << &neus_srg);
-	DBG_PRT(61, os << " aft_load_col quas_srg=" << &quas_srg);
+	DBG_PRT(129, os << " aft_load_col neus_srg=" << neus_srg);
+	DBG_PRT(129, os << " aft_load_col quas_srg=" << quas_srg);
 	
 	// THE STAB FOR THIS NMP BLOCK
 	neus_srg.stab_mutual(quas_srg);
 	
+	DBG_PRT(129, os << " aft_stab neus_srg=" << neus_srg);
+	DBG_PRT(129, os << " aft_stab quas_srg=" << quas_srg);
+	
+	DBG_PRT(129, os << " bef_guide_col=" << guide_col);
 	guide_col.save_colors_from(neus_srg, quas_srg);
+	DBG_PRT(129, os << " AFT_guide_col=" << guide_col);
 
 	BRAIN_CK(old_quas_sz == guide_col.co_quas.size());
-	BRAIN_CK(old_neus_sz == guide_col.co_neus.size());
+	BRAIN_CK_PRT((old_neus_sz == guide_col.co_neus.size()),
+			os << "_____\n old_neus_sz=" << old_neus_sz << " nw_sz=" 
+			<< guide_col.co_neus.size();
+	);
 }
 
 void
@@ -1510,9 +1561,6 @@ neuromap::map_ck_contained_in(coloring& colr, dbg_call_id dbg_id){
 	BRAIN_CK(brn.br_tot_ne_spots == 0);
 	set_spots_of(brn, m_neus);
 	
-	//DBG_PRT(133, os << "cll_id=" << dbg_id << " colr=" << bj_eol << colr << bj_eol 
-	//		<< "NMP=" << bj_eol << *this);
-
 	row<neuron*>& all_neus = colr.co_neus;
 	for(long ii = 0; ii < all_neus.size(); ii++){
 		BRAIN_CK(all_neus[ii] != NULL_PT);
@@ -1566,4 +1614,30 @@ coloring::set_brain_coloring(){
 	
 }
 
+bool
+neuromap::ck_first_forced_idx(){
+#ifdef FULL_DEBUG
+	bool has_sub = (na_submap != NULL_PT);
+	if(has_sub){
+		return true;
+	}
+	BRAIN_CK(na_forced.is_valid_idx(0));
+	BRAIN_CK(na_forced.is_valid_idx(1));
+	quanton* qu0 = na_forced[0].ps_quanton;
+	BRAIN_CK(qu0 != NULL_PT);
+	quanton& opp = qu0->opposite();
+	
+	bool ff_opp = false;
+	for(long aa = 1; aa < na_forced.size(); aa++){
+		quanton* qua2 = na_forced[aa].ps_quanton;
+		BRAIN_CK(qua2 != NULL_PT);
+		if(qua2 == &opp){
+			ff_opp = true;
+			break;
+		}
+	}
+	BRAIN_CK(ff_opp);
+#endif
+	return true;
+}
 

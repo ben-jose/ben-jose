@@ -138,16 +138,12 @@ public:
 
 	char		so_dbg_me_class;
 	long		so_dbg_extrn_id;
-	void*		so_dbg_extrn_src;
 
 	long		so_saved_tee_consec;
 	long		so_tee_consec;
-	long		so_last_ccl_id;
 	canon_clause	so_ccl;
 
 	long		so_qua_id;
-
-	charge_t	so_charge;
 
 	sortee(){
 		init_sortee();
@@ -167,16 +163,12 @@ public:
 
 		so_dbg_me_class = 0;
 		so_dbg_extrn_id = 0;
-		so_dbg_extrn_src = NULL_PT;
 
 		so_saved_tee_consec = INVALID_NATURAL;
 		so_tee_consec = INVALID_NATURAL;
-		so_last_ccl_id = 0;
 		so_ccl.cc_clear(free_mem);
 
 		so_qua_id = 0;
-
-		so_charge = cg_neutral;
 	}
 
 	template<class obj_t1>
@@ -241,7 +233,6 @@ public:
 			quar.so_mates.clear();
 		}
 
-		so_dbg_extrn_src = NULL_PT;
 		so_ccl.cc_clear(false);
 	}
 	
@@ -630,7 +621,10 @@ public:
 
 	// dbg attrs
 
-	DBG(long	sg_dbg_num_items);
+	DBG(
+		long	sg_dbg_fst_num_items;
+		long	sg_dbg_num_items;
+	);
 	long		sg_dbg_num_saved_consec;
 	bool		sg_dbg_has_repeated_ids;
 
@@ -716,7 +710,10 @@ public:
 
 		sg_tot_ss_marks = 0;
 
-		DBG(sg_dbg_num_items = 0);
+		DBG(
+			sg_dbg_fst_num_items = 0;
+			sg_dbg_num_items = 0;
+		);
 		sg_dbg_num_saved_consec = 0;
 		sg_dbg_last_id = 0;
 		sg_dbg_has_repeated_ids = false;

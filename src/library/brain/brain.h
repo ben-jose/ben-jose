@@ -35,6 +35,7 @@ Declarations of classes and that implement the neural network.
 
 //=================================================================
 
+#include "stack_trace.h"
 #include "tools.h"
 #include "binder.h"
 #include "ben_jose.h"
@@ -564,12 +565,6 @@ class quanton {
 
 		DBG(qu_dbg_fst_lap_cho = 0);
 		DBG(qu_dbg_num_laps_cho = 0);
-	}
-
-	void	init_tees_ccl_id(){
-		BRAIN_CK(qu_inverse != NULL_PT);
-		qu_tee.so_last_ccl_id = 0;
-		qu_inverse->qu_tee.so_last_ccl_id = 0;
 	}
 
 	void	reset_and_add_tee(sort_glb& quas_srg, sort_id_t quas_consec);
@@ -1414,7 +1409,6 @@ class deduction {
 	row_quanton_t		dt_motives;
 	quanton*			dt_forced;
 	long				dt_target_level;
-	//long			dt_forced_level;
 
 	deduction(){
 		init_deduction();
@@ -1428,7 +1422,6 @@ class deduction {
 		dt_motives.clear();
 		dt_forced = NULL_PT;
 		dt_target_level = INVALID_LEVEL;
-		//dt_forced_level = INVALID_LEVEL;
 	}
 
 	brain*	get_dbg_brn(){
@@ -1441,7 +1434,6 @@ class deduction {
 		bool c1 = (dt_motives.is_empty());
 		bool c2 = (dt_forced == NULL_PT);
 		bool c3 = (dt_target_level == INVALID_LEVEL);
-		//bool c5 = (dt_forced_level == INVALID_LEVEL);
 
 		bool is_vg = (c1 && c2 && c3);
 	
@@ -1454,11 +1446,20 @@ class deduction {
 
 		dct2.dt_forced = dt_forced;
 		dct2.dt_target_level = dt_target_level;
-		//dct2.dt_forced_level = dt_forced_level;
 
 		init_deduction();
 		BRAIN_CK(is_dt_virgin());
 	}
+
+	void	copy_to_dct(deduction& dct2){
+		BRAIN_CK(dct2.is_dt_virgin());
+		dt_motives.copy_to(dct2.dt_motives);
+
+		dct2.dt_forced = dt_forced;
+		dct2.dt_target_level = dt_target_level;
+	}
+	
+	bool	equal_to_dct(deduction& dct2);
 
 	void	set_with(brain& brn, notekeeper& dke, quanton& nxt_qua);
 
@@ -1476,7 +1477,6 @@ class deduction {
 		os << "dt={ mots=" << dt_motives;
 		os << " qu:" << dt_forced;
 		os << " lv:" << dt_target_level;
-		//os << " fl:" << dt_forced_level;
 		os << "}";
 		os.flush();
 		return os;
@@ -1645,7 +1645,7 @@ class neuromap {
 		na_release_idx = INVALID_IDX;
 		
 		na_all_filled_in_propag.clear();
-		na_forced.clear(true);
+		na_forced.clear(true, true);
 		na_non_forced.clear();
 		
 		na_fo_upper_quas.clear();
@@ -1721,8 +1721,8 @@ class neuromap {
 	void	map_set_all_ne_curr_dom();
 	void	map_reset_all_ne_curr_dom();
 
-	bool	map_ck_all_qu_dominated();
-	bool	map_ck_all_ne_dominated();
+	bool	map_ck_all_qu_dominated(dbg_call_id dbg_id);
+	bool	map_ck_all_ne_dominated(dbg_call_id dbg_id);
 	
 	void	map_add_to_release();
 
@@ -1732,18 +1732,7 @@ class neuromap {
 
 	void	set_all_filled_in_propag();
 	
-	bool	ck_first_forced_idx(){
-		bool has_sub = (na_submap != NULL_PT);
-		if(has_sub){
-			return true;
-		}
-		BRAIN_CK(na_forced.is_valid_idx(0));
-		BRAIN_CK(na_forced.is_valid_idx(1));
-		quanton* qu0 = na_forced[0].ps_quanton;
-		quanton* qu1 = na_forced[1].ps_quanton;
-		BRAIN_CK(qu0->qu_inverse == qu1);
-		return true;
-	}
+	bool	ck_first_forced_idx();
 	
 	long	first_forced_body_idx(){
 		bool has_sub = (na_submap != NULL_PT);
@@ -2372,6 +2361,7 @@ class analyser {
 	qlayers_ref		de_ref;
 	neurolayers 	de_not_sel_neus;
 	row<prop_signal>	de_all_noted;
+	bool			de_found_learned;
 
 	prop_signal 	de_first_bk_psig;
 	prop_signal 	de_next_bk_psig;
@@ -2385,6 +2375,7 @@ class analyser {
 	}
 
 	void	init_analyser(brain* brn = NULL_PT);
+	void	reset_deduc();
 
 	//static
 	//void	init_nk_with_dots(notekeeper& nkpr, brain* brn, long tg_lv);
@@ -2428,6 +2419,10 @@ class analyser {
 	bool	ck_end_of_lrn_nmp();
 	
 	bool	is_end_of_nmp(){
+		return is_end_of_lv();
+	}
+	/*
+	bool	is_end_of_nmp(){
 		if(is_end_of_lv()){
 			return true;
 		}
@@ -2435,7 +2430,7 @@ class analyser {
 		bool eonm = ! de_next_bk_psig.ps_source->ne_original;
 		BRAIN_CK(! eonm || ck_end_of_lrn_nmp());
 		return eonm;
-	}
+	}*/
 	
 	void	fill_dct(deduction& dct);
 	void	make_noted_dominated_and_deduced();
@@ -2498,7 +2493,7 @@ class leveldat {
 	void	init_leveldat(brain* pt_brn = NULL){
 		ld_brn = pt_brn;
 		ld_idx = INVALID_IDX;
-		ld_pre_sigs.clear();
+		ld_pre_sigs.clear(true, true);
 		ld_learned.clear();
 		ld_chosen = NULL_PT;
 		ld_upper_quas.clear();
@@ -2700,6 +2695,7 @@ public:
 	row_quanton_t 	br_tmp_load_quantons;
 	row_quanton_t 	br_tmp_assig_quantons;
 
+	row_quanton_t 	br_tmp_prt_quas;
 	row_quanton_t 	br_tmp_motives;
 	row_quanton_t 	br_tmp_edge;
 	row_quanton_t 	br_tmp_choose;
@@ -3212,9 +3208,8 @@ public:
 		br_ne_tot_tag5 = 0;
 	}
 
-	ch_string 	dbg_prt_margin(bool is_ck = false);
+	ch_string 	dbg_prt_margin(bj_ostream& os, bool is_ck = false);
 	
-	bool	ck_choices(bool after = false);
 	bool	ck_trail();
 	void	print_trail(bj_ostream& os, bool no_src_only = false);
 
@@ -3421,7 +3416,7 @@ neurolayers::get_nl_brain(){
 inline
 void
 neuromap::reset_neuromap(brain& brn){
-	BRAIN_CK(map_ck_all_qu_dominated());
+	BRAIN_CK(map_ck_all_qu_dominated(dbg_call_1));
 	init_neuromap(&brn);
 }
 
