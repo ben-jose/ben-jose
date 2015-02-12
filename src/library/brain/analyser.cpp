@@ -221,18 +221,17 @@ analyser::inc_all_noted(){
 	BRAIN_CK(pt_qua != NULL_PT);
 	quanton& nxt_qua = *pt_qua;
 
-	prop_signal& nxt_ps = de_next_bk_psig;
-	nxt_ps.init_qua_signal(nxt_qua);
-	if((nxt_ps.ps_source != NULL_PT) && ! nxt_ps.ps_source->ne_original){
-		BRAIN_CK(ck_end_of_lrn_nmp());
-		de_found_learned = true;
-		de_all_learned_forced.push(pt_qua);
-		nxt_ps.ps_source = NULL_PT;
-	}
-	//DBG_PRT(133, os << "nxt_ps=" << nxt_ps); 
+	//prop_signal& nxt_ps = de_next_bk_psig;
+	de_next_bk_psig.init_qua_signal(nxt_qua);
 	
 	prop_signal& nxt_sig = all_noted.inc_sz();
 	nxt_sig = de_next_bk_psig;
+	if((nxt_sig.ps_source != NULL_PT) && ! nxt_sig.ps_source->ne_original){
+		BRAIN_CK(ck_end_of_lrn_nmp());
+		de_found_learned = true;
+		de_all_learned_forced.push(pt_qua);
+		nxt_sig.ps_source = NULL_PT;
+	}
 
 	//DBG_PRT(133, os << "all_noted{"; de_all_noted.print_row_data(os, true, "\n"); 
 	//	os << "\n}";); 
@@ -468,18 +467,11 @@ analyser::update_neuromap(neuromap* sub_nmp){
 	nxt_nmp.na_setup_tk.update_ticket(brn);
 	
 	quanton* qua = qlr.get_curr_quanton();
-	//bool eolv = is_end_of_lv();
-	//if(eolv){
-		nxt_nmp.na_orig_lv = qua->qlevel();
-		nxt_nmp.na_orig_cho = qua;
-	//}
-	//DBG_PRT(124, os << "BEF_all_noted{"; de_all_noted.print_row_data(os, true, "\n"); 
-	//	os << "\n}";); 
+	
+	nxt_nmp.na_orig_lv = qua->qlevel();
+	nxt_nmp.na_orig_cho = qua;
 	
 	all_noted.move_to(nxt_nmp.na_forced);
-	
-	//DBG_PRT(124, os << "AFT_all_noted{"; nxt_nmp.na_forced.print_row_data(os, true, "\n"); 
-	//	os << "\n}";); 
 	
 	DBG_PRT(124, os << "tot_no_sel_neus_1=" << de_not_sel_neus.get_tot_neurons());
 	nxt_nmp.set_all_filled_in_propag();
@@ -586,7 +578,6 @@ analyser::calc_neuromap(prop_signal const & confl_sg, long min_lv, neuromap* pre
 			<< " cur_qlv=" << qlr.get_curr_qlevel() << bj_eol
 			<< " nxt_ps=" << de_next_bk_psig
 			<< " out_nmp=" << out_nmp << bj_eol
-			<< " eolv=" << is_end_of_lv()
 			<< " eonmp=" << is_end_of_nmp()
 			<< "}");
 	

@@ -2413,26 +2413,15 @@ class analyser {
 		return (num_ly_notes == 0);
 	}
 	
-	bool	is_end_of_lv(){
-		bool eolv = (de_next_bk_psig.ps_source == NULL_PT);
-		return eolv;
-	}
-	
 	bool	ck_end_of_lrn_nmp();
 	
 	bool	is_end_of_nmp(){
-		return is_end_of_lv();
-	}
-	/*
-	bool	is_end_of_nmp(){
-		if(is_end_of_lv()){
-			return true;
+		if(de_all_noted.is_empty()){
+			return false;
 		}
-		BRAIN_CK(de_next_bk_psig.ps_source != NULL_PT);
-		bool eonm = ! de_next_bk_psig.ps_source->ne_original;
-		BRAIN_CK(! eonm || ck_end_of_lrn_nmp());
-		return eonm;
-	}*/
+		bool eonmp = (de_all_noted.last().ps_source == NULL_PT);
+		return eonmp;
+	}
 	
 	void	fill_dct(deduction& dct);
 	void	set_noted_marks();
