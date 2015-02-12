@@ -169,6 +169,7 @@ bool		ck_motives(brain& brn, row_quanton_t& mots);
 //=================================================================
 // funcs declarations
 
+bool	dbg_ck_first_ps(row<prop_signal>& all_ps);
 void	dbg_prepare_used_dbg_ccl(row_quanton_t& rr_qua, canon_clause& dbg_ccl);
 void	dbg_print_ccls_neus(bj_ostream& os, row<canon_clause*>& dbg_ccls);
 bool	dbg_run_satex_on(brain& brn, ch_string f_nam);
@@ -1331,7 +1332,7 @@ make_all_ps_dominated(brain& brn, row<prop_signal>& trace, bool mk_deduc,
 
 inline
 void
-set_marks_and_spots_of(brain& brn, row<prop_signal>& trace, 
+set_all_ps(brain& brn, row<prop_signal>& trace, bool mks = true, bool spts = true,
 			long first_idx = 0, long last_idx = -1)
 {
 	if(last_idx < 0){ last_idx = trace.size(); }
@@ -1342,14 +1343,14 @@ set_marks_and_spots_of(brain& brn, row<prop_signal>& trace,
 
 	for(long ii = first_idx; ii < last_idx; ii++){
 		prop_signal& q_sig = trace[ii];
-		q_sig.set_ps_mark(brn);
-		q_sig.set_ps_spot(brn);
+		if(mks){ q_sig.set_ps_mark(brn); }
+		if(spts){ q_sig.set_ps_spot(brn); }
 	}
 }
 
 inline
 void
-reset_marks_and_spots_of(brain& brn, row<prop_signal>& trace,
+reset_all_ps(brain& brn, row<prop_signal>& trace, bool mks = true, bool spts = true,
 			long first_idx = 0, long last_idx = -1)
 {
 	if(last_idx < 0){ last_idx = trace.size(); }
@@ -1360,8 +1361,8 @@ reset_marks_and_spots_of(brain& brn, row<prop_signal>& trace,
 
 	for(long ii = first_idx; ii < last_idx; ii++){
 		prop_signal& q_sig = trace[ii];
-		q_sig.reset_ps_mark(brn);
-		q_sig.reset_ps_spot(brn);
+		if(mks){ q_sig.reset_ps_mark(brn); }
+		if(spts){ q_sig.reset_ps_spot(brn); }
 	}
 }
 
@@ -1541,7 +1542,7 @@ class coloring {
 
 	void	set_brain_coloring();
 	
-	bool	has_diff_col_than_prev(row<long>& the_colors, long col_idx);
+	bool	has_diff_col_than_prev(row<long>& the_colors, long col_idx, dbg_call_id dbg_id);
 
 	void	save_colors_from(sort_glb& neus_srg, sort_glb& quas_srg);
 	void	load_colors_into(brain& brn, sort_glb& neus_srg, sort_glb& quas_srg, 
@@ -1557,20 +1558,7 @@ class coloring {
 		return true;
 	}
 
-	bj_ostream&	print_coloring(bj_ostream& os, bool from_pt = false){
-		MARK_USED(from_pt);
-		os << "CO(" << (void*)this <<")={ " << bj_eol;
-		os << " quas=" << co_quas << bj_eol;
-		os << " cols_quas=" << co_qua_colors << bj_eol;
-		os << " neus=" << bj_eol;
-		co_neus.print_row_data(os, true, "\n");
-		os << " qu_all=" << co_all_qua_consec;
-		os << " ne_all=" << co_all_neu_consec;
-		os << bj_eol;
-		os << "}";
-		os.flush();
-		return os;
-	}
+	bj_ostream&	print_coloring(bj_ostream& os, bool from_pt = false);
 };
 
 //=============================================================================
@@ -1597,6 +1585,7 @@ class neuromap {
 	long			na_deact_tier;
 	long			na_orig_lv;
 	quanton*		na_orig_cho;
+	quanton*		na_nxt_forced_qua;
 	neuromap*		na_submap;
 	recemap_t		na_mates;
 	long			na_release_idx;
@@ -1636,6 +1625,7 @@ class neuromap {
 		na_deact_tier = INVALID_TIER;
 		na_orig_lv = INVALID_LEVEL;
 		na_orig_cho = NULL_PT;
+		na_nxt_forced_qua = NULL_PT;
 		na_submap = NULL_PT;
 
 		na_mates.re_me = this;
@@ -1666,9 +1656,10 @@ class neuromap {
 		bool c5 = (na_deact_tier == INVALID_TIER);
 		bool c6 = (na_orig_lv == INVALID_LEVEL);
 		bool c7 = (na_orig_cho == NULL_PT);
-		bool c8 = (na_submap == NULL_PT);
+		bool c8 = (na_nxt_forced_qua == NULL_PT);
+		bool c9 = (na_submap == NULL_PT);
 
-		return (c1 && c2 && c3 && c4 && c5 && c6 && c7 && c8);
+		return (c1 && c2 && c3 && c4 && c5 && c6 && c7 && c8 && c9);
 	}
 
 	void	full_release();
@@ -1729,14 +1720,24 @@ class neuromap {
 	bool	map_can_activate();
 	void	map_activate(dbg_call_id dbg_id);
 	void	map_deactivate();
+	
+	bool	is_to_write(){
+		if(! na_active){ return false; }
+		if(na_nxt_forced_qua == NULL_PT){ return false; }
+		if(! na_nxt_forced_qua->has_note1()){ return false; }
+		return true;
+	}
 
 	void	set_all_filled_in_propag();
 	
 	bool	ck_first_forced_idx();
 	
+	bool	has_submap(){
+		return (na_submap != NULL_PT);
+	}
+	
 	long	first_forced_body_idx(){
-		bool has_sub = (na_submap != NULL_PT);
-		long fst_idx = (has_sub)?(0):(1);
+		long fst_idx = (has_submap())?(0):(1);
 		BRAIN_CK(ck_first_forced_idx());
 		return fst_idx;
 	}
@@ -2362,6 +2363,7 @@ class analyser {
 	neurolayers 	de_not_sel_neus;
 	row<prop_signal>	de_all_noted;
 	bool			de_found_learned;
+	row_quanton_t	de_all_learned_forced;
 
 	prop_signal 	de_first_bk_psig;
 	prop_signal 	de_next_bk_psig;
@@ -2433,6 +2435,8 @@ class analyser {
 	}*/
 	
 	void	fill_dct(deduction& dct);
+	void	set_noted_marks();
+	void	reset_noted_marks();
 	void	make_noted_dominated_and_deduced();
 	//void	fill_nmp(notekeeper& nkpr, qlayers_ref& qlr);
 	
@@ -3153,8 +3157,9 @@ public:
 	void	fill_mutual_tees(sort_glb& neus_srg, sort_glb& quas_srg, 
 							 row<neuron*>& all_neus, row_quanton_t& all_quas);
 	
-	long	append_all_to_write(long fst_lv, long tg_lv, row<neuromap*>& all_nmps);
-	void	add_lv_neuromap_to_write(long nxt_lv);
+	long	append_all_to_write(analyser& dedcer, long fst_lv, long tg_lv, 
+								row<neuromap*>& all_nmps);
+	void	add_lv_neuromap_to_write(long nxt_lv, quanton* dct_qu);
 	
 	bool 	lv_has_setup_nmp(long nxt_lv){
 		leveldat& lv_s = get_data_level(nxt_lv);

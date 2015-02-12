@@ -78,6 +78,9 @@ bool	dbg_print_cond_func(
 	
 #define	DBG_PRT_COND(lev, cond, comm)	DBG_BR_PRT_COND(get_dbg_brn(), lev, cond, comm)
 
+#define	DBG_PRT_COND_WITH(lev, obj, cond, comm)	\
+	DBG_BR_PRT_COND((obj).get_dbg_brn(), lev, cond, comm)
+
 #define	DBG_PRT_WITH(lev, obj, comm)	DBG_BR_PRT_COND((obj).get_dbg_brn(), lev, true, comm)
 
 #define	DBG_PRT(lev, comm)	DBG_PRT_COND(lev, true, comm)

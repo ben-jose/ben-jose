@@ -73,6 +73,7 @@ void
 analyser::reset_deduc(){
 	de_all_noted.clear(true, true);
 	de_found_learned = false;
+	de_all_learned_forced.clear();
 	
 	de_first_bk_psig.init_prop_signal();
 	de_next_bk_psig.init_prop_signal();
@@ -219,22 +220,23 @@ analyser::inc_all_noted(){
 	}
 	BRAIN_CK(pt_qua != NULL_PT);
 	quanton& nxt_qua = *pt_qua;
-	DBG_PRT(20, os << "noted found " << nxt_qua 
-		<< " num_noted_in_layer " << nkpr.dk_num_noted_in_layer;
-		os << " note layer=" << nkpr.dk_note_layer;
-	);
 
 	prop_signal& nxt_ps = de_next_bk_psig;
 	nxt_ps.init_qua_signal(nxt_qua);
 	if((nxt_ps.ps_source != NULL_PT) && ! nxt_ps.ps_source->ne_original){
 		BRAIN_CK(ck_end_of_lrn_nmp());
 		de_found_learned = true;
+		de_all_learned_forced.push(pt_qua);
 		nxt_ps.ps_source = NULL_PT;
 	}
+	//DBG_PRT(133, os << "nxt_ps=" << nxt_ps); 
 	
 	prop_signal& nxt_sig = all_noted.inc_sz();
 	nxt_sig = de_next_bk_psig;
 
+	//DBG_PRT(133, os << "all_noted{"; de_all_noted.print_row_data(os, true, "\n"); 
+	//	os << "\n}";); 
+	
 	nkpr.nk_reset_note(nxt_qua);
 	BRAIN_CK(nxt_qua.qlevel() == nkpr.dk_note_layer);
 	BRAIN_CK(nxt_qua.is_pos());
@@ -297,6 +299,8 @@ analyser::deduction_init(prop_signal const & confl_sg){
 	prop_signal& fst_sig = all_noted.inc_sz();
 	fst_sig = confl_sg;
 
+	//DBG_PRT(133, os << "nxt_ps=" << fst_sig); 
+	
 	BRAIN_CK(confl_sg.ps_quanton != NULL);
 	BRAIN_CK(confl_sg.ps_quanton->get_charge() == cg_negative);
 	BRAIN_CK(confl_sg.ps_quanton->qlevel() == deduc_lv);
@@ -354,6 +358,26 @@ analyser::deduction_analysis(prop_signal const & confl_sg, deduction& dct){
 	nkpr.clear_all_quantons();
 	BRAIN_CK(nkpr.dk_quas_lyrs.is_empty());
 	BRAIN_CK(nkpr.nk_get_counter() == 0);
+}
+
+void
+analyser::set_noted_marks(){
+	brain& brn = get_de_brain();
+	row<prop_signal>& all_noted = de_all_noted;
+	bool with_mks = true;
+	bool with_spts = false;
+	BRAIN_CK(dbg_ck_first_ps(all_noted));
+	set_all_ps(brn, all_noted, with_mks, with_spts, 1);
+}
+
+void
+analyser::reset_noted_marks(){
+	brain& brn = get_de_brain();
+	row<prop_signal>& all_noted = de_all_noted;
+	bool with_mks = true;
+	bool with_spts = false;
+	BRAIN_CK(dbg_ck_first_ps(all_noted));
+	reset_all_ps(brn, all_noted, with_mks, with_spts, 1);
 }
 
 void
@@ -449,7 +473,13 @@ analyser::update_neuromap(neuromap* sub_nmp){
 		nxt_nmp.na_orig_lv = qua->qlevel();
 		nxt_nmp.na_orig_cho = qua;
 	//}
+	//DBG_PRT(124, os << "BEF_all_noted{"; de_all_noted.print_row_data(os, true, "\n"); 
+	//	os << "\n}";); 
+	
 	all_noted.move_to(nxt_nmp.na_forced);
+	
+	//DBG_PRT(124, os << "AFT_all_noted{"; nxt_nmp.na_forced.print_row_data(os, true, "\n"); 
+	//	os << "\n}";); 
 	
 	DBG_PRT(124, os << "tot_no_sel_neus_1=" << de_not_sel_neus.get_tot_neurons());
 	nxt_nmp.set_all_filled_in_propag();
@@ -572,13 +602,31 @@ analyser::end_analysis(){
 	BRAIN_CK(nkpr.nk_get_counter() == 0);	
 }
 
+void
+append_all_nmps_to_write(grip& the_grp, row<neuromap*>& rr){
+	binder* fst_bdr = the_grp.bn_right;
+	binder* lst_bdr = &the_grp;
+	for(binder* bdr_1 = fst_bdr; bdr_1 != lst_bdr; bdr_1 = bdr_1->bn_right){
+		neuromap& nmp = rcp_as<neuromap>(bdr_1);
+		if(nmp.is_to_write()){
+			rr.push(&nmp);
+		}
+	}
+}
+
 long
-brain::append_all_to_write(long fst_lv, long tg_lv, row<neuromap*>& all_nmps){
+brain::append_all_to_write(analyser& dedcer, long fst_lv, long tg_lv, 
+						   row<neuromap*>& all_nmps)
+{
+	brain& brn = *this;
 	BRAIN_CK(fst_lv >= tg_lv);
 	
 	row<leveldat*>& all_lv = br_data_levels;	
 	BRAIN_CK(level() == all_lv.last_idx());
 	BRAIN_CK(all_lv.is_valid_idx(fst_lv));
+	
+	BRAIN_CK(brn.br_qu_tot_note1 == 0);
+	set_all_note1(brn, dedcer.de_all_learned_forced);
 
 	long min_has_setup_lv = INVALID_LEVEL;
 	for(int aa = fst_lv; aa >= 0; aa--){
@@ -594,8 +642,13 @@ brain::append_all_to_write(long fst_lv, long tg_lv, row<neuromap*>& all_nmps){
 			continue;
 		}
 		
-		lv.ld_nmps_to_write.append_all_as<neuromap>(all_nmps);
+		append_all_nmps_to_write(lv.ld_nmps_to_write, all_nmps);
+		//lv.ld_nmps_to_write.append_all_as<neuromap>(all_nmps);
 	}
+	
+	reset_all_note1(brn, dedcer.de_all_learned_forced);
+	BRAIN_CK(brn.br_qu_tot_note1 == 0);
+	
 	return min_has_setup_lv;
 }
 
@@ -631,11 +684,11 @@ analyser::neuromap_find_analysis(analyser& deducer, prop_signal const & confl_sg
 		
 		nxt_dct.init_deduction();
 		deducer.deduction_analysis(nmp_causes, nxt_dct);
-		make_noted_dominated_and_deduced();
+		deducer.make_noted_dominated_and_deduced();
 		de_found_learned = deducer.de_found_learned;
 		
 		long tg_lv = nxt_dct.dt_target_level;
-		long min_s_lv = brn.append_all_to_write(nxt_lv, tg_lv, to_wrt);
+		long min_s_lv = brn.append_all_to_write(deducer, nxt_lv, tg_lv, to_wrt);
 		MARK_USED(min_s_lv);
 		
 		nxt_lv = tg_lv;
@@ -699,6 +752,7 @@ analyser::neuromap_setup_analysis(prop_signal const & confl_sg, long nxt_lv,
 			<< " nxt_lv=" << nxt_lv
 		);
 		if(in_nmp_is_last_nmp){
+			in_nmp->map_make_dominated();
 			in_nmp->na_is_head = true;
 			DBG(in_nmp->na_dbg_orig_lv = in_nmp->na_orig_lv);
 			in_nmp->na_orig_lv = nxt_lv + 1;
@@ -755,12 +809,13 @@ analyser::neuromap_setup_analysis(prop_signal const & confl_sg, long nxt_lv,
 }
 
 void
-brain::add_lv_neuromap_to_write(long nxt_lv){
+brain::add_lv_neuromap_to_write(long nxt_lv, quanton* dct_qu){
 	leveldat& lv_s = get_data_level(nxt_lv + 1);
 	
 	//BRAIN_CK(lv_s.has_setup_neuromap());
 	if(lv_s.has_setup_neuromap()){
 		neuromap& nmp = lv_s.get_setup_neuromap();
+		nmp.na_nxt_forced_qua = dct_qu;
 		
 		BRAIN_CK(nmp.na_active);
 		nmp.na_mates.let_go();
@@ -802,7 +857,7 @@ brain::analyse(prop_signal const & confl, deduction& out_dct){
 	long fst_lv = level();
 	long tg_lv = out_dct.dt_target_level;
 	
-	long min_s_lv = append_all_to_write(fst_lv, tg_lv, to_wrt);
+	long min_s_lv = append_all_to_write(dedser, fst_lv, tg_lv, to_wrt);
 	MARK_USED(min_s_lv);
 	BRAIN_CK_PRT((! lv_has_setup_nmp(tg_lv + 1) || (min_s_lv == (tg_lv + 1))), 
 		os << "______\n"; dbg_prt_margin(os);
@@ -831,7 +886,7 @@ brain::analyse(prop_signal const & confl, deduction& out_dct){
 		f_nmp = mper.neuromap_setup_analysis(confl, tg_lv, f_nmp); // activates new maps
 	}
 	
-	add_lv_neuromap_to_write(tg_lv);
+	add_lv_neuromap_to_write(tg_lv, out_dct.dt_forced);
 	
 	mper.end_analysis();
 	
@@ -851,6 +906,10 @@ brain::analyse(prop_signal const & confl, deduction& out_dct){
 	)
 	BRAIN_CK(br_ne_tot_tag1 == 0);
 	
+	DBG_PRT_COND(133, ! to_wrt.is_empty(), os << "WRITING sz=" << to_wrt.size() << "\n";
+		os << "out_dct=" << out_dct << bj_eol;
+		print_trail(os));
+		
 	write_all_neuromaps(to_wrt); // deactivates final wrt maps
 	
 	release_all_neuromaps();

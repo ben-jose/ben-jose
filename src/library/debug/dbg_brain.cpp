@@ -451,21 +451,40 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 	brain& brn = get_brn();
 	MARK_USED(brn);
 	MARK_USED(from_pt);
-	/*if(from_pt){
+	if(from_pt){
 		row_quanton_t& all_qu = brn.br_tmp_prt_quas;
 		all_qu.clear();
 		map_get_all_quas(all_qu);
 		
+		row<neuron*>& all_ne = brn.br_tmp_prt_neus;
+		MARK_USED(all_ne);
+		
 		os << "na{";
 		if(na_is_head){ os << ".h"; }
+		os << "." << na_index;
 		os << "(" << (void*)this << ")";
 		os << " quas=" << all_qu;
-		//os << " o_lv=" << na_orig_lv;
+
+		/*
+		os << bj_eol;
+		
+		all_ne.clear();
+		map_get_all_forced_neus(all_ne);
+		os << " all_forced=" << bj_eol;
+		all_ne.print_row_data(os, true, "\n");
+		
+		all_ne.clear();
+		map_get_all_non_forced_neus(all_ne);
+		os << " all_non_forced=" << bj_eol;
+		all_ne.print_row_data(os, true, "\n");
+		*/
+		
 		//os << " cho=" << na_orig_cho;
 		os << "}";
 		os.flush();
 		return os;
-	}*/
+	}
+	
 	os << "NMP(" << (void*)this <<")={ " << bj_eol;
 	
 	os << " active=" << na_active << bj_eol;
@@ -587,6 +606,8 @@ quanton::print_quanton(bj_ostream& os, bool from_pt){
 	neuron* neu = qu_source;
 	bool n0 = has_note0();
 	MARK_USED(n0);
+	bool n1 = has_note1();
+	MARK_USED(n1);
 	bool h_src = (neu != NULL_PT);
 	bool h_chg = has_charge();
 	long qlv = qlevel();
@@ -608,6 +629,22 @@ quanton::print_quanton(bj_ostream& os, bool from_pt){
 		if((neu != NULL_PT) && ! neu->ne_original){ os << "+"; }
 		if(qlv == 0){ os << "#"; }
 		if(! h_src && h_chg){ os << "L" << qlv; }
+		/*if((! h_src) && (pt_brn != NULL_PT) && h_chg){ 
+			brain& brn = *pt_brn;
+			
+			leveldat& lv = brn.get_data_level(qlv);
+			if(lv.has_setup_neuromap()){ os << ".s"; }
+			if(lv.has_to_write_neuromaps()){ os << ".w"; }
+			if(lv.has_learned()){ 
+				os << ".l"; 
+				if(lv.ld_learned.size() > 1){
+					os << lv.ld_learned.size(); 
+				}
+			}
+			if((qlv != ROOT_LEVEL) && (lv.ld_chosen == NULL_PT)){
+				os << "[NULL_CHO!!!]"; 
+			}
+		}*/
 
 		if(! h_chg){ os << "("; }
 		if(is_nega){ os << '\\';  }
@@ -618,28 +655,13 @@ quanton::print_quanton(bj_ostream& os, bool from_pt){
 		if(! h_chg){ os << ")"; }
 
 		//os << ".t" << qu_tier;
-		/*
-		if((! h_src) && (pt_brn != NULL_PT) && h_chg){ 
-			brain& brn = *pt_brn;
-			
-			leveldat& lv = brn.get_data_level(qlv);
-			if(lv.has_setup_neuromap()){ os << ".s"; }
-			if(lv.has_to_write_neuromaps()){ os << ".w"; }
-			if(lv.has_learned()){ 
-				os << ".l"; 
-				if(lv.ld_learned.size() > 1){
-					os << "l"; 
-				}
-			}
-			if((qlv != ROOT_LEVEL) && (lv.ld_chosen == NULL_PT)){
-				os << "[NULL_CHO!!!]"; 
-			}
-		}
 		
+		/*
 		if(n0){ os << ".n0"; }
 		if(with_dot){ os << ".d"; }
 		if(with_mark){ os << ".m"; }
 		if(! qu_tee.is_unsorted()){ os << ".q" << qu_tee.so_qua_id; }
+		if(n1){ os << ".n1"; }
 		*/
 
 		//if(dominated){ os << ".DOM"; }
@@ -926,12 +948,14 @@ dbg_run_satex_on(brain& brn, ch_string f_nam){
 	MARK_USED(is_no);
 	DBG_COND_COMM(! is_no ,
 		os << "ABORTING_DATA " << bj_eol;
+		ch_string o_ff = brn.dbg_prt_margin(os);
 		//os << "mmap_before_tk=" << ma_before_retract_tk << bj_eol;
 		//os << "mmap_after_tks=" << ma_after_retract_tks << bj_eol;
 		os << " brn_tk=" << brn.br_current_ticket << bj_eol;
 		os << "	LV=" << brn.level() << bj_eol;
 		os << " f_nam=" << f_nam << bj_eol;
 		os << " save_consec=" << brn.br_dbg.dbg_canon_save_id << bj_eol;
+		os << " during ff=" << o_ff << bj_eol;
 		os << "END_OF_aborting_data" << bj_eol;
 	);
 	BRAIN_CK(is_no);
@@ -1195,3 +1219,19 @@ neurolayers::print_neurolayers(bj_ostream& os, bool from_pt){
 }
 
 
+bj_ostream&
+coloring::print_coloring(bj_ostream& os, bool from_pt){
+	MARK_USED(from_pt);
+	os << "CO(" << (void*)this <<")={ " << bj_eol;
+	os << " quas=" << co_quas << bj_eol;
+	os << " cols_quas=" << co_qua_colors << bj_eol;
+	os << " neus=" << bj_eol;
+	co_neus.print_row_data(os, true, "\n");
+	os << " cols_neus=" << co_neu_colors << bj_eol;
+	os << " all_qu_consc=" << co_all_qua_consec;
+	os << " all_ne_consc=" << co_all_neu_consec;
+	os << bj_eol;
+	os << "}";
+	os.flush();
+	return os;
+}
