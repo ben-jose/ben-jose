@@ -2365,7 +2365,7 @@ class analyser {
 	bool			de_found_learned;
 	row_quanton_t	de_all_learned_forced;
 
-	prop_signal 	de_first_bk_psig;
+	prop_signal 	de_confl;
 	prop_signal 	de_next_bk_psig;
 	
 	analyser(){
@@ -2395,8 +2395,8 @@ class analyser {
 	qulayers& 	get_orig_trail();
 	
 	neuron* 	tg_confl(){
-		BRAIN_CK(de_first_bk_psig.ps_source != NULL_PT);
-		return de_first_bk_psig.ps_source;
+		BRAIN_CK(de_confl.ps_source != NULL_PT);
+		return de_confl.ps_source;
 	}
 	
 	quanton*	last_qu_noted(){

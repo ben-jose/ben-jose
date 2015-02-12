@@ -1547,7 +1547,9 @@ brain::receive_psignal(bool only_in_dom){
 	if(qua.has_charge()){
 		if(qua.is_neg()){
 			BRAIN_CK((neu != NULL_PT) || (level() == ROOT_LEVEL));
-			br_conflict_found.init_prop_signal(pt_qua, neu, sg_tier);
+			//long cnfl_ti = sg_tier;
+			long cnfl_ti = tier() + 1;
+			br_conflict_found.init_prop_signal(pt_qua, neu, cnfl_ti);
 			DBG_PRT(18, os << "**confict** " << neu);
 			reset_psignals();
 			BRAIN_CK(! has_psignals());

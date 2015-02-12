@@ -277,7 +277,7 @@ neuromap::map_activate(dbg_call_id dbg_id){
 	
 	leveldat& lv_dat = brn.get_data_level(na_orig_lv);
 	
-	DBG_PRT_COND(133, (na_index == 3), os << "ACTIV. nmp=" << this << bj_eol;
+	DBG_PRT_COND(69, (na_index == 3), os << "ACTIV. nmp=" << this << bj_eol;
 		brn.print_trail(os);
 		os << bj_eol << " o_lv=" << na_orig_lv;
 	);
@@ -324,7 +324,7 @@ void
 neuromap::map_deactivate(){
 	brain& brn = get_brn();
 	
-	DBG_PRT_COND(133, (na_index == 3), os << "DEACTivating " << this);
+	DBG_PRT_COND(69, (na_index == 3), os << "DEACTivating " << this);
 	//DBG_PRT(134, os << "DEACTivating " << this);
 
 	BRAIN_CK(na_active);
@@ -1018,7 +1018,7 @@ bool
 neuromap::map_oper(mem_op_t mm){
 	brain& brn = get_brn();
 
-	DBG_PRT(133, os << "MAP_OPER NMP=" << this);
+	DBG_PRT(69, os << "MAP_OPER NMP=" << this);
 	
 	brn.init_mem_tmps();
 
@@ -1334,7 +1334,7 @@ neuromap::map_get_initial_guide_coloring(coloring& clr){
 
 	BRAIN_CK(brn.br_qu_tot_note1 == 0);
 
-	DBG_PRT(110, os << "I_GUI_trace\n="; dtrace.print_row_data(os, true, "\n"); );
+	DBG_PRT(133, os << "I_GUI_trace\n="; dtrace.print_row_data(os, true, "\n"); );
 	for(long ii = beg_sz; ii < end_sz; ii++){
 		prop_signal& q_sig1 = dtrace[ii];
 
@@ -1350,7 +1350,11 @@ neuromap::map_get_initial_guide_coloring(coloring& clr){
 			BRAIN_CK(col0 >= 0);
 			BRAIN_CK(col1 >= 0);
 			if(col0 != col1){
-				BRAIN_CK(col0 > col1);
+				BRAIN_CK_PRT((col0 > col1),
+					os << "________\n"; brn.dbg_prt_margin(os);
+					os << " ii=" << ii << " col0=" << col0 << " col1=" << col1
+					<< " ps1=" << q_sig1 << " ps0=" << q_sig0;
+				);
 				inc_col = true;
 			}
 		}

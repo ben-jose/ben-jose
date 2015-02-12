@@ -654,7 +654,7 @@ quanton::print_quanton(bj_ostream& os, bool from_pt){
 		if(is_nega){ os << '/';  }
 		if(! h_chg){ os << ")"; }
 
-		//os << ".t" << qu_tier;
+		os << ".t" << qu_tier;
 		
 		/*
 		if(n0){ os << ".n0"; }
