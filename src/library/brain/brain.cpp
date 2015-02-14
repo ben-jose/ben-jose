@@ -773,7 +773,6 @@ brain::choose_quanton(){
 
 	quanton* qua = NULL;
 
-	/*
 	while(! br_maps_active.is_empty()){
 		neuromap* pt_mpp = br_maps_active.last();
 		BRAIN_CK(pt_mpp != NULL_PT);
@@ -785,7 +784,7 @@ brain::choose_quanton(){
 		BRAIN_CK(qua == NULL_PT);
 		deactivate_last_map();
 		DBG_PRT(122, os << "deac_lst (choose)");
-	}*/
+	}
 
 	for(long ii = 0; ii < br_choices.size(); ii++){
 		quanton* qua_ii = br_choices[ii];

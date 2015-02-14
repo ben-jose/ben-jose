@@ -407,8 +407,9 @@ int	main(int argc, char** argv){
 
 	test_full_srt_from();
 
-	os << "ENDING TESTS___________  MEM_STATS.num_bytes_in_use = " 
-			<< MEM_STATS.num_bytes_in_use << std::endl;
+	os << "ENDING TESTS___________  ";
+	DBG(os << "MEM_STATS.num_bytes_in_use = " << MEM_STATS.num_bytes_in_use);
+	os << std::endl;
 	os.flush();
 
 	DBG_CK(tt_mem_in_u == MEM_STATS.num_bytes_in_use);

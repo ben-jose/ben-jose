@@ -153,6 +153,7 @@ DECLARE_PRINT_FUNCS(coloring)
 DECLARE_PRINT_FUNCS(neurolayers)
 DECLARE_PRINT_FUNCS(qulayers)
 DECLARE_PRINT_FUNCS(neuromap)
+DECLARE_PRINT_FUNCS(analyser)
 DECLARE_PRINT_FUNCS(leveldat)
 
 //=================================================================
@@ -1206,6 +1207,9 @@ make_all_ne_dominated(brain& brn, row<neuron*>& all_neus, bool mk_deduc,
 	BRAIN_CK((last_idx == all_neus.size()) || all_neus.is_valid_idx(last_idx));
 
 	for(long ii = first_idx; ii < last_idx; ii++){
+		BRAIN_CK_PRT(all_neus.is_valid_idx(ii), os << "_______\n ii=" << ii
+			<< " sz=" << all_neus.size() << " last_idx=" << last_idx
+		);
 		BRAIN_CK(all_neus[ii] != NULL_PT);
 		neuron& neu = *(all_neus[ii]);
 		neu.make_ne_dominated(brn);
@@ -1721,6 +1725,8 @@ class neuromap {
 	void	map_activate(dbg_call_id dbg_id);
 	void	map_deactivate();
 	
+	void	deactivate_until_me();
+	
 	bool	is_to_write(){
 		if(! na_active){ return false; }
 		if(na_nxt_forced_qua == NULL_PT){ return false; }
@@ -1779,12 +1785,12 @@ class neuromap {
 	void	map_get_tauto_neus(row<neuron*>& neus, bool ck_tks);
 	
 	static
-	void		map_append_non_forced_from(brain& brn, row<neuron*>& all_neus, 
+	void	map_append_non_forced_from(brain& brn, row<neuron*>& all_neus, 
 							row<neuron*>& sel_neus, neurolayers& not_sel_neus, 
 							row_quanton_t& nmp_upper_quas, long min_ti, long max_ti,
 							dbg_call_id dbg_call);
 	
-	void		map_fill_non_forced(neurolayers& not_sel_neus);
+	void	map_fill_non_forced(neurolayers& not_sel_neus);
 	
 	bj_ostream&	print_neuromap(bj_ostream& os, bool from_pt = false);
 };
@@ -2454,6 +2460,9 @@ class analyser {
 						long& nxt_lv, deduction& nxt_dct, row<neuromap*>& to_wrt);
 	neuromap* 	neuromap_setup_analysis(prop_signal const & confl_sg, long tg_lv, 
 										neuromap* in_nmp);
+
+	bj_ostream&	print_analyser(bj_ostream& os, bool from_pt = false);
+	
 };
 
 //=============================================================================
@@ -2565,20 +2574,7 @@ class leveldat {
 	void	reset_semi_monos(brain& brn);
 	void	release_learned(brain& brn);
 
-	bj_ostream&	print_leveldat(bj_ostream& os, bool from_pt = false){
-		if(from_pt){
-			os << "[LV=" << ld_idx << ".cho=" << ld_chosen << "]";
-			return os;
-		}
-		os << "LVDAT(" << (void*)this <<")={" << bj_eol;
-		os << " ld_idx=" << ld_idx << bj_eol;
-		os << " ld_chosen=" << ld_chosen << bj_eol;
-		os << " ld_upper_quas=" << ld_upper_quas << bj_eol;
-		os << " ld_semi_monos_to_update=" << ld_semi_monos_to_update << bj_eol;
-		os << "}";
-		os.flush();
-		return os;
-	}
+	bj_ostream&	print_leveldat(bj_ostream& os, bool from_pt = false);
 };
 
 //=================================================================
@@ -2697,12 +2693,15 @@ public:
 	row_quanton_t 	br_tmp_nmp_upper_qu;
 	row_quanton_t 	br_tmp_qu_activate;
 	row_quanton_t 	br_tmp_f_analysis;
+	row_quanton_t 	br_tmp_qu_ck_all_dom;
 	row_quanton_t 	br_tmp_qu_dom;
 	row_quanton_t 	br_tmp_ck_col;
 	
 	row<neuron*> 	br_tmp_ck_neus;
 	row<neuron*> 	br_tmp_ne_activate;
 	row<neuron*> 	br_tmp_ne_dom;
+	row<neuron*> 	br_tmp_ne_mk_all_dom;
+	row<neuron*> 	br_tmp_ne_ck_all_dom;
 	row<neuron*> 	br_tmp_ne_fill_nmp;
 
 	row_quanton_t 	br_tmp_rever_quas;
@@ -3155,6 +3154,8 @@ public:
 		bool h_s = lv_s.has_setup_neuromap();
 		return h_s;
 	}
+	
+	bool 	needs_lv_setup(long nxt_lv, neuromap* in_nmp);
 
 	void	analyse(prop_signal const & confl, deduction& dct);
 	void	release_all_neuromaps();
@@ -3549,6 +3550,7 @@ DEFINE_PRINT_FUNCS(coloring)
 DEFINE_PRINT_FUNCS(neurolayers)
 DEFINE_PRINT_FUNCS(qulayers)
 DEFINE_PRINT_FUNCS(neuromap)
+DEFINE_PRINT_FUNCS(analyser)
 DEFINE_PRINT_FUNCS(leveldat)
 
 #endif		// BRAIN_H

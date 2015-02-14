@@ -109,25 +109,24 @@ batch_solver::init_batch_solver(){
 	using_mem_ctrl = false;
 
 	help_str =
-		"[<file_name[.lst]> -h -v -paths -verify -just_read -keep_skeleton -only_save "
+		"[<file_name[.lst]> -h -v -paths "
+		DBG("[-rr] [+w | -w] [+f | -f] ")
 		"-root <root_path> -max_mem <max_kb_to_use>] \n"
 		"\n"
 		"-h : print help.\n"
 		"-v : print version.\n"
 		"-paths : print the paths to be used.\n"
-		"-verify : localy verify the  <file_name>.\n"
 		"-root : set the root path to <root_path>.\n"
 		"-max_mem : set max number of RAM Kbytes to use while running.\n"
 		"\n"
 		;
 
 	version_str =
-		"v0.1\n"
-		"(c) 2009. QUIROGA BELTRAN, Jose Luis. c.c. 79523732. Bogota - Colombia.\n"
+		"v_alpha_0.1\n"
+		"(c) 2015. QUIROGA BELTRAN, Jose Luis. c.c. 79523732. Bogota - Colombia.\n"
 		;
 
 	op_debug_clean_code = false;
-	op_just_read = false;
 
 	MEM_CTRL(using_mem_ctrl = true);
 
@@ -686,12 +685,11 @@ batch_solver::get_args(int argc, char** argv)
 			prt_version = true;
 		} else if(the_arg == "-paths"){
 			prt_paths = true;
-		} else if(the_arg == "-just_read"){
-			op_just_read = true;
 		} else if(the_arg == "-debug"){
 			op_debug_clean_code = true;
-		} else if(the_arg == "-r"){
-			as_release = true;
+		} else if(the_arg == "-rr"){
+			DBG(as_release = true);
+			NOT_DBG(os << "running RELEASE exe. ignoring debug op '-rr'" << bj_eol;)
 		} else if(the_arg == "-w"){
 			DBG(dbg_ops.W = 0;)
 			NOT_DBG(os << "running RELEASE exe. ignoring debug op '-w'" << bj_eol;)

@@ -68,7 +68,7 @@ neuromap::map_make_dominated(){
 	bool mk_deduc = false;
 	map_make_guide_dominated(mk_deduc);
 	
-	row<neuron*>& all_neus = brn.br_tmp_ne_dom;
+	row<neuron*>& all_neus = brn.br_tmp_ne_mk_all_dom;
 	all_neus.clear();
 	map_get_all_non_forced_neus(all_neus);
 	make_all_ne_dominated(brn, all_neus, mk_deduc);
@@ -191,7 +191,7 @@ bool
 neuromap::map_ck_all_qu_dominated(dbg_call_id dbg_id){
 #ifdef FULL_DEBUG
 	brain& brn = get_brn();
-	row_quanton_t& all_quas = brn.br_tmp_qu_dom;
+	row_quanton_t& all_quas = brn.br_tmp_qu_ck_all_dom;
 	all_quas.clear();
 	map_get_all_quas(all_quas);
 	for(long ii = 0; ii < all_quas.size(); ii++){
@@ -241,7 +241,7 @@ neuromap::map_ck_all_ne_dominated(dbg_call_id dbg_id){
 #ifdef FULL_DEBUG
 	neuromap& nmp = *this;
 	brain& brn = get_brn();
-	row<neuron*>& all_neus = brn.br_tmp_ne_dom;
+	row<neuron*>& all_neus = brn.br_tmp_ne_ck_all_dom;
 	
 	all_neus.clear();
 	map_get_all_forced_neus(all_neus);
@@ -304,7 +304,7 @@ neuromap::map_activate(dbg_call_id dbg_id){
 	BRAIN_CK(brn.br_maps_active.last() == this);
 
 	DBG_PRT(134, os << "ACTIVATING " << this);
-	DBG_PRT(134, os << "ALL_ACTIVE\n"; brn.br_maps_active.print_row_data(os, true, "\n"));
+	DBG_PRT(69, os << "ALL_ACTIVE\n"; brn.br_maps_active.print_row_data(os, true, "\n"));
 	
 }
 
@@ -321,11 +321,18 @@ neuromap::map_add_to_release(){
 }
 
 void
+neuromap::deactivate_until_me(){
+	brain& brn = get_brn();
+	while(na_active){
+		brn.deactivate_last_map();
+	}
+}
+
+void
 neuromap::map_deactivate(){
 	brain& brn = get_brn();
 	
-	DBG_PRT_COND(69, (na_index == 3), os << "DEACTivating " << this);
-	//DBG_PRT(134, os << "DEACTivating " << this);
+	DBG_PRT(134, os << "DEACTivating " << this);
 
 	BRAIN_CK(na_active);
 	BRAIN_CK(! brn.br_maps_active.is_empty());
@@ -348,7 +355,6 @@ neuromap::map_deactivate(){
 		map_add_to_release();
 	}
 	
-	//DBG_PRT(134, os << "all_active\n"; brn.br_maps_active.print_row_data(os, true, "\n"));
 }
 
 /*
@@ -450,10 +456,12 @@ quanton::in_qu_dominated(brain& brn){
 
 void
 quanton::make_qu_dominated(brain& brn){
+	DBG(bool deac = false);
 	while(! in_qu_dominated(brn)){
-		DBG_PRT(134, os << "deact_QU=" << this);
+		DBG(deac = true);
 		brn.deactivate_last_map();
 	}
+	DBG_PRT_COND(134, deac, os << "deact_QU=" << this);
 }
 
 bool
@@ -468,10 +476,12 @@ neuron::in_ne_dominated(brain& brn){
 
 void
 neuron::make_ne_dominated(brain& brn){
+	DBG(bool deac = false);
 	while(! in_ne_dominated(brn)){
-		DBG_PRT(134, os << "deact_NE=" << this);
+		DBG(deac = true);
 		brn.deactivate_last_map();
 	}
+	DBG_PRT_COND(134, deac, os << "deact_NE=" << this);
 }
 
 void
@@ -1334,7 +1344,7 @@ neuromap::map_get_initial_guide_coloring(coloring& clr){
 
 	BRAIN_CK(brn.br_qu_tot_note1 == 0);
 
-	DBG_PRT(133, os << "I_GUI_trace\n="; dtrace.print_row_data(os, true, "\n"); );
+	DBG_PRT(110, os << "I_GUI_trace\n="; dtrace.print_row_data(os, true, "\n"); );
 	for(long ii = beg_sz; ii < end_sz; ii++){
 		prop_signal& q_sig1 = dtrace[ii];
 

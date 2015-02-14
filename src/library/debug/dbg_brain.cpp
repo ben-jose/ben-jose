@@ -463,6 +463,7 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 		if(na_is_head){ os << ".h"; }
 		os << "." << na_index;
 		os << "(" << (void*)this << ")";
+		os << " fo_qu=" << na_nxt_forced_qua << bj_eol;
 		os << " quas=" << all_qu;
 
 		/*
@@ -629,7 +630,7 @@ quanton::print_quanton(bj_ostream& os, bool from_pt){
 		if((neu != NULL_PT) && ! neu->ne_original){ os << "+"; }
 		if(qlv == 0){ os << "#"; }
 		if(! h_src && h_chg){ os << "L" << qlv; }
-		/*if((! h_src) && (pt_brn != NULL_PT) && h_chg){ 
+		if((! h_src) && (pt_brn != NULL_PT) && h_chg){ 
 			brain& brn = *pt_brn;
 			
 			leveldat& lv = brn.get_data_level(qlv);
@@ -644,7 +645,7 @@ quanton::print_quanton(bj_ostream& os, bool from_pt){
 			if((qlv != ROOT_LEVEL) && (lv.ld_chosen == NULL_PT)){
 				os << "[NULL_CHO!!!]"; 
 			}
-		}*/
+		}
 
 		if(! h_chg){ os << "("; }
 		if(is_nega){ os << '\\';  }
@@ -654,7 +655,7 @@ quanton::print_quanton(bj_ostream& os, bool from_pt){
 		if(is_nega){ os << '/';  }
 		if(! h_chg){ os << ")"; }
 
-		os << ".t" << qu_tier;
+		//os << ".t" << qu_tier;
 		
 		/*
 		if(n0){ os << ".n0"; }
@@ -1232,6 +1233,35 @@ coloring::print_coloring(bj_ostream& os, bool from_pt){
 	os << " all_ne_consc=" << co_all_neu_consec;
 	os << bj_eol;
 	os << "}";
+	os.flush();
+	return os;
+}
+
+bj_ostream&	
+leveldat::print_leveldat(bj_ostream& os, bool from_pt){
+	if(from_pt){
+		os << "[LV=" << ld_idx << ".cho=" << ld_chosen << "]";
+		return os;
+	}
+	os << "LVDAT(" << (void*)this <<")={" << bj_eol;
+	os << " ld_idx=" << ld_idx << bj_eol;
+	os << " ld_chosen=" << ld_chosen << bj_eol;
+	os << " ld_upper_quas=" << ld_upper_quas << bj_eol;
+	os << " ld_semi_monos_to_update=" << ld_semi_monos_to_update << bj_eol;
+	os << "}";
+	os.flush();
+	return os;
+}
+
+bj_ostream&	
+analyser::print_analyser(bj_ostream& os, bool from_pt){
+	row_quanton_t all_quas;
+	append_all_trace_quas(de_all_noted, all_quas);
+	
+	os << "an{";
+	os << all_quas;
+	os << "}";
+	
 	os.flush();
 	return os;
 }
