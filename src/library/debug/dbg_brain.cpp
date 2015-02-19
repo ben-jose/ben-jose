@@ -985,7 +985,7 @@ brain::dbg_in_edge_of_target_lv(deduction& dct){
 
 void
 brain::dbg_old_reverse(){
-	DEDUC_DBG(deduction& dct2 = br_dbg.dbg_deduc);
+	DBG(deduction& dct2 = br_dbg.dbg_deduc);
 	//long dbg_old_lv = level();
 
 	BRAIN_CK(! has_psignals());
@@ -1013,7 +1013,7 @@ brain::dbg_old_reverse(){
 	
 	BRAIN_DBG(br_dbg.dbg_before_retract_lv = level());
 
-	DEDUC_DBG(br_deducer_anlsr.deduction_analysis(br_conflict_found, dct2));
+	DBG(br_deducer_anlsr.deduction_analysis(br_conflict_found, dct2));
 	BRAIN_CK_PRT(dct2.dt_target_level >= ROOT_LEVEL, 
 		os << recoil() << ".dct2=" << dct2
 	);
@@ -1144,7 +1144,7 @@ brain::dbg_old_reverse(){
 
 	//BRAIN_CK(! has_in_mem);	// DBG purposes
 	
-	DEDUC_DBG(has_in_mem || dbg_ck_deducs(dct, dct2));
+	DBG(has_in_mem || dbg_ck_deducs(dct, dct2));
 	DBG(long rr_lv = trail_level());
 	BRAIN_CK((level() == ROOT_LEVEL) || (level() == dct.dt_target_level));
 	BRAIN_CK((level() == ROOT_LEVEL) || (rr_lv == dct.dt_target_level));

@@ -64,6 +64,7 @@ bj_solver_t bj_solver_create(const char* bjs_dir_path){
 	
 	bj_solver_t bjs = (bj_solver_t)nw_slv;
 
+	WF_DBG(bj_out << "NOT FIND (JUST AS DEFAULT_DBG)" << bj_eol);
 	DBG_CHECK_SAVED(
 		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
 		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
@@ -94,6 +95,7 @@ void 		bj_solver_release(bj_solver_t bjs){
 		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
 		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
 	);
+	WF_DBG(bj_out << bj_eol << "NOT FIND (JUST AS DEFAULT_DBG)" << bj_eol);
 }
 
 const char* bj_get_path(bj_solver_t bjs){

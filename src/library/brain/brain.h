@@ -47,18 +47,19 @@ Declarations of classes and that implement the neural network.
 //=============================================================================
 // defines
 
-#define BRAIN_DBG(prm) DBG(prm)
+#if defined AS_DBG_WF
+#define WF_DBG(prm) prm
+#else
+#define WF_DBG(prm) /**/
+#endif
 
+#define BRAIN_DBG(prm) DBG(prm)
 #define BRAIN_CK(prm) DBG_BJ_LIB_CK(prm)
 #define BRAIN_CK_PRT(prm, comms1)  DBG_CK_2(prm, comms1)
-
 #define BRAIN_CK_0(prm)	DBG_BJ_LIB_CK(prm)
 
 #define BRAIN_CK_1(prm)  /**/
-
 #define BRAIN_CK_2(prm)  /**/
-
-#define DEDUC_DBG(cod)	DBG(cod)
 
 #define BRAIN_REL_CK(prm) if(! prm){ throw brain_exception(); }
 
@@ -674,6 +675,8 @@ class quanton {
 	bool	has_tmp_psig(){
 		return (qu_tmp_psig != NULL_PT);
 	}
+	
+	DBG(bool is_eonmp();)
 
 	bj_ostream&		print_quanton(bj_ostream& os, bool from_pt = false);
 
@@ -1598,6 +1601,7 @@ class neuromap {
 	
 	row<neuron*>		na_all_filled_in_propag;
 	
+	row<prop_signal>	na_all_propag;
 	row<prop_signal>	na_forced;
 	row<neuron*>		na_non_forced;
 	
@@ -1639,6 +1643,7 @@ class neuromap {
 		na_release_idx = INVALID_IDX;
 		
 		na_all_filled_in_propag.clear();
+		na_all_propag.clear(true, true);
 		na_forced.clear(true, true);
 		na_non_forced.clear();
 		
@@ -1748,10 +1753,11 @@ class neuromap {
 		return fst_idx;
 	}
 	
-	long	get_min_tier(){
+	static
+	long	get_min_tier(row<prop_signal>& sgs){
 		long mti = INVALID_TIER;
-		if(! na_forced.is_empty()){
-			quanton* qua = na_forced.last().ps_quanton;
+		if(! sgs.is_empty()){
+			quanton* qua = sgs.last().ps_quanton;
 			if(qua != NULL_PT){
 				mti = qua->qu_tier;
 			}
@@ -1759,10 +1765,11 @@ class neuromap {
 		return mti;
 	}
 
-	long	get_max_tier(){
+	static
+	long	get_max_tier(row<prop_signal>& sgs){
 		long mti = INVALID_TIER;
-		if(! na_forced.is_empty()){
-			quanton* qua = na_forced.first().ps_quanton;
+		if(! sgs.is_empty()){
+			quanton* qua = sgs.first().ps_quanton;
 			if(qua != NULL_PT){
 				mti = qua->qu_tier;
 			}
@@ -2367,12 +2374,15 @@ class analyser {
 	notekeeper		de_nkpr;
 	qlayers_ref		de_ref;
 	neurolayers 	de_not_sel_neus;
+	row<prop_signal>	de_all_propag;
 	row<prop_signal>	de_all_noted;
 	bool			de_found_learned;
 	row_quanton_t	de_all_learned_forced;
 
 	prop_signal 	de_confl;
 	prop_signal 	de_next_bk_psig;
+	
+	DBG(quanton*	de_dbg_last_eonmp);
 	
 	analyser(){
 		init_analyser();
@@ -2426,14 +2436,12 @@ class analyser {
 			return false;
 		}
 		bool eonmp = (de_all_noted.last().ps_source == NULL_PT);
+		BRAIN_CK(! eonmp || (de_all_noted.last().ps_quanton == de_dbg_last_eonmp));
 		return eonmp;
 	}
 	
 	void	fill_dct(deduction& dct);
-	void	set_noted_marks();
-	void	reset_noted_marks();
 	void	make_noted_dominated_and_deduced();
-	//void	fill_nmp(notekeeper& nkpr, qlayers_ref& qlr);
 	
 	bool		ck_deduction_init(long deduc_lv);
 	
@@ -3384,6 +3392,19 @@ quanton::reset_mark(brain& brn){
 	qu_inverse->qu_mark = cg_neutral;
 	brn.br_tot_qu_marks--;
 }
+
+DBG(
+inline
+bool
+quanton::is_eonmp(){
+	if(qu_source == NULL_PT){
+		return true;
+	}
+	if(! qu_source->ne_original){
+		return true;
+	}
+	return false;
+})
 
 inline
 void

@@ -45,6 +45,7 @@ neuromap::map_find(){
 		}
 		return false;
 	)
+	WF_DBG(return false);
 	NOT_DBG(return map_oper(mo_find);)
 	return false;
 }
@@ -523,7 +524,7 @@ void
 neuromap::dbg_get_fo_upper_quas(row_quanton_t& fo_upper_quas){
 	fo_upper_quas.clear();
 	
-	long min_ti = get_min_tier();
+	long min_ti = get_min_tier(na_forced);
 	BRAIN_CK(min_ti != INVALID_TIER);
 	
 	brain& brn = get_brn();
@@ -990,8 +991,8 @@ neuromap::map_fill_non_forced(neurolayers& not_sel_neus){
 	
 	nmp_upper_quas.clear();
 	
-	long min_ti = get_min_tier();
-	long max_ti = get_max_tier();
+	long min_ti = get_min_tier(na_forced);
+	long max_ti = get_max_tier(na_forced);
 	
 	BRAIN_CK(min_ti != INVALID_TIER);
 	BRAIN_CK(max_ti != INVALID_TIER);

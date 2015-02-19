@@ -9,6 +9,7 @@ CXXFLAGS := -DFULL_DEBUG -DDBG_GLB_MEM_USE -rdynamic -Wall
 # CXXFLAGS := -DFULL_DEBUG -DDBG_GLB_MEM_USE -DDBG_GLB_MEM_WITH_PT_DIR -rdynamic -Wall 
 # CXXFLAGS := -DFULL_DEBUG -rdynamic -Wall 
 # CXXFLAGS := -rdynamic -Wall 
+# CXXFLAGS := -rdynamic -Wall -DAS_DBG_WF
 
 LDFLAGS := -rdynamic
 
