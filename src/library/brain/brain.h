@@ -171,7 +171,7 @@ bool		ck_motives(brain& brn, row_quanton_t& mots);
 //=================================================================
 // funcs declarations
 
-bool	dbg_ck_first_ps(row<prop_signal>& all_ps);
+bool	dbg_ck_first_ps(brain& brn, row<prop_signal>& all_ps);
 void	dbg_prepare_used_dbg_ccl(row_quanton_t& rr_qua, canon_clause& dbg_ccl);
 void	dbg_print_ccls_neus(bj_ostream& os, row<canon_clause*>& dbg_ccls);
 bool	dbg_run_satex_on(brain& brn, ch_string f_nam);
@@ -1054,7 +1054,7 @@ class neuron {
 		return ne_fibres[0];
 	}
 
-	void	old_set_motives(brain& brn, notekeeper& dke, bool is_first);
+	void	dbg_old_set_motives(brain& brn, notekeeper& dke, bool is_first);
 
 	void	swap_fibres_0_1(){
 		BRAIN_CK(ck_tunnels());
@@ -1469,7 +1469,7 @@ class deduction {
 	
 	bool	equal_to_dct(deduction& dct2);
 
-	void	set_with(brain& brn, notekeeper& dke, quanton& nxt_qua);
+	void	dbg_set_with(brain& brn, notekeeper& dke, quanton& nxt_qua);
 
 	quanton&	get_forced(){
 		BRAIN_CK(dt_forced != NULL_PT);
@@ -1601,7 +1601,6 @@ class neuromap {
 	
 	row<neuron*>		na_all_filled_in_propag;
 	
-	row<prop_signal>	na_all_propag;
 	row<prop_signal>	na_forced;
 	row<neuron*>		na_non_forced;
 	
@@ -1643,7 +1642,6 @@ class neuromap {
 		na_release_idx = INVALID_IDX;
 		
 		na_all_filled_in_propag.clear();
-		na_all_propag.clear(true, true);
 		na_forced.clear(true, true);
 		na_non_forced.clear();
 		
@@ -1702,8 +1700,9 @@ class neuromap {
 		map_get_all_non_forced_neus(all_neus, false);
 	}
 	
-	void	dbg_get_fo_upper_quas(row_quanton_t& fo_upper_quas);
-	void	map_get_all_upper_quas(notekeeper& nkpr, row_quanton_t& all_upper_quas);
+	void 	dbg_get_fo_upper_quas(row_quanton_t& fo_upper_quas);
+	//void 	old_get_all_upper_quas(notekeeper& nkpr, row_quanton_t& all_upper_quas);
+	void 	map_get_all_upper_quas(row_quanton_t& all_upper_quas);
 
 	void	map_make_dominated();
 	
@@ -2104,6 +2103,11 @@ class notekeeper {
 		init_notes(tg_lv);
 	}
 	
+	/*long 	get_note_counter(){
+		BRAIN_CK(dk_note_counter != NULL_PT);
+		return (*dk_note_counter);
+	}*/
+
 	long 	nk_get_counter(){
 		BRAIN_CK(dk_note_counter != NULL_PT);
 		return *dk_note_counter;
@@ -2190,11 +2194,6 @@ class notekeeper {
 	}
 
 	brain&	get_dk_brain();
-
-	long 	get_note_counter(){
-		BRAIN_CK(dk_note_counter != NULL_PT);
-		return (*dk_note_counter);
-	}
 
 	long	clear_all_quantons(long lim_lv = INVALID_LEVEL, bool reset_notes = true);
 	
@@ -2348,6 +2347,15 @@ class qlayers_ref {
 		return nxt_qua;
 	}
 	
+	bool	is_end_of_nmp(){
+		quanton* cur_qu = get_curr_quanton();
+		if(cur_qu == NULL_PT){
+			return false;
+		}
+		bool eonmp = cur_qu->is_eonmp();
+		return eonmp;
+	}
+	
 	long	get_curr_qlevel(){
 		long lv = INVALID_LEVEL;
 		quanton* qua = get_curr_quanton();
@@ -2374,7 +2382,6 @@ class analyser {
 	notekeeper		de_nkpr;
 	qlayers_ref		de_ref;
 	neurolayers 	de_not_sel_neus;
-	row<prop_signal>	de_all_propag;
 	row<prop_signal>	de_all_noted;
 	bool			de_found_learned;
 	row_quanton_t	de_all_learned_forced;
@@ -2431,15 +2438,6 @@ class analyser {
 	
 	bool	ck_end_of_lrn_nmp();
 	
-	bool	is_end_of_nmp(){
-		if(de_all_noted.is_empty()){
-			return false;
-		}
-		bool eonmp = (de_all_noted.last().ps_source == NULL_PT);
-		BRAIN_CK(! eonmp || (de_all_noted.last().ps_quanton == de_dbg_last_eonmp));
-		return eonmp;
-	}
-	
 	void	fill_dct(deduction& dct);
 	void	make_noted_dominated_and_deduced();
 	
@@ -2453,14 +2451,18 @@ class analyser {
 	bool		is_first_source();
 	void		find_next_source(bool only_origs = false);
 	void		find_next_noted();
-	void		inc_all_noted();
+	void		inc_all_noted(bool with_noted = true);
 	void 		set_notes_of(row_quanton_t& causes, bool is_first);
 
 	neuromap*	update_neuromap(neuromap* prev_nmp);
-	void 		init_calc_nmp(prop_signal const & confl_sg, long min_lv);
+	void 		init_calc_nmp(prop_signal const & confl_sg, long min_lv, 
+							  bool with_noted);
 	neuromap*	calc_neuromap(prop_signal const & confl_sg, long min_lv, 
 							  neuromap* prev_nmp);
 	void 		end_analysis();
+	
+	neuromap*	calc_neuromap_2(prop_signal const & confl_sg, long min_lv, 
+							  neuromap* prev_nmp);
 	
 	long		find_min_lv_to_setup(long tg_lv);
 
@@ -2699,6 +2701,7 @@ public:
 	row_quanton_t 	br_tmp_qu_fill_nmp;
 	row_quanton_t 	br_tmp_neu_upper_qu;
 	row_quanton_t 	br_tmp_nmp_upper_qu;
+	row_quanton_t 	br_tmp_nmp_quas_for_upper_qu;
 	row_quanton_t 	br_tmp_qu_activate;
 	row_quanton_t 	br_tmp_f_analysis;
 	row_quanton_t 	br_tmp_qu_ck_all_dom;
@@ -2711,6 +2714,7 @@ public:
 	row<neuron*> 	br_tmp_ne_mk_all_dom;
 	row<neuron*> 	br_tmp_ne_ck_all_dom;
 	row<neuron*> 	br_tmp_ne_fill_nmp;
+	row<neuron*> 	br_tmp_nmp_neus_for_upper_qu;
 
 	row_quanton_t 	br_tmp_rever_quas;
 
@@ -2753,9 +2757,10 @@ public:
 	analyser		br_neuromaper_anlsr;
 	
 	deduction		br_retract_dct;
-	notekeeper		br_retract_nke0;
 
 	row_quanton_t		br_semi_monos_to_update;
+	
+	notekeeper		br_dbg_retract_nke0;
 	
 	row<sortee*> 		br_tmp_wrt_tauto_tees;
 	row<sortee*> 		br_tmp_wrt_guide_tees;
@@ -2768,7 +2773,7 @@ public:
 	canon_cnf		br_tmp_wrt_diff_cnf;
 	canon_cnf		br_tmp_wrt_guide_cnf;
 
-	prop_signal		br_conflict_found;
+	row<prop_signal>	br_all_conflicts_found;
 
 	row<neuromap*>	br_maps_active;
 
@@ -3036,12 +3041,21 @@ public:
 	// aux methods
 
 	void	reset_conflict(){
-		br_conflict_found.init_prop_signal();
+		br_all_conflicts_found.clear(true, true);
+	}
+	
+	prop_signal&	first_conflict(){
+		BRAIN_CK(! br_all_conflicts_found.is_empty());
+		prop_signal& fst_cfl = br_all_conflicts_found[0];
+		BRAIN_CK(fst_cfl.ps_source != NULL_PT);
+		BRAIN_CK(fst_cfl.ps_source->ne_original);
+		BRAIN_CK(fst_cfl.ps_tier != INVALID_TIER);
+		return fst_cfl;
 	}
 	
 	bool 	found_conflict(){
-		bool h_cfl = (br_conflict_found.ps_quanton != NULL);
-		BRAIN_CK(! h_cfl || (br_conflict_found.ps_tier != INVALID_TIER));
+		bool h_cfl = ! br_all_conflicts_found.is_empty();
+		BRAIN_CK(! h_cfl || ! first_conflict().is_ps_virgin());
 		return h_cfl;
 	}
 
@@ -3067,6 +3081,8 @@ public:
 		BRAIN_CK(br_data_levels.size() == (br_current_ticket.tk_level + 1));
 		return br_current_ticket.tk_level;
 	}
+	
+	long		find_min_lv_to_setup();
 
 	leveldat&	get_data_level(long lv){
 		row<leveldat*>& all_lv = br_data_levels;
