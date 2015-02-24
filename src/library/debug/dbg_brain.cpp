@@ -625,7 +625,7 @@ quanton::print_quanton(bj_ostream& os, bool from_pt){
 		if((neu != NULL_PT) && ! neu->ne_original){ os << "+"; }
 		if(qlv == 0){ os << "#"; }
 		if(! h_src && h_chg){ os << "L" << qlv; }
-		if((! h_src) && (pt_brn != NULL_PT) && h_chg){ 
+		/*if((! h_src) && (pt_brn != NULL_PT) && h_chg){ 
 			brain& brn = *pt_brn;
 			
 			leveldat& lv = brn.get_data_level(qlv);
@@ -645,7 +645,7 @@ quanton::print_quanton(bj_ostream& os, bool from_pt){
 			if((qlv != ROOT_LEVEL) && (lv.ld_chosen == NULL_PT)){
 				os << "[NULL_CHO!!!]"; 
 			}
-		}
+		}*/
 
 		if(! h_chg){ os << "("; }
 		if(is_nega){ os << '\\';  }
@@ -655,7 +655,7 @@ quanton::print_quanton(bj_ostream& os, bool from_pt){
 		if(is_nega){ os << '/';  }
 		if(! h_chg){ os << ")"; }
 
-		//os << ".t" << qu_tier;
+		os << ".t" << qu_tier;
 		
 		if(n0){ os << ".n0"; }
 		/*

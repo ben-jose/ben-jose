@@ -61,7 +61,7 @@ Declarations of classes and that implement the neural network.
 #define BRAIN_CK_1(prm)  /**/
 #define BRAIN_CK_2(prm)  /**/
 
-#define BRAIN_REL_CK(prm) if(! prm){ throw brain_exception(); }
+#define BRAIN_REL_CK(prm) if(! (prm)){ throw brain_exception(); }
 
 //=============================================================================
 // MAIN CLASSES
@@ -185,6 +185,8 @@ bool	has_neu(row<neuron*>& rr_neus, neuron* neu);
 
 long	set_dots_of(brain& brn, row_quanton_t& quans);
 long	reset_dots_of(brain& brn, row_quanton_t& quans);
+
+void	get_quas_of(brain& brn, row_neuron_t& all_neus, row_quanton_t& all_quas);
 
 void	negate_quantons(row_quanton_t& qua_row);
 void	get_ids_of(row_quanton_t& quans, row_long_t& the_ids);
@@ -2455,8 +2457,7 @@ class analyser {
 	void 		set_notes_of(row_quanton_t& causes, bool is_first);
 
 	neuromap*	update_neuromap(neuromap* prev_nmp);
-	void 		init_calc_nmp(prop_signal const & confl_sg, long min_lv, 
-							  bool with_noted);
+	void 		init_calc_nmp(prop_signal const & confl_sg, long min_lv);
 	neuromap*	calc_neuromap(prop_signal const & confl_sg, long min_lv, 
 							  neuromap* prev_nmp);
 	void 		end_analysis();
@@ -2808,6 +2809,7 @@ public:
 	row<neuron*>	br_tmp_forced;
 	row<neuron*>	br_tmp_tauto_neus;
 	row<neuron*>	br_tmp_all_neus;
+	row<neuron*>	br_tmp_all_confl;
 
 	row_quanton_t	br_tmp_stab_quas;
 	row_quanton_t	br_tmp_sorted_quas;
@@ -3041,6 +3043,13 @@ public:
 	// aux methods
 
 	void	reset_conflict(){
+		brain& brn = *this;
+		row_neuron_t& all_cfl = br_tmp_all_confl;
+		all_cfl.clear();
+		append_all_trace_neus(br_all_conflicts_found, all_cfl);
+		reset_all_tag2(brn, all_cfl);
+		BRAIN_CK(br_ne_tot_tag2 == 0);
+		
 		br_all_conflicts_found.clear(true, true);
 	}
 	
@@ -3055,10 +3064,23 @@ public:
 	
 	bool 	found_conflict(){
 		bool h_cfl = ! br_all_conflicts_found.is_empty();
+		BRAIN_CK(br_ne_tot_tag2 == br_all_conflicts_found.size());
 		BRAIN_CK(! h_cfl || ! first_conflict().is_ps_virgin());
 		return h_cfl;
 	}
 
+	bool 	ck_confl_ti(){
+		if(br_all_conflicts_found.size() < 2){
+			return true;
+		}
+		long lst_idx = br_all_conflicts_found.last_idx();
+		long prv_idx = lst_idx - 1;
+		prop_signal& cfl_0 = br_all_conflicts_found[lst_idx];
+		prop_signal& cfl_1 = br_all_conflicts_found[prv_idx];
+		BRAIN_CK(cfl_0.ps_tier == cfl_1.ps_tier);
+		return true;
+	}
+	
 	void	set_file_name_in_ic(ch_string f_nam = "");
 	void	config_brain(ch_string f_nam = "");
 	void	init_loading(long num_qua, long num_neu);

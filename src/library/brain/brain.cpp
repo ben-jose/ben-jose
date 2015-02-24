@@ -1459,7 +1459,7 @@ brain::dbg_ck_deducs(deduction& dct1, deduction& dct2){
 
 quanton*
 brain::receive_psignal(bool only_in_dom){
-	BRAIN_CK(! found_conflict());
+	//BRAIN_CK(! found_conflict()); // simple_propag
 	BRAIN_CK(has_psignals());
 	brain& brn = *this;
 	prop_signal& sgnl = pick_psignal();
@@ -1469,33 +1469,60 @@ brain::receive_psignal(bool only_in_dom){
 
 	quanton& qua = *(pt_qua);
 	neuron* neu = sgnl.ps_source;
+	long sg_tier = sgnl.ps_tier;
+	BRAIN_CK(sg_tier != INVALID_TIER);
+	
+	DBG_PRT(63, os << sgnl << " odom=" << only_in_dom; os << " HIT ENTER TO CONTINUE...");
+	DBG_COMMAND(63, getchar());
+	
+	if(found_conflict()){
+		prop_signal& f_cfl = first_conflict();
+		if(! qua.has_charge() && (sg_tier >= f_cfl.ps_tier)){
+			DBG_PRT(63, os << "\n o_cfl=" << f_cfl << "\n new_ps=" << sgnl);
+			return NULL_PT;
+		}
+	}
 
 	if(only_in_dom && ! qua.in_qu_dominated(brn)){
 		br_delayed_psignals.push(sgnl);
+		DBG_PRT(63, os << " no qu_dom" << qua);
 		return NULL_PT;
 	}
 
 	if(only_in_dom && (neu != NULL_PT) && neu->ne_original && ! neu->in_ne_dominated(brn)){
 		br_delayed_psignals.push(sgnl);
+		DBG_PRT(63, os << " no ne_dom" << neu);
 		return NULL_PT;
 	}
 
-	long sg_tier = sgnl.ps_tier;
-	BRAIN_CK(sg_tier != INVALID_TIER);
-
+	DBG_PRT(63, os << "init sgnl" << sgnl);
 	sgnl.init_prop_signal();
 
 	if(qua.has_charge()){
 		if(qua.is_neg()){
-			BRAIN_CK((neu != NULL_PT) || (level() == ROOT_LEVEL));
+			BRAIN_REL_CK(neu != NULL_PT);
+			BRAIN_CK(neu != NULL_PT);
+			//BRAIN_CK((neu != NULL_PT) || (level() == ROOT_LEVEL));
 			//long cnfl_ti = sg_tier;
+			
 			long cnfl_ti = tier() + 1;
-			prop_signal& nxt_cfl = br_all_conflicts_found.inc_sz();
-			nxt_cfl.init_prop_signal(pt_qua, neu, cnfl_ti);
-			DBG_PRT(18, os << "**confict** " << neu);
-			reset_psignals();
-			BRAIN_CK(! has_psignals());
+			BRAIN_CK(sg_tier <= cnfl_ti);
+			
+			if(! neu->has_tag2()){
+				neu->set_tag2(brn);
+				prop_signal& nxt_cfl = br_all_conflicts_found.inc_sz();
+				nxt_cfl.init_prop_signal(pt_qua, neu, cnfl_ti);
+				DBG_PRT(18, os << "**confict** " << nxt_cfl;
+					os << "\n sg_tier=" << sg_tier << " cnfl_ti=" << cnfl_ti);
+			}
+			
+			//reset_psignals();	// simple_propag
+			//BRAIN_CK(! has_psignals()); // simple_propag
 			BRAIN_CK(found_conflict());
+			BRAIN_CK(ck_confl_ti());
+			DBG_PRT_COND(136, (br_all_conflicts_found.size() > 1), 
+					os << "num_confl=" << br_all_conflicts_found.size()
+			);
 		} 
 		pt_qua = NULL_PT;
 	} else {
