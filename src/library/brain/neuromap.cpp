@@ -75,14 +75,6 @@ neuromap::map_make_dominated(){
 	make_all_ne_dominated(brn, all_neus, mk_deduc);
 
 	BRAIN_CK(map_ck_all_ne_dominated(dbg_call_1));
-	DBG_PRT(133, 
-		row<neuron*>& all_neus = brn.br_tmp_ne_ck_all_dom;
-		all_neus.clear();
-		map_get_all_confl_neus(all_neus);
-		os << STACK_STR << bj_eol;
-		os << "ALL_CONFL=\n"; all_neus.print_row_data(os, true, "\n");
-		os << "ALL_FORCED=\n"; na_forced.print_row_data(os, true, "\n");
-	);
 }
 
 void

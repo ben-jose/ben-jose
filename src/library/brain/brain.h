@@ -2434,10 +2434,33 @@ class analyser {
 	
 	bool		ck_deduc_init(long deduc_lv);
 	
+	void		set_conflicts(row<prop_signal>& all_confl){
+		de_all_confl.clear(true, true);
+		all_confl.copy_to(de_all_confl);
+		BRAIN_CK(! de_all_confl.is_empty());
+	}
+	
+	prop_signal&	get_first_conflict(){
+		BRAIN_CK(! de_all_confl.is_empty());
+		prop_signal& cfl = de_all_confl.first();
+		return cfl;
+	}
+	
+	row_quanton_t&	get_first_causes(){
+		BRAIN_CK(! de_all_confl.is_empty());
+		prop_signal& cfl = de_all_confl.first();
+		
+		BRAIN_CK(cfl.ps_quanton != NULL);
+		BRAIN_CK(cfl.ps_quanton->get_charge() == cg_negative);
+		BRAIN_CK(cfl.ps_source != NULL);
+		
+		row_quanton_t& causes = cfl.ps_source->ne_fibres;
+		BRAIN_CK(! causes.is_empty());
+		return causes;
+	}
+	
 	void		deduction_init(row_quanton_t& causes);
-	void		deduction_init(prop_signal const & confl_sg);
 	void 		deduction_analysis(row_quanton_t& causes, deduction& dct);
-	void 		deduction_analysis(prop_signal const & confl, deduction& dct);
 	
 	void		find_next_source(bool only_origs = false);
 	void		find_next_noted();
@@ -2445,20 +2468,17 @@ class analyser {
 	void 		set_notes_of(row_quanton_t& causes, bool is_first);
 
 	neuromap*	update_neuromap(neuromap* prev_nmp);
-	void 		init_calc_nmp(prop_signal const & confl_sg, long min_lv);
-	neuromap*	calc_neuromap(prop_signal const & confl_sg, long min_lv, 
-							  neuromap* prev_nmp);
+	void 		init_calc_nmp(long min_lv);
+	neuromap*	calc_neuromap(long min_lv, neuromap* prev_nmp);
 	void 		end_analysis();
 	
-	neuromap*	calc_neuromap_2(prop_signal const & confl_sg, long min_lv, 
-							  neuromap* prev_nmp);
+	neuromap*	calc_neuromap_2(long min_lv, neuromap* prev_nmp);
 	
 	long		find_min_lv_to_setup(long tg_lv);
 
-	neuromap* 	neuromap_find_analysis(analyser& deducer, prop_signal const & confl_sg, 
+	neuromap* 	neuromap_find_analysis(analyser& deducer, 
 						long& nxt_lv, deduction& nxt_dct, row<neuromap*>& to_wrt);
-	neuromap* 	neuromap_setup_analysis(prop_signal const & confl_sg, long tg_lv, 
-										neuromap* in_nmp);
+	neuromap* 	neuromap_setup_analysis(long tg_lv, neuromap* in_nmp);
 
 	bj_ostream&	print_analyser(bj_ostream& os, bool from_pt = false);
 	
@@ -3192,7 +3212,7 @@ public:
 	
 	bool 	needs_lv_setup(long nxt_lv, neuromap* in_nmp);
 
-	void	analyse(prop_signal const & confl, deduction& dct);
+	void	analyse(row<prop_signal>& all_confl, deduction& dct);
 	void	release_all_neuromaps();
 
 	//void	stab_it();

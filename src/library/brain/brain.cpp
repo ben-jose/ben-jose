@@ -2062,9 +2062,10 @@ brain::reverse(){
 	bool dbg_full_anls = true;
 	DBG_COMMAND(141, dbg_full_anls = false);
 	if(dbg_full_anls){
-		analyse(first_conflict(), dct);
+		analyse(br_all_conflicts_found, dct);
 	} else {
-		br_deducer_anlsr.deduction_analysis(first_conflict(), dct);
+		br_deducer_anlsr.set_conflicts(br_all_conflicts_found);
+		br_deducer_anlsr.deduction_analysis(br_deducer_anlsr.get_first_causes(), dct);
 	}
 	DBG_PRT(122, os << "AFTE_ANALYSE \ncfl=" << first_conflict() << "\ndct=" << dct);
 

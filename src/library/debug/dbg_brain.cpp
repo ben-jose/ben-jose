@@ -1072,7 +1072,10 @@ brain::dbg_old_reverse(){
 	
 	BRAIN_DBG(br_dbg.dbg_before_retract_lv = level());
 
-	DBG(br_deducer_anlsr.deduction_analysis(first_conflict(), dct2));
+	DBG(
+		br_deducer_anlsr.set_conflicts(br_all_conflicts_found);
+		br_deducer_anlsr.deduction_analysis(br_deducer_anlsr.get_first_causes(), dct2)
+	);
 	BRAIN_CK_PRT(dct2.dt_target_level >= ROOT_LEVEL, 
 		os << recoil() << ".dct2=" << dct2
 	);
