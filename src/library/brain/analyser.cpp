@@ -158,16 +158,9 @@ analyser::find_next_noted(){
 	nkpr.update_notes_layer(qlv);
 }
 
-bool
-analyser::is_first_source(){
-	bool is_first = (de_next_bk_psig.ps_source == tg_confl());
-	return is_first;
-}
-
 void
 analyser::find_next_source(bool only_origs)
 {
-	BRAIN_CK(! is_first_source());
 	BRAIN_DBG(notekeeper& nkpr = de_nkpr);
 	
 	neuron*& nxt_src = de_next_bk_psig.ps_source;
@@ -275,6 +268,7 @@ analyser::ck_deduc_init(long deduc_lv){
 	BRAIN_CK(nkpr.dk_note_layer == deduc_lv);
 	BRAIN_CK(qlr.has_curr_quanton());
 	BRAIN_CK(de_nkpr.nk_get_counter() == 0);
+	BRAIN_CK(de_all_noted.size() == 0); 
 #endif
 	return true;
 }
@@ -302,43 +296,19 @@ analyser::deduction_init(row_quanton_t& causes){
 
 void
 analyser::deduction_init(prop_signal const & confl_sg){
-	qlayers_ref& qlr = de_ref;
-	notekeeper& nkpr = de_nkpr;
+	BRAIN_CK(confl_sg.ps_quanton != NULL);
+	BRAIN_CK(confl_sg.ps_quanton->get_charge() == cg_negative);
+	BRAIN_CK(confl_sg.ps_source != NULL);
 	
-	reset_deduc();
-
-	long deduc_lv = confl_sg.get_level();
-	
-	nkpr.init_notes(deduc_lv);
-	qlr.reset_curr_quanton();
-	
-	BRAIN_CK(ck_deduc_init(deduc_lv));
+	row_quanton_t& causes = confl_sg.ps_source->ne_fibres;
+	BRAIN_CK(! causes.is_empty());
 	
 	prop_signal& fst_confl = de_all_confl.inc_sz();
 	fst_confl = confl_sg;
-	de_next_bk_psig = confl_sg;
-
-	BRAIN_CK(confl_sg.ps_quanton != NULL);
-	BRAIN_CK(confl_sg.ps_quanton->get_charge() == cg_negative);
-	BRAIN_CK(confl_sg.ps_quanton->qlevel() == deduc_lv);
-	BRAIN_CK(confl_sg.ps_source != NULL);
-	BRAIN_CK(! tg_confl()->ne_fibres.is_empty());
-	BRAIN_CK(is_first_source());
 	
-	//prop_signal& fst_sig = de_all_noted.inc_sz(); // cfls_in_forced
-	//fst_sig = confl_sg; // cfls_in_forced
-	//BRAIN_CK(de_all_noted.size() == 1); // cfls_in_forced
-	BRAIN_CK(de_next_bk_psig.ps_source != NULL);
-
-	set_notes_of(tg_confl()->ne_fibres, true);
-	BRAIN_CK(nkpr.dk_tot_noted > 0);
-
-	find_next_noted();
-	inc_all_noted();
+	deduction_init(causes);
 	
-	//find_next_source();
-	BRAIN_CK(qlr.has_curr_quanton());
-	BRAIN_CK(! is_first_source());
+	BRAIN_CK(de_ref.has_curr_quanton());
 }
 
 void
@@ -363,7 +333,6 @@ analyser::deduction_analysis(row_quanton_t& causes, deduction& dct){
 	deduction_init(causes);
 	while(! is_end_of_dct()){
 		BRAIN_CK(qlr.has_curr_quanton());
-		BRAIN_CK(! is_first_source());
 		find_next_source();
 	}
 	BRAIN_CK(qlr.has_curr_quanton());
@@ -386,7 +355,6 @@ analyser::deduction_analysis(prop_signal const & confl_sg, deduction& dct){
 	deduction_init(confl_sg);
 	while(! is_end_of_dct()){
 		BRAIN_CK(qlr.has_curr_quanton());
-		BRAIN_CK(! is_first_source());
 		find_next_source();
 	}
 	BRAIN_CK(qlr.has_curr_quanton());
@@ -496,6 +464,7 @@ analyser::update_neuromap(neuromap* sub_nmp){
 	nxt_nmp.na_orig_cho = qua;
 	
 	if(sub_nmp == NULL_PT){
+		//BRAIN_CK(! de_all_confl.is_empty());
 		de_all_confl.copy_to(nxt_nmp.na_all_confl);
 	}
 	de_all_noted.move_to(nxt_nmp.na_forced);
@@ -543,7 +512,6 @@ analyser::calc_neuromap(prop_signal const & confl_sg, long min_lv, neuromap* pre
 			BRAIN_DBG(just_updated = true);
 			out_nmp = update_neuromap(out_nmp);
 		}
-		BRAIN_CK(! is_first_source());
 		find_next_source(true);
 	}
 	

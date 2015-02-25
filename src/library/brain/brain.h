@@ -1747,16 +1747,8 @@ class neuromap {
 
 	void	set_all_filled_in_propag();
 	
-	bool	ck_first_forced_idx();
-	
 	bool	has_submap(){
 		return (na_submap != NULL_PT);
-	}
-	
-	long	first_forced_body_idx(){
-		long fst_idx = (has_submap())?(0):(1);
-		BRAIN_CK(ck_first_forced_idx());
-		return fst_idx;
 	}
 	
 	static
@@ -2409,9 +2401,6 @@ class analyser {
 	void	init_analyser(brain* brn = NULL_PT);
 	void	reset_deduc();
 
-	//static
-	//void	init_nk_with_dots(notekeeper& nkpr, brain* brn, long tg_lv);
-	
 	static
 	void	init_nk_with_note0(notekeeper& nkpr, brain* brn, long tg_lv);
 
@@ -2423,13 +2412,6 @@ class analyser {
 
 	brain&		get_de_brain();
 	qulayers& 	get_orig_trail();
-	
-	neuron* 	tg_confl(){
-		BRAIN_CK(! de_all_confl.is_empty());
-		neuron* tg_neu = de_all_confl.first().ps_source;
-		BRAIN_CK(tg_neu != NULL_PT);
-		return tg_neu;
-	}
 	
 	quanton*	last_qu_noted(){
 		if(de_all_noted.is_empty()){
@@ -2457,7 +2439,6 @@ class analyser {
 	void 		deduction_analysis(row_quanton_t& causes, deduction& dct);
 	void 		deduction_analysis(prop_signal const & confl, deduction& dct);
 	
-	bool		is_first_source();
 	void		find_next_source(bool only_origs = false);
 	void		find_next_noted();
 	void		inc_all_noted(bool with_noted = true);
