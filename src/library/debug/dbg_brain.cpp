@@ -702,6 +702,12 @@ neuron::print_neuron(bj_ostream& os, bool from_pt){
 bj_ostream&	
 neuron::print_neu_base(bj_ostream& os, bool detail, bool prt_src, bool sort_fib){
 #ifdef FULL_DEBUG
+	bool in_dom = false;
+	brain* pt_brn = get_dbg_brn();
+	if(pt_brn != NULL_PT){
+		in_dom = in_ne_dominated(*pt_brn);
+	}
+
 	if(! detail){
 		os << "ne={";
 		os << ((void*)(this)) << " ";
@@ -712,6 +718,7 @@ neuron::print_neu_base(bj_ostream& os, bool detail, bool prt_src, bool sort_fib)
 		} else {
 			os << "+";
 		}
+		if(in_dom){ os << ".D"; }
 		os << ne_fibres;
 		os << "}";
 

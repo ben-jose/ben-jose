@@ -1603,6 +1603,7 @@ class neuromap {
 	
 	row<neuron*>		na_all_filled_in_propag;
 	
+	row<prop_signal>	na_all_confl;
 	row<prop_signal>	na_forced;
 	row<neuron*>		na_non_forced;
 	
@@ -1644,6 +1645,8 @@ class neuromap {
 		na_release_idx = INVALID_IDX;
 		
 		na_all_filled_in_propag.clear();
+		
+		na_all_confl.clear(true, true);
 		na_forced.clear(true, true);
 		na_non_forced.clear();
 		
@@ -1693,12 +1696,14 @@ class neuromap {
 	bool	has_stab_guide();
 
 	void	map_get_all_quas(row_quanton_t& all_quas);
-	void	map_get_all_forced_neus(row<neuron*>& all_neus);
+	void	map_get_all_confl_neus(row<neuron*>& all_neus);
+	void	map_get_all_forced_neus(row<neuron*>& all_neus, bool with_clear = true);
 	void	map_get_all_non_forced_neus(row<neuron*>& all_neus, bool with_clear = true);
 	
 	void	map_get_all_neus(row<neuron*>& all_neus){
 		all_neus.clear();
-		map_get_all_forced_neus(all_neus);
+		map_get_all_confl_neus(all_neus);
+		map_get_all_forced_neus(all_neus, false);
 		map_get_all_non_forced_neus(all_neus, false);
 	}
 	
@@ -2388,7 +2393,7 @@ class analyser {
 	bool			de_found_learned;
 	row_quanton_t	de_all_learned_forced;
 
-	prop_signal 	de_confl;
+	row<prop_signal>	de_all_confl;
 	prop_signal 	de_next_bk_psig;
 	
 	DBG(quanton*	de_dbg_last_eonmp);
@@ -2420,8 +2425,10 @@ class analyser {
 	qulayers& 	get_orig_trail();
 	
 	neuron* 	tg_confl(){
-		BRAIN_CK(de_confl.ps_source != NULL_PT);
-		return de_confl.ps_source;
+		BRAIN_CK(! de_all_confl.is_empty());
+		neuron* tg_neu = de_all_confl.first().ps_source;
+		BRAIN_CK(tg_neu != NULL_PT);
+		return tg_neu;
 	}
 	
 	quanton*	last_qu_noted(){
@@ -2443,7 +2450,7 @@ class analyser {
 	void	fill_dct(deduction& dct);
 	void	make_noted_dominated_and_deduced();
 	
-	bool		ck_deduction_init(long deduc_lv);
+	bool		ck_deduc_init(long deduc_lv);
 	
 	void		deduction_init(row_quanton_t& causes);
 	void		deduction_init(prop_signal const & confl_sg);
@@ -2716,6 +2723,7 @@ public:
 	row<neuron*> 	br_tmp_ne_ck_all_dom;
 	row<neuron*> 	br_tmp_ne_fill_nmp;
 	row<neuron*> 	br_tmp_nmp_neus_for_upper_qu;
+	row<neuron*> 	br_tmp_guide_confls;
 
 	row_quanton_t 	br_tmp_rever_quas;
 
