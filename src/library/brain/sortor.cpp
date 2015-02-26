@@ -1161,7 +1161,7 @@ sort_glb::stab_mutual_unique(sort_glb& srg2){
 	}
 	SORTER_CK(srg2.sg_step_all_consec);
 
-	DBG_PRT(62, 
+	DBG_PRT(63, 
 			os << " UNIQUE cnf=" << bj_eol; sg_cnf_clauses.print_row_data(os, true, "\n");
 	);
 }

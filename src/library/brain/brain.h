@@ -1561,6 +1561,9 @@ class coloring {
 	void	move_co_to(coloring& col2);
 	void	copy_co_to(coloring& col2);
 
+	void	filter_unique_neus(coloring& col2);
+	void	force_unique_neus(coloring& col2);
+	
 	bool 	ck_cols(){
 		BRAIN_CK(co_quas.size() == co_qua_colors.size());
 		BRAIN_CK(co_neus.size() == co_neu_colors.size());
@@ -1702,13 +1705,11 @@ class neuromap {
 	
 	void	map_get_all_neus(row<neuron*>& all_neus){
 		all_neus.clear();
-		map_get_all_confl_neus(all_neus);
+		//map_get_all_confl_neus(all_neus); // no_cfl_guide
 		map_get_all_forced_neus(all_neus, false);
 		map_get_all_non_forced_neus(all_neus, false);
 	}
 	
-	void 	dbg_get_fo_upper_quas(row_quanton_t& fo_upper_quas);
-	//void 	old_get_all_upper_quas(notekeeper& nkpr, row_quanton_t& all_upper_quas);
 	void 	map_get_all_upper_quas(row_quanton_t& all_upper_quas);
 
 	void	map_make_dominated();
@@ -1720,6 +1721,7 @@ class neuromap {
 	quanton*	map_choose_quanton();
 	
 	bool	dbg_ck_all_neus();
+	bool	map_ck_all_confl_in_non_forced();
 
 	void	map_set_all_qu_curr_dom();
 	void	map_reset_all_qu_curr_dom();
@@ -2459,6 +2461,8 @@ class analyser {
 		return causes;
 	}
 	
+	row_quanton_t&	get_all_causes();
+		
 	void		deduction_init(row_quanton_t& causes);
 	void 		deduction_analysis(row_quanton_t& causes, deduction& dct);
 	
@@ -2716,6 +2720,7 @@ public:
 	row_quanton_t 	br_tmp_qu_ck_all_dom;
 	row_quanton_t 	br_tmp_qu_dom;
 	row_quanton_t 	br_tmp_ck_col;
+	row_quanton_t 	br_tmp_all_causes;
 	
 	row<neuron*> 	br_tmp_ck_neus;
 	row<neuron*> 	br_tmp_ne_activate;
@@ -2725,6 +2730,7 @@ public:
 	row<neuron*> 	br_tmp_ne_fill_nmp;
 	row<neuron*> 	br_tmp_nmp_neus_for_upper_qu;
 	row<neuron*> 	br_tmp_guide_confls;
+	row<neuron*> 	br_tmp_all_cfl;
 
 	row_quanton_t 	br_tmp_rever_quas;
 

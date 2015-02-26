@@ -797,9 +797,12 @@ canon_clause::add_chars_to(row<char>& cnn){
 bj_ostream&
 canon_clause::print_canon_clause(bj_ostream& os, bool from_pt){
 	MARK_USED(from_pt);
+	
+	neuron& neu = me_as<neuron>();
 
 	os << "ccl{";
 	print_row_data(os, true, " ");
+	os << " " << &neu;
 	os << "}";
 	return os;
 }

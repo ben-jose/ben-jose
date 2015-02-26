@@ -1472,30 +1472,30 @@ brain::receive_psignal(bool only_in_dom){
 	long sg_tier = sgnl.ps_tier;
 	BRAIN_CK(sg_tier != INVALID_TIER);
 	
-	DBG_PRT(63, os << sgnl << " odom=" << only_in_dom; os << " HIT ENTER TO CONTINUE...");
-	DBG_COMMAND(63, getchar());
+	DBG_PRT(21, os << sgnl << " odom=" << only_in_dom; os << " HIT ENTER TO CONTINUE...");
+	DBG_COMMAND(21, getchar());
 	
 	if(found_conflict()){
 		prop_signal& f_cfl = first_conflict();
 		if(! qua.has_charge() && (sg_tier >= f_cfl.ps_tier)){
-			DBG_PRT(63, os << "\n o_cfl=" << f_cfl << "\n new_ps=" << sgnl);
+			DBG_PRT(21, os << "\n o_cfl=" << f_cfl << "\n new_ps=" << sgnl);
 			return NULL_PT;
 		}
 	}
 
 	if(only_in_dom && ! qua.in_qu_dominated(brn)){
 		br_delayed_psignals.push(sgnl);
-		DBG_PRT(63, os << " no qu_dom" << qua);
+		DBG_PRT(21, os << " no qu_dom" << qua);
 		return NULL_PT;
 	}
 
 	if(only_in_dom && (neu != NULL_PT) && neu->ne_original && ! neu->in_ne_dominated(brn)){
 		br_delayed_psignals.push(sgnl);
-		DBG_PRT(63, os << " no ne_dom" << neu);
+		DBG_PRT(21, os << " no ne_dom" << neu);
 		return NULL_PT;
 	}
 
-	DBG_PRT(63, os << "init sgnl" << sgnl);
+	DBG_PRT(21, os << "init sgnl" << sgnl);
 	sgnl.init_prop_signal();
 
 	if(qua.has_charge()){

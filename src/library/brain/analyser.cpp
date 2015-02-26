@@ -294,9 +294,24 @@ analyser::deduction_init(row_quanton_t& causes){
 	inc_all_noted();
 }
 
+row_quanton_t&
+analyser::get_all_causes(){
+	brain& brn = get_de_brain();
+	
+	row_neuron_t& all_cfl = brn.br_tmp_all_cfl;
+	all_cfl.clear();
+	append_all_trace_neus(de_all_confl, all_cfl);
+	
+	row_quanton_t& all_quas = brn.br_tmp_all_causes;
+	all_quas.clear();
+	get_quas_of(brn, all_cfl, all_quas);
+	return all_quas;
+}
+
 void
 analyser::init_calc_nmp(long min_lv){
-	deduction_init(get_first_causes());
+	deduction_init(get_all_causes()); // multi_confl
+	//deduction_init(get_first_causes());
 	
 	BRAIN_CK(de_all_confl.first().get_level() == get_de_brain().level());
 	BRAIN_CK(get_de_brain().br_ne_tot_tag1 == 0);
@@ -425,10 +440,10 @@ analyser::update_neuromap(neuromap* sub_nmp){
 	if(sub_nmp == NULL_PT){
 		BRAIN_CK(! de_all_confl.is_empty());
 
-		//de_all_confl.copy_to(nxt_nmp.na_all_confl);
-		nxt_nmp.na_all_confl.clear(true, true);
+		de_all_confl.copy_to(nxt_nmp.na_all_confl);  // multi_confl
+		/*nxt_nmp.na_all_confl.clear(true, true);
 		prop_signal& fst_ps = nxt_nmp.na_all_confl.inc_sz();
-		fst_ps = de_all_confl.first();
+		fst_ps = de_all_confl.first();*/
 	}
 	de_all_noted.move_to(nxt_nmp.na_forced);
 	
@@ -524,13 +539,16 @@ append_all_nmps_to_write(grip& the_grp, row<neuromap*>& rr){
 
 void
 get_quas_of(brain& brn, row_neuron_t& all_neus, row_quanton_t& all_quas){
+	BRAIN_CK(brn.br_qu_tot_note1 == 0);
 	all_quas.clear();
 	for(long aa = 0; aa < all_neus.size(); aa++){
 		BRAIN_CK(all_neus[aa] != NULL_PT);
 		neuron& neu = *(all_neus[aa]);
 		append_all_not_note1(brn, neu.ne_fibres, all_quas);
-		set_all_note0(brn, neu.ne_fibres);
+		set_all_note1(brn, neu.ne_fibres);
 	}
+	reset_all_note1(brn, all_quas);
+	BRAIN_CK(brn.br_qu_tot_note1 == 0);
 }
 
 long
