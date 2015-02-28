@@ -660,7 +660,7 @@ class quanton {
 	void		add_source(neuron& neu);
 
 	bool		in_qu_dominated(brain& brn);
-	void		make_qu_dominated(brain& brn);
+	void		make_qu_dominated(brain& brn, row<neuromap*>& to_wrt);
 
 	void		set_uncharged_partner_neu(brain& brn, long uidx, 
 										long dbg_call, neuron* dbg_neu);
@@ -679,6 +679,8 @@ class quanton {
 	}
 	
 	DBG(bool is_eonmp();)
+	
+	neuromap*	get_nmp_to_write();
 
 	bj_ostream&		print_quanton(bj_ostream& os, bool from_pt = false);
 
@@ -738,6 +740,7 @@ set_all_qu_nemap(row_quanton_t& all_quas, neuromap* nmp, long first_idx = 0)
 	}
 }
 
+/*
 inline
 void
 make_all_qu_dominated(brain& brn, row_quanton_t& all_quas, 
@@ -754,7 +757,7 @@ make_all_qu_dominated(brain& brn, row_quanton_t& all_quas,
 		quanton& qua = *(all_quas[ii]);
 		qua.make_qu_dominated(brn);
 	}
-}
+}*/
 
 //=============================================================================
 // neuron
@@ -931,9 +934,6 @@ class neuron {
 
 	neuromap*		ne_curr_nemap;
 
-	ticket			ne_recoil_tk;		// srcs of the confl are updated at recoil time
-	ticket			ne_deduc_tk;		// srcs of the confl are updated at deduction time
-
 	long			ne_num_remote_tees;
 
 	bool			ne_spot;
@@ -996,10 +996,6 @@ class neuron {
 		ne_tee.so_ccl.cc_me = this;
 
 		ne_curr_nemap = NULL_PT;
-		//ne_curr_map = NULL_PT;
-
-		ne_recoil_tk.init_ticket();
-		ne_deduc_tk.init_ticket();
 
 		ne_num_remote_tees = 0;
 	
@@ -1158,24 +1154,12 @@ class neuron {
 		return false;
 	}
 
-	bool	deduced_in_or_after(ticket tik){
-		return (ne_deduc_tk.tk_recoil >= tik.tk_recoil);
-	}
-
 	bool	in_ne_dominated(brain& brn);
 	void	make_ne_dominated(brain& brn);
 	
-	void	make_ne_deduced(brain& brn){
-		ne_deduc_tk.update_ticket(brn);
-	}
-
 	void	fill_mutual_sortees(brain& brn);
 
 	bool	has_qua(quanton& tg_qua);
-
-	//void	set_dbg_ccl(mem_op_t mm, brain& brn);
-	//void	add_dbg_ccl(brain& brn, row<canon_clause*>& the_ccls, 
-	//					row<neuron*>& the_neus, dima_dims& dims);
 
 	sorset*	get_sorset(){
 		return ne_tee.so_vessel;
@@ -1218,9 +1202,6 @@ make_all_ne_dominated(brain& brn, row<neuron*>& all_neus, bool mk_deduc,
 		BRAIN_CK(all_neus[ii] != NULL_PT);
 		neuron& neu = *(all_neus[ii]);
 		neu.make_ne_dominated(brn);
-		if(mk_deduc){
-			neu.make_ne_deduced(brn);
-		}
 	}
 }
 
@@ -1270,15 +1251,12 @@ class prop_signal {
 		return lv;
 	}
 
-	void	make_ps_dominated(brain& brn, bool mk_deduc){
+	void	make_ps_dominated(brain& brn, row<neuromap*>& to_wrt){
 		if(ps_quanton != NULL_PT){
-			ps_quanton->make_qu_dominated(brn);
+			ps_quanton->make_qu_dominated(brn, to_wrt);
 		}
 		if(ps_source != NULL_PT){
 			ps_source->make_ne_dominated(brn);
-			if(mk_deduc){
-				ps_source->make_ne_deduced(brn);
-			}
 		}
 	}
 	
@@ -1324,7 +1302,8 @@ class prop_signal {
 
 inline
 void
-make_all_ps_dominated(brain& brn, row<prop_signal>& trace, bool mk_deduc, 
+make_all_ps_dominated(brain& brn, row<prop_signal>& trace, 
+			row<neuromap*>& to_wrt, 
 			long first_idx = 0, long last_idx = -1)
 {
 	if(last_idx < 0){ last_idx = trace.size(); }
@@ -1335,7 +1314,7 @@ make_all_ps_dominated(brain& brn, row<prop_signal>& trace, bool mk_deduc,
 
 	for(long ii = first_idx; ii < last_idx; ii++){
 		prop_signal& q_sig = trace[ii];
-		q_sig.make_ps_dominated(brn, mk_deduc);
+		q_sig.make_ps_dominated(brn, to_wrt);
 	}
 }
 
@@ -1789,7 +1768,6 @@ class neuromap {
 	void 	map_get_initial_tauto_coloring(coloring& stab_guide_clr, 
 									   coloring& base_final_clr, bool ck_tks);
 	void	map_get_initial_guide_coloring(coloring& clr);
-	void	map_get_tauto_neus(row<neuron*>& neus, bool ck_tks);
 	
 	static
 	void	map_append_non_forced_from(brain& brn, row<neuron*>& all_neus, 
@@ -2432,7 +2410,7 @@ class analyser {
 	bool	ck_end_of_lrn_nmp();
 	
 	void	fill_dct(deduction& dct);
-	void	make_noted_dominated_and_deduced();
+	void	make_noted_dominated_and_deduced(row<neuromap*>& to_wrt);
 	
 	bool		ck_deduc_init(long deduc_lv);
 	
@@ -2731,7 +2709,7 @@ public:
 	row<neuron*> 	br_tmp_nmp_neus_for_upper_qu;
 	row<neuron*> 	br_tmp_guide_confls;
 	row<neuron*> 	br_tmp_all_cfl;
-
+	
 	row_quanton_t 	br_tmp_rever_quas;
 
 	// config attributes
@@ -2830,6 +2808,7 @@ public:
 	row_quanton_t	br_tmp_sorted_quas;
 
 	row<neuromap*>	br_tmp_maps_to_write;
+	row<neuromap*> 	br_tmp_nmps_all_to_wrt;
 	
 	coloring		br_tmp_tauto_col;
 	

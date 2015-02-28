@@ -286,8 +286,8 @@ neuron::update_fibres(row_quanton_t& synps, bool orig){
 	}
 
 	ne_edge_tk.init_ticket();
-	ne_recoil_tk.init_ticket();
-	ne_deduc_tk.init_ticket();
+	//ne_recoil_tk.init_ticket();
+	//ne_deduc_tk.init_ticket();
 
 	return forced_qua;
 }

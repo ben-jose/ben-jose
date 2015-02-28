@@ -342,24 +342,6 @@ analyser::deduction_analysis(row_quanton_t& causes, deduction& dct){
 }
 
 void
-analyser::make_noted_dominated_and_deduced(){
-	brain& brn = get_de_brain();
-	qlayers_ref& qlr = de_ref;
-	row<prop_signal>& all_noted = de_all_noted;
-	
-	DBG_PRT(134, os << "mk dom_noted=\n" << this);
-	
-	bool mk_deduc = true;
-	make_all_ps_dominated(brn, all_noted, mk_deduc, 0, all_noted.last_idx());
-	
-	BRAIN_CK(last_qu_noted() == qlr.get_curr_quanton());
-
-	quanton* qua = qlr.get_curr_quanton();
-	BRAIN_CK(qua != NULL_PT);	
-	qua->make_qu_dominated(brn);
-}
-
-void
 analyser::fill_dct(deduction& dct){
 	qlayers_ref& qlr = de_ref;
 	notekeeper& nkpr = de_nkpr;
@@ -553,7 +535,7 @@ get_quas_of(brain& brn, row_neuron_t& all_neus, row_quanton_t& all_quas){
 
 long
 brain::append_all_to_write(analyser& dedcer, long fst_lv, long tg_lv, 
-						   row<neuromap*>& all_nmps)
+						   row<neuromap*>& to_wrt)
 {
 	brain& brn = *this;
 	BRAIN_CK(fst_lv >= tg_lv);
@@ -586,8 +568,7 @@ brain::append_all_to_write(analyser& dedcer, long fst_lv, long tg_lv,
 			continue;
 		}
 		
-		append_all_nmps_to_write(lv.ld_nmps_to_write, all_nmps);
-		//lv.ld_nmps_to_write.append_all_as<neuromap>(all_nmps);
+		append_all_nmps_to_write(lv.ld_nmps_to_write, to_wrt);
 	}
 	
 	reset_all_note1(brn, all_qu_wrt);
@@ -628,7 +609,7 @@ analyser::neuromap_find_analysis(analyser& deducer,
 		
 		nxt_dct.init_deduction();
 		deducer.deduction_analysis(nmp_causes, nxt_dct);
-		deducer.make_noted_dominated_and_deduced();
+		deducer.make_noted_dominated_and_deduced(to_wrt);
 		de_found_learned = deducer.de_found_learned;
 		
 		long tg_lv = nxt_dct.dt_target_level;
@@ -838,15 +819,15 @@ brain::analyse(row<prop_signal>& all_confl, deduction& out_dct){
 		os << " num_conf=" << br_all_conflicts_found.size();
 	);
 	
+	row<neuromap*>& to_wrt = br_tmp_maps_to_write;
+	to_wrt.clear();
+	
 	dedser.deduction_analysis(dedser.get_first_causes(), out_dct);
-	dedser.make_noted_dominated_and_deduced();
+	dedser.make_noted_dominated_and_deduced(to_wrt);
 	mper.de_found_learned = dedser.de_found_learned;
 
 	BRAIN_DBG(deduction fst_dct; out_dct.copy_to_dct(fst_dct));
 	BRAIN_CK(br_ne_tot_tag1 == 0);
-	
-	row<neuromap*>& to_wrt = br_tmp_maps_to_write;
-	to_wrt.clear();
 	
 	long fst_lv = level();
 	long tg_lv = out_dct.dt_target_level;
@@ -938,6 +919,27 @@ brain::release_all_neuromaps(){
 		BRAIN_CK_PRT(nmp.na_is_head, os << "____" << bj_eol << "NMP=" << &nmp);
 		nmp.full_release();
 	}
+}
+
+void
+analyser::make_noted_dominated_and_deduced(row<neuromap*>& to_wrt){
+	brain& brn = get_de_brain();
+	qlayers_ref& qlr = de_ref;
+	row<prop_signal>& all_noted = de_all_noted;
+	row_quanton_t& all_qu_wrt = de_all_learned_forced;
+	
+	DBG_PRT(134, os << "mk dom_noted=\n" << this);
+	
+	DBG_PRT_COND(135, ! all_qu_wrt.is_empty(), os << "to_wrt=" << all_qu_wrt);
+	
+	BRAIN_CK(brn.br_qu_tot_note1 == 0);
+	//set_all_note1(brn, all_qu_wrt);
+	
+	make_all_ps_dominated(brn, all_noted, to_wrt);
+	
+	//reset_all_note1(brn, all_qu_wrt);
+	BRAIN_CK(brn.br_qu_tot_note1 == 0);
+	BRAIN_CK(last_qu_noted() == qlr.get_curr_quanton());
 }
 
 

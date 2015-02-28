@@ -1028,7 +1028,7 @@ neuron::dbg_old_set_motives(brain& brn, notekeeper& nke, bool is_first){
 	BRAIN_CK(is_first || (ne_fibres[0]->get_charge() == cg_positive) );
 	BRAIN_CK(is_first || neu_compute_binary());
 
-	ne_recoil_tk.update_ticket(brn);
+	//ne_recoil_tk.update_ticket(brn);
 
 	BRAIN_DBG(brn.dbg_add_to_used(neu));
 

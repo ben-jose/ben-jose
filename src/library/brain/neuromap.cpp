@@ -85,8 +85,10 @@ neuromap::map_make_guide_dominated(bool mk_deduc){
 	}
 	
 	brain& brn = get_brn();
+	row<neuromap*>& to_wrt = brn.br_tmp_nmps_all_to_wrt;
+	to_wrt.clear();
 	//make_all_ps_dominated(brn, na_all_confl, mk_deduc); // no_cfl_guide
-	make_all_ps_dominated(brn, na_forced, mk_deduc);
+	make_all_ps_dominated(brn, na_forced, to_wrt);
 }
 
 void
@@ -450,8 +452,24 @@ quanton::in_qu_dominated(brain& brn){
 	return in_dom;
 }
 
+neuromap*
+quanton::get_nmp_to_write(){
+	neuromap* to_wrt = qu_curr_nemap;
+	if(! has_note1()){ return NULL_PT; }
+	if(to_wrt == NULL_PT){ return NULL_PT; }
+	if(! to_wrt->na_active){ return NULL_PT; }
+	if(to_wrt->na_nxt_forced_qua != this){ return NULL_PT; }
+	
+	return to_wrt;
+}
+
 void
-quanton::make_qu_dominated(brain& brn){
+quanton::make_qu_dominated(brain& brn, row<neuromap*>& to_wrt){
+	neuromap* nmp = get_nmp_to_write();
+	if(nmp != NULL_PT){
+		to_wrt.push(nmp);
+	}
+	
 	DBG(bool deac = false);
 	while(! in_qu_dominated(brn)){
 		DBG(deac = true);
@@ -1380,37 +1398,12 @@ neuromap::map_get_initial_tauto_coloring(coloring& stab_guide_clr,
 	all_co_neus.clear();
 	//map_get_all_neus(all_co_neus);
 	map_get_all_non_forced_neus(all_co_neus, false);
-	//map_get_tauto_neus(all_co_neus, ck_tks);
 	tmp_co.co_neu_colors.fill(1, all_co_neus.size());
 
 	stab_guide_clr.copy_co_to(base_tauto_clr);
 	base_tauto_clr.add_coloring(brn, tmp_co);
 	
 	BRAIN_CK(base_tauto_clr.ck_cols());
-}
-
-void
-neuromap::map_get_tauto_neus(row<neuron*>& neus, bool ck_tks){
-	neus.clear();
-
-	brain& brn = get_brn();
-	row<neuron*>& m_neus = brn.br_tmp_tauto_neus;
-	m_neus.clear();
-	//map_get_all_forced_neus(m_neus);
-	map_get_all_non_forced_neus(m_neus, false);
-	
-	if(! ck_tks){
-		m_neus.move_to(neus);
-		return;
-	}
-	
-	for(long bb = 0; bb < m_neus.size(); bb++){
-		BRAIN_CK(m_neus[bb] != NULL_PT);
-		neuron& neu = *(m_neus[bb]);
-
-		bool ck_val = neu.deduced_in_or_after(na_setup_tk); 
-		if(ck_val){ neus.push(&neu); }
-	}
 }
 
 bool
@@ -1763,3 +1756,4 @@ neuromap::map_ck_all_confl_in_non_forced(){
 #endif
 	return true;
 }
+
