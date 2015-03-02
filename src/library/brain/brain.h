@@ -682,6 +682,9 @@ class quanton {
 	
 	neuromap*	get_nmp_to_write();
 
+	bj_ostream&		print_quanton_base(bj_ostream& os, bool from_pt, 
+									   long ps_ti, neuron* ps_src);
+	
 	bj_ostream&		print_quanton(bj_ostream& os, bool from_pt = false);
 
 	bj_ostream& 		print_ic_label(bj_ostream& os){
@@ -1677,6 +1680,7 @@ class neuromap {
 	
 	bool	has_stab_guide();
 
+	void	map_get_all_ps(row<prop_signal>& all_ps);
 	void	map_get_all_quas(row_quanton_t& all_quas);
 	void	map_get_all_confl_neus(row<neuron*>& all_neus);
 	void	map_get_all_forced_neus(row<neuron*>& all_neus, bool with_clear = true);
@@ -2475,10 +2479,8 @@ class leveldat {
 	brain*			ld_brn;
 		
 	long			ld_idx;
-	row<prop_signal>	ld_pre_sigs;
 	row<neuron*>		ld_learned;
 	quanton*		ld_chosen;
-	row_quanton_t		ld_upper_quas;
 
 	row_quanton_t		ld_semi_monos_to_update;
 
@@ -2496,10 +2498,8 @@ class leveldat {
 	void	init_leveldat(brain* pt_brn = NULL){
 		ld_brn = pt_brn;
 		ld_idx = INVALID_IDX;
-		ld_pre_sigs.clear(true, true);
 		ld_learned.clear();
 		ld_chosen = NULL_PT;
-		ld_upper_quas.clear();
 
 		BRAIN_CK(ld_semi_monos_to_update.is_empty());
 		ld_semi_monos_to_update.clear();
@@ -2809,6 +2809,8 @@ public:
 
 	row<neuromap*>	br_tmp_maps_to_write;
 	row<neuromap*> 	br_tmp_nmps_all_to_wrt;
+	
+	row<prop_signal>	br_tmp_prt_ps;
 	
 	coloring		br_tmp_tauto_col;
 	

@@ -1652,7 +1652,7 @@ brain::pulsate(){
 
 		quanton* cho = curr_choice();
 		BRAIN_CK((cho == &qua) || (&(qua.opposite()) == cho));
-
+		
 		if(! cho->is_note5()){ 
 			cho->set_binote5(brn); 
 			BRAIN_DBG(

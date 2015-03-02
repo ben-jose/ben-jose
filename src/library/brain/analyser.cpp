@@ -613,14 +613,15 @@ analyser::neuromap_find_analysis(analyser& deducer,
 		de_found_learned = deducer.de_found_learned;
 		
 		long tg_lv = nxt_dct.dt_target_level;
-		long min_s_lv = brn.append_all_to_write(deducer, nxt_lv, tg_lv, to_wrt);
-		MARK_USED(min_s_lv);
+		//long min_s_lv = 
+		brn.append_all_to_write(deducer, nxt_lv, tg_lv, to_wrt);
+		//MARK_USED(min_s_lv);
 		
 		nxt_lv = tg_lv;
 
 		bool h_stp_lv_p_1 = brn.lv_has_setup_nmp(nxt_lv + 1);
 		if(! to_wrt.is_empty() && h_stp_lv_p_1){
-			BRAIN_CK(! h_stp_lv_p_1 || (min_s_lv == (nxt_lv + 1)));
+			//BRAIN_CK(! h_stp_lv_p_1 || (min_s_lv == (nxt_lv + 1)));
 			break;
 		}
 		if(de_found_learned){
@@ -816,13 +817,15 @@ brain::analyse(row<prop_signal>& all_confl, deduction& out_dct){
 	mper.de_found_learned = false;
 	
 	DBG_PRT(125, os << "bef_ana=" << bj_eol; print_trail(os);
-		os << " num_conf=" << br_all_conflicts_found.size();
+		os << " num_conf=" << br_all_conflicts_found.size() << " br_lv=" << level()
+		<< " br_ti=" << tier();
 	);
 	
 	row<neuromap*>& to_wrt = br_tmp_maps_to_write;
 	to_wrt.clear();
 	
 	dedser.deduction_analysis(dedser.get_first_causes(), out_dct);
+	DBG_PRT(125, os << "out_dct=" << out_dct);
 	dedser.make_noted_dominated_and_deduced(to_wrt);
 	mper.de_found_learned = dedser.de_found_learned;
 
@@ -832,14 +835,10 @@ brain::analyse(row<prop_signal>& all_confl, deduction& out_dct){
 	long fst_lv = level();
 	long tg_lv = out_dct.dt_target_level;
 	
-	long min_s_lv = append_all_to_write(dedser, fst_lv, tg_lv, to_wrt);
-	MARK_USED(min_s_lv);
-	BRAIN_CK_PRT((! lv_has_setup_nmp(tg_lv + 1) || (min_s_lv == (tg_lv + 1))), 
-		os << "______\n"; dbg_prt_margin(os);
-		os << " fst_lv=" << fst_lv << " tg_lv=" << tg_lv 
-		<< " min_s_lv=" << min_s_lv << " to_w_sz=" << to_wrt.size() << bj_eol;
-		print_trail(os);
-	);
+	//long min_s_lv = 
+	append_all_to_write(dedser, fst_lv, tg_lv, to_wrt);
+	//MARK_USED(min_s_lv);
+	//BRAIN_CK(! lv_has_setup_nmp(tg_lv + 1) || (min_s_lv == (tg_lv + 1)));
 	DBG_PRT_COND(125, mper.de_found_learned, os << "FOUND_LEARNED 1");
 	
 	deduction& fnd_dct = br_tmp_find_dct;

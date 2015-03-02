@@ -126,6 +126,16 @@ neuromap::map_reset_all_marks_and_spots(){
 }
 
 void
+neuromap::map_get_all_ps(row<prop_signal>& all_ps){
+	if(na_submap == NULL_PT){
+		all_ps.clear();
+	} else {
+		na_submap->map_get_all_ps(all_ps);
+	}
+	na_forced.append_to(all_ps);
+}
+
+void
 neuromap::map_get_all_quas(row_quanton_t& all_quas){
 	if(na_submap == NULL_PT){
 		all_quas.clear();
@@ -291,8 +301,8 @@ neuromap::map_activate(dbg_call_id dbg_id){
 	
 	leveldat& lv_dat = brn.get_data_level(na_orig_lv);
 	
-	DBG_PRT_COND(69, (na_index == 3), os << "ACTIV. nmp=" << this << bj_eol;
-		brn.print_trail(os);
+	DBG_PRT_COND(69, (na_index == 1), os << "ACTIV. nmp=" << this << bj_eol;
+		//brn.print_trail(os);
 		os << bj_eol << " o_lv=" << na_orig_lv;
 	);
 	
@@ -981,7 +991,7 @@ neuromap::map_oper(mem_op_t mm){
 	BRAIN_CK(map_ck_all_confl_in_non_forced());
 	brain& brn = get_brn();
 
-	DBG_PRT(69, os << "MAP_OPER NMP=" << this);
+	DBG_PRT(134, os << "MAP_OPER NMP=" << this);
 	
 	brn.init_mem_tmps();
 
