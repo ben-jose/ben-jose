@@ -464,7 +464,7 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 		os << "." << na_index;
 		os << "(" << (void*)this << ")";
 		os << " lv=" << na_orig_lv;
-		os << " fo_qu=" << na_nxt_forced_qua << bj_eol;
+		os << " fo_ps=" << na_next_psig << bj_eol;
 		os << " all_ps=" << all_ps;
 
 		/*
@@ -1139,12 +1139,21 @@ brain::dbg_old_reverse(){
 bj_ostream&
 prop_signal::print_prop_signal(bj_ostream& os, bool from_pt){
 	MARK_USED(from_pt);
+	if(from_pt){
+		os << " ps{";
+		os << ps_quanton;
+		os << ps_tier;
+		os << "}";
+		os.flush();
+		return os;
+	}
+	
 	if(ps_quanton != NULL_PT){
 		return ps_quanton->print_quanton_base(os, true, ps_tier, ps_source);
 	}
 	
 	os << " ps{";
-	//os << ps_quanton;
+	os << ps_quanton;
 	//if(ps_source == NULL_PT){ os << ".NULL_SRC"; }
 	//else { os << "." << ((void*)ps_source) << "." << ps_source->ne_index; }
 	//os << ps_source << ".";
@@ -1269,7 +1278,7 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 		if((neu != NULL_PT) && ! neu->ne_original){ os << "+"; }
 		if(qlv == 0){ os << "#"; }
 		if(! h_src && h_chg){ os << "L" << qlv; }
-		if((! h_src) && (pt_brn != NULL_PT) && h_chg){ 
+		/*if((! h_src) && (pt_brn != NULL_PT) && h_chg){ 
 			brain& brn = *pt_brn;
 			
 			leveldat& lv = brn.get_data_level(qlv);
@@ -1289,7 +1298,7 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 			if((qlv != ROOT_LEVEL) && (lv.ld_chosen == NULL_PT)){
 				os << "[NULL_CHO!!!]"; 
 			}
-		}
+		}*/
 
 		if(! h_chg){ os << "("; }
 		if(is_nega){ os << '\\';  }
