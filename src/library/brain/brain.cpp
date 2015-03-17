@@ -1274,6 +1274,22 @@ brain::aux_solve_instance(){
 	release_all_sortors();
 
 	all_mutual_init();
+
+	DBG_PRT(142, os << "dbg_max_lv=" << br_dbg.dbg_max_lv 
+		<< " dbg_max_num_subnmp=" << br_dbg.dbg_max_num_subnmp;
+	);
+	
+	get_solver().update_dbg2(br_dbg);
+}
+
+void
+solver::update_dbg2(dbg_inst_info& ist_info){
+	if(ist_info.dbg_max_lv > slv_dbg2.dbg_max_lv){
+		slv_dbg2.dbg_max_lv = ist_info.dbg_max_lv;
+	}
+	if(ist_info.dbg_max_num_subnmp > slv_dbg2.dbg_max_num_subnmp){
+		slv_dbg2.dbg_max_num_subnmp = ist_info.dbg_max_num_subnmp;
+	}
 }
 
 void
@@ -1475,6 +1491,7 @@ brain::receive_psignal(bool only_in_dom){
 	DBG_PRT(21, os << sgnl << " odom=" << only_in_dom; os << " HIT ENTER TO CONTINUE...");
 	DBG_COMMAND(21, getchar());
 	
+	/*
 	if(found_conflict()){
 		prop_signal& f_cfl = first_conflict();
 		if(! qua.has_charge() && (sg_tier >= f_cfl.ps_tier)){
@@ -1493,7 +1510,7 @@ brain::receive_psignal(bool only_in_dom){
 		br_delayed_psignals.push(sgnl);
 		DBG_PRT(21, os << " no ne_dom" << neu);
 		return NULL_PT;
-	}
+	}*/
 
 	DBG_PRT(21, os << "init sgnl" << sgnl);
 	sgnl.init_prop_signal();
@@ -1519,7 +1536,7 @@ brain::receive_psignal(bool only_in_dom){
 			//reset_psignals();	// simple_propag
 			//BRAIN_CK(! has_psignals()); // simple_propag
 			BRAIN_CK(found_conflict());
-			BRAIN_CK(ck_confl_ti());
+			//BRAIN_CK(ck_confl_ti());
 			DBG_PRT_COND(136, (br_all_conflicts_found.size() > 1), 
 					os << "num_confl=" << br_all_conflicts_found.size()
 			);
@@ -2055,6 +2072,8 @@ brain::reverse(){
 	BRAIN_DBG(br_dbg.dbg_before_retract_lv = level());
 	
 	// analyse
+	
+	BRAIN_DBG(if(level() > br_dbg.dbg_max_lv){ br_dbg.dbg_max_lv = level(); });
 	
 	deduction& dct = br_retract_dct;
 

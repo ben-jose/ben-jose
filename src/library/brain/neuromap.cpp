@@ -66,6 +66,8 @@ neuromap::map_write(){
 void
 neuromap::map_make_dominated(){
 	brain& brn = get_brn();
+
+	DBG_PRT(133, os << "before make_map_dom");
 	map_make_guide_dominated();
 	
 	row<neuron*>& all_neus = brn.br_tmp_ne_mk_all_dom;
@@ -74,6 +76,7 @@ neuromap::map_make_dominated(){
 	make_all_ne_dominated(brn, all_neus);
 
 	BRAIN_CK(map_ck_all_ne_dominated(dbg_call_1));
+	DBG_PRT(133, os << "AFTER make_map_dom\n nmp=" << this);
 }
 
 void
@@ -300,6 +303,14 @@ neuromap::map_ck_orig(){
 }
 
 bool
+neuromap::map_can_activate_2(){
+	if(na_orig_lv == INVALID_LEVEL){
+		return false;
+	}
+	return true;
+}
+
+bool
 neuromap::map_can_activate(){
 	if(na_orig_lv == INVALID_LEVEL){
 		return false;
@@ -328,34 +339,11 @@ neuromap::map_cond_activate(dbg_call_id dbg_id){
 	brain& brn = get_brn();
 	leveldat& lv_dat = brn.get_data_level(na_orig_lv);
 	
-	DBG_PRT_COND(69, (na_index == 1), os << "ACTIV. nmp=" << this << bj_eol;
-		//brn.print_trail(os);
-		os << bj_eol << " o_lv=" << na_orig_lv;
-	);
-	
 	BRAIN_CK(! lv_dat.has_setup_neuromap());
 	lv_dat.set_setup_neuromap(*this);
 	
 	map_activate(dbg_id);
 }
-
-/*
-void
-neuromap::map_full_activate(deduction& nxt_dct, row<neuromap*>& to_wrt, dbg_call_id dbg_id){
-	BRAIN_CK(nxt_dct.dt_forced != NULL_PT);
-	brain& brn = get_brn();
-	
-	long nxt_lv = nxt_dct.dt_target_level;
-	long l_ti = brn.br_charge_trail.last_qtier_in_layer(nxt_lv);
-	
-	na_is_head = true;
-	map_make_dominated();
-	na_all_to_wrt.append_to(to_wrt);
-	na_next_psig.ps_quanton = nxt_dct.dt_forced;
-	na_next_psig.ps_tier = l_ti + 1;
-	
-	map_activate(dbg_id);
-}*/
 
 void
 neuromap::map_activate(dbg_call_id dbg_id){
@@ -379,9 +367,8 @@ neuromap::map_activate(dbg_call_id dbg_id){
 	BRAIN_CK(! brn.br_maps_active.is_empty());
 	BRAIN_CK(brn.br_maps_active.last() == this);
 
-	DBG_PRT(134, os << "ACTIVATING " << this);
-	//DBG_PRT(69, os << "ALL_ACTIVE\n"; brn.br_maps_active.print_row_data(os, true, "\n"));
-	
+	DBG_PRT(134, os << "ACTIVAting " << this);
+	DBG_PRT_COND(144, (na_dbg_num_submap > 3), os << "ACTIVAting " << this);
 }
 
 void
@@ -408,7 +395,10 @@ void
 neuromap::map_deactivate(){
 	brain& brn = get_brn();
 	
-	DBG_PRT(134, os << "DEACTivating " << this);
+	DBG_PRT(134, os << "DEACTvating " << this);
+	DBG_PRT_COND(144, (na_dbg_num_submap > 3), os << "DEACTvating  " << this
+		<< "\n dct=" << brn.br_retract_dct
+	);
 
 	BRAIN_CK(na_active);
 	BRAIN_CK(! brn.br_maps_active.is_empty());
@@ -516,12 +506,21 @@ quanton::in_qu_dominated(brain& brn){
 
 void
 quanton::make_qu_dominated(brain& brn){
-	DBG(bool deac = false);
+	DBG(
+		bool deac = false;
+		bool big = false;
+	);
 	while(! in_qu_dominated(brn)){
-		DBG(deac = true);
+		DBG(
+			deac = true;
+			neuromap* nmp = brn.br_maps_active.last();
+			BRAIN_CK(nmp != NULL_PT);
+			big = (nmp->na_dbg_num_submap > 3);
+		);
 		brn.deactivate_last_map();
 	}
 	DBG_PRT_COND(134, deac, os << "deact_QU=" << this);
+	DBG_PRT_COND(144, (deac && big), os << "deact_QU=" << this);
 }
 
 bool
@@ -536,12 +535,21 @@ neuron::in_ne_dominated(brain& brn){
 
 void
 neuron::make_ne_dominated(brain& brn){
-	DBG(bool deac = false);
+	DBG(
+		bool deac = false;
+		bool big = false;
+	);
 	while(! in_ne_dominated(brn)){
-		DBG(deac = true);
+		DBG(
+			deac = true;
+			neuromap* nmp = brn.br_maps_active.last();
+			BRAIN_CK(nmp != NULL_PT);
+			big = (nmp->na_dbg_num_submap > 3);
+		);
 		brn.deactivate_last_map();
 	}
 	DBG_PRT_COND(134, deac, os << "deact_NE=" << this);
+	DBG_PRT_COND(144, (deac && big), os << "deact_NE=" << this);
 }
 
 void
@@ -578,8 +586,6 @@ neuromap::full_release(){
 	
 	brain& brn = get_brn();
 	
-	DBG_PRT(133, os << "\n" << STACK_STR << "\n______________\n" 
-		<< "released nmp=(" << (void*)this << ")\n");
 	brn.release_neuromap(*this);
 }
 
@@ -1455,6 +1461,9 @@ neuromap::map_get_initial_tauto_coloring(coloring& stab_guide_clr,
 
 bool
 neuromap::has_stab_guide(){
+	bool h_g =  ! na_guide_col.is_co_virgin();
+	return h_g;
+	/*
 	brain& brn = get_brn();
 	if(na_guide_tk.is_valid()){
 		if(brn.recoil() == na_guide_tk.tk_recoil){
@@ -1462,6 +1471,7 @@ neuromap::has_stab_guide(){
 		}
 	}
 	return false;
+	*/
 }
 
 void
@@ -1474,8 +1484,8 @@ neuromap::map_set_stab_guide(){
 	}
 	map_init_stab_guide();
 	
-	brain& brn = get_brn();
-	na_guide_tk.update_ticket(brn);
+	/*brain& brn = get_brn();
+	na_guide_tk.update_ticket(brn);*/
 	BRAIN_CK(has_stab_guide());
 }
 

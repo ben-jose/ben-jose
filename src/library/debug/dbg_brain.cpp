@@ -295,6 +295,9 @@ dbg_inst_info::init_dbg_inst_info(){
 	dbg_levs_arr.fill(false, DBG_NUM_LEVS);
 	
 	dbg_tot_nmps = 0;
+	
+	dbg_max_lv = 0;
+	dbg_max_num_subnmp = 0;
 }
 #endif
 
@@ -463,6 +466,7 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 		if(na_is_head){ os << ".h"; }
 		os << "." << na_index;
 		os << "(" << (void*)this << ")";
+		os << " #lv=" << na_dbg_num_submap;
 		os << " lv=" << na_orig_lv;
 		os << " fo_ps=" << na_next_psig << bj_eol;
 		os << " all_ps=" << all_ps;
@@ -490,7 +494,6 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 	os << "NMP(" << (void*)this <<")={ " << bj_eol;
 	
 	os << " active=" << na_active << bj_eol;
-	os << " na_deact_tier=" << na_deact_tier << bj_eol;
 	os << " cho=" << na_orig_cho << bj_eol;
 	os << " na_submap=" << na_submap << bj_eol;
 	

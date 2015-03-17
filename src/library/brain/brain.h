@@ -1544,15 +1544,15 @@ class neuromap {
 	bool			na_is_head;
 	bool			na_active;
 	bool			na_has_marks_and_spots;
-	long			na_deact_tier;
 	long			na_orig_lv;
 	quanton*		na_orig_cho;
 	prop_signal		na_next_psig;
 	neuromap*		na_submap;
 	recemap_t		na_mates;
 	long			na_release_idx;
-	ticket			na_setup_tk;
-	ticket			na_guide_tk;
+	BRAIN_DBG(long		na_dbg_num_submap);
+	//ticket			na_setup_tk;
+	//ticket			na_guide_tk;
 	
 	row<neuron*>		na_all_filled_in_propag;
 	
@@ -1586,7 +1586,6 @@ class neuromap {
 		na_is_head = false;
 		na_active = false;
 		na_has_marks_and_spots = false;
-		na_deact_tier = INVALID_TIER;
 		na_orig_lv = INVALID_LEVEL;
 		na_orig_cho = NULL_PT;
 		na_next_psig.init_prop_signal();
@@ -1597,6 +1596,7 @@ class neuromap {
 		BRAIN_CK(na_mates.is_alone());
 		
 		na_release_idx = INVALID_IDX;
+		BRAIN_DBG(na_dbg_num_submap = 1);
 		
 		na_all_filled_in_propag.clear();
 		
@@ -1620,12 +1620,11 @@ class neuromap {
 		bool c2 = (na_is_head == false);
 		bool c3 = (na_active == false);
 		bool c4 = (na_has_marks_and_spots == false);
-		bool c5 = (na_deact_tier == INVALID_TIER);
-		bool c6 = (na_orig_lv == INVALID_LEVEL);
-		bool c7 = (na_orig_cho == NULL_PT);
-		bool c8 = (na_submap == NULL_PT);
+		bool c5 = (na_orig_lv == INVALID_LEVEL);
+		bool c6 = (na_orig_cho == NULL_PT);
+		bool c7 = (na_submap == NULL_PT);
 
-		return (c1 && c2 && c3 && c4 && c5 && c6 && c7 && c8);
+		return (c1 && c2 && c3 && c4 && c5 && c6 && c7);
 	}
 
 	void	full_release();
@@ -1688,6 +1687,7 @@ class neuromap {
 	void	map_add_to_release();
 
 	bool	map_can_activate();
+	bool	map_can_activate_2();
 	void	map_cond_activate(dbg_call_id dbg_id);
 	void	map_activate(dbg_call_id dbg_id);
 	void	map_full_activate(deduction& nxt_dct, 
@@ -2457,6 +2457,9 @@ class analyser {
 	neuromap* 	neuromap_find_analysis_2(analyser& deducer, 
 						deduction& nxt_dct, row<neuromap*>& to_wrt);
 	neuromap* 	neuromap_setup_analysis(long tg_lv, neuromap* in_nmp);
+	neuromap* 	neuromap_setup_analysis_2(long tg_lv, neuromap* in_nmp);
+	
+	void		reset_setup_neuromap_for(neuromap& nmp);
 
 	bj_ostream&	print_analyser(bj_ostream& os, bool from_pt = false);
 	
@@ -2617,6 +2620,9 @@ public:
 	row<bool>	dbg_levs_arr;
 
 	long	dbg_tot_nmps;
+	
+	long	dbg_max_lv;
+	long	dbg_max_num_subnmp;
 	
 	dbg_inst_info(){
 		init_dbg_inst_info();
