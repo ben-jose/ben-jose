@@ -74,6 +74,15 @@ DEFINE_NE_FLAG_ALL_FUNCS(tag4);
 DEFINE_NE_FLAG_ALL_FUNCS(tag5);
 
 
+
+DEFINE_PS_FLAG_ALL_FUNCS(0);
+DEFINE_PS_FLAG_ALL_FUNCS(1);
+DEFINE_PS_FLAG_ALL_FUNCS(2);
+DEFINE_PS_FLAG_ALL_FUNCS(3);
+DEFINE_PS_FLAG_ALL_FUNCS(4);
+DEFINE_PS_FLAG_ALL_FUNCS(5);
+
+
 #define PRINT_PERIOD			4.0
 #define SOLVING_TIMEOUT			0.0		// 0.0 if no timeout
 
@@ -133,6 +142,7 @@ long	reset_dots_of(brain& brn, row_quanton_t& quans){
 	return resetted;
 }
 
+/*
 void	set_marks_of(brain& brn, row<prop_signal>& trace, long first_idx, long last_idx, 
 					 bool with_related){
 	if(last_idx < 0){ last_idx = trace.size(); }
@@ -200,6 +210,7 @@ void	reset_marks_of(brain& brn, row<prop_signal>& trace, long first_idx, long la
 		BRAIN_CK(opp->qu_mark_idx == INVALID_IDX);
 	}
 }
+*/
 
 //============================================================
 // neuron methods
@@ -717,6 +728,9 @@ long
 brain::brn_tunnel_signals(bool only_in_dom){
 	brain& brn = *this;
 	MARK_USED(brn);
+	BRAIN_CK(br_ne_tot_tag0 == 0);
+	BRAIN_CK(br_qu_tot_note0 == 0);
+	BRAIN_CK(br_shadow_quas.is_empty());
 	BRAIN_CK(! found_conflict());
 	BRAIN_CK(ck_trail());
 	BRAIN_DBG(
@@ -746,9 +760,23 @@ brain::brn_tunnel_signals(bool only_in_dom){
 	
 		num_psigs++;
 	} // end while
-
+	
 	BRAIN_CK_0(! has_psignals());
 	reset_psignals();
+	
+	reset_all_note0(brn, br_shadow_quas);
+	BRAIN_CK(br_qu_tot_note0 == 0);
+	
+	// reset tag0
+	
+	BRAIN_CK(br_ne_tot_tag0 == br_all_conflicts_found.size());
+	row_neuron_t& all_cfl = br_tmp_all_confl;
+	all_cfl.clear();
+	append_all_trace_neus(br_all_conflicts_found, all_cfl);
+
+	BRAIN_CK(br_ne_tot_tag0 == all_cfl.size());
+	reset_all_tag0(brn, all_cfl);
+	BRAIN_CK(br_ne_tot_tag0 == 0);
 
 	BRAIN_DBG(
 		ticket tk2;
@@ -1512,9 +1540,6 @@ brain::receive_psignal(bool only_in_dom){
 		return NULL_PT;
 	}*/
 
-	DBG_PRT(21, os << "init sgnl" << sgnl);
-	sgnl.init_prop_signal();
-
 	if(qua.has_charge()){
 		if(qua.is_neg()){
 			BRAIN_REL_CK(neu != NULL_PT);
@@ -1525,8 +1550,8 @@ brain::receive_psignal(bool only_in_dom){
 			long cnfl_ti = tier() + 1;
 			BRAIN_CK(sg_tier <= cnfl_ti);
 			
-			if(! neu->has_tag2()){
-				neu->set_tag2(brn);
+			if(! neu->has_tag0()){
+				neu->set_tag0(brn);
 				prop_signal& nxt_cfl = br_all_conflicts_found.inc_sz();
 				nxt_cfl.init_prop_signal(pt_qua, neu, cnfl_ti);
 				DBG_PRT(18, os << "**confict** " << nxt_cfl;
@@ -1543,7 +1568,6 @@ brain::receive_psignal(bool only_in_dom){
 		} 
 		pt_qua = NULL_PT;
 	} else {
-		BRAIN_CK(! qua.has_note3());
 		BRAIN_CK(! only_in_dom || (sg_tier == tier()) || (sg_tier == (tier() + 1)));
 
 		BRAIN_CK(qua.ck_uncharged_partner_neu());
@@ -1558,7 +1582,51 @@ brain::receive_psignal(bool only_in_dom){
 		BRAIN_CK((qua.qu_tier == sg_tier) || 
 			((level() == ROOT_LEVEL) && (qua.qu_tier == 0)));
 	}
+	
+	if(found_conflict()){
+		update_cfls_shadow(sgnl);
+	}
+	
+	DBG_PRT(21, os << "init sgnl" << sgnl);
+	sgnl.init_prop_signal();
+
 	return pt_qua;
+}
+
+void
+brain::update_cfls_shadow(prop_signal& sgnl){
+	brain& brn = *this;
+	
+	BRAIN_CK(sgnl.ps_quanton != NULL_PT);
+	quanton& qua = *(sgnl.ps_quanton);
+	if(qua.has_note0()){
+		return;
+	}
+	
+	if(qua.has_charge() && qua.is_neg()){
+		qua.set_note0(brn);
+		br_shadow_quas.push(&qua);
+		prop_signal& nxt_ps = br_shadow_ps.inc_sz();
+		nxt_ps = sgnl;
+		return;
+	} 
+	
+	neuron* neu = sgnl.ps_source;
+	if(neu == NULL_PT){
+		return;
+	}
+	row_quanton_t& all_fib = neu->ne_fibres;
+	for(long aa = 0; aa < all_fib.size(); aa++){
+		BRAIN_CK(all_fib[aa] != NULL_PT);
+		quanton& fib = *(all_fib[aa]);
+		if(fib.has_note0()){
+			qua.set_note0(brn);
+			br_shadow_quas.push(&qua);
+			prop_signal& nxt_ps = br_shadow_ps.inc_sz();
+			nxt_ps = sgnl;
+			break;
+		}
+	}
 }
 
 long
@@ -1627,7 +1695,7 @@ brain::start_propagation(quanton& nxt_qua){
 				BRAIN_CK(old_lv == level());
 			}
 
-			if((num1 == num2) && qua.is_note5()){
+			if((num1 == num2) && qua.qu_has_been_cho){
 				retract_choice();
 				BRAIN_CK(old_lv == level());
 			}
@@ -1670,14 +1738,14 @@ brain::pulsate(){
 		quanton* cho = curr_choice();
 		BRAIN_CK((cho == &qua) || (&(qua.opposite()) == cho));
 		
-		if(! cho->is_note5()){ 
-			cho->set_binote5(brn); 
+		if(! cho->qu_has_been_cho){ 
+			cho->qu_has_been_cho = true; 
 			BRAIN_DBG(
 				cho->qu_dbg_fst_lap_cho = brn.br_current_ticket.tk_recoil;
 				br_dbg.dbg_all_chosen.push(cho);
 			)
 		}
-		BRAIN_DBG(if(cho->opposite().is_note5()){ cho->qu_dbg_num_laps_cho++; });
+		BRAIN_DBG(if(cho->opposite().qu_has_been_cho){ cho->qu_dbg_num_laps_cho++; });
 		DBG_PRT(25, os << "**CHOICE** " << cho);
 	}
 }

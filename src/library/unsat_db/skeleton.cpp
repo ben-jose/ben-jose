@@ -724,8 +724,10 @@ skeleton_glb::init_paths(){
 		kg_root_path = kg_running_path;
 		if(! kg_keep_skeleton){
 			ch_string skl_pth = kg_root_path + SKG_SKELETON_DIR;
-			delete_directory(skl_pth);
+			
 			SKELETON_DBG(bj_out << "DELETING_SKELETON" << bj_eol);
+			delete_directory(skl_pth);
+			SKELETON_DBG(bj_out << "DELETED_SKELETON" << bj_eol);
 		}
 	}
 	

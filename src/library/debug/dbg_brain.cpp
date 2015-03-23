@@ -459,9 +459,6 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 		all_ps.clear(true, true);
 		map_get_all_ps(all_ps);
 		
-		row<neuron*>& all_ne = brn.br_tmp_prt_neus;
-		MARK_USED(all_ne);
-		
 		os << "na{";
 		if(na_is_head){ os << ".h"; }
 		os << "." << na_index;
@@ -472,6 +469,9 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 		os << " all_ps=" << all_ps;
 
 		/*
+		row<neuron*>& all_ne = brn.br_tmp_prt_neus;
+		MARK_USED(all_ne);
+		
 		os << bj_eol;
 		
 		all_ne.clear();
@@ -480,8 +480,8 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 		all_ne.print_row_data(os, true, "\n");
 		
 		all_ne.clear();
-		map_get_all_non_forced_neus(all_ne);
-		os << " all_non_forced=" << bj_eol;
+		map_get_all_cov_by_forced_neus(all_ne);
+		os << " all_cov_by_forced=" << bj_eol;
 		all_ne.print_row_data(os, true, "\n");
 		*/
 		
@@ -499,14 +499,14 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 	
 	os << " na_forced=" << bj_eol;
 	na_forced.print_row_data(os, true, "\n");
-	os << " na_non_forced=" << bj_eol;
-	na_non_forced.print_row_data(os, true, "\n");
+	os << " na_cov_by_forced_quas=" << bj_eol;
+	na_cov_by_forced_quas.print_row_data(os, true, "\n");
 	
 	os << " ma_guide_col=" << bj_eol;
 	os << na_guide_col << bj_eol;
 	
-	os << " na_all_filled_in_propag=" << bj_eol;
-	na_all_filled_in_propag.print_row_data(os, true, "\n");
+	os << " all_filled_by_forced=" << bj_eol;
+	na_all_filled_by_forced.print_row_data(os, true, "\n");
 	os << "}";
 	os.flush();
 #endif
