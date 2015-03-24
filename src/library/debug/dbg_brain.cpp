@@ -457,7 +457,7 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 	if(from_pt){
 		row<prop_signal>& all_ps = brn.br_tmp_prt_ps;
 		all_ps.clear(true, true);
-		map_get_all_ps(all_ps);
+		map_get_all_forced_ps(all_ps);
 		
 		os << "na{";
 		if(na_is_head){ os << ".h"; }

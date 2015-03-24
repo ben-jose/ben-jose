@@ -91,7 +91,8 @@ analyser::init_analyser(brain* brn){
 		de_ref.init_qlayers_ref(&(brn->br_charge_trail));
 		BRAIN_CK(de_nkpr.nk_get_counter() == 0);
 	}
-	de_not_sel_neus.clear_all_neurons();
+	de_forced_not_sel_neus.clear_all_neurons();
+	de_propag_not_sel_neus.clear_all_neurons();
 	de_all_confl.clear(true, true);
 	reset_deduc();
 }
@@ -335,7 +336,8 @@ analyser::init_calc_nmp(long min_lv){
 	BRAIN_CK(get_de_brain().br_ne_tot_tag1 == 0);
 	BRAIN_CK(min_lv < de_ref.get_curr_qlevel());
 	
-	de_not_sel_neus.clear_all_neurons();
+	de_forced_not_sel_neus.clear_all_neurons();
+	de_propag_not_sel_neus.clear_all_neurons();
 }
 
 void
@@ -444,6 +446,7 @@ analyser::update_neuromap(neuromap* sub_nmp){
 	nxt_nmp.na_orig_lv = qua->qlevel();
 	nxt_nmp.na_orig_cho = qua;
 	
+	BRAIN_CK(nxt_nmp.na_trail_propag.is_empty());
 	BRAIN_CK(nxt_nmp.na_forced.is_empty());
 	
 	if(sub_nmp == NULL_PT){
@@ -451,24 +454,54 @@ analyser::update_neuromap(neuromap* sub_nmp){
 		de_all_confl.copy_to(nxt_nmp.na_all_confl);  // multi_confl
 	}
 	
+	de_all_propag.move_to(nxt_nmp.na_trail_propag);
 	de_all_noted.move_to(nxt_nmp.na_forced);
-	de_all_propag.move_to(nxt_nmp.na_propag);
-	
-	DBG_PRT(124, os << "tot_no_sel_neus_1=" << de_not_sel_neus.get_tot_neurons());
-	nxt_nmp.set_all_filled_by_forced();
-	nxt_nmp.set_all_filled_by_propag();
-	DBG_PRT(124, os << "tot_no_sel_neus_2=" << de_not_sel_neus.get_tot_neurons());
-	
-	nxt_nmp.map_set_all_marks_and_spots();
-	nxt_nmp.map_fill_cov_by_forced(de_not_sel_neus);
 
+	// set all filled
+	
+	nxt_nmp.set_all_filled_by_forced();
+	nxt_nmp.map_forced_set_all_note2_n_tag2();
+	
+	//nxt_nmp.set_propag();
+	//nxt_nmp.set_all_filled_by_propag();
+	//nxt_nmp.map_propag_set_all_note3_n_tag3();
+
+	//nxt_nmp.set_shadow();
+	//nxt_nmp.set_all_filled_by_shadow();
+
+	BRAIN_CK(nxt_nmp.na_propag.is_empty());
+	BRAIN_CK(nxt_nmp.na_shadow.is_empty());
+	BRAIN_CK(nxt_nmp.na_all_filled_by_propag.is_empty());
+	BRAIN_CK(nxt_nmp.na_all_filled_by_shadow.is_empty());
+	// set covs
+	set_ps_all_note4_n_tag4(brn, nxt_nmp.na_shadow, true, true);
+	
+	nxt_nmp.map_fill_cov_by_forced(de_forced_not_sel_neus);
+	
+	reset_ps_all_note4_n_tag4(brn, nxt_nmp.na_shadow, true, true);
+	
 	return &nxt_nmp;
+}
+
+bool
+brain::ck_cov_flags(){
+#ifdef FULL_DEBUG
+	BRAIN_CK(br_qu_tot_note2 == 0);
+	BRAIN_CK(br_ne_tot_tag2 == 0);
+	BRAIN_CK(br_qu_tot_note3 == 0);
+	BRAIN_CK(br_ne_tot_tag3 == 0);
+	BRAIN_CK(br_qu_tot_note4 == 0);
+	BRAIN_CK(br_ne_tot_tag4 == 0);
+#endif
+	return true;
 }
 
 neuromap*
 analyser::calc_neuromap(long min_lv, neuromap* prev_nmp, bool with_lrnd)
 {
 	BRAIN_DBG(brain& brn = get_de_brain());
+	BRAIN_CK(brn.ck_cov_flags());
+	
 	qlayers_ref& qlr = de_ref;
 	
 	neuromap* out_nmp = prev_nmp;
@@ -523,11 +556,14 @@ analyser::calc_neuromap(long min_lv, neuromap* prev_nmp, bool with_lrnd)
 	if(out_nmp != NULL_PT){
 		BRAIN_CK_PRT(just_updated, 
 				brn.dbg_prt_margin(os); os << "____\n out_nmp=" << out_nmp);
-		out_nmp->map_reset_all_marks_and_spots();
+		out_nmp->map_forced_reset_all_note2_n_tag2();
+		out_nmp->map_propag_reset_all_note3_n_tag3();
 		BRAIN_CK(out_nmp->dbg_ck_all_neus());
+		BRAIN_CK(out_nmp->dbg_ck_all_confl_tag1());
 	}
 	BRAIN_CK(brn.br_tot_qu_marks == 0);
 	BRAIN_CK(brn.br_tot_ne_spots == 0);
+	BRAIN_CK(brn.ck_cov_flags());
 
 	DBG_PRT(119, os << "CLC_NMP{" 
 			<< " min_lv=" << min_lv

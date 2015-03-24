@@ -82,6 +82,12 @@ DEFINE_PS_FLAG_ALL_FUNCS(3);
 DEFINE_PS_FLAG_ALL_FUNCS(4);
 DEFINE_PS_FLAG_ALL_FUNCS(5);
 
+DEFINE_NA_FLAG_FUNCS(na_flags, tags0_n_notes0);
+DEFINE_NA_FLAG_FUNCS(na_flags, tags1_n_notes1);
+DEFINE_NA_FLAG_FUNCS(na_flags, tags2_n_notes2);
+DEFINE_NA_FLAG_FUNCS(na_flags, tags3_n_notes3);
+DEFINE_NA_FLAG_FUNCS(na_flags, tags4_n_notes4);
+DEFINE_NA_FLAG_FUNCS(na_flags, tags5_n_notes5);
 
 #define PRINT_PERIOD			4.0
 #define SOLVING_TIMEOUT			0.0		// 0.0 if no timeout
@@ -141,76 +147,6 @@ long	reset_dots_of(brain& brn, row_quanton_t& quans){
 	}
 	return resetted;
 }
-
-/*
-void	set_marks_of(brain& brn, row<prop_signal>& trace, long first_idx, long last_idx, 
-					 bool with_related){
-	if(last_idx < 0){ last_idx = trace.size(); }
-
-	BRAIN_CK(first_idx <= last_idx);
-	BRAIN_CK(trace.is_valid_idx(first_idx));
-	BRAIN_CK((last_idx == trace.size()) || trace.is_valid_idx(last_idx));
-
-	for(long ii = first_idx; ii < last_idx; ii++){
-		prop_signal& q_sig = trace[ii];
-		quanton* qua = q_sig.ps_quanton;
-		quanton* opp = qua->qu_inverse;
-
-		BRAIN_CK(qua != &(brn.br_top_block));
-
-		BRAIN_CK_0(! qua->has_mark());
-		qua->set_mark(brn);
-
-		if(with_related){
-			qua->qu_reltee.init_sortrel();
-			opp->qu_reltee.init_sortrel();
-
-			if(qua->qu_mark_idx == INVALID_IDX){
-				BRAIN_CK(opp->qu_mark_idx == INVALID_IDX);
-				qua->qu_mark_idx = ii;
-				opp->qu_mark_idx = ii;
-			}
-			if(q_sig.ps_source != NULL_PT){
-				q_sig.ps_source->set_spot(brn);
-			}
-		}
-	}
-}
-
-void	reset_marks_of(brain& brn, row<prop_signal>& trace, long first_idx, long last_idx, 
-					   bool with_related){
-	if(last_idx < 0){ last_idx = trace.size(); }
-
-	BRAIN_CK(first_idx <= last_idx);
-	BRAIN_CK(trace.is_valid_idx(first_idx));
-	BRAIN_CK((last_idx == trace.size()) || trace.is_valid_idx(last_idx));
-
-	for(long ii = first_idx; ii < last_idx; ii++){
-		prop_signal& q_sig = trace[ii];
-		quanton* qua = q_sig.ps_quanton;
-		quanton* opp = qua->qu_inverse;
-
-		BRAIN_CK(qua != &(brn.br_top_block));
-
-		BRAIN_CK(qua->has_pos_mark());
-		qua->reset_mark(brn);
-
-		if(with_related){
-			if(qua->qu_mark_idx != INVALID_IDX){
-				BRAIN_CK(opp->qu_mark_idx != INVALID_IDX);
-				qua->qu_mark_idx = INVALID_IDX;
-				opp->qu_mark_idx = INVALID_IDX;
-			}
-			if(q_sig.ps_source != NULL_PT){
-				q_sig.ps_source->reset_spot(brn);
-			}
-		}
-
-		BRAIN_CK(qua->qu_mark_idx == INVALID_IDX);
-		BRAIN_CK(opp->qu_mark_idx == INVALID_IDX);
-	}
-}
-*/
 
 //============================================================
 // neuron methods
@@ -502,8 +438,7 @@ brain::init_brain(solver& ss){
 	BRAIN_DBG(br_pt_brn = NULL);
 	br_pt_slvr = &ss;
 	
-	init_tots_notes();
-	init_tots_tags();
+	init_all_tots();
 	
 	br_prt_timer.init_timer(PRINT_PERIOD, SOLVING_TIMEOUT);
 
@@ -897,8 +832,7 @@ brain::init_loading(long num_qua, long num_neu){
 	br_tot_qu_marks = 0;
 	br_tot_ne_spots = 0;
 
-	init_tots_notes();
-	init_tots_tags();
+	init_all_tots();
 
 	BRAIN_DBG(
 		br_dbg.dbg_all_chosen.clear();
