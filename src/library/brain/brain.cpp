@@ -48,8 +48,8 @@ DEFINE_NI_FLAG_FUNCS(qu_flags, note0, true);
 DEFINE_NI_FLAG_FUNCS(qu_flags, note1, true);
 DEFINE_NI_FLAG_FUNCS(qu_flags, note2, true);
 DEFINE_NI_FLAG_FUNCS(qu_flags, note3, true);
-DEFINE_NI_FLAG_FUNCS(qu_flags, note4, false);
-DEFINE_NI_FLAG_FUNCS(qu_flags, note5, false);
+DEFINE_NI_FLAG_FUNCS(qu_flags, note4, true);
+DEFINE_NI_FLAG_FUNCS(qu_flags, note5, true);
 
 DEFINE_NI_FLAG_ALL_FUNCS(note0);
 DEFINE_NI_FLAG_ALL_FUNCS(note1);
@@ -233,8 +233,6 @@ neuron::update_fibres(row_quanton_t& synps, bool orig){
 	}
 
 	ne_edge_tk.init_ticket();
-	//ne_recoil_tk.init_ticket();
-	//ne_deduc_tk.init_ticket();
 
 	return forced_qua;
 }
@@ -505,6 +503,9 @@ brain::release_all_sortors(){
 	br_guide_neus_srg.release_all();
 	br_guide_quas_srg.release_all();
 
+	br_compl_neus_srg.release_all();
+	br_compl_quas_srg.release_all();
+	
 	br_tauto_neus_srg.release_all();
 	br_tauto_quas_srg.release_all();
 }
@@ -2167,18 +2168,11 @@ brain::dbg_prt_full_stab(){
 	dima_dims dims0;
 	full_col.load_colors_into(brn, neus_srg, quas_srg, dims0);
 
-	//bj_out << "NEUS_SRG_BEFORE=" << bj_eol << neus_srg;
-	
 	neus_srg.sg_cnf_clauses.clear();
 	
 	neus_srg.stab_mutual(quas_srg);
 	
-	//row<canon_clause*>& all_ccl = neus_srg.sg_cnf_clauses;
-	
 	//bj_out << "ALL_CCL=\n";
-	//all_ccl.print_row_data(bj_out, true, "\n");;
-	
-	//bj_out << "NEUS_SRG=" << bj_eol << neus_srg;
 	
 	canon_cnf& the_cnf = neus_srg.stab_mutual_get_cnf(skg, "TEST_STAB", true);
 
@@ -2192,28 +2186,6 @@ brain::dbg_prt_full_stab(){
 	BRAIN_CK(finl_col.co_quas.size() == full_col.co_quas.size());
 	BRAIN_CK(finl_col.co_neus.size() == full_col.co_neus.size());
 	
-	/*
-	bj_out << "stab_neus=" << bj_eol;
-	neus_srg.sg_cnf_clauses.print_row_data(bj_out, true, "\n");
-	
-	bool all_csc = false;
-	row_neuron_t all_nn;
-	bool h_dff = neus_srg.sort_to_row_and_all_consec<neuron>(all_nn, all_csc);
-	
-	//neus_srg.sg_step_sortees
-	
-	bj_out << "SORTED_ALL_STAB_NEUS=" << bj_eol;
-	all_nn.print_row_data(bj_out, true, "\n");
-	bj_out << bj_eol << "END_OF_SORTED_stab_neus=" << bj_eol;
-	
-	bj_out << "bb_cls=" << pru_bb.get_cls_name() << bj_eol;
-	bj_out << "gg_cls=" << pru_gg.get_cls_name() << bj_eol;
-	bj_out << "rr_cls=" << pru_rr.get_cls_name() << bj_eol;
-	bj_out << "tt_cls=" << pru_tt.get_cls_name() << bj_eol;
-	bj_out << "ss_cls=" << pru_ss.get_cls_name() << bj_eol;
-	*/
-
 	release_all_sortors();
-	
 }
 

@@ -94,6 +94,8 @@ brain::init_all_dbg_brn(){
 	br_filled_srg.set_dbg_brn(this);
 	br_guide_neus_srg.set_dbg_brn(this);
 	br_guide_quas_srg.set_dbg_brn(this);
+	br_compl_neus_srg.set_dbg_brn(this);
+	br_compl_quas_srg.set_dbg_brn(this);
 	br_tauto_neus_srg.set_dbg_brn(this);
 	br_tauto_quas_srg.set_dbg_brn(this);
 	br_clls_srg.set_dbg_brn(this);
@@ -449,6 +451,78 @@ brain::brn_dbg_compute_dots_of(row<neuron*>& neus, row_quanton_t& assig){
 // print methods
 
 bj_ostream&
+neuromap::print_all_subnmp(bj_ostream& os){
+#ifdef FULL_DEBUG
+	print_subnmp(os);
+	if(has_submap()){
+		na_submap->print_all_subnmp(os);
+	}
+#endif
+	return os;
+}
+
+bj_ostream&
+neuromap::print_subnmp(bj_ostream& os){
+#ifdef FULL_DEBUG
+	os << "_______________________________________________________\n";
+	os << "NMP(" << (void*)this <<")={ " << bj_eol;
+
+	os << " idx=" << na_index;
+	os << " brn=" << (void*)na_brn;
+	
+	/*
+	bool n0 = has_tags0_n_notes0();
+	bool n1 = has_tags1_n_notes1();
+	bool n2 = has_tags2_n_notes2();
+	bool n3 = has_tags3_n_notes3();
+	bool n4 = has_tags4_n_notes4();
+	bool n5 = has_tags5_n_notes5();
+	*/
+	
+	//os << " hd=" << na_is_head;
+	//os << " ac=" << na_active;
+	os << " lv=" << na_orig_lv;
+	os << " cho=" << na_orig_cho;
+	//os << " nx_ps=" << na_next_psig;
+	os << " subnmp=" << (void*)na_submap;
+	//os << " mat=" << na_mates;
+	//os << " rel_idx=" << na_release_idx;
+	os << " #lv=" << na_dbg_num_submap;
+	
+	os << "\n all_filled=\n";
+	os << "\n\t by_forced=\n";
+	na_all_filled_by_forced.print_row_data(os, true, "\n");
+	os << "\n\t by_propag=\n";
+	na_all_filled_by_propag.print_row_data(os, true, "\n");
+	os << "\n\t by_shadow=\n";
+	na_all_filled_by_shadow.print_row_data(os, true, "\n");
+
+	os << "\n trail_propag=\n";
+	na_trail_propag.print_row_data(os, true, "\n");
+	
+	os << "\n all_ps=\n";
+	os << "\n\t forced=\n";
+	na_forced.print_row_data(os, true, "\n");
+	os << "\n\t propag=\n";
+	na_propag.print_row_data(os, true, "\n");
+	os << "\n\t shadow=\n";
+	na_shadow.print_row_data(os, true, "\n");
+
+	os << "\n all_cov=\n";
+	os << "\n\t cov_by_forced=\n";
+	na_cov_by_forced_quas.print_row_data(os, true, "\n");
+	os << "\n\t cov_by_propag=\n";
+	na_cov_by_propag_quas.print_row_data(os, true, "\n");
+	os << "\n\t cov_by_shadow=\n";
+	na_cov_by_shadow_quas.print_row_data(os, true, "\n");
+	
+	os << "}\n";
+	os.flush();
+#endif
+	return os;
+}
+
+bj_ostream&
 neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 #ifdef FULL_DEBUG
 	brain& brn = get_brn();
@@ -457,7 +531,7 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 	if(from_pt){
 		row<prop_signal>& all_ps = brn.br_tmp_prt_ps;
 		all_ps.clear(true, true);
-		map_get_all_forced_ps(all_ps);
+		map_get_all_ps(all_ps);
 		
 		os << "na{";
 		if(na_is_head){ os << ".h"; }
@@ -491,24 +565,8 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 		return os;
 	}
 	
-	os << "NMP(" << (void*)this <<")={ " << bj_eol;
+	print_all_subnmp(os);
 	
-	os << " active=" << na_active << bj_eol;
-	os << " cho=" << na_orig_cho << bj_eol;
-	os << " na_submap=" << na_submap << bj_eol;
-	
-	os << " na_forced=" << bj_eol;
-	na_forced.print_row_data(os, true, "\n");
-	os << " na_cov_by_forced_quas=" << bj_eol;
-	na_cov_by_forced_quas.print_row_data(os, true, "\n");
-	
-	os << " ma_guide_col=" << bj_eol;
-	os << na_guide_col << bj_eol;
-	
-	os << " all_filled_by_forced=" << bj_eol;
-	na_all_filled_by_forced.print_row_data(os, true, "\n");
-	os << "}";
-	os.flush();
 #endif
 	return os;
 }
@@ -582,7 +640,8 @@ brain::print_all_quantons(bj_ostream& os, long ln_sz, ch_string ln_fd){
 
 bj_ostream&
 quanton::print_quanton(bj_ostream& os, bool from_pt){
-	return print_quanton_base(os, from_pt, qu_tier, qu_source);
+	neuron* src = get_source();
+	return print_quanton_base(os, from_pt, qu_tier, src);
 }
 
 bj_ostream&
@@ -1259,6 +1318,12 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 	MARK_USED(n0);
 	bool n1 = has_note1();
 	MARK_USED(n1);
+	bool n2 = has_note2();
+	MARK_USED(n2);
+	bool n3 = has_note3();
+	MARK_USED(n3);
+	bool n4 = has_note4();
+	MARK_USED(n4);
 	bool h_src = (neu != NULL_PT);
 	bool h_chg = has_charge();
 	long qlv = qlevel();
@@ -1276,9 +1341,12 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 
 	if(from_pt){
 		//if(qu_block != NULL_PT){ os << "b"; }
-		if((neu != NULL_PT) && neu->ne_original){ os << "o"; }
+		if(neu != NULL_PT){
+			if(neu->ne_original){ os << "o"; }
+			else { os << "+"; }
+			os << neu->ne_index;
+		}
 		//if(! has_source() && has_charge()){ os << "*"; }
-		if((neu != NULL_PT) && ! neu->ne_original){ os << "+"; }
 		if(qlv == 0){ os << "#"; }
 		if(! h_src && h_chg){ os << "L" << qlv; }
 		/*if((! h_src) && (pt_brn != NULL_PT) && h_chg){ 
@@ -1313,7 +1381,10 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 
 		os << ".t" << qti;
 		
-		if(n0){ os << ".n0"; }
+		//if(n0){ os << ".n0"; }
+		if(n2){ os << ".n2"; }
+		if(n3){ os << ".n3"; }
+		if(n4){ os << ".n4"; }
 		/*
 		if(with_dot){ os << ".d"; }
 		if(with_mark){ os << ".m"; }

@@ -1200,6 +1200,22 @@ sort_glb::step_quas(sort_glb& mates_srg){
 	);
 }
 
+bool
+sort_glb::ck_stab_inited(){
+#ifdef FULL_DEBUG
+	SORTER_CK(sg_num_active_ss == 1);
+	SORTER_CK(sg_dbg_num_items == 0);
+	SORTER_CK(sg_step_sorsets.size() == 1);
+	SORTER_CK(has_head());
+	SORTER_CK(&(get_head_ss()) == sg_step_sorsets.first());
+	SORTER_CK(! sg_step_sortees.is_empty() || get_head_ss().is_ss_virgin());
+	SORTER_CK(sg_curr_stab_consec == 1);
+	SORTER_CK(! sg_one_ccl_per_ss);
+	SORTER_CK(sg_dbg_num_saved_consec == 0);
+#endif
+	return true;
+}
+
 void
 sort_glb::stab_mutual_init(){
 	sg_one_ccl_per_ss = false;
@@ -1209,18 +1225,10 @@ sort_glb::stab_mutual_init(){
 	
 	SORTER_CK(sg_step_sorsets.is_empty());
 	sg_step_sorsets.push(&hd_nsr);
-	
-	SORTER_CK(sg_num_active_ss == 1);
-	SORTER_CK(sg_dbg_num_items == 0);
-	SORTER_CK(sg_step_sorsets.size() == 1);
-	SORTER_CK(has_head());
-	SORTER_CK(&(get_head_ss()) == sg_step_sorsets.first());
-	SORTER_CK(! sg_step_sortees.is_empty() || get_head_ss().is_ss_virgin());
-	SORTER_CK(sg_curr_stab_consec == 0);
-	SORTER_CK(! sg_one_ccl_per_ss);
-	SORTER_CK(sg_dbg_num_saved_consec == 0);
-
 	sg_curr_stab_consec++;
+	
+	SORTER_CK(ck_stab_inited());
+	
 	init_counters();
 }
 

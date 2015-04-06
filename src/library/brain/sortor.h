@@ -813,6 +813,8 @@ public:
 
 	void		stabilize();
 
+	bool 		ck_stab_inited();
+	
 	void		stab_mutual_init();
 	void		stab_mutual(sort_glb& mates_srg);
 	void		stab_mutual_unique(sort_glb& mates_srg);
