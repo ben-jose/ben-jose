@@ -171,6 +171,7 @@ bool		ck_motives(brain& brn, row_quanton_t& mots);
 //=================================================================
 // funcs declarations
 
+void	dbg_run_diff(ch_string fnm1, ch_string fnm2, ch_string dff_fnm);
 void	dbg_prepare_used_dbg_ccl(row_quanton_t& rr_qua, canon_clause& dbg_ccl);
 void	dbg_print_ccls_neus(bj_ostream& os, row<canon_clause*>& dbg_ccls);
 bool	dbg_run_satex_on(brain& brn, ch_string f_nam);
@@ -716,7 +717,8 @@ set_all_qu_nemap(row_quanton_t& all_quas, neuromap* nmp, long first_idx = 0)
 		BRAIN_CK(all_quas[ii] != NULL_PT);
 		quanton& qua = *(all_quas[ii]);
 		quanton& opp = qua.opposite();
-		BRAIN_CK_PRT((qua.qu_curr_nemap != nmp), os << "___" << bj_eol << "qu=" << qua 
+		BRAIN_CK_PRT((qua.qu_curr_nemap != nmp), os << "___" << bj_eol 
+			<< " qu=" << &qua << "\n nmp=\n" << nmp
 			<< " ii=" << ii
 		);
 		BRAIN_CK(opp.qu_curr_nemap != nmp);
@@ -1625,7 +1627,7 @@ class neuromap {
 	brain*			na_brn;
 	t_1byte			na_flags;
 	bool			na_is_head;
-	bool			na_active;
+	long			na_active_idx;
 	//bool			na_has_marks_and_spots;
 	long			na_orig_lv;
 	quanton*		na_orig_cho;
@@ -1675,7 +1677,7 @@ class neuromap {
 		na_brn = pt_brn;
 		na_flags = 0;
 		na_is_head = false;
-		na_active = false;
+		na_active_idx = INVALID_IDX;
 		//na_has_marks_and_spots = false;
 		na_orig_lv = INVALID_LEVEL;
 		na_orig_cho = NULL_PT;
@@ -1683,8 +1685,9 @@ class neuromap {
 		na_submap = NULL_PT;
 
 		na_mates.re_me = this;
-		na_mates.let_go();
 		BRAIN_CK(na_mates.is_alone());
+		BRAIN_REL_CK(na_mates.is_alone());
+		//na_mates.let_go();
 		
 		na_release_idx = INVALID_IDX;
 		BRAIN_DBG(na_dbg_num_submap = 1);
@@ -1718,7 +1721,7 @@ class neuromap {
 	bool	is_na_virgin(){
 		bool c1 = (na_brn == NULL_PT);
 		bool c2 = (na_is_head == false);
-		bool c3 = (na_active == false);
+		bool c3 = (na_active_idx == INVALID_IDX);
 		//bool c4 = (na_has_marks_and_spots == false);
 		bool c4 = (na_orig_lv == INVALID_LEVEL);
 		bool c5 = (na_orig_cho == NULL_PT);
@@ -1751,6 +1754,14 @@ class neuromap {
 
 	bool		has_mates(){
 		return ! na_mates.is_alone();
+	}
+	
+	bool ck_act_idx();
+	
+	bool is_active(){
+		bool ac = (na_active_idx != INVALID_IDX);
+		BRAIN_CK(ck_act_idx());
+		return ac;
 	}
 	
 	bool	has_stab_guide();
@@ -1801,13 +1812,6 @@ class neuromap {
 	void	map_deactivate();
 	
 	void	deactivate_until_me();
-	
-	bool	is_to_write(){
-		if(! na_active){ return false; }
-		if(na_next_psig.ps_quanton == NULL_PT){ return false; }
-		if(! na_next_psig.ps_quanton->has_note1()){ return false; }
-		return true;
-	}
 	
 	void	set_min_ti_max_ti();
 
@@ -1865,7 +1869,8 @@ class neuromap {
 	void	map_fill_cov_by_propag(neurolayers& not_sel_neus);
 	void	map_fill_cov_by_shadow(neurolayers& not_sel_neus);
 	
-	bool	is_last_ps_of(quanton& qua);
+	bool	is_last_forced(quanton& qua);
+	bool	has_qua_tier(quanton& qua);
 	
 	void	reset_all_nmp_tag1();
 
@@ -2646,8 +2651,13 @@ class leveldat {
 		BRAIN_CK(ld_semi_monos_to_update.is_empty());
 		ld_semi_monos_to_update.clear();
 
-		ld_nmps_to_write.let_all_go();
-		ld_nmp_setup.let_all_go();
+		BRAIN_CK(ld_nmps_to_write.is_alone());
+		BRAIN_CK(ld_nmp_setup.is_alone());
+		BRAIN_REL_CK(ld_nmps_to_write.is_alone());
+		BRAIN_REL_CK(ld_nmp_setup.is_alone());
+		
+		//ld_nmps_to_write.let_all_go();
+		//ld_nmp_setup.let_all_go();
 	}
 	
 	brain*	get_dbg_brn(){
@@ -2656,10 +2666,8 @@ class leveldat {
 		return the_brn;
 	}
 	
-	void	let_maps_go(){
-		ld_nmps_to_write.let_all_go();
-		ld_nmp_setup.let_all_go();
-	}
+	bool	ck_maps_active();
+	void	let_maps_go(brain& brn);
 	
 	static
 	leveldat* create_leveldat(brain* pt_brn = NULL){
@@ -2965,6 +2973,7 @@ public:
 
 	row<neuromap*>	br_tmp_maps_to_write;
 	row<neuromap*> 	br_tmp_foo_param;
+	row<neuromap*>	br_dbg_all_act;
 	
 	row<prop_signal>	br_tmp_prt_ps;
 	row<prop_signal>	br_tmp_nmp_get_all_ps;
@@ -3309,7 +3318,7 @@ public:
 		leveldat& lv = data_level();
 		lv.reset_semi_monos(brn);
 		lv.release_learned(brn);
-		lv.let_maps_go();
+		lv.let_maps_go(brn);
 
 		leveldat* pt_lv = br_data_levels.pop();
 		leveldat::release_leveldat(pt_lv);
@@ -3772,7 +3781,7 @@ long	find_max_level(row_quanton_t& tmp_mots){
 	for(long aa = 0; aa < tmp_mots.size(); aa++){
 		BRAIN_CK(tmp_mots[aa] != NULL_PT);
 		quanton& qua = *(tmp_mots[aa]);
-		max_lev = max(max_lev, qua.qlevel());
+		max_lev = max_val(max_lev, qua.qlevel());
 	}
 	return max_lev;
 }
@@ -3784,7 +3793,7 @@ long	find_max_tier(row_quanton_t& tmp_mots){
 	for(long aa = 0; aa < tmp_mots.size(); aa++){
 		BRAIN_CK(tmp_mots[aa] != NULL_PT);
 		quanton& qua = *(tmp_mots[aa]);
-		max_ti = max(max_ti, qua.qu_tier);
+		max_ti = max_val(max_ti, qua.qu_tier);
 	}
 	return max_ti;
 }

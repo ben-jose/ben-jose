@@ -40,10 +40,6 @@ Some usefult abstract template classes and others.
 #include "ch_string.h"
 #include "print_macros.h"
 
-class ref_strs;
-
-DECLARE_PRINT_FUNCS(ref_strs)
-
 #define NUM_BYTES_IN_KBYTE	1024
 
 // 'integer' must be of a signed type
@@ -216,8 +212,15 @@ cmp_big_floating(bj_big_float_t const & bn1, bj_big_float_t const & bn2){
 
 typedef char	trinary;
 
-template<class obj_t> static inline obj_t min(obj_t x, obj_t y) { return (x < y) ? x : y; }
-template<class obj_t> static inline obj_t max(obj_t x, obj_t y) { return (x > y) ? x : y; }
+template<class obj_t> static inline obj_t 
+min_val(obj_t x, obj_t y) { 
+	return (x < y) ? x : y; 
+}
+
+template<class obj_t> static inline obj_t 
+max_val(obj_t x, obj_t y) { 
+	return (x > y) ? x : y; 
+}
 
 WIN32_COD(
 inline
@@ -704,7 +707,9 @@ public:
 		return true;
 	}
 
-	bool	equal_to_diff(row_data<obj_t>& rw2, row_data<obj_t>& diff, row_index first_ii = 0, row_index last_ii = -1){
+	long	equal_to_diff(row_data<obj_t>& rw2, row_data<obj_t>& diff, 
+						  row_index first_ii = 0, row_index last_ii = -1)
+	{
 		if((sz == 0) && (rw2.size() == 0)){
 			return true;
 		}
@@ -717,17 +722,19 @@ public:
 
 		diff.fill_new(last_ii);
 
-		bool are_eq = true;
+		long df_pos = INVALID_IDX;
 		//for(row_index ii = 0; ii < sz; ii++){
 		for (row_index ii = first_ii; ii < last_ii; ii++){
 			if(! is_valid_idx(ii)){ break; }
 			if(! rw2.is_valid_idx(ii)){ break; }
 			if(pos(ii) != rw2.pos(ii)){
 				diff[ii] = pos(ii);
-				are_eq = false;
+				if(df_pos == INVALID_IDX){
+					df_pos = ii;
+				}
 			}
 		}
-		return are_eq;
+		return df_pos;
 	}
 };
 

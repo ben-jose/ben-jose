@@ -946,7 +946,7 @@ update_elap_entry(const char *fpath, const struct stat *sb, int tflag, struct FT
 				tak_mak& gg = *glb_test_tak_mak;
 				long upd_it = gg.gen_rand_int32_ie(0, 2);
 				if(upd_it > 0){
-					ch_string full_pth = path_get_directory(pth_str) + '/';
+					ch_string full_pth = path_get_directory(pth_str, true);
 
 					ch_string elp_nm = full_pth + SKG_ELAPSED_NAME;
 					update_elapsed(elp_nm);
@@ -1014,13 +1014,13 @@ test_skl(){
 	GSKE.print_paths(os);
 
 	GSKE.kg_find_cnn_pth = true;
-	GSKE.kg_verifying = false;
-	GSKE.kg_only_save = false;
+	GSKE.kg_dbg_verifying = false;
+	GSKE.kg_dbg_only_save = false;
 
 	os << "Type RETURN ..." << bj_eol;
 	getchar();
 
-	GSKE.kg_save_canon = true;
+	GSKE.kg_dbg_save_canon = true;
 
 	//dbg_arr[107] = true;
 	dbg_arr[73] = true;

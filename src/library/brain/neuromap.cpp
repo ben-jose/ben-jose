@@ -385,13 +385,13 @@ neuromap::map_activate(dbg_call_id dbg_id){
 	brain& brn = get_brn();
 	
 	BRAIN_CK(! is_na_virgin());
-	BRAIN_CK(! na_active);
+	BRAIN_CK(! is_active());
 
 	BRAIN_CK(map_ck_all_qu_dominated(dbg_id));
 	BRAIN_CK(map_ck_all_ne_dominated(dbg_id));
 
 	brn.br_maps_active.push(this);
-	na_active = true;
+	na_active_idx = brn.br_maps_active.last_idx();
 
 	map_set_all_qu_curr_dom();
 	map_set_all_ne_curr_dom();
@@ -421,7 +421,7 @@ neuromap::map_add_to_release(){
 void
 neuromap::deactivate_until_me(){
 	brain& brn = get_brn();
-	while(na_active){
+	while(is_active()){
 		brn.deactivate_last_map();
 	}
 }
@@ -435,7 +435,7 @@ neuromap::map_deactivate(){
 		<< "\n dct=" << brn.br_retract_dct
 	);
 
-	BRAIN_CK(na_active);
+	BRAIN_CK(is_active());
 	BRAIN_CK(! brn.br_maps_active.is_empty());
 
 	BRAIN_CK(brn.br_maps_active.last() == this);
@@ -443,7 +443,7 @@ neuromap::map_deactivate(){
 	BRAIN_CK(map_ck_all_ne_dominated(dbg_call_2));
 
 	brn.br_maps_active.pop();
-	na_active = false;
+	na_active_idx = INVALID_IDX;
 
 	map_reset_all_qu_curr_dom();
 	map_reset_all_ne_curr_dom();
@@ -597,7 +597,7 @@ neuromap::full_release(){
 		na_submap->full_release();
 	}
 	
-	BRAIN_CK(! na_active);
+	BRAIN_CK(! is_active());
 	BRAIN_CK(na_mates.is_alone());
 	BRAIN_REL_CK(na_mates.is_alone());
 	//na_mates.let_go();
@@ -1158,6 +1158,10 @@ neuromap::map_oper(mem_op_t mm){
 	canon_cnf& tmp_tauto_cnf = brn.br_tmp_wrt_tauto_cnf;
 	canon_cnf& tmp_diff_cnf = brn.br_tmp_wrt_diff_cnf;
 	canon_cnf& tmp_guide_cnf = brn.br_tmp_wrt_guide_cnf;
+	
+	BRAIN_CK(tmp_tauto_cnf.get_dbg_brn() != NULL_PT);
+	BRAIN_CK(tmp_diff_cnf.get_dbg_brn() != NULL_PT);
+	BRAIN_CK(tmp_guide_cnf.get_dbg_brn() != NULL_PT);
 
 	tmp_diff_cnf.cf_dbg_shas.push(tmp_tauto_cnf.cf_sha_str + "\n");
 	tmp_diff_cnf.cf_dbg_shas.push(tmp_diff_cnf.cf_sha_str + "\n");
@@ -1194,7 +1198,9 @@ neuromap::map_oper(mem_op_t mm){
 
 		oper_ok = (fst_idx != INVALID_NATURAL);
 		if(oper_ok){
-			ch_string fst_vpth = tmp_diff_cnf.get_variant_path(skg, fst_idx, skg.in_verif());
+			ch_string fst_vpth = 
+				tmp_diff_cnf.get_variant_path(skg, fst_idx, skg.in_dbg_verif());
+				
 			DBG_PRT(115, 
 				os << "found cnf=" << bj_eol << tmp_diff_cnf << "FOUND CNF" << bj_eol
 				<< "SHAS=" << bj_eol << tmp_diff_cnf.cf_dbg_shas << bj_eol
@@ -1214,18 +1220,20 @@ neuromap::map_oper(mem_op_t mm){
 			// so that map_make.dominated works only for thos neus ?????
 		}
 	} else {
-		ref_strs& phd = tmp_diff_cnf.cf_phdat;
+		ref_strs& diff_phdat = tmp_diff_cnf.cf_phdat;
 		
 		BRAIN_CK(mm == mo_save);
-		BRAIN_CK(! skg.kg_save_canon || phd.has_ref());
+		BRAIN_CK(! skg.kg_dbg_save_canon || diff_phdat.has_ref());
 
-		ch_string lk_dir = phd.lck_nam();
+		ch_string lk_dir = diff_phdat.lck_nam();
 		int fd_lk = skg.get_write_lock(lk_dir);
 
 		if(fd_lk != -1){
-			ch_string sv_pth1 = tmp_tauto_cnf.get_cnf_path() + SKG_CANON_NAME;
-			ch_string sv_pth2 = tmp_tauto_cnf.get_cnf_path() + SKG_DIFF_NAME;
-			ch_string sv_pth3 = tmp_tauto_cnf.get_cnf_path() + SKG_GUIDE_NAME;
+			ch_string tau_pth = tmp_tauto_cnf.get_cnf_path();
+			
+			ch_string sv_pth1 = tau_pth + SKG_CANON_NAME;
+			ch_string sv_pth2 = tau_pth + SKG_DIFF_NAME;
+			ch_string sv_pth3 = tau_pth + SKG_GUIDE_NAME;
 
 			tmp_tauto_cnf.save_cnf(skg, sv_pth1);
 			oper_ok = tmp_diff_cnf.save_cnf(skg, sv_pth2);
@@ -1237,8 +1245,8 @@ neuromap::map_oper(mem_op_t mm){
 			
 			skg.drop_write_lock(lk_dir, fd_lk);
 
-			ch_string pth1 = phd.pd_ref1_nam;
-			ch_string pth2 = phd.pd_ref2_nam;
+			ch_string pth1 = diff_phdat.pd_ref1_nam;
+			ch_string pth2 = diff_phdat.pd_ref2_nam;
 
 			BRAIN_CK((pth1 == "") || skg.find_skl_path(skg.as_full_path(pth1)));
 			BRAIN_CK((pth2 == "") || skg.find_skl_path(skg.as_full_path(pth2)));
@@ -1288,22 +1296,22 @@ neuromap::map_prepare_mem_oper(mem_op_t mm){
 	
 	skeleton_glb& skg = brn.get_skeleton();
 
-	canon_cnf& cnf1 = neus_srg.stab_mutual_get_cnf(skg, PHASE_1_COMMENT, false);
+	canon_cnf& gui_cnf = neus_srg.stab_mutual_get_cnf(skg, PHASE_1_COMMENT, false);
 
-	BRAIN_CK(! cnf1.cf_phdat.has_ref());
+	BRAIN_CK(! gui_cnf.cf_phdat.has_ref());
 
-	ref_strs phtd;
+	ref_strs nxt_diff_phdat;
 	row_str_t dbg_shas;
 
-	phtd.pd_ref1_nam = cnf1.get_ref_path();	// stab guide 
-	phtd.pd_ref2_nam = cnf1.get_lck_path();
+	nxt_diff_phdat.pd_ref1_nam = gui_cnf.get_ref_path();	// stab guide 
+	nxt_diff_phdat.pd_ref2_nam = gui_cnf.get_lck_path();
 	
-	dbg_shas.push(cnf1.cf_sha_str + "\n");
+	dbg_shas.push(gui_cnf.cf_sha_str + "\n");
 
 	if(mm == mo_find){
 		instance_info& iinfo = brn.get_my_inst();
 		
-		ch_string find_ref = phtd.pd_ref1_nam;
+		ch_string find_ref = nxt_diff_phdat.pd_ref1_nam;
 		ch_string pth1 = skg.as_full_path(find_ref);
 		bool found1 = skg.find_skl_path(pth1, &iinfo);
 		
@@ -1397,7 +1405,7 @@ neuromap::map_prepare_mem_oper(mem_op_t mm){
 	tmp_diff_cnf.init_with(skg, tmp_diff_ccls);
 	tmp_guide_cnf.init_with(skg, tmp_guide_ccls);
 
-	tmp_diff_cnf.cf_phdat = phtd;
+	tmp_diff_cnf.cf_phdat = nxt_diff_phdat;
 	dbg_shas.move_to(tmp_diff_cnf.cf_dbg_shas);
 
 	BRAIN_CK(tmp_tauto_ccls.is_empty());
@@ -1898,7 +1906,7 @@ analyser::set_shadow(neuromap& top_nmp){
 		BRAIN_CK(qua != NULL_PT);
 		BRAIN_DBG(neuron* pt_neu = sgnl.ps_source);
 		BRAIN_CK((pt_neu == NULL_PT) || pt_neu->ne_original);
-		
+
 		bool add_qua = (qua->qu_tier > de_max_ti);
 		
 		if(add_qua){

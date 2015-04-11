@@ -300,7 +300,7 @@ neuron::neu_tunnel_signals(brain& brn, quanton& r_qua){
 		for(ii = old_max; ii > 1; ii--){
 			charge_t fib_chg = ne_fibres[ii]->get_charge();
 
-			max_tier = max(max_tier, ne_fibres[ii]->qu_tier);
+			max_tier = max_val(max_tier, ne_fibres[ii]->qu_tier);
 
 			bool f_pos = (chg_op2 == cg_neutral) && (fib_chg == cg_positive);
 			if(f_pos){
@@ -355,10 +355,10 @@ neuron::neu_tunnel_signals(brain& brn, quanton& r_qua){
 		BRAIN_CK(ck_all_charges(&brn, 1));
 
 		for(long aa = fib_sz() - 1; aa > old_max; aa--){
-			max_tier = max(max_tier, ne_fibres[aa]->qu_tier);
+			max_tier = max_val(max_tier, ne_fibres[aa]->qu_tier);
 		}
 
-		max_tier = max(max_tier, ne_fibres[1]->qu_tier);
+		max_tier = max_val(max_tier, ne_fibres[1]->qu_tier);
 
 		quanton* forced_qua = forced_quanton();
 		BRAIN_CK(forced_qua != NULL_PT);

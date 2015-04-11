@@ -357,6 +357,7 @@ dimacs_loader::load_file(ch_string& f_nam){
 	ld_file_name = f_nam;
 	// loads the full file into ld_content
 	read_file(ld_file_name, ld_content);
+	ld_content.push(END_OF_SEC); // it already has room for it
 
 	DBG_PRT(11, os << " ld_content=" << ld_content.print_row_data(os, true, ""));
 }

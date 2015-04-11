@@ -480,7 +480,7 @@ neuromap::print_subnmp(bj_ostream& os){
 	*/
 	
 	//os << " hd=" << na_is_head;
-	//os << " ac=" << na_active;
+	//os << " ac=" << is_active();
 	os << " lv=" << na_orig_lv;
 	os << " cho=" << na_orig_cho;
 	//os << " nx_ps=" << na_next_psig;
@@ -1349,15 +1349,16 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 		//if(! has_source() && has_charge()){ os << "*"; }
 		if(qlv == 0){ os << "#"; }
 		if(! h_src && h_chg){ os << "L" << qlv; }
-		/*if((! h_src) && (pt_brn != NULL_PT) && h_chg){ 
+		if(! h_src && h_chg && (pt_brn != NULL_PT)){ 
 			brain& brn = *pt_brn;
 			
 			leveldat& lv = brn.get_data_level(qlv);
 			if(lv.has_setup_neuromap()){ 
 				neuromap& s_nmp = lv.get_setup_neuromap();
-				BRAIN_CK(s_nmp.na_active);
+				BRAIN_CK(s_nmp.is_active());
 				//recoil_counter_t s_rc = s_nmp.na_setup_tk.tk_recoil;
-				os << ".s(" << (void*)(&s_nmp) << ")"; 
+				os << ".s";
+				os << "(" << (void*)(&s_nmp) << ")"; 
 			}
 			if(lv.has_to_write_neuromaps()){ os << ".w"; }
 			if(lv.has_learned()){ 
@@ -1369,7 +1370,7 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 			if((qlv != ROOT_LEVEL) && (lv.ld_chosen == NULL_PT)){
 				os << "[NULL_CHO!!!]"; 
 			}
-		}*/
+		}
 
 		if(! h_chg){ os << "("; }
 		if(is_nega){ os << '\\';  }
@@ -1421,5 +1422,112 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 	os.flush();
 #endif
 	return os;
+}
+
+/*
+neuromap*
+analyser::neuromap_setup_analysis_2(long nxt_lv, neuromap* in_nmp)
+{
+	brain& brn = get_de_brain();
+	
+	BRAIN_CK(nxt_lv != INVALID_LEVEL);
+	BRAIN_CK((in_nmp == NULL_PT) || (in_nmp->na_orig_lv > nxt_lv));
+	BRAIN_CK((in_nmp == NULL_PT) || ! in_nmp->na_is_head);
+	
+	bool in_nmp_is_last_nmp = brn.needs_lv_setup(nxt_lv, in_nmp);
+	
+	long min_lv = find_min_lv_to_setup(nxt_lv);
+	
+	DBG_PRT(123, os << "setup_a. min_lv=" << min_lv << " pt_in_nmp=" << (void*)in_nmp
+		<< " nxt_lv=" << nxt_lv
+	);
+	
+	if(min_lv < 0){
+		DBG_PRT(123, os << "setup_a. min_lv=" << min_lv << " pt_in_nmp=" << (void*)in_nmp
+			<< " nxt_lv=" << nxt_lv
+		);
+		if(in_nmp_is_last_nmp){
+			in_nmp->map_make_dominated();
+			in_nmp->na_is_head = true;
+			BRAIN_DBG(in_nmp->na_dbg_orig_lv = in_nmp->na_orig_lv);
+			in_nmp->na_orig_lv = nxt_lv + 1;
+			in_nmp->map_cond_activate(dbg_call_1);
+			
+			DBG_PRT(123, os << "IS_HEAD in_nmp=" << in_nmp);
+		}
+		return in_nmp;
+	}
+	BRAIN_CK(min_lv <= nxt_lv);
+
+	DBG_PRT(123, 
+			os << "set_ana{"
+			<< " in_nmp=" << in_nmp
+			<< " nxt_lv=" << nxt_lv
+			<< " has_lv+1=" << brn.lv_has_setup_nmp(nxt_lv + 1)
+			<< " cur_qu=" << de_ref.get_curr_quanton()
+			<< " tot_no=" << de_nkpr.dk_tot_noted
+			<< " min_lv=" << min_lv << " nxt_lv=" << nxt_lv
+			<< " all_no=" << de_nkpr.dk_quas_lyrs 
+			<< "}" );
+	
+	neuromap* orig_nmp = calc_neuromap(min_lv - 1, in_nmp, false);
+	BRAIN_CK(orig_nmp != NULL_PT);
+	neuromap* setup_nmp = calc_setup_neuromap(orig_nmp, nxt_lv);
+	
+	if(setup_nmp != NULL_PT){
+		BRAIN_CK_PRT(setup_nmp->na_orig_lv >= min_lv, 
+			os << "__________" << bj_eol 
+				<< " in_nmp=" << in_nmp
+				<< " setup_nmp=" << setup_nmp
+				<< " min_lv=" << min_lv
+				<< " nxt_lv=" << nxt_lv
+		);
+		
+		setup_nmp->map_make_dominated();
+		setup_nmp->na_is_head = true;
+		
+		BRAIN_CK(setup_nmp->map_can_activate());
+		DBG_PRT(123, os << "IS_HEAD setup_nmp=" << setup_nmp);
+	}
+
+	neuromap* nxt_nmp = setup_nmp;
+	
+	while((nxt_nmp != NULL_PT) && (nxt_nmp->na_orig_lv <= nxt_lv)){
+		BRAIN_CK(nxt_nmp != in_nmp);
+		nxt_nmp->map_cond_activate(dbg_call_2);
+		nxt_nmp = nxt_nmp->na_submap;
+	}
+	
+	BRAIN_CK((setup_nmp == NULL_PT) || (in_nmp == setup_nmp) || setup_nmp->is_active());
+
+	in_nmp_is_last_nmp = brn.needs_lv_setup(nxt_lv, in_nmp); // recalc. mk_dom changes it.
+	if(in_nmp_is_last_nmp && (setup_nmp != NULL_PT)){
+		DBG_PRT(123, os << "SET_ANAL{ nmp_act=" << in_nmp);
+		BRAIN_DBG(in_nmp->na_dbg_orig_lv = in_nmp->na_orig_lv);
+		in_nmp->na_orig_lv = nxt_lv + 1;
+		in_nmp->map_cond_activate(dbg_call_3);
+	}
+	
+	//BRAIN_CK((setup_nmp == NULL_PT) || setup_nmp->is_active());
+	
+	DBG_PRT(123, os << "SET_ANAL{ is_lst=" << in_nmp_is_last_nmp);
+	BRAIN_CK((setup_nmp == NULL_PT) ||brn.get_data_level(nxt_lv + 1).has_setup_neuromap());
+	return setup_nmp;
+}
+*/
+
+void
+dbg_run_diff(ch_string fnm1, ch_string fnm2, ch_string dff_fnm){
+#ifdef FULL_DEBUG
+	if(! file_exists(fnm1)){
+		return;
+	}
+	if(! file_exists(fnm2)){
+		return;
+	}
+
+	ch_string o_str = "diff " + fnm1 + " " + fnm2 + " > " + dff_fnm;
+	system_exec(o_str);
+#endif
 }
 

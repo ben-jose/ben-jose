@@ -77,7 +77,7 @@ read_file(ch_string f_nam, row<char>& f_data){
 
 	DBG_CK(sizeof(char) == 1);
 
-	char* file_content = tpl_malloc<char>(file_sz + 1);
+	char* file_content = tpl_malloc<char>(file_sz + 1); // leave room for END_OF_SEC
 	istm.read(file_content, file_sz);
 	long num_read = istm.gcount();
 	if(num_read != file_sz){
@@ -94,6 +94,7 @@ read_file(ch_string f_nam, row<char>& f_data){
 	tmp_rr.move_to(f_data);
 
 	DBG_CK(f_data.last() == END_OF_SEC);
+	f_data.pop(); // read as writed but leave room for END_OF_SEC
 }
 
 bool
