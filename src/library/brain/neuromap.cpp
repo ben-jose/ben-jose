@@ -1292,36 +1292,7 @@ neuromap::map_prepare_mem_oper(mem_op_t mm){
 	BRAIN_CK(! guide_col.is_co_virgin());
 	BRAIN_CK(map_ck_contained_in(guide_col, dbg_call_1));
 
-	// stab uni_guide
-	
-	skeleton_glb& skg = brn.get_skeleton();
-
-	canon_cnf& gui_cnf = neus_srg.stab_mutual_get_cnf(skg, PHASE_1_COMMENT, false);
-
-	BRAIN_CK(! gui_cnf.cf_phdat.has_ref());
-
-	ref_strs nxt_diff_phdat;
-	row_str_t dbg_shas;
-
-	nxt_diff_phdat.pd_ref1_nam = gui_cnf.get_ref_path();	// stab guide 
-	nxt_diff_phdat.pd_ref2_nam = gui_cnf.get_lck_path();
-	
-	dbg_shas.push(gui_cnf.cf_sha_str + "\n");
-
-	if(mm == mo_find){
-		instance_info& iinfo = brn.get_my_inst();
-		
-		ch_string find_ref = nxt_diff_phdat.pd_ref1_nam;
-		ch_string pth1 = skg.as_full_path(find_ref);
-		bool found1 = skg.find_skl_path(pth1, &iinfo);
-		
-		bj_output_t& o_info = brn.get_out_info();
-		if(! found1){ 
-			o_info.bjo_quick_discards++;
-			return false; 
-		}
-		o_info.bjo_num_finds++;
-	}
+	// old_set nxt_diff_phdat was here
 	
 	// stab compl
 	
@@ -1353,9 +1324,42 @@ neuromap::map_prepare_mem_oper(mem_op_t mm){
 	BRAIN_CK(uni_guide_col.co_all_neu_consec);
 	BRAIN_CK(map_ck_contained_in(uni_guide_col, dbg_call_2));
 
+	// set nxt_diff_phdat and ck it
+	
+	skeleton_glb& skg = brn.get_skeleton();
+
+	canon_cnf& gui_cnf = neus_srg.get_final_cnf(skg, PHASE_1_COMMENT, false);
+
+	BRAIN_CK(! gui_cnf.cf_phdat.has_ref());
+	
+	ref_strs nxt_diff_phdat;
+	row_str_t dbg_shas;
+
+	nxt_diff_phdat.pd_ref1_nam = gui_cnf.get_ref_path();	// stab guide 
+	nxt_diff_phdat.pd_ref2_nam = gui_cnf.get_lck_path();
+	
+	dbg_shas.push(gui_cnf.cf_sha_str + "\n");
+
+	if(mm == mo_find){
+		instance_info& iinfo = brn.get_my_inst();
+		
+		ch_string find_ref = nxt_diff_phdat.pd_ref1_nam;
+		ch_string pth1 = skg.as_full_path(find_ref);
+		bool found1 = skg.find_skl_path(pth1, &iinfo);
+		
+		bj_output_t& o_info = brn.get_out_info();
+		if(! found1){ 
+			o_info.bjo_quick_discards++;
+			return false; 
+		}
+		o_info.bjo_num_finds++;
+	}
+	
+	// init guide tees
+	
 	row<sortee*>& guide_tees = brn.br_tmp_wrt_guide_tees;
 	neus_srg.sg_step_sortees.move_to(guide_tees);
-
+	
 	// stab tauto
 
 	coloring ini_tau_col(&brn);
@@ -1377,7 +1381,7 @@ neuromap::map_prepare_mem_oper(mem_op_t mm){
 	fnl_ne_srg.stab_mutual(fnl_qu_srg);
 	BRAIN_CK(fnl_qu_srg.sg_step_all_consec);
 
-	canon_cnf& tauto_cnf = fnl_ne_srg.stab_mutual_get_cnf(skg, FINAL_COMMENT, true);
+	canon_cnf& tauto_cnf = fnl_ne_srg.get_final_cnf(skg, FINAL_COMMENT, true);
 
 	dbg_shas.push(tauto_cnf.cf_sha_str + "\n");
 
@@ -1404,6 +1408,8 @@ neuromap::map_prepare_mem_oper(mem_op_t mm){
 	tmp_tauto_cnf.init_with(skg, tmp_tauto_ccls);
 	tmp_diff_cnf.init_with(skg, tmp_diff_ccls);
 	tmp_guide_cnf.init_with(skg, tmp_guide_ccls);
+	
+	tmp_tauto_cnf.cf_diff_minisha_str = tmp_diff_cnf.cf_minisha_str;
 
 	tmp_diff_cnf.cf_phdat = nxt_diff_phdat;
 	dbg_shas.move_to(tmp_diff_cnf.cf_dbg_shas);

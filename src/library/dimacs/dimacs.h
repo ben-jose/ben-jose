@@ -410,6 +410,8 @@ public:
 	void	parse_file(ch_string& f_nam, row<long>& inst_ccls);
 	
 	long	get_cursor_pos();
+	
+	ch_string 	calc_content_sha();
 };
 
 //=================================================================

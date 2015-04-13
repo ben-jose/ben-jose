@@ -34,8 +34,19 @@ util funcs.
 #define UTIL_FUNCS_H
 
 #include "ch_string.h"
+#include "tak_mak.h"
+#include "tools.h"
+#include "sha2.h"
 
-ch_string	long_to_str(long val);
+#define NUM_LONG_SHA2 (NUM_BYTES_SHA2/sizeof(long))
+#define NUM_BYTES_MINSHA 5
+#define NUM_BITS_MINSHA (NUM_BYTES_MINSHA * 8)
+
+ch_string 	long_to_str(long val);
+ch_string 	sha_to_minsha(row<uchar_t>& sha_rr);
+
+void 		sha_bytes_of_arr(uchar_t* to_sha, long to_sha_sz, row<uchar_t>& the_sha);
+ch_string 	sha_txt_of_arr(uchar_t* to_sha, long to_sha_sz);
 
 #endif		// UTIL_FUNCS_H
 

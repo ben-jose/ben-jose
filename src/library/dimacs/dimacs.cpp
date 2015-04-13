@@ -34,6 +34,7 @@ Functions to read and parse dimacs files.
 #include "dimacs.h"
 #include "parse_funcs.h"
 #include "file_funcs.h"
+#include "util_funcs.h"
 #include "dbg_config.h"
 #include "dbg_prt.h"
 
@@ -547,5 +548,26 @@ dimacs_loader::calc_f_lit_equal_and(long d_lit, row<long>& and_lits,
 	}
 
 	and_lits.clear();
+}
+
+ch_string
+dimacs_loader::calc_content_sha(){
+	// ld_content has a final END_OF_SEC artifitially added
+	uchar_t* arr_to_sha = (uchar_t*)(ld_content.get_c_array());
+	long arr_to_sha_sz = ld_content.get_c_array_sz() - 1;  
+	
+	ch_string the_sha = sha_txt_of_arr(arr_to_sha, arr_to_sha_sz);
+
+	DBG_PRT(94, os << "calc_loader_sha str " << bj_eol << ld_file_name << bj_eol;
+		os << " CONTENT=" << bj_eol;
+		os << ">>>>>>" << bj_eol;
+		os << arr_to_sha;
+		os << "<<<<<<" << bj_eol;
+		os << "SZ_to_SHA=" << arr_to_sha_sz << bj_eol;
+		os << "SHA=" << the_sha << bj_eol;
+		os << "sizeof(std::istream::char_type)=" << sizeof(std::istream::char_type);
+	);
+
+	return the_sha;
 }
 

@@ -818,9 +818,10 @@ public:
 	void		stab_mutual_init();
 	void		stab_mutual(sort_glb& mates_srg);
 	void		stab_mutual_unique(sort_glb& mates_srg);
-	canon_cnf&	stab_mutual_get_cnf(skeleton_glb& skg, ch_string comment, bool sorted_cnf);
 	void		stab_mutual_choose_one(sort_glb& srg2);
 	void		stab_mutual_end(sort_glb& mates_srg);
+	
+	canon_cnf&	get_final_cnf(skeleton_glb& skg, ch_string comment, bool sorted_cnf);
 
 	bool		base_path_exists(skeleton_glb& skg);
 

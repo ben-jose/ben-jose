@@ -74,7 +74,7 @@ class ref_strs;
 #ifdef FULL_DEBUG
 #define SKG_MAX_NUM_VARIANT 10
 #else
-#define SKG_MAX_NUM_VARIANT 1000
+#define SKG_MAX_NUM_VARIANT 10
 #endif
 
 #define SKG_LOCK_SEP_STR "%"
@@ -152,6 +152,8 @@ void strset_add_path(string_set_t ss, ch_string pth){
 #define SKG_DEAD_DIR		"/SKELETON/ERR/DEAD"
 #define SKG_BROKEN_DIR		"/SKELETON/ERR/BROKEN"
 
+#define SKG_REF_SUF 		".ref"
+
 #define SKG_CANON_NAME		"canon.skl"
 #define SKG_DIFF_NAME		"diff.skl"
 #define SKG_GUIDE_NAME		"guide.skl"
@@ -169,12 +171,6 @@ void strset_add_path(string_set_t ss, ch_string pth){
 
 //=================================================================
 // funtion declarations
-
-ch_string
-print_hex_as_txt(row<uchar_t>& sha_rr);
-
-ch_string
-sha_txt_of_arr(uchar_t* to_sha, long to_sha_sz);
 
 DECLARE_PRINT_FUNCS(canon_clause)
 DECLARE_PRINT_FUNCS(variant)
@@ -215,7 +211,7 @@ ch_string	canon_hash_path(const dima_dims& dims, ch_string sha_str);
 //ch_string	canon_lock_name(const dima_dims& dims, ch_string sha_str);
 
 void		canon_print(bj_ostream& os, row<char>& cnn);
-void		canon_sha(row<char>& cnn, ch_string& sha_txt);
+void		canon_sha(row<char>& cnn, ch_string& sha_txt, ch_string& minisha_txt);
 
 ch_string	canon_header(ch_string& hd_str, long ccls, long vars);
 void		canon_long_append(row<char>& cnn, long nn);
@@ -460,6 +456,8 @@ public:
 	row<canon_clause*>	cf_clauses;
 
 	ch_string		cf_sha_str;
+	ch_string		cf_minisha_str;
+	ch_string		cf_diff_minisha_str;
 
 	row<char>		cf_chars;
 	row<char>		cf_comment_chars;
@@ -507,6 +505,8 @@ public:
 		SKELETON_CK(cf_clauses.is_empty());
 
 		cf_sha_str = "";
+		cf_minisha_str = "";
+		cf_diff_minisha_str = "";
 
 		cf_chars.clear(free_mem, free_mem);
 		cf_comment_chars.clear(free_mem, free_mem);
@@ -586,7 +586,7 @@ public:
 	}
 
 	ch_string	get_all_variant_dir_name();
-	ch_string	get_variant_dir_name(long num_vnt);
+	ch_string	get_variant_ref_fname(long num_vnt);
 	ch_string	get_variant_path(skeleton_glb& skg, long num_vnt, bool skip_report = false);
 
 	bool	i_am_sub_of(canon_cnf& the_cnf, bool& are_eq);
@@ -601,11 +601,7 @@ public:
 	long	first_vnt_i_super_of(skeleton_glb& skg, instance_info* iinfo = NULL);
 	bool	ck_vnts(skeleton_glb& skg);
 
-	ch_string	get_cnf_path(){
-		SKELETON_CK(cf_unique_path.size() > 0);
-		ch_string cnf_pth = SKG_CNF_DIR + cf_unique_path;
-		return cnf_pth;
-	}
+	ch_string	get_cnf_path();
 
 	ch_string	get_ref_path(){
 		SKELETON_CK(cf_unique_path.size() > 0);
@@ -632,19 +628,18 @@ public:
 
 	void	load_lits(skeleton_glb& skg, row_long_t& all_lits, long& tot_lits, 
 					  long& tot_twolits);
-	void	calc_sha_in(ch_string& sha_str);
+	void	calc_sha_in(ch_string& sha_str, ch_string& minisha_str);
 
 	long	purge_clauses(skeleton_glb& skg);
 	bool	ck_all_sup_leaf(row_str_t& all_pth);
 
 	void	calc_sha(){
-		calc_sha_in(cf_sha_str);
+		calc_sha_in(cf_sha_str, cf_minisha_str);
 	}
 
 	void	init_skl_paths(skeleton_glb& skg);
 
-	void		fill_with(skeleton_glb& skg, row<long>& all_lits, long num_cla, long num_var);
-	ch_string	calc_loader_sha_str(dimacs_loader& the_loader);
+	//void		fill_with(skeleton_glb& skg, row<long>& all_lits, long num_cla, long num_var);
 	bool		load_from(skeleton_glb& skg, ch_string& f_nam);
 	
 	bool 	has_instance_info(){
@@ -669,6 +664,7 @@ public:
 		os << "cf_tot_lits=" << cf_tot_lits << bj_eol;
 		*/
 		os << "cf_sha_str=" << cf_sha_str << bj_eol;
+		os << "cf_minisha_str=" << cf_minisha_str << bj_eol;
 		os << "cf_num_purged=" << cf_num_purged << bj_eol;
 		return os;
 	}

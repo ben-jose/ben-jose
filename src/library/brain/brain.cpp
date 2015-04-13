@@ -2174,7 +2174,7 @@ brain::dbg_prt_full_stab(){
 	
 	//bj_out << "ALL_CCL=\n";
 	
-	canon_cnf& the_cnf = neus_srg.stab_mutual_get_cnf(skg, "TEST_STAB", true);
+	canon_cnf& the_cnf = neus_srg.get_final_cnf(skg, "TEST_STAB", true);
 
 	bj_out << "THE_CNF=" << bj_eol;
 	bj_out << the_cnf;

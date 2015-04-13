@@ -42,6 +42,7 @@ file for test and debugging purposes.
 #include "tak_mak.h"
 #include "skeleton.h"
 #include "file_funcs.h"
+#include "util_funcs.h"
 
 #include "top_exception.h"
 
@@ -150,9 +151,10 @@ test_sha_pth(){
 
 	ch_string str_cont = "HOLA_MUNDO";
 	ch_string sha_txt;
+	ch_string minisha_txt;
 	row<char> cnn;
 	canon_string_append(cnn, str_cont);
-	canon_sha(cnn, sha_txt);
+	canon_sha(cnn, sha_txt, minisha_txt);
 	slice_str_to_path(sha_txt);
 
 	os << "'" << sha_txt << "'" << bj_eol;
@@ -223,7 +225,9 @@ void
 finish_cnf(canon_cnf& the_cnf, long num_vars, long tot_lits, long tot_twolits){
 	row<canon_clause*>& all_ccl = the_cnf.cf_clauses;
 
-	the_cnf.cf_dims.dd_tot_lits = tot_lits;	// purge_clauses change this val so leave this here.
+	// purge_clauses change this val so leave this here.
+	the_cnf.cf_dims.dd_tot_lits = tot_lits;	
+	
 	the_cnf.cf_dims.dd_tot_twolits = tot_twolits;
 
 	the_cnf.purge_clauses(GSKE);
@@ -1271,19 +1275,6 @@ void	test_sorted_ops2(){
 
 }
 
-bj_ostr_stream&
-print_hex_as_txt_2(bj_ostr_stream& os, row<uchar_t>& sha_rr){
-	std::ios_base::fmtflags old_fls = os.flags();
-	os.flags(std::ios::hex);
-	for(int ii = 0; ii < sha_rr.size(); ii++){
-		os.width(2);
-		os.fill('0');
-		os << (int)(sha_rr[ii]);
-	}
-	os.flags(old_fls);
-	return os;
-}
-
 void pru_hex_as_txt(){
 	row<uchar_t> sha_rr;
 	tak_mak gg;
@@ -1298,51 +1289,10 @@ void pru_hex_as_txt(){
 		}
 		BRAIN_CK(sha_rr.size() == 32);
 	
-		bj_ostr_stream oss;
-		print_hex_as_txt_2(oss, sha_rr);
-		ch_string val1 = oss.str();
-		
-		ch_string val2 = print_hex_as_txt(sha_rr);
+		ch_string val2 = sha_rr.as_hex_str();
 				
-		if(! (val1 == val2)){
-			abort_func(1, "NOT EQUAL");
-		}
-		
-		bj_out << val1 << bj_eol;
 		bj_out << val2 << bj_eol;
 	}
-}
-
-int	tests_main_(int argc, char** argv){
-	MARK_USED(argc);
-	MARK_USED(argv);
-	bj_ostream& os = bj_out;
-	
-	//test_realpath(argc, argv);
-	//test_subsets();
-	//test_dims_to_path(argc, argv);
-	//test_sets();
-	//test_big4();
-	//test_str1();
-	//test_symlk(argc, argv);
-	//test_tm_elapsed(argc, argv);
-	//test_open_unlink(argc, argv);
-	//test_row_reduc();
-	//test_sorted_ops2();
-	//test_lk_name();
-	//test_num1();
-	//test_skl();  // last before ben-jose
-	
-	test_thrw_obj();
-	//pru_hex_as_txt();
-	
-	os.flush();
-
-	os << bj_eol;
-	os << "End of tests" << bj_eol;
-	//getchar();
-
-	return 0;
 }
 
 class test_excep {
@@ -1407,4 +1357,57 @@ void test_thrw_obj(){
 	}
 }
 
+void test_minisha(){
+	row<uchar_t> sha_rr;
+	tak_mak gg;
+	gg.init_with_long((long)run_time());
+	int max_num = 100;
+	
+	for(int aa = 0; aa < max_num; aa++){
+		sha_rr.clear();
+		for(int bb = 0; bb < 32; bb++){
+			uchar_t vv = (uchar_t)gg.gen_rand_int32_ie(0, 256);
+			sha_rr << vv;
+		}
+		BRAIN_CK(sha_rr.size() == 32);
+	
+		ch_string val2 = sha_to_minsha(sha_rr);
+		//ch_string val2 = sha_rr.as_hex_str();
+				
+		bj_out << val2 << bj_eol;
+	}
+}
+
+int	tests_main_(int argc, char** argv){
+	MARK_USED(argc);
+	MARK_USED(argv);
+	bj_ostream& os = bj_out;
+	
+	//test_realpath(argc, argv);
+	//test_subsets();
+	//test_dims_to_path(argc, argv);
+	//test_sets();
+	//test_big4();
+	//test_str1();
+	//test_symlk(argc, argv);
+	//test_tm_elapsed(argc, argv);
+	//test_open_unlink(argc, argv);
+	//test_row_reduc();
+	//test_sorted_ops2();
+	//test_lk_name();
+	//test_num1();
+	//test_skl();  // last before ben-jose
+	
+	//test_thrw_obj();
+	//pru_hex_as_txt();
+	test_minisha();
+	
+	os.flush();
+
+	os << bj_eol;
+	os << "End of tests" << bj_eol;
+	//getchar();
+
+	return 0;
+}
 

@@ -1167,7 +1167,8 @@ sort_glb::stab_mutual_unique(sort_glb& srg2){
 }
 
 canon_cnf&
-sort_glb::stab_mutual_get_cnf(skeleton_glb& skg, ch_string comment, bool sorted_cnf){
+sort_glb::get_final_cnf(skeleton_glb& skg, ch_string comment, bool sorted_cnf){
+	// after any stab_mutual
 	DBG_PRT(114, os << " get_cnf=" << this << " " << comment << bj_eol;
 		sg_cnf_clauses.print_row_data(os, true, "\n");
 	);
