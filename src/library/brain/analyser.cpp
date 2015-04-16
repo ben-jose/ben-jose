@@ -18,9 +18,14 @@ along with ben-jose.  If not, see <http://www.gnu.org/licenses/>.
 
 ------------------------------------------------------------
 
-Copyright (C) 2011, 2014. QUIROGA BELTRAN, Jose Luis.
+Copyright (C) 2011, 2014-2015. QUIROGA BELTRAN, Jose Luis.
 Id (cedula): 79523732 de Bogota - Colombia.
 email: joseluisquirogabeltran@gmail.com
+
+ben-jose is free software thanks to The Glory of Our Lord 
+	Yashua Melej Hamashiaj.
+Our Resurrected and Living, both in Body and Spirit, 
+	Prince of Peace.
 
 ------------------------------------------------------------
 
@@ -169,7 +174,7 @@ analyser::find_next_noted(){
 	if(nxt_qua == NULL_PT){
 		return;
 	}
-	//DBG_PRT(119, os << "nxt_no=" << nxt_qua);
+	DBG_PRT(139, os << "nxt_no=" << nxt_qua);
 	
 	BRAIN_CK(nxt_qua != NULL_PT);
 	BRAIN_CK(nkpr.nk_has_note(*nxt_qua));
@@ -280,11 +285,13 @@ analyser::ck_deduc_init(long deduc_lv){
 	BRAIN_DBG(
 		qlayers_ref& qlr = de_ref;
 		notekeeper& nkpr = de_nkpr;
+		brain& brn = get_de_brain();
+		bool in_root = (brn.level() == ROOT_LEVEL);
 	)
 	BRAIN_CK(deduc_lv != INVALID_LEVEL);
 	BRAIN_CK(nkpr.nk_get_counter() == 0);
 	BRAIN_CK(nkpr.dk_quas_lyrs.is_empty());
-	BRAIN_CK(nkpr.dk_note_layer > 0);
+	BRAIN_CK(in_root || (nkpr.dk_note_layer > 0));
 	BRAIN_CK(nkpr.dk_note_layer == deduc_lv);
 	BRAIN_CK(qlr.has_curr_quanton());
 	BRAIN_CK(de_nkpr.nk_get_counter() == 0);
@@ -300,6 +307,8 @@ void
 analyser::deduction_init(row_quanton_t& causes){
 	qlayers_ref& qlr = de_ref;
 	notekeeper& nkpr = de_nkpr;
+	
+	BRAIN_CK(causes.size() > 1);
 
 	reset_deduc();
 	
@@ -311,7 +320,7 @@ analyser::deduction_init(row_quanton_t& causes){
 	BRAIN_CK(ck_deduc_init(deduc_lv));
 	
 	set_notes_of(causes, true);
-	BRAIN_CK(nkpr.dk_tot_noted > 0);
+	BRAIN_CK_PRT((nkpr.dk_tot_noted > 0), get_de_brain().dbg_prt_margin(os));
 
 	find_next_noted();
 	inc_all_noted();
@@ -376,7 +385,7 @@ void
 analyser::fill_dct(deduction& dct){
 	qlayers_ref& qlr = de_ref;
 	notekeeper& nkpr = de_nkpr;
-	BRAIN_DBG(brain& brn = get_de_brain());
+	brain& brn = get_de_brain();
 	
 	quanton* pt_qua = qlr.get_curr_quanton();
 	BRAIN_CK(pt_qua != NULL_PT);
@@ -397,11 +406,19 @@ analyser::fill_dct(deduction& dct){
 
 	BRAIN_CK(! nkpr.nk_has_note(opp));
 	dct.dt_forced = &opp;
+	
+	bool br_in_root = (brn.level() == ROOT_LEVEL);
 
-	BRAIN_CK(dct.dt_target_level < nkpr.dk_note_layer);
+	BRAIN_CK(br_in_root || (dct.dt_target_level < nkpr.dk_note_layer));
 	BRAIN_CK(ck_motives(brn, dct.dt_motives));
 
 	DBG_PRT(20, os << "find_dct of deduction=" << dct);
+	
+	if(br_in_root){
+		BRAIN_CK(dct.dt_target_level == ROOT_LEVEL);
+		BRAIN_CK(dct.dt_motives.is_empty());
+		dct.dt_target_level = INVALID_LEVEL;
+	}
 }
 
 bool
@@ -665,6 +682,10 @@ analyser::neuromap_find_analysis(analyser& deducer,
 {
 	brain& brn = get_de_brain();
 	//row_quanton_t& nmp_causes = brn.br_tmp_f_analysis;
+	if(brn.level() == ROOT_LEVEL){
+		BRAIN_CK(nxt_dct.dt_target_level == INVALID_LEVEL);
+		return NULL_PT;
+	}
 	
 	if(! to_wrt.is_empty() && brn.lv_has_setup_nmp(nxt_lv + 1)){
 		DBG_PRT(118, os << "NMP_NULL !to_wrt.empty && h_s_lv+1");
@@ -722,6 +743,11 @@ brain::needs_lv_setup(long nxt_lv, neuromap* in_nmp){
 
 void
 brain::add_lv_neuromap_to_write(long nxt_lv, quanton* dct_qu){
+	if(level() == ROOT_LEVEL){
+		BRAIN_CK(nxt_lv == INVALID_LEVEL);
+		return;
+	}
+	
 	leveldat& lv_s = get_data_level(nxt_lv + 1);
 	
 	//BRAIN_CK(lv_s.has_setup_neuromap());
@@ -740,7 +766,7 @@ brain::add_lv_neuromap_to_write(long nxt_lv, quanton* dct_qu){
 		leveldat& lv_w = get_data_level(nxt_lv);
 		lv_w.ld_nmps_to_write.bind_to_my_right(nmp.na_mates);
 		
-		DBG_PRT(123, os << "ADDED_TO_WRT=" << &nmp << " w_lv=" << nxt_lv);
+		DBG_PRT(126, os << "setup_to_wrt=" << &nmp << " w_lv=" << nxt_lv);
 	} 
 }
 
@@ -907,7 +933,7 @@ prop_signal::make_ps_dominated(brain& brn, row<neuromap*>& to_wrt){
 		//neuromap* nmp = NULL_PT;
 		neuromap* nmp = ps_quanton->get_nmp_to_write(brn);
 		if(nmp != NULL_PT){
-			DBG_PRT(134, os << "adding_to_wrt_nmp=(" << (void*)nmp << ")");
+			DBG_PRT(138, os << "ADDING_to_wrt_nmp=(" << (void*)nmp << ")");
 			to_wrt.push(nmp);
 		}
 	}
@@ -1027,6 +1053,10 @@ neuromap*
 analyser::neuromap_setup_analysis(long nxt_lv, neuromap* in_nmp)
 {
 	brain& brn = get_de_brain();
+	if(brn.level() == ROOT_LEVEL){
+		BRAIN_CK(nxt_lv == INVALID_LEVEL);
+		return NULL_PT;
+	}
 	
 	BRAIN_CK(nxt_lv != INVALID_LEVEL);
 	BRAIN_CK((in_nmp == NULL_PT) || (in_nmp->na_orig_lv > nxt_lv));

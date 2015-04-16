@@ -18,9 +18,14 @@ along with ben-jose.  If not, see <http://www.gnu.org/licenses/>.
 
 ------------------------------------------------------------
 
-Copyright (C) 2011, 2014. QUIROGA BELTRAN, Jose Luis.
+Copyright (C) 2011, 2014-2015. QUIROGA BELTRAN, Jose Luis.
 Id (cedula): 79523732 de Bogota - Colombia.
 email: joseluisquirogabeltran@gmail.com
+
+ben-jose is free software thanks to The Glory of Our Lord 
+	Yashua Melej Hamashiaj.
+Our Resurrected and Living, both in Body and Spirit, 
+	Prince of Peace.
 
 ------------------------------------------------------------
 
@@ -1229,6 +1234,11 @@ neuromap::map_oper(mem_op_t mm){
 		int fd_lk = skg.get_write_lock(lk_dir);
 
 		if(fd_lk != -1){
+			DBG_PRT_COND(133, (tmp_tauto_cnf.cf_diff_minisha_str == "ada06ea706"),
+					os << "WRITING all_noted_misssing"
+			);
+			DBG_PRT(133, os << "Writing=" << tmp_tauto_cnf.cf_diff_minisha_str);
+				
 			ch_string tau_pth = tmp_tauto_cnf.get_cnf_path();
 			
 			ch_string sv_pth1 = tau_pth + SKG_CANON_NAME;

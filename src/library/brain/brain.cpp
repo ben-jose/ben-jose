@@ -18,9 +18,14 @@ along with ben-jose.  If not, see <http://www.gnu.org/licenses/>.
 
 ------------------------------------------------------------
 
-Copyright (C) 2011, 2014. QUIROGA BELTRAN, Jose Luis.
+Copyright (C) 2011, 2014-2015. QUIROGA BELTRAN, Jose Luis.
 Id (cedula): 79523732 de Bogota - Colombia.
 email: joseluisquirogabeltran@gmail.com
+
+ben-jose is free software thanks to The Glory of Our Lord 
+	Yashua Melej Hamashiaj.
+Our Resurrected and Living, both in Body and Spirit, 
+	Prince of Peace.
 
 ------------------------------------------------------------
 
@@ -455,8 +460,10 @@ brain::init_brain(solver& ss){
 	// state attributes
 	br_choice_spin = cg_neutral;
 	br_choice_order = k_invalid_order;
-	//br_choices_lim = INVALID_IDX;
 	
+	br_last_retract = false;
+	
+	//br_choices_lim = INVALID_IDX;
 	br_charge_trail.init_qulayers(this);
 
 	br_first_psignal = 0;
@@ -512,9 +519,16 @@ brain::release_all_sortors(){
 
 void
 brain::release_brain(){
+	br_last_retract = true;
+	
 	BRAIN_DBG(br_pt_brn = NULL);
 	get_skeleton().set_dbg_brn(NULL);
 
+	bool has_chgs = (br_charge_trail.get_tot_quantons() > 0);
+	if(has_chgs){
+		retract_to(INVALID_LEVEL);
+	}
+	BRAIN_CK(br_charge_trail.get_tot_quantons() == 0);
 	if(level() != ROOT_LEVEL){
 		retract_to();
 	}
@@ -554,10 +568,7 @@ brain::release_brain(){
 	br_top_block.init_quanton(this, cg_neutral, INVALID_IDX, NULL);
 
 	BRAIN_CK(br_tot_qu_dots == 0);
-	//BRAIN_CK(br_tot_qu_marks == 0);
-	//BRAIN_CK(br_tot_ne_spots == 0);
 
-	//DBG_PRT(DBG_ALL_LVS, os << "release_brain 4");
 	BRAIN_CK(br_dbg.dbg_tot_nmps == 0);
 	BRAIN_CK(br_num_active_neuromaps == 0);
 }
@@ -585,15 +596,16 @@ quanton::set_charge(brain& brn, neuron* neu, charge_t cha, long n_tier){
 	BRAIN_CK(! is_pos() || (cha == cg_neutral));
 	BRAIN_CK(has_charge() || (cha == cg_positive));
 
-	bool in_root = (brn.level() == ROOT_LEVEL);
+	bool is_ending = brn.br_last_retract;
+	//bool in_root = (brn.level() == ROOT_LEVEL);
+	//bool in_root = false;
 	bool with_src_before = has_source();
 
-	if(in_root){ 
-		BRAIN_CK(cha != cg_neutral);
+	/*if(in_root){ 
+		BRAIN_CK(is_ending || (cha != cg_neutral));
 		neu = NULL; 
-
 		n_tier = 0;
-	}
+	}*/
 
 	qu_charge = cha;
 	qu_inverse->qu_charge = negate_trinary(cha);
@@ -610,7 +622,7 @@ quanton::set_charge(brain& brn, neuron* neu, charge_t cha, long n_tier){
 
 		MARK_USED(qua_trl);
 		BRAIN_CK(qua_trl == this);
-		BRAIN_CK(qlevel() != ROOT_LEVEL);
+		BRAIN_CK(is_ending || (qlevel() != ROOT_LEVEL));
 
 		if(! with_src_before && (qlevel() != ROOT_LEVEL)){
 			quanton* qua_cho = brn.br_chosen.pop();
@@ -867,7 +879,8 @@ brain::learn_mots(row_quanton_t& the_mots, quanton& forced_qua){
 	);
 
 	if(the_mots.is_empty()){
-		long nxt_tir = 0;
+		//long nxt_tir = 0;
+		long nxt_tir = tier() + 1;
 		BRAIN_CK(level() == ROOT_LEVEL);
 		send_psignal(forced_qua, the_neu, nxt_tir);
 	}
@@ -1189,6 +1202,19 @@ brain::aux_solve_instance(){
 	while(o_info.bjo_result == bjr_unknown_satisf){
 		pulsate();
 	}
+	
+	if(get_result() == bjr_no_satisf){
+		// write all pending
+		row<neuromap*>& to_wrt = br_tmp_maps_to_write;
+		to_wrt.clear();
+		
+		BRAIN_CK(! br_data_levels.is_empty());
+		BRAIN_CK(level() == ROOT_LEVEL);
+		leveldat& lv = get_data_level(ROOT_LEVEL);
+		
+		lv.ld_nmps_to_write.append_all_as<neuromap>(to_wrt);
+		write_all_neuromaps(to_wrt);
+	}
 
 	br_tmp_assig_quantons.clear();
 
@@ -1199,6 +1225,11 @@ brain::aux_solve_instance(){
 		inst_info.ist_assig.push(0);	// means the last lit
 	}
 	
+	bj_satisf_val_t resp_solv = o_info.bjo_result;
+	if(resp_solv == bjr_no_satisf){
+		write_all_active();
+	}
+	
 	BRAIN_DBG(
 		DBG_PRT(116, dbg_prt_all_cho(*this));
 		DBG_PRT(32, os << "BRAIN=" << bj_eol;
@@ -1207,7 +1238,7 @@ brain::aux_solve_instance(){
 
 		br_final_msg << f_nam << " ";
 
-		bj_satisf_val_t resp_solv = o_info.bjo_result;
+		resp_solv = o_info.bjo_result;
 		if(resp_solv == bjr_yes_satisf){
 			dbg_check_sat_assig();
 			br_final_msg << "IS_SAT_INSTANCE";
@@ -1282,6 +1313,8 @@ notekeeper::set_motive_notes(row_quanton_t& rr_qua, long from, long until){
 
 	if(from < 0){ from = 0; }
 	if(until > rr_qua.size()){ until = rr_qua.size(); }
+	
+	bool br_in_root = (brn.level() == ROOT_LEVEL);
 
 	long ii = from;
 	for(; ii < until; ii++){
@@ -1289,8 +1322,13 @@ notekeeper::set_motive_notes(row_quanton_t& rr_qua, long from, long until){
 		quanton& qua = *(rr_qua[ii]);
 		BRAIN_CK(qua.get_charge() == cg_negative);
 
+		bool qu_in_root = (qua.qlevel() == ROOT_LEVEL);
+		
+		bool to_note = (! qu_in_root || br_in_root);
+		//to_note = true;
+		
 		bool has_note = (qua.*dk_has_note_fn)();
-		if(! has_note && (qua.qlevel() != ROOT_LEVEL)){
+		if(! has_note && to_note){
 			dk_tot_noted++;
 			(qua.*dk_set_note_fn)(brn);
 
@@ -1388,6 +1426,9 @@ brain::retract_to(long tg_lv){
 		if(level() == tg_lv){
 			break;
 		}
+		if(! br_charge_trail.has_motives()){
+			break;
+		}
 		
 		BRAIN_CK_PRT(br_charge_trail.has_motives(),
 			os << recoil() << ".lv=" << level() << " tg_lv=" << tg_lv;
@@ -1398,8 +1439,8 @@ brain::retract_to(long tg_lv){
 		quanton& qua = trail_last();
 		qua.set_charge(brn, NULL_PT, cg_neutral, INVALID_TIER);
 	}
-	BRAIN_CK(level() == tg_lv);
-	BRAIN_CK(trail_level() == tg_lv);
+	BRAIN_CK((tg_lv == INVALID_LEVEL) || (level() == tg_lv));
+	BRAIN_CK((tg_lv == INVALID_LEVEL) || (trail_level() == tg_lv));
 	
 	update_semi_monos();
 }
@@ -1503,7 +1544,18 @@ brain::receive_psignal(bool only_in_dom){
 		} 
 		pt_qua = NULL_PT;
 	} else {
-		BRAIN_CK(! only_in_dom || (sg_tier == tier()) || (sg_tier == (tier() + 1)));
+		BRAIN_CK_PRT((! only_in_dom || (sg_tier == tier()) || (sg_tier == (tier() + 1))),
+				os << "____________________\n";
+				brn.dbg_prt_margin(os);
+				os << " only_in_dom=" << only_in_dom << "\n";
+				os << " ti=" << tier() << "\n";
+				os << " sg_tier=" << sg_tier << "\n";
+				os << " neu=" << neu << "\n";
+				os << " blv=" << brn.level() << "\n";
+				os << " sgnl=" << sgnl << "\n";
+				os << " qua=" << &qua << "\n";
+				brn.print_trail(os);
+		);
 
 		BRAIN_CK(qua.ck_uncharged_partner_neu());
 		BRAIN_CK(qua.opposite().ck_uncharged_partner_neu());
@@ -1646,12 +1698,17 @@ brain::pulsate(){
 	BRAIN_CK(ck_trail());
 
 	if(found_conflict()){
+		br_last_retract = (level() == ROOT_LEVEL);
 		if(level() == ROOT_LEVEL){ 
 			set_result(bjr_no_satisf);
 			return;
 		}
 		//dbg_old_reverse();
 		reverse();
+		/*if(br_last_retract){ 
+			set_result(bjr_no_satisf);
+			return;
+		}*/
 		BRAIN_CK(has_psignals());
 
 	} else {
@@ -2187,5 +2244,9 @@ brain::dbg_prt_full_stab(){
 	BRAIN_CK(finl_col.co_neus.size() == full_col.co_neus.size());
 	
 	release_all_sortors();
+}
+
+void
+brain::write_all_active(){
 }
 

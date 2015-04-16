@@ -18,9 +18,14 @@ along with ben-jose.  If not, see <http://www.gnu.org/licenses/>.
 
 ------------------------------------------------------------
 
-Copyright (C) 2011, 2014. QUIROGA BELTRAN, Jose Luis.
+Copyright (C) 2011, 2014-2015. QUIROGA BELTRAN, Jose Luis.
 Id (cedula): 79523732 de Bogota - Colombia.
 email: joseluisquirogabeltran@gmail.com
+
+ben-jose is free software thanks to The Glory of Our Lord 
+	Yashua Melej Hamashiaj.
+Our Resurrected and Living, both in Body and Spirit, 
+	Prince of Peace.
 
 ------------------------------------------------------------
 
@@ -39,16 +44,6 @@ Functions to read and parse dimacs files.
 #include "dbg_prt.h"
 
 #define DIMACS_CK(prm) 	DBG_CK(prm)
-
-// '\0'
-
-
-const ch_string k_dimacs_header_str =
-		"c (C) 2014. QUIROGA BELTRAN, Jose Luis. Bogota - Colombia.\n"
-		"c Date of birth: December 28 of 1970.\n"
-		"c Place of birth: Bogota - Colombia - Southamerica.\n"
-		"c Id (cedula): 79523732 de Bogota.\n";
-
 
 bj_ostr_stream& 
 dimacs_loader::dimacs_err_msg(long num_line, char ch_err, ch_string msg){

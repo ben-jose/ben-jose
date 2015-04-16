@@ -18,9 +18,14 @@ along with ben-jose.  If not, see <http://www.gnu.org/licenses/>.
 
 ------------------------------------------------------------
 
-Copyright (C) 2011, 2014. QUIROGA BELTRAN, Jose Luis.
+Copyright (C) 2011, 2014-2015. QUIROGA BELTRAN, Jose Luis.
 Id (cedula): 79523732 de Bogota - Colombia.
 email: joseluisquirogabeltran@gmail.com
+
+ben-jose is free software thanks to The Glory of Our Lord 
+	Yashua Melej Hamashiaj.
+Our Resurrected and Living, both in Body and Spirit, 
+	Prince of Peace.
 
 ------------------------------------------------------------
 
@@ -197,6 +202,8 @@ long	find_max_tier(row_quanton_t& tmp_mots);
 void	split_tees(sort_glb& srg, row<sortee*>& sorted_tees, row<sortee*>& sub_tees, 
 			row<canon_clause*>& ccls_in, row<canon_clause*>& ccls_not_in);
 
+
+void	write_all_neuromaps(row<neuromap*>& to_wrt);
 
 //=============================================================================
 // ticket
@@ -503,13 +510,10 @@ class quanton {
 	}
 
 	~quanton(){
-
 		BRAIN_CK_0(qu_source == NULL);
-
 		BRAIN_CK_0(qu_tunnels.size() == 0);
 
 		qu_tunnels.clear(false, true);
-
 		init_quanton(NULL, cg_neutral, 0, NULL);
 	}
 
@@ -2073,7 +2077,9 @@ class qulayers {
 		if(qua == NULL_PT){
 			return 0;
 		}
-		return qua->qu_tier;
+		long qti = qua->qu_tier;
+		BRAIN_CK(qti >= 0);
+		return qti;
 	}
 	
 	void	add_motive(quanton& qua, long q_layer){
@@ -2887,6 +2893,8 @@ public:
 
 	charge_t		br_choice_spin;
 	long			br_choice_order;
+	
+	bool			br_last_retract;
 
 	//long			br_choices_lim;	// last known choice idx
 	row_quanton_t		br_choices;	// to find non charged quantons quickly
@@ -3104,9 +3112,16 @@ public:
 		return ((br_first_psignal == 0) && (br_last_psignal == 0));
 	}
 
-	void	send_psignal(quanton& qua, neuron* neu, long max_tier){ 
-		BRAIN_CK((max_tier > 0) || (level() == ROOT_LEVEL));
-		put_psignal(qua, neu, max_tier);
+	void	send_psignal(quanton& qua, neuron* neu, long nxt_ti){ 
+		BRAIN_CK((nxt_ti > 0) || (level() == ROOT_LEVEL));
+		DBG_PRT_COND(133, (nxt_ti == 0), 
+					 os << "\n ++++++++++++++++\n";
+					 os << "++++++++++++++++\n";
+					 os << STACK_STR;
+					 os << " qua=" << &qua;
+					 os << " neu=" << neu;
+		);
+		put_psignal(qua, neu, nxt_ti);
 	}
 
 	void	send_row_psignals(row<prop_signal>& to_send){ 
@@ -3141,6 +3156,7 @@ public:
 	// aux memaps
 
 	void	deactivate_last_map();
+	void	write_all_active();
 	void	close_all_maps();
 
 	void	print_active_maps(bj_ostream& os);

@@ -19,9 +19,14 @@ along with ben-jose.  If not, see <http://www.gnu.org/licenses/>.
 
 ------------------------------------------------------------
 
-Copyright (C) 2011, 2014. QUIROGA BELTRAN, Jose Luis.
+Copyright (C) 2011, 2014-2015. QUIROGA BELTRAN, Jose Luis.
 Id (cedula): 79523732 de Bogota - Colombia.
 email: joseluisquirogabeltran@gmail.com
+
+ben-jose is free software thanks to The Glory of Our Lord 
+	Yashua Melej Hamashiaj.
+Our Resurrected and Living, both in Body and Spirit, 
+	Prince of Peace.
 
 ------------------------------------------------------------
 
@@ -236,7 +241,8 @@ canon_save(skeleton_glb& skg, ch_string& the_pth, row<char>& cnn, bool write_onc
 
 	SKELETON_CK(not_skl_path(the_pth));
 	
-	DBG_PRT_COND_WITH(133, skg, (((long)cnn.last()) == 0), os << "WRITING_ENDING_0");
+	SKELETON_CK((((long)cnn.last()) != 0));
+	//DBG_PRT_COND_WITH(133, skg, (((long)cnn.last()) == 0), os << "WRITING_ENDING_0");
 	
 	bool ok = write_file(the_pth, cnn, write_once);
 	return ok;
@@ -249,7 +255,8 @@ canon_load(skeleton_glb& skg, ch_string& the_pth, row<char>& cnn){
 	try{
 		read_file(the_pth, cnn);
 		
-		DBG_PRT_COND_WITH(133, skg, (((long)cnn.last()) == 0), os << "READING_ENDING_0");
+		SKELETON_CK((((long)cnn.last()) != 0));
+		//DBG_PRT_COND_WITH(133, skg, (((long)cnn.last()) == 0), os << "READING_ENDING_0");
 		
 		load_ok = true;
 	} catch (const top_exception& ex1){
@@ -1053,8 +1060,9 @@ ch_string
 canon_cnf::get_cnf_path(){
 	SKELETON_CK(cf_diff_minisha_str.size() > 0);
 	SKELETON_CK(cf_unique_path.size() > 0);
+	SKELETON_CK(*(cf_unique_path.rbegin()) == '/');
 	//ch_string cnf_pth = SKG_CNF_DIR + cf_unique_path;
-	ch_string cnf_pth = SKG_CNF_DIR + cf_unique_path + '/' + cf_diff_minisha_str + '/';
+	ch_string cnf_pth = SKG_CNF_DIR + cf_unique_path + cf_diff_minisha_str + '/';
 	return cnf_pth;
 }
 

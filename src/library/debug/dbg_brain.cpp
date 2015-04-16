@@ -18,9 +18,14 @@ along with ben-jose.  If not, see <http://www.gnu.org/licenses/>.
 
 ------------------------------------------------------------
 
-Copyright (C) 2011, 2014. QUIROGA BELTRAN, Jose Luis.
+Copyright (C) 2011, 2014-2015. QUIROGA BELTRAN, Jose Luis.
 Id (cedula): 79523732 de Bogota - Colombia.
 email: joseluisquirogabeltran@gmail.com
+
+ben-jose is free software thanks to The Glory of Our Lord 
+	Yashua Melej Hamashiaj.
+Our Resurrected and Living, both in Body and Spirit, 
+	Prince of Peace.
 
 ------------------------------------------------------------
 
@@ -52,10 +57,10 @@ dbg_trinary_to_str(charge_t obj){
 bool
 quanton::ck_charge(brain& brn){
 #ifdef FULL_DEBUG
-	if((qlevel() == ROOT_LEVEL) && (get_source() != NULL)){
-		ch_string ab_mm = "case0." + brn.br_file_name;
+	/*if((qlevel() == ROOT_LEVEL) && (get_source() != NULL)){
+		ch_string ab_mm = "case00." + brn.br_file_name;
 		abort_func(-1, ab_mm.c_str());
-	}
+	}*/
 	BRAIN_CK_0(	(is_pos()) || 
 			(! has_charge()) || 
 			(is_neg()) );
@@ -143,11 +148,11 @@ brain::ck_trail(){
 		}
 		prev_tier = qua->qu_tier;
 		
-		if((qua->qlevel() == ROOT_LEVEL) && (qua->get_source() != NULL)){
+		/*if((qua->qlevel() == ROOT_LEVEL) && (qua->get_source() != NULL)){
 			print_trail(os);
 			ab_mm = "case1." + br_file_name;
 			abort_func(-1, ab_mm.c_str());
-		}
+		}*/
 
 		if((qua->qu_source == NULL) && (qua->qlevel() != ROOT_LEVEL)){
 			num_null_src++;
@@ -541,6 +546,7 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 		os << " lv=" << na_orig_lv;
 		os << " fo_ps=" << na_next_psig << bj_eol;
 		os << " all_ps=" << all_ps;
+		os << " #qu=" << all_ps.size();
 
 		/*
 		row<neuron*>& all_ne = brn.br_tmp_prt_neus;
@@ -1291,6 +1297,16 @@ analyser::print_analyser(bj_ostream& os, bool from_pt){
 	return os;
 }
 
+void
+print_all_in_grip(bj_ostream& os, binder& grp){
+	binder* fst_bdr = grp.bn_right;
+	binder* lst_bdr = &(grp);
+	for(binder* bdr_1 = fst_bdr; bdr_1 != lst_bdr; bdr_1 = bdr_1->bn_right){
+		neuromap& nmp = rcp_as<neuromap>(bdr_1);
+		os << "(" << ((void*)&nmp) << ")";
+	}
+}
+
 bj_ostream&
 quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps_src){
 #ifdef FULL_DEBUG
@@ -1353,21 +1369,26 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 			brain& brn = *pt_brn;
 			
 			leveldat& lv = brn.get_data_level(qlv);
-			if(lv.has_setup_neuromap()){ 
+			bool is_qu = (this == lv.ld_chosen) || (qu_tier == 1);
+			
+			if(is_qu && lv.has_setup_neuromap()){ 
 				neuromap& s_nmp = lv.get_setup_neuromap();
 				BRAIN_CK(s_nmp.is_active());
 				//recoil_counter_t s_rc = s_nmp.na_setup_tk.tk_recoil;
 				os << ".s";
 				os << "(" << (void*)(&s_nmp) << ")"; 
 			}
-			if(lv.has_to_write_neuromaps()){ os << ".w"; }
-			if(lv.has_learned()){ 
+			if(is_qu && lv.has_to_write_neuromaps()){ 
+				os << ".w"; 
+				print_all_in_grip(os, lv.ld_nmps_to_write);
+			}
+			if(is_qu && lv.has_learned()){ 
 				os << ".l"; 
 				if(lv.ld_learned.size() > 1){
 					os << lv.ld_learned.size(); 
 				}
 			}
-			if((qlv != ROOT_LEVEL) && (lv.ld_chosen == NULL_PT)){
+			if(is_qu && (qlv != ROOT_LEVEL) && (lv.ld_chosen == NULL_PT)){
 				os << "[NULL_CHO!!!]"; 
 			}
 		}
