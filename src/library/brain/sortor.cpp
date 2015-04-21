@@ -786,9 +786,14 @@ srs_row_as_clauses(sort_glb& srg, row<sorset*>& rr1, row<canon_clause*>& rr2){
 void
 sorset::step_mutual_stabilize_rec(sort_glb& srg1, sort_glb& srg2)
 {
-	SORTER_CK(&srg1 != &srg2);
+	// pre checks
+	
+	step_mutual_op_t oper = srg1.sg_step_mutual_op;
+	
+	SORTER_CK((oper == sm_walk) || (&srg1 != &srg2));
 	SORTER_CK(srg1.sg_curr_stab_consec >= srg1.sg_dbg_last_id);
 	SORTER_CK(srg2.sg_curr_stab_consec >= srg2.sg_dbg_last_id);
+	
 	// subsets
 
 	while(has_subsets()){
@@ -801,7 +806,6 @@ sorset::step_mutual_stabilize_rec(sort_glb& srg1, sort_glb& srg2)
 
 	// pre assigs
 
-	step_mutual_op_t oper = srg1.sg_step_mutual_op;
 	row<sorset*>& all_ss = srg1.sg_step_sorsets;
 
 	long& tee_consec = srg1.sg_step_consec;
@@ -820,6 +824,7 @@ sorset::step_mutual_stabilize_rec(sort_glb& srg1, sort_glb& srg2)
 	}
 
 	sort_id_t& curr_stab_consec = *pt_stab_consec;
+	SORTER_DBG(sort_id_t old_stb_consec = curr_stab_consec);
 
 	// items
 
@@ -861,6 +866,8 @@ sorset::step_mutual_stabilize_rec(sort_glb& srg1, sort_glb& srg2)
 
 			if(oper != sm_walk){
 				srt.so_tee_consec = tee_consec;
+			} else {
+				srt.so_wlk_consec = tee_consec;
 			}
 	
 			if(all_consec){			
@@ -926,6 +933,7 @@ sorset::step_mutual_stabilize_rec(sort_glb& srg1, sort_glb& srg2)
 	if(! has_items()){
 		srg1.release_sorset(*this);
 	}
+	SORTER_CK((oper != sm_walk) || (old_stb_consec == curr_stab_consec));
 } // step.mutual.stabilize.rec
 
 void
@@ -1012,6 +1020,18 @@ sort_glb::step_mutual_stabilize(sort_glb& srg2, step_mutual_op_t op){
 			  os << " op=" << op << " i_sz=" << srg1.sg_dbg_fst_num_items
 			  << " sz=" << srg1.sg_step_sortees.size()
 	);
+}
+
+void
+sort_glb::stab_mutual_walk(){
+	// sets step_sortees
+	sort_glb& srg2 = *this;
+
+	DBG(sg_dbg_fst_num_items = sg_dbg_num_items);
+	sg_tot_stab_steps = 0;
+	
+	step_mutual_stabilize(srg2, sm_walk);
+	SORTER_CK(has_head());
 }
 
 void

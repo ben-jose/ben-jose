@@ -304,7 +304,8 @@ dbg_inst_info::init_dbg_inst_info(){
 	dbg_tot_nmps = 0;
 	
 	dbg_max_lv = 0;
-	dbg_max_num_subnmp = 0;
+	dbg_max_wrt_num_subnmp = 0;
+	dbg_max_fnd_num_subnmp = 0;
 }
 #endif
 

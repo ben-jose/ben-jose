@@ -89,14 +89,10 @@ analyser::reset_deduc(){
 
 void
 analyser::init_analyser(brain* brn){
-	long tg_lv = INVALID_LEVEL;
-	
 	de_brain = brn;
 
 	if(brn != NULL_PT){
-		init_nk_with_note0(de_nkpr, brn, tg_lv);
 		de_ref.init_qlayers_ref(&(brn->br_charge_trail));
-		BRAIN_CK(de_nkpr.nk_get_counter() == 0);
 	}
 	de_forced_not_sel_neus.clear_all_neurons();
 	de_propag_not_sel_neus.clear_all_neurons();
@@ -108,31 +104,31 @@ analyser::init_analyser(brain* brn){
 	reset_deduc();
 }
 
-/*void
-analyser::init_nk_with_dots(notekeeper& nkpr, brain* brn, long tg_lv){
-	long* pt_tot_dots = NULL_PT;
-	if(brn != NULL_PT){
-		pt_tot_dots = &(brn->br_tot_qu_dots);
-	}
-
-	nkpr.init_notekeeper(brn, tg_lv);
-	nkpr.init_funcs(pt_tot_dots, &quanton::has_dot, 
-					&quanton::set_dot, &quanton::reset_dot, 
-					&set_dots_of, &reset_dots_of);
-}*/
-
 void
-analyser::init_nk_with_note0(notekeeper& nkpr, brain* brn, long tg_lv){
+analyser::init_nk_with_note0(notekeeper& nkpr, brain& brn){
 	long* pt_tot_note0 = NULL_PT;
-	if(brn != NULL_PT){
-		pt_tot_note0 = &(brn->br_qu_tot_note0);
-	}
-	nkpr.init_notekeeper(brn, tg_lv);
+	pt_tot_note0 = &(brn.br_qu_tot_note0);
+	nkpr.init_notekeeper(&brn, INVALID_LEVEL);
 	nkpr.init_funcs(pt_tot_note0, &quanton::has_note0, 
 							   &quanton::set_note0, &quanton::reset_its_note0, 
 								&set_all_note0, &reset_all_its_note0, 
 								&append_all_not_note0, &same_quantons_note0
    				);
+	
+	BRAIN_CK(nkpr.nk_get_counter() == 0);
+}
+
+void
+analyser::init_nk_with_note5(notekeeper& nkpr, brain& brn){
+	long* pt_tot_note5 = NULL_PT;
+	pt_tot_note5 = &(brn.br_qu_tot_note5);
+	nkpr.init_notekeeper(&brn, INVALID_LEVEL);
+	nkpr.init_funcs(pt_tot_note5, &quanton::has_note5, 
+							   &quanton::set_note5, &quanton::reset_its_note5, 
+								&set_all_note5, &reset_all_its_note5, 
+								&append_all_not_note5, &same_quantons_note5
+   				);
+	BRAIN_CK(nkpr.nk_get_counter() == 0);
 }
 
 void
@@ -280,7 +276,7 @@ analyser::inc_all_noted(){
 }
 
 bool
-analyser::ck_deduc_init(long deduc_lv){
+analyser::ck_deduc_init(long deduc_lv, bool full_ck){
 #ifdef FULL_DEBUG
 	BRAIN_DBG(
 		qlayers_ref& qlr = de_ref;
@@ -288,17 +284,21 @@ analyser::ck_deduc_init(long deduc_lv){
 		brain& brn = get_de_brain();
 		bool in_root = (brn.level() == ROOT_LEVEL);
 	)
-	BRAIN_CK(deduc_lv != INVALID_LEVEL);
-	BRAIN_CK(nkpr.nk_get_counter() == 0);
+	BRAIN_CK_PRT((nkpr.nk_get_counter() == 0), os << "_____________\n";
+		os << " deduc_lv=" << deduc_lv;
+		os << " full_ck=" << full_ck;
+	);
 	BRAIN_CK(nkpr.dk_quas_lyrs.is_empty());
-	BRAIN_CK(in_root || (nkpr.dk_note_layer > 0));
-	BRAIN_CK(nkpr.dk_note_layer == deduc_lv);
-	BRAIN_CK(qlr.has_curr_quanton());
 	BRAIN_CK(de_nkpr.nk_get_counter() == 0);
 	BRAIN_CK(de_all_noted.size() == 0); 
 	BRAIN_CK(de_all_propag.size() == 0); 
 	BRAIN_CK(de_all_learned_forced.size() == 0); 
 	BRAIN_CK(de_all_learned_propag.size() == 0); 
+	
+	BRAIN_CK(! full_ck || in_root || (nkpr.dk_note_layer > 0));
+	BRAIN_CK(! full_ck || (deduc_lv != INVALID_LEVEL));
+	BRAIN_CK(! full_ck || (nkpr.dk_note_layer == deduc_lv));
+	BRAIN_CK(! full_ck || (qlr.has_curr_quanton()));
 #endif
 	return true;
 }
@@ -311,13 +311,14 @@ analyser::deduction_init(row_quanton_t& causes){
 	BRAIN_CK(causes.size() > 1);
 
 	reset_deduc();
+	BRAIN_CK(ck_deduc_init(INVALID_LEVEL, false));
 	
 	long deduc_lv = find_max_level(causes);
 	
 	nkpr.init_notes(deduc_lv);
 	qlr.reset_curr_quanton();
 
-	BRAIN_CK(ck_deduc_init(deduc_lv));
+	BRAIN_CK(ck_deduc_init(deduc_lv, true));
 	
 	set_notes_of(causes, true);
 	BRAIN_CK_PRT((nkpr.dk_tot_noted > 0), get_de_brain().dbg_prt_margin(os));
@@ -681,7 +682,7 @@ analyser::neuromap_find_analysis(analyser& deducer,
 					long& nxt_lv, deduction& nxt_dct, row<neuromap*>& to_wrt)
 {
 	brain& brn = get_de_brain();
-	//row_quanton_t& nmp_causes = brn.br_tmp_f_analysis;
+	row_quanton_t& nmp_causes = brn.br_tmp_f_analysis;
 	if(brn.level() == ROOT_LEVEL){
 		BRAIN_CK(nxt_dct.dt_target_level == INVALID_LEVEL);
 		return NULL_PT;
@@ -694,6 +695,8 @@ analyser::neuromap_find_analysis(analyser& deducer,
 	
 	nxt_dct.init_deduction();
 	
+	BRAIN_CK(brn.br_qu_tot_note0 == 0);
+	
 	neuromap* out_nmp = calc_neuromap(nxt_lv, NULL_PT, true);
 	
 	while(out_nmp != NULL_PT){
@@ -701,15 +704,38 @@ analyser::neuromap_find_analysis(analyser& deducer,
 			DBG_PRT(118, os << "CANNOT find nmp=" << (void*)(out_nmp));
 			break;
 		}
-		BRAIN_CK(false); // WRITE_THIS_CODE
+		BRAIN_DBG(
+			long& max_ns = brn.br_dbg.dbg_max_fnd_num_subnmp;
+			if(out_nmp->na_dbg_num_submap > max_ns){
+				max_ns = out_nmp->na_dbg_num_submap;
+			}
+		);
+
+		BRAIN_CK(brn.br_qu_tot_note0 == 0);
 		
 		DBG_PRT(118, os << "found nmp=" << (void*)(out_nmp));
 		if(nxt_lv <= 0){
 			break;
 		}
 		
-		//out_nmp = calc_neuromap(nxt_lv, out_nmp, true);
-		//BRAIN_CK(out_nmp != NULL_PT);
+		nmp_causes.clear();
+		out_nmp->map_get_all_upper_quas(nmp_causes);
+	
+		nxt_dct.init_deduction();
+		deducer.deduction_analysis(nmp_causes, nxt_dct);
+		deducer.make_noted_dominated_and_deduced(to_wrt);
+ 
+		nxt_lv = nxt_dct.dt_target_level;
+
+		if(! to_wrt.is_empty() && brn.lv_has_setup_nmp(nxt_lv + 1)){
+			break;
+		}
+		if(deducer.found_learned()){
+			break;
+		}
+
+		out_nmp = calc_neuromap(nxt_lv, out_nmp, true);
+		BRAIN_CK(out_nmp != NULL_PT);
 	}
 	return out_nmp;
 }
@@ -778,7 +804,7 @@ write_all_neuromaps(row<neuromap*>& to_wrt){
 		nmp.map_write();
 		
 		BRAIN_DBG(
-			long& max_ns = nmp.get_brn().br_dbg.dbg_max_num_subnmp;
+			long& max_ns = nmp.get_brn().br_dbg.dbg_max_wrt_num_subnmp;
 			if(nmp.na_dbg_num_submap > max_ns){
 				max_ns = nmp.na_dbg_num_submap;
 			}
@@ -817,6 +843,7 @@ brain::analyse(row<prop_signal>& all_confl, deduction& out_dct){
 
 	BRAIN_DBG(deduction fst_dct; out_dct.copy_to_dct(fst_dct));
 	BRAIN_CK(br_ne_tot_tag1 == 0);
+	BRAIN_CK(br_qu_tot_note0 == 0);
 	
 	long tg_lv = out_dct.dt_target_level;
 	
@@ -826,7 +853,9 @@ brain::analyse(row<prop_signal>& all_confl, deduction& out_dct){
 	long tg2 = tg_lv;
 	neuromap* f_nmp = NULL_PT;
 	if(! f_lrnd){
+		BRAIN_CK(br_qu_tot_note0 == 0);
 		f_nmp = mper.neuromap_find_analysis(dedser, tg2, fnd_dct, to_wrt);
+		//f_lrnd = mper.found_learned() || dedser.found_learned();
 		f_lrnd = mper.found_learned();
 	}
 	if(tg_lv != tg2){

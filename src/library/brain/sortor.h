@@ -144,7 +144,8 @@ public:
 	char		so_dbg_me_class;
 	long		so_dbg_extrn_id;
 
-	long		so_saved_tee_consec;
+	//long		so_saved_tee_consec;
+	long		so_wlk_consec;
 	long		so_tee_consec;
 	canon_clause	so_ccl;
 
@@ -169,7 +170,8 @@ public:
 		so_dbg_me_class = 0;
 		so_dbg_extrn_id = 0;
 
-		so_saved_tee_consec = INVALID_NATURAL;
+		//so_saved_tee_consec = INVALID_NATURAL;
+		so_wlk_consec = INVALID_NATURAL;
 		so_tee_consec = INVALID_NATURAL;
 		so_ccl.cc_clear(free_mem);
 
@@ -199,8 +201,8 @@ public:
 	void		sort_me_to(sort_glb& srg, sorset& nsr);
 	void		sort_from(sort_glb& srg, sort_id_t curr_nid,	void* id_src = NULL_PT);
 
-	void		save_consec(sort_glb& srg);
-	long		recover_consec(sort_glb& srg);
+	//void		save_consec(sort_glb& srg);
+	//long		recover_consec(sort_glb& srg);
 
 	long 		get_ccl_id(sort_glb& srg);
 	void		close_ccl(sort_glb& srg);
@@ -231,6 +233,7 @@ public:
 	void		reset_sort_info(){
 		SORTER_CK(is_unsorted());
 		
+		so_wlk_consec = 0;
 		so_tee_consec = 0;
 		if(so_related != NULL_PT){
 			sortrel& quar = *so_related;
@@ -268,7 +271,9 @@ srt_row_as(row<sortee*>& rr1, row<obj_t1*>& rr2){
 
 template<class obj_t1>
 bool
-srt_row_as_colors(row<sortee*>& rr1, row<obj_t1*>& rr2, row<long>& cols){
+srt_row_as_colors(row<sortee*>& rr1, row<obj_t1*>& rr2, row<long>& cols, 
+				  bool from_wlk_consecs = false)
+{
 	long last_item_id = INVALID_NATURAL;
 	bool all_consec = true;
 	rr2.clear();
@@ -277,9 +282,13 @@ srt_row_as_colors(row<sortee*>& rr1, row<obj_t1*>& rr2, row<long>& cols){
 	cols.set_cap(rr1.size());
 	for(long ii = 0; ii < rr1.size(); ii++){
 		sortee& srt = *(rr1[ii]);
+		long the_consec = srt.so_tee_consec;
+		if(from_wlk_consecs){
+			the_consec = srt.so_wlk_consec;
+		}
 
-		all_consec = all_consec && (last_item_id != srt.so_tee_consec);
-		last_item_id = srt.so_tee_consec;
+		all_consec = all_consec && (last_item_id != the_consec);
+		last_item_id = the_consec;
 
 		cols.push(last_item_id);
 
@@ -825,6 +834,7 @@ public:
 	void		stab_mutual_unique(sort_glb& mates_srg);
 	void		stab_mutual_choose_one(sort_glb& srg2);
 	void		stab_mutual_end(sort_glb& mates_srg);
+	void		stab_mutual_walk();
 	
 	canon_cnf&	get_final_cnf(skeleton_glb& skg, ch_string comment, bool sorted_cnf);
 
@@ -901,6 +911,7 @@ sortee::get_vessel(){
 	return *so_vessel;
 }
 
+/*
 inline
 void
 sortee::save_consec(sort_glb& srg){
@@ -918,7 +929,7 @@ sortee::recover_consec(sort_glb& srg){
 	long consec = so_saved_tee_consec;
 	so_saved_tee_consec = INVALID_NATURAL;
 	return consec;
-}
+}*/
 
 inline
 void

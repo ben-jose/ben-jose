@@ -99,6 +99,7 @@ enum mem_op_t {
 #define INVALID_LEVEL -1
 #define INVALID_TIER -1
 #define INVALID_BLOCK -1
+#define INVALID_COLOR -1
 
 #define MAX_LAYERS 1000
 
@@ -498,10 +499,14 @@ class quanton {
 	sortee			qu_tee;
 	sortrel			qu_reltee;
 
+	long			qu_tmp_col;
+		
 	// dbg attributes
 	
-	DBG(bj_big_int_t	qu_dbg_fst_lap_cho);
-	DBG(bj_big_int_t	qu_dbg_num_laps_cho);
+	DBG(
+		bj_big_int_t	qu_dbg_fst_lap_cho;
+		bj_big_int_t	qu_dbg_num_laps_cho;
+	);
 
 	// methods
 
@@ -582,8 +587,12 @@ class quanton {
 			qu_reltee.so_opposite = &(oppt);
 		}
 
-		DBG(qu_dbg_fst_lap_cho = 0);
-		DBG(qu_dbg_num_laps_cho = 0);
+		qu_tmp_col = INVALID_COLOR;
+		
+		DBG(
+			qu_dbg_fst_lap_cho = 0;
+			qu_dbg_num_laps_cho = 0;
+		);
 	}
 
 	void	reset_and_add_tee(sort_glb& quas_srg, sort_id_t quas_consec);
@@ -942,6 +951,8 @@ class neuron {
 
 	bool			ne_spot;
 
+	long			ne_tmp_col;
+	
 	DBG(
 		bool			ne_dbg_used_no_orig;
 		canon_clause	ne_dbg_ccl;
@@ -1005,11 +1016,14 @@ class neuron {
 	
 		ne_spot = false;
 
+		ne_tmp_col = INVALID_COLOR;
+		
 		DBG(
 			ne_dbg_used_no_orig = false;
 			ne_dbg_ccl.cc_me = this;
 			ne_dbg_in_used = false;
 			ne_dbg_filled_tk.init_ticket();
+			ne_dbg_creation_tk.init_ticket();
 		)
 	}
 
@@ -1504,7 +1518,7 @@ class coloring {
 	
 	bool	has_diff_col_than_prev(row<long>& the_colors, long col_idx, dbg_call_id dbg_id);
 
-	void	save_colors_from(sort_glb& neus_srg, sort_glb& quas_srg);
+	void	save_colors_from(sort_glb& neus_srg, sort_glb& quas_srg, bool pre_walk);
 	void	load_colors_into(brain& brn, sort_glb& neus_srg, sort_glb& quas_srg, 
 							 dima_dims& dims);
 	void	add_coloring(brain& brn, coloring& clr);
@@ -1516,6 +1530,10 @@ class coloring {
 	
 	void	filter_unique_neus(coloring& col2);
 	void	force_unique_neus(coloring& col2);
+	
+	void	set_tmp_colors();
+	void	reset_tmp_colors();
+	bool	equal_to_tmp_colors();
 	
 	bool 	ck_cols(){
 		BRAIN_CK(co_quas.size() == co_qua_colors.size());
@@ -1665,7 +1683,9 @@ class neuromap {
 	row_neuron_t	na_all_neus_in_vnt_found;
 
 	DBG(
-		long			na_dbg_orig_lv;
+		long				na_dbg_orig_lv;
+		recoil_counter_t 	na_dbg_g_col_recoil;
+		ch_string			na_dbg_g_col_stk;
 	);
 	
 	neuromap(brain* pt_brn = NULL) {
@@ -1719,7 +1739,11 @@ class neuromap {
 		
 		na_all_neus_in_vnt_found.clear();
 		
-		DBG(na_dbg_orig_lv = INVALID_IDX);
+		DBG(
+			na_dbg_orig_lv = INVALID_IDX;
+			na_dbg_g_col_recoil = INVALID_RECOIL;
+			na_dbg_g_col_stk = "INVALID_STACK";
+		);
 	}
 	
 	bool	is_na_virgin(){
@@ -1854,7 +1878,7 @@ class neuromap {
 	
 	static
 	void 	map_get_initial_ps_coloring(brain& brn, row<prop_signal>& dtrace, 
-										coloring& clr, bool ck_ord = true);
+										coloring& clr, bool ck_ord);
 	
 	void	map_get_initial_guide_coloring(coloring& clr);
 	void 	map_get_initial_compl_coloring(coloring& prv_clr, coloring& all_quas_clr);
@@ -2515,7 +2539,10 @@ class analyser {
 	void	reset_deduc();
 
 	static
-	void	init_nk_with_note0(notekeeper& nkpr, brain* brn, long tg_lv);
+	void	init_nk_with_note0(notekeeper& nkpr, brain& brn);
+	
+	static
+	void	init_nk_with_note5(notekeeper& nkpr, brain& brn);
 
 	brain*	get_dbg_brn(){
 		brain* the_brn = NULL;
@@ -2558,7 +2585,7 @@ class analyser {
 	void	fill_dct(deduction& dct);
 	void	make_noted_dominated_and_deduced(row<neuromap*>& to_wrt);
 	
-	bool		ck_deduc_init(long deduc_lv);
+	bool		ck_deduc_init(long deduc_lv, bool full_ck);
 	
 	void		set_conflicts(row<prop_signal>& all_confl){
 		de_all_confl.clear(true, true);
@@ -2783,7 +2810,8 @@ public:
 	long	dbg_tot_nmps;
 	
 	long	dbg_max_lv;
-	long	dbg_max_num_subnmp;
+	long	dbg_max_wrt_num_subnmp;
+	long	dbg_max_fnd_num_subnmp;
 	
 	dbg_inst_info(){
 		init_dbg_inst_info();

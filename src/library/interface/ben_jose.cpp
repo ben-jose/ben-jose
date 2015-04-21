@@ -76,10 +76,10 @@ bj_solver_t bj_solver_create(const char* bjs_dir_path){
 		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
 		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
 	);
-	BRAIN_CK((bj_out << "doing CKs (plain CKs)" << bj_eol) && true);
-	BRAIN_CK_0((bj_out << "doing CK_0s" << bj_eol) && true);
-	BRAIN_CK_1((bj_out << "doing CK_1s" << bj_eol) && true);
-	BRAIN_CK_2((bj_out << "doing CK_2s" << bj_eol) && true);
+	BRAIN_CK((bj_out << "doing CKs (plain BRN_CKs)" << bj_eol) && true);
+	BRAIN_CK_0((bj_out << "doing BRN_CK_0s" << bj_eol) && true);
+	BRAIN_CK_1((bj_out << "doing BRN_CK_1s" << bj_eol) && true);
+	BRAIN_CK_2((bj_out << "doing BRN_CK_2s" << bj_eol) && true);
 	return bjs;
 }
 
@@ -91,17 +91,18 @@ void 		bj_solver_release(bj_solver_t bjs){
 	
 	BRAIN_CK((the_slvr != NULL_PT) && 
 		(bj_out << "BATCH_DBG=\n" << "MAX_lv=" << the_slvr->slv_dbg2.dbg_max_lv
-		<< " MAX_num_subnmp=" << the_slvr->slv_dbg2.dbg_max_num_subnmp
+		<< " MAX_wrt_num_subnmp=" << the_slvr->slv_dbg2.dbg_max_wrt_num_subnmp
+		<< " MAX_fnd_num_subnmp=" << the_slvr->slv_dbg2.dbg_max_fnd_num_subnmp
 		<< bj_eol) && 
 		true
 	);
 	
 	solver::release_solver(the_slvr);
 	
-	BRAIN_CK((bj_out << "doing CKs (plain CKs)" << bj_eol) && true);
-	BRAIN_CK_0((bj_out << "doing CK_0s" << bj_eol) && true);
-	BRAIN_CK_1((bj_out << "doing CK_1s" << bj_eol) && true);
-	BRAIN_CK_2((bj_out << "doing CK_2s" << bj_eol) && true);
+	BRAIN_CK((bj_out << "doing CKs (plain BRN_CKs)" << bj_eol) && true);
+	BRAIN_CK_0((bj_out << "doing BRN_CK_0s" << bj_eol) && true);
+	BRAIN_CK_1((bj_out << "doing BRN_CK_1s" << bj_eol) && true);
+	BRAIN_CK_2((bj_out << "doing BRN_CK_2s" << bj_eol) && true);
 	DBG_CHECK_SAVED(
 		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
 		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;

@@ -57,7 +57,8 @@ DBG(
 class dbg_slvr_info {
 public:
 	long	dbg_max_lv;
-	long	dbg_max_num_subnmp;
+	long	dbg_max_wrt_num_subnmp;
+	long	dbg_max_fnd_num_subnmp;
 	
 	dbg_slvr_info(){
 		init_dbg_slvr_info();
@@ -65,7 +66,8 @@ public:
 
 	void	init_dbg_slvr_info(){
 		dbg_max_lv = 0;
-		dbg_max_num_subnmp = 0;
+		dbg_max_wrt_num_subnmp = 0;
+		dbg_max_fnd_num_subnmp = 0;
 	}
 };
 

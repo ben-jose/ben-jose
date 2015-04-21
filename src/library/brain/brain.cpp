@@ -438,6 +438,8 @@ brain::get_out_info(){
 
 void
 brain::init_brain(solver& ss){
+	brain& brn = *this;
+	
 	BRAIN_DBG(br_pt_brn = NULL);
 	br_pt_slvr = &ss;
 	
@@ -478,6 +480,9 @@ brain::init_brain(solver& ss){
 
 	br_deducer_anlsr.init_analyser(this);
 	br_neuromaper_anlsr.init_analyser(this);
+	
+	br_deducer_anlsr.init_nk_with_note0(br_deducer_anlsr.de_nkpr, brn);
+	br_neuromaper_anlsr.init_nk_with_note5(br_neuromaper_anlsr.de_nkpr, brn);
 	
 	reset_conflict();
 
@@ -1269,8 +1274,9 @@ brain::aux_solve_instance(){
 
 	all_mutual_init();
 
-	DBG_PRT(142, os << "dbg_max_lv=" << br_dbg.dbg_max_lv 
-		<< " dbg_max_num_subnmp=" << br_dbg.dbg_max_num_subnmp;
+	DBG_PRT(142, os << "dbg_max_lv=" << br_dbg.dbg_max_lv ;
+		os << " dbg_max_wrt_num_subnmp=" << br_dbg.dbg_max_wrt_num_subnmp;
+		os << " dbg_max_fnd_num_subnmp=" << br_dbg.dbg_max_fnd_num_subnmp;
 	);
 	
 	get_solver().update_dbg2(br_dbg);
@@ -1281,8 +1287,11 @@ solver::update_dbg2(dbg_inst_info& ist_info){
 	if(ist_info.dbg_max_lv > slv_dbg2.dbg_max_lv){
 		slv_dbg2.dbg_max_lv = ist_info.dbg_max_lv;
 	}
-	if(ist_info.dbg_max_num_subnmp > slv_dbg2.dbg_max_num_subnmp){
-		slv_dbg2.dbg_max_num_subnmp = ist_info.dbg_max_num_subnmp;
+	if(ist_info.dbg_max_wrt_num_subnmp > slv_dbg2.dbg_max_wrt_num_subnmp){
+		slv_dbg2.dbg_max_wrt_num_subnmp = ist_info.dbg_max_wrt_num_subnmp;
+	}
+	if(ist_info.dbg_max_fnd_num_subnmp > slv_dbg2.dbg_max_fnd_num_subnmp){
+		slv_dbg2.dbg_max_fnd_num_subnmp = ist_info.dbg_max_fnd_num_subnmp;
 	}
 }
 
@@ -2238,7 +2247,7 @@ brain::dbg_prt_full_stab(){
 	bj_out << "END_of_cnf=" << bj_eol;
 	
 	coloring finl_col;
-	finl_col.save_colors_from(neus_srg, quas_srg);
+	finl_col.save_colors_from(neus_srg, quas_srg, false);
 	
 	BRAIN_CK(finl_col.co_quas.size() == full_col.co_quas.size());
 	BRAIN_CK(finl_col.co_neus.size() == full_col.co_neus.size());
