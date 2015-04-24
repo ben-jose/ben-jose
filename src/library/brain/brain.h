@@ -1661,12 +1661,13 @@ class neuromap {
 	long			na_max_ti;
 	BRAIN_DBG(long		na_dbg_num_submap);
 	
+	row<prop_signal>	na_trail_propag; // all trail propag in this nmp section
+	row<neuron*>		na_cov_by_trail_propag_quas;
+	
 	row<neuron*>		na_all_filled_by_forced;
 	row<neuron*>		na_all_filled_by_propag;
 	row<neuron*>		na_all_filled_by_shadow;
 
-	row<prop_signal>	na_trail_propag; // all trail propag in this nmp section
-	
 	row<prop_signal>	na_forced; // deduction with all confl visit these.
 	row<prop_signal>	na_propag; // psigs from na_all_propag NOT in all_forced
 	row<prop_signal>	na_shadow;  // psigs from br_shadow_ps NOT in all_forced NOR
@@ -1724,6 +1725,7 @@ class neuromap {
 		na_all_filled_by_shadow.clear();
 		
 		na_trail_propag.clear(true, true);
+		na_cov_by_trail_propag_quas.clear();
 		
 		na_forced.clear(true, true);
 		na_propag.clear(true, true);
@@ -1797,6 +1799,7 @@ class neuromap {
 	neuromap&	map_get_last_submap();
 
 	void	map_get_all_forced_ps(row<prop_signal>& all_ps, bool with_clear = true);
+	void	map_get_all_trail_propag_ps(row<prop_signal>& all_ps, bool with_clear = true);
 	neuromap&	map_get_all_propag_ps(row<prop_signal>& all_ps, bool with_clear = true);
 	void	map_get_all_ps(row<prop_signal>& all_ps);
 	bool	map_get_all_non_forced_ps(row<prop_signal>& all_ps);
@@ -1804,6 +1807,8 @@ class neuromap {
 	void	map_get_all_quas(row_quanton_t& all_quas);
 	void	map_get_all_confl_neus(row<neuron*>& all_neus);
 	//void	map_get_all_forced_neus(row<neuron*>& all_neus, bool with_clear = true);
+	
+	void	map_get_all_cov_by_trail_propag_neus(row<neuron*>& all_neus, bool with_clear);
 	
 	void	map_get_all_subcov_neus(row<neuron*>& all_neus, bool with_clear);
 	void	map_get_all_cov_neus(row<neuron*>& all_neus, bool with_clear);
@@ -1846,6 +1851,7 @@ class neuromap {
 	static
 	bool	set_all_filled_by(brain& brn, row_quanton_t& nmp_quas, row<neuron*>& all_filled);
 	
+	bool	set_all_filled_by_trail_propag();
 	bool	set_all_filled_by_forced();
 	bool	set_all_filled_by_propag();
 	bool	set_all_filled_by_shadow();
@@ -1873,8 +1879,11 @@ class neuromap {
 	bool 	map_write();
 	bool 	map_oper(mem_op_t mm);
 	bool 	map_prepare_mem_oper(mem_op_t mm);
+	void 	map_prepare_wrt_cnfs(mem_op_t mm, ref_strs& nxt_diff_phdat, row_str_t& dbg_shas);
+	void 	old_set_stab_guide();
 	void 	map_set_stab_guide();
-	void 	map_init_stab_guide();	
+	void 	map_stab_guide_col();
+	void 	map_init_stab_guide();
 	
 	static
 	void 	map_get_initial_ps_coloring(brain& brn, row<prop_signal>& dtrace, 
@@ -1893,6 +1902,7 @@ class neuromap {
 	void	map_fill_cov(brain& brn, long min_ti, long max_ti, row<neuron*>& all_filled,
 								 neurolayers& not_sel_neus, row<neuron*>& all_cov);
 	
+	void	map_fill_cov_by_trail_propag(neurolayers& not_sel_neus);
 	void	map_fill_cov_by_forced(neurolayers& not_sel_neus);
 	void	map_fill_cov_by_propag(neurolayers& not_sel_neus);
 	void	map_fill_cov_by_shadow(neurolayers& not_sel_neus);
@@ -1902,8 +1912,7 @@ class neuromap {
 	
 	void	reset_all_nmp_tag1();
 
-	void	map_fill_all_cov_by_shadow(neurolayers& not_sel_neus);
-	
+	DECLARE_NA_FLAG_ALL_FUNCS(trail_propag, 2)
 	DECLARE_NA_FLAG_ALL_FUNCS(forced, 2)
 	DECLARE_NA_FLAG_ALL_FUNCS(propag, 3)
 	DECLARE_NA_FLAG_ALL_FUNCS(shadow, 4)
@@ -2197,7 +2206,7 @@ class notekeeper {
 	long			dk_tot_noted;
 	long 			dk_num_noted_in_layer;
 
-	qulayers		dk_quas_lyrs;
+	qulayers		dk_quas_lyrs; // layers are levels
 
 	notekeeper(brain* brn = NULL_PT, long tg_lv = INVALID_LEVEL)
 	{
@@ -2510,7 +2519,7 @@ class analyser {
 	brain*			de_brain;
 
 	notekeeper		de_nkpr;
-	qlayers_ref		de_ref;
+	qlayers_ref		de_ref;		// layers are tiers (inited with charge_trail)
 	row<prop_signal>	de_all_noted;
 	row<prop_signal>	de_all_propag;
 	
@@ -2521,6 +2530,7 @@ class analyser {
 	prop_signal 	de_next_bk_psig;
 	long			de_max_ti;
 
+	neurolayers 	de_trail_propag_not_sel_neus;
 	neurolayers 	de_forced_not_sel_neus;
 	neurolayers 	de_propag_not_sel_neus;
 	neurolayers 	de_shadow_not_sel_neus;
@@ -2617,7 +2627,7 @@ class analyser {
 	void		deduction_init(row_quanton_t& causes);
 	void 		deduction_analysis(row_quanton_t& causes, deduction& dct);
 	
-	void		set_nxt_propag(quanton& nxt_qua);
+	void		set_nxt_propag(quanton* nxt_qua);
 	
 	void		find_next_source(bool only_origs = false);
 	void		find_next_noted();
@@ -2632,10 +2642,6 @@ class analyser {
 	neuromap*	cut_neuromap(neuromap* nmp, neuromap* nxt_nmp);
 	neuromap*	calc_setup_neuromap(neuromap* nmp, long nxt_lv);
 	neuromap*	calc_orig_neuromap(neuromap* nmp);
-	
-	void		set_shadow(neuromap& nmp);
-	
-	//neuromap*	calc_neuromap_2(long min_lv, neuromap* prev_nmp);
 	
 	long		find_min_lv_to_setup(long tg_lv);
 
@@ -2798,14 +2804,17 @@ public:
 	bool	dbg_clean_code;
 	
 	bool	dbg_periodic_prt;
-	
+
+	/*
 	row<debug_entry>	dbg_start_dbg_entries;
 	row<debug_entry>	dbg_stop_dbg_entries;
 	long			dbg_current_start_entry;
 	long			dbg_current_stop_entry;
+	row<bool>	dbg_levs_arr;
+	*/
+	debug_info	dbg_conf_info;
 	
 	bool 		dbg_bad_cycle1;
-	row<bool>	dbg_levs_arr;
 
 	long	dbg_tot_nmps;
 	
@@ -2819,15 +2828,6 @@ public:
 
 	void	init_dbg_inst_info();
 
-	void	dbg_lv_on(long lv_idx){
-		BRAIN_CK(dbg_levs_arr.is_valid_idx(lv_idx));
-		dbg_levs_arr[lv_idx] = true;
-	}
-
-	void	dbg_lv_off(long lv_idx){
-		BRAIN_CK(dbg_levs_arr.is_valid_idx(lv_idx));
-		dbg_levs_arr[lv_idx] = false;
-	}
 };
 
 #endif
@@ -2892,7 +2892,6 @@ public:
 	row_quanton_t 	br_tmp_shadw_ck_all_orig;
 	row_quanton_t 	br_tmp_qu_mk_all_dom;
 	row_quanton_t 	br_tmp_ck_all_qu_notes;
-	row_quanton_t 	br_tmp_set_shadow_all_quas;
 	
 	row<neuron*> 	br_tmp_ck_neus;
 	row<neuron*> 	br_tmp_ne_activate;
@@ -2916,7 +2915,7 @@ public:
 	k_row<quanton>		br_positons;	// all quantons with positive charge
 	k_row<quanton>		br_negatons;	// all quantons with negative charge
 
-	qulayers		br_charge_trail;
+	qulayers		br_charge_trail;	// layers are tiers
 	row_quanton_t		br_tmp_trail;		// in time of charging order
 
 	charge_t		br_choice_spin;
@@ -3014,6 +3013,7 @@ public:
 	row<prop_signal>	br_tmp_prt_ps;
 	row<prop_signal>	br_tmp_nmp_get_all_ps;
 	row<prop_signal>	br_tmp_nmp_get_all_non_forced_ps;
+	row<prop_signal>	br_tmp_nmp_get_all_propag_ps;
 	
 	coloring		br_tmp_all_quas_col;
 	coloring		br_tmp_tauto_col;
@@ -3142,13 +3142,6 @@ public:
 
 	void	send_psignal(quanton& qua, neuron* neu, long nxt_ti){ 
 		BRAIN_CK((nxt_ti > 0) || (level() == ROOT_LEVEL));
-		DBG_PRT_COND(133, (nxt_ti == 0), 
-					 os << "\n ++++++++++++++++\n";
-					 os << "++++++++++++++++\n";
-					 os << STACK_STR;
-					 os << " qua=" << &qua;
-					 os << " neu=" << neu;
-		);
 		put_psignal(qua, neu, nxt_ti);
 	}
 
@@ -3523,11 +3516,11 @@ public:
 	void		dbg_add_to_used(neuron& neu);
 	
 	void	dbg_lv_on(long lv_idx){
-		BRAIN_DBG(br_dbg.dbg_lv_on(lv_idx));
+		BRAIN_DBG(br_dbg.dbg_conf_info.dbg_lv_on(lv_idx));
 	}
 
 	void	dbg_lv_off(long lv_idx){
-		BRAIN_DBG(br_dbg.dbg_lv_off(lv_idx));
+		BRAIN_DBG(br_dbg.dbg_conf_info.dbg_lv_off(lv_idx));
 	}
 	
 	void 	dbg_prt_lvs_have_learned(bj_ostream& os);

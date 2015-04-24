@@ -40,6 +40,7 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 #define SKELETON_H
 
 #include <set>
+#include <map>
 
 #include "bj_stream.h"
 #include "tools.h"
@@ -100,7 +101,7 @@ class ref_strs;
 
 typedef std::set<ch_string> 	string_set_t;
 //typedef mem_redblack<ch_string>						string_set_t;
-
+typedef std::map<ch_string, long> 	string_long_map_t;
 
 inline
 void strset_clear(string_set_t ss){
@@ -180,6 +181,8 @@ DECLARE_PRINT_FUNCS(ref_strs)
 
 //=================================================================
 // path funcs
+
+bool		print_str_long_map(bj_ostream& os, string_long_map_t& pmp);
 
 bool		not_skl_path(ch_string pth);
 
@@ -478,6 +481,8 @@ public:
 	ch_string 		cf_tmp_pth1;
 	ch_string 		cf_tmp_pth2;
 
+	SKELETON_DBG(void* cf_dbg_orig_nmp);
+		
 	canon_cnf(){
 		init_canon_cnf();
 	}
@@ -526,6 +531,8 @@ public:
 		cf_tmp_sv_dir = "";
 		cf_tmp_pth1 = "";
 		cf_tmp_pth2 = "";
+		
+		SKELETON_DBG(cf_dbg_orig_nmp = NULL_PT);
 		
 		SKELETON_CK(cf_unique_path.size() == 0);
 	}
@@ -689,6 +696,8 @@ public:
 	bool			kg_keep_skeleton;
 	bool			kg_find_cnn_pth;
 
+	SKELETON_DBG(string_long_map_t 	kg_dbg_all_wrt_paths);
+	
 	string_set_t	kg_cnf_new_paths;
 	string_set_t	kg_cnf_paths_found;
 

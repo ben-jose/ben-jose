@@ -443,6 +443,8 @@ brain::init_brain(solver& ss){
 	BRAIN_DBG(br_pt_brn = NULL);
 	br_pt_slvr = &ss;
 	
+	DBG_COMMAND(145, get_skeleton().kg_dbg_all_wrt_paths.clear());
+	
 	init_all_tots();
 	
 	br_prt_timer.init_timer(PRINT_PERIOD, SOLVING_TIMEOUT);
@@ -502,7 +504,7 @@ brain::init_brain(solver& ss){
 
 	BRAIN_DBG(
 		init_all_dbg_brn();  // sets br_pt_brn indicating it is readi for DBG_PRT
-		dbg_init_dbg_conf(*this);	
+		dbg_init_dbg_conf(br_dbg.dbg_conf_info);
 	);
 	BRAIN_CK(br_dbg.dbg_tot_nmps == 0);
 }
@@ -2189,7 +2191,7 @@ brain::reverse(){
 	inc_recoil();
 
 	BRAIN_DBG(
-		dbg_update_config_entries(*this);
+		dbg_update_config_entries(br_dbg.dbg_conf_info, recoil());
 	);
 	check_timeout();
 

@@ -50,8 +50,6 @@ bool	dbg_check_lev(brain* brn, long lev);
 //=================================================================
 // debug defs
 
-#define DBG_NUM_LEVS 200
-
 //define DBG_CHECK_SAVED(cod)	;
 #define DBG_CHECK_SAVED(cod)		DBG(cod)
 

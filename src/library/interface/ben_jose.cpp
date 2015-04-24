@@ -88,14 +88,20 @@ void 		bj_solver_release(bj_solver_t bjs){
 		return;
 	}
 	solver* the_slvr = (solver*)bjs;
-	
-	BRAIN_CK((the_slvr != NULL_PT) && 
-		(bj_out << "BATCH_DBG=\n" << "MAX_lv=" << the_slvr->slv_dbg2.dbg_max_lv
-		<< " MAX_wrt_num_subnmp=" << the_slvr->slv_dbg2.dbg_max_wrt_num_subnmp
-		<< " MAX_fnd_num_subnmp=" << the_slvr->slv_dbg2.dbg_max_fnd_num_subnmp
-		<< bj_eol) && 
-		true
-	);
+	if(the_slvr != NULL_PT){
+		BRAIN_CK(
+			(bj_out << "BATCH_DBG=\n" << "MAX_lv=" << the_slvr->slv_dbg2.dbg_max_lv
+			<< " MAX_wrt_num_subnmp=" << the_slvr->slv_dbg2.dbg_max_wrt_num_subnmp
+			<< " MAX_fnd_num_subnmp=" << the_slvr->slv_dbg2.dbg_max_fnd_num_subnmp
+			<< bj_eol) && 
+			true
+		);
+		/*BRAIN_CK(
+			! the_slvr->slv_skl.kg_dbg_all_wrt_paths.empty() &&
+			print_str_long_map(bj_out, the_slvr->slv_skl.kg_dbg_all_wrt_paths) &&
+			true
+		);*/
+	}
 	
 	solver::release_solver(the_slvr);
 	

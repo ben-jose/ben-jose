@@ -39,7 +39,6 @@ Functions to read and parse debug config files.
 
 #include "file_funcs.h"
 #include "parse_funcs.h"
-#include "brain.h"
 #include "dbg_config.h"
 
 void
@@ -66,9 +65,9 @@ config_reader::parse_debug_line(row<long>& dbg_line, ch_string& str_ln){
 }
 
 void	
-config_reader::add_config_line(brain& brn, ch_string& str_ln){
+config_reader::add_config_line(debug_info& dbg_info, ch_string& str_ln){
 #ifdef FULL_DEBUG
-	dbg_inst_info& dbg_info = brn.br_dbg;
+	//dbg_inst_info& dbg_info = brn.br_dbg;
 	bj_ostream& os = bj_out;
 	MARK_USED(os);
 	row<long>& dbg_ln = dbg_config_line;
@@ -96,9 +95,9 @@ config_reader::add_config_line(brain& brn, ch_string& str_ln){
 }
 
 void
-config_reader::read_config(brain& brn, const char* file_nm){
+config_reader::read_config(debug_info& dbg_info, const char* file_nm){
 #ifdef FULL_DEBUG
-	dbg_inst_info& dbg_info = brn.br_dbg;
+	//dbg_inst_info& dbg_info = brn.br_dbg;
 	bj_ostream& os = bj_out;
 	CONFIG_CK(file_nm != NULL_PT);
 
@@ -122,7 +121,7 @@ config_reader::read_config(brain& brn, const char* file_nm){
 		std::getline(in_stm, str_ln);
 		
 		//os << "Lei:<<" << str_ln << ">>" << bj_eol;
-		add_config_line(brn, str_ln);
+		add_config_line(dbg_info, str_ln);
 	}
 	in_stm.close();
 
@@ -136,15 +135,17 @@ config_reader::read_config(brain& brn, const char* file_nm){
 #endif
 }
 
-void	dbg_init_dbg_conf(brain& brn){
+void	dbg_init_dbg_conf(debug_info& dbg_info){
 #ifdef FULL_DEBUG
-	dbg_inst_info& dbg_info = brn.br_dbg;
+	//dbg_inst_info& dbg_info = brn.br_dbg;
 	config_reader conf_rdr;
-	conf_rdr.read_config(brn, "yosoy.conf");
+	conf_rdr.read_config(dbg_info, "yosoy.conf");
 
 	dbg_info.dbg_current_start_entry = 0;
 	dbg_info.dbg_current_stop_entry = 0;
-	dbg_update_config_entries(brn);
+	
+	bj_big_int_t curr_round = 0;
+	dbg_update_config_entries(dbg_info, curr_round);
 
 	/*
 	DBG_COMMAND(37, os << "PRINT_FULL_INFO" << bj_eol; 
@@ -160,16 +161,16 @@ void	dbg_init_dbg_conf(brain& brn){
 }
 
 void
-dbg_update_config_entries(brain& brn){
+dbg_update_config_entries(debug_info& dbg_info, bj_big_int_t curr_round){
 #ifdef FULL_DEBUG
 	
-	dbg_inst_info& dbg_info = brn.br_dbg;
+	//dbg_inst_info& dbg_info = brn.br_dbg;
 	row<bool>& dbg_arr = dbg_info.dbg_levs_arr;
 	
 	bj_ostream& os = bj_out;
 	MARK_USED(os);
 
-	recoil_counter_t curr_round = brn.recoil();
+	//recoil_counter_t curr_round = brn.recoil();
 
 	long& start_idx = dbg_info.dbg_current_start_entry;
 	long& stop_idx = dbg_info.dbg_current_stop_entry;

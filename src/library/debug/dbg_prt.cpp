@@ -52,7 +52,7 @@ dbg_check_lev(brain* brn, long lev){
 	brain* pt_b = brn->get_dbg_brn();
 	if(pt_b == NULL){ return false; }
 	if(lev < 0){ return true; }
-	row<bool>& lvs_arr = pt_b->br_dbg.dbg_levs_arr;
+	row<bool>& lvs_arr = pt_b->br_dbg.dbg_conf_info.dbg_levs_arr;
 	if(! lvs_arr.is_valid_idx(lev)){ return false; }
 	lv_ok = lvs_arr[lev];
 #endif

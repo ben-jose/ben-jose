@@ -293,13 +293,15 @@ dbg_inst_info::init_dbg_inst_info(){
 	
 	dbg_periodic_prt = true;
 
+	/*
 	dbg_start_dbg_entries.clear();
 	dbg_stop_dbg_entries.clear();
 	dbg_current_start_entry = 0;
 	dbg_current_stop_entry = 0;
+	dbg_levs_arr.fill(false, DBG_NUM_LEVS);
+	*/
 	
 	dbg_bad_cycle1 = false;
-	dbg_levs_arr.fill(false, DBG_NUM_LEVS);
 	
 	dbg_tot_nmps = 0;
 	
@@ -496,30 +498,30 @@ neuromap::print_subnmp(bj_ostream& os){
 	os << " #lv=" << na_dbg_num_submap;
 	
 	os << "\n all_filled=\n";
-	os << "\n\t by_forced=\n";
+	os << "\n\t na_all_filled_by_forced=\n";
 	na_all_filled_by_forced.print_row_data(os, true, "\n");
-	os << "\n\t by_propag=\n";
+	os << "\n\t na_all_filled_by_propag=\n";
 	na_all_filled_by_propag.print_row_data(os, true, "\n");
-	os << "\n\t by_shadow=\n";
+	os << "\n\t na_all_filled_by_shadow=\n";
 	na_all_filled_by_shadow.print_row_data(os, true, "\n");
 
-	os << "\n trail_propag=\n";
+	os << "\n na_trail_propag=\n";
 	na_trail_propag.print_row_data(os, true, "\n");
 	
 	os << "\n all_ps=\n";
-	os << "\n\t forced=\n";
+	os << "\n\t na_forced=\n";
 	na_forced.print_row_data(os, true, "\n");
-	os << "\n\t propag=\n";
+	os << "\n\t na_propag=\n";
 	na_propag.print_row_data(os, true, "\n");
-	os << "\n\t shadow=\n";
+	os << "\n\t na_shadow=\n";
 	na_shadow.print_row_data(os, true, "\n");
 
 	os << "\n all_cov=\n";
-	os << "\n\t cov_by_forced=\n";
+	os << "\n\t na_cov_by_forced_quas=\n";
 	na_cov_by_forced_quas.print_row_data(os, true, "\n");
-	os << "\n\t cov_by_propag=\n";
+	os << "\n\t na_cov_by_propag_quas=\n";
 	na_cov_by_propag_quas.print_row_data(os, true, "\n");
-	os << "\n\t cov_by_shadow=\n";
+	os << "\n\t na_cov_by_shadow_quas=\n";
 	na_cov_by_shadow_quas.print_row_data(os, true, "\n");
 	
 	os << "}\n";
@@ -1194,7 +1196,7 @@ brain::dbg_old_reverse(){
 	inc_recoil();
 
 	DBG(
-		dbg_update_config_entries(*this);
+		dbg_update_config_entries(br_dbg.dbg_conf_info, recoil());
 	);
 	check_timeout();
 

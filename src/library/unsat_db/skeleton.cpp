@@ -242,7 +242,6 @@ canon_save(skeleton_glb& skg, ch_string& the_pth, row<char>& cnn, bool write_onc
 	SKELETON_CK(not_skl_path(the_pth));
 	
 	SKELETON_CK((((long)cnn.last()) != 0));
-	//DBG_PRT_COND_WITH(133, skg, (((long)cnn.last()) == 0), os << "WRITING_ENDING_0");
 	
 	bool ok = write_file(the_pth, cnn, write_once);
 	return ok;
@@ -256,7 +255,6 @@ canon_load(skeleton_glb& skg, ch_string& the_pth, row<char>& cnn){
 		read_file(the_pth, cnn);
 		
 		SKELETON_CK((((long)cnn.last()) != 0));
-		//DBG_PRT_COND_WITH(133, skg, (((long)cnn.last()) == 0), os << "READING_ENDING_0");
 		
 		load_ok = true;
 	} catch (const top_exception& ex1){
@@ -1045,11 +1043,6 @@ canon_cnf::init_skl_paths(skeleton_glb& skg){
 	//cf_lock_nm = canon_lock_name(dims2, cf_sha_str);
 	ch_string upth = canon_hash_path(dims3, cf_sha_str);
 	ch_string id_str = get_id_str();
-
-	DBG_PRT_COND(133, ((get_dbg_brn() != NULL_PT) && (get_dbg_brn()->recoil() == 209)), 
-				 os << "INIT_cf_sha_str=\n" << cf_sha_str << "\n";
-				 os << "INIT_upth=\n" << upth << "\n";
-	);
 
 	cf_unique_path = upth + id_str + '/' + SKG_CANON_PATH_ENDING + '/';
 
@@ -2034,6 +2027,27 @@ canon_cnf::prepare_cnf(skeleton_glb& skg, ch_string sv_pth)
 }
 
 bool
+dbg_is_canon_pth(ch_string sv_name){
+	ch_string suffix = SKG_CANON_NAME;
+	long gap = sv_name.size() - suffix.size();
+	bool is_taut = ((gap > 0) && (sv_name.compare(gap, suffix.size(), suffix) == 0));
+	return is_taut;
+}
+
+void
+dbg_map_add_path(skeleton_glb& skg, ch_string sv_name){
+	bool is_taut = dbg_is_canon_pth(sv_name);
+	if(is_taut){
+		string_long_map_t& pmp = skg.kg_dbg_all_wrt_paths;
+		if(pmp.find(sv_name) == pmp.end()){
+			pmp[sv_name] = 1;
+		} else {
+			pmp[sv_name]++;
+		}
+	}
+}
+
+bool
 canon_cnf::save_cnf(skeleton_glb& skg, ch_string sv_pth){
 	ch_string sv_dir = path_get_directory(sv_pth, true);
 	
@@ -2056,6 +2070,17 @@ canon_cnf::save_cnf(skeleton_glb& skg, ch_string sv_pth){
 	if(! skg.ref_exists(sv_dir)){
 		skg.ref_create(sv_dir);
 	}
+	
+	DBG_COMMAND(146, dbg_map_add_path(skg, sv_name));
+	DBG_PRT_COND(78, dbg_is_canon_pth(sv_name), 
+		os << "sv_name=" << sv_name << "\n";
+		os << this;
+		os << "............\n";
+		if(cf_dbg_orig_nmp != NULL_PT){
+			neuromap* nmp = ((neuromap*)cf_dbg_orig_nmp);
+			os << "orig_nmp=\n" << *nmp;
+		}
+	);
 
 	DBG(bool existed = false);
 	bool sv_ok = canon_save(skg, sv_name, cf_chars);
@@ -2332,5 +2357,12 @@ canon_clause::cc_is_full(){
 	return fchg;
 }
 
+bool
+print_str_long_map(bj_ostream& os, string_long_map_t& pmp){
+	for(string_long_map_t::iterator it = pmp.begin(); it != pmp.end(); ++it){
+		os << it->first << " => " << it->second << '\n';
+	}
+	return true;
+}
 
 
