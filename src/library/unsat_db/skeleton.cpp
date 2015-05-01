@@ -66,32 +66,6 @@ print_hex_as_txt(row<uchar_t>& sha_rr){
 //============================================================
 // path funcs
 
-bool		
-path_begins_with(ch_string the_pth, ch_string the_beg){
-	if(the_pth.size() < the_beg.size()){ 
-		return false; 
-	}
-
-	ch_string pref_str = the_pth.substr(0, the_beg.size());
-	if(pref_str != the_beg){ 
-		return false; 
-	}
-	return true;
-}
-
-bool
-path_ends_with(ch_string& the_str, ch_string& the_suf){
-	if(the_str.size() < the_suf.size()){
-		return false;
-	}
-	str_pos_t pos1 = the_str.size() - the_suf.size();
-	ch_string sub_str = the_str.substr(pos1);
-	if(sub_str == the_suf){
-		return true;
-	}
-	return false;
-}
-
 ch_string
 nam_subset_resp(cmp_is_sub rr){
 	ch_string rr_str = "?????";
@@ -109,16 +83,6 @@ nam_subset_resp(cmp_is_sub rr){
 	return rr_str;
 }
 
-ch_string
-path_get_directory(ch_string the_pth, bool add_last_dir_sep){
-	long pos = (long)the_pth.rfind('/');
-	ch_string the_dir = the_pth.substr(0, pos);
-	if(add_last_dir_sep){
-		the_dir = the_dir + '/';
-	}
-	return the_dir;
-}
-
 bool
 dims_path_exists(ch_string base_pth, const dima_dims& dims){
 	SKELETON_CK(! base_pth.empty());
@@ -133,71 +97,6 @@ dims_path_exists(ch_string base_pth, const dima_dims& dims){
 	bool pth_ok = file_exists(full_dim_pth);
 	SKELETON_CK(! pth_ok || (full_dim_pth == path_to_absolute_path(full_dim_pth)));
 	return pth_ok;
-}
-
-void
-path_delete(ch_string full_pth, ch_string up_to){
-	SKELETON_CK(not_skl_path(full_pth));
-	ch_string sub_pth = full_pth;
-
-	if(! path_begins_with(full_pth, up_to)){
-		SKELETON_CK(false);
-		return; 
-	}
-
-	delete_directory(sub_pth);
-	//DBG_PRT(95, os << "DEL DIR=" << sub_pth);
-
-	str_pos_t pos_sep = 0;
-	for(	pos_sep = sub_pth.rfind('/');
-		(pos_sep < sub_pth.size());
-		pos_sep = sub_pth.rfind('/'))
-	{
-		sub_pth = sub_pth.substr(0, pos_sep);
-		//DBG_PRT(95, os << "REM DIR=" << sub_pth);
-
-		if(sub_pth == up_to){ break; }
-		int resp = rmdir(sub_pth.c_str());
-		if(resp != 0){ break; }
-	}
-
-	//ch_string the_dir = full_pth.substr(0, pos);
-}
-
-bool
-path_create(ch_string n_pth){
-	SKELETON_CK(not_skl_path(n_pth));
-	//DBG_PRT(77, os << "CREATING " << n_pth);
-	//DBG_PRT(77, os << "HIT RETURN TO CONTINUE...");
-	//DBG_COMMAND(16, getchar());
-
-	//long resp = true;
-	int eos = (int)ch_string::npos;
-	int pos1 = n_pth.find('/');
-	bool path_ok = true;
-	while((pos1 == eos) || (pos1 < (int)n_pth.size())){
-		if(pos1 == eos){
-			pos1 = (int)n_pth.size();
-		}
-
-		ch_string nm_dir = n_pth.substr(0, pos1);
-		if(nm_dir.size() > 0){
-			path_ok = make_dir(nm_dir, 0700);
-			/*
-			resp = mkdir(nm_dir.c_str(), 0700);
-			//path_ok = ((resp == 0) || (errno == EEXIST));
-			path_ok = (resp == 0);
-			*/
-		}
-
-		if((pos1 + 1) < (int)n_pth.size()){
-			pos1 = n_pth.find('/', pos1 + 1);
-		} else {
-			pos1 = (int)n_pth.size();
-		}
-	}
-
-	return path_ok;
 }
 
 void

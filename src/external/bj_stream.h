@@ -41,6 +41,7 @@ Wrapper for ostream class.
 
 #include <iostream>
 #include <sstream>
+#include <fstream>	// used for bj_ofstream
 
 #define DO_GETCHAR()			getchar()
 
@@ -56,6 +57,8 @@ Wrapper for ostream class.
 typedef std::ostream bj_ostream;
 
 typedef std::ostringstream bj_ostr_stream;
+
+typedef std::ofstream bj_ofstream;
 
 #endif // BJ_STREAM_H
 

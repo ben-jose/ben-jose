@@ -36,6 +36,7 @@ Classes and that implement the neural network.
 --------------------------------------------------------------*/
 
 #include "stack_trace.h"
+#include "util_funcs.h"
 #include "file_funcs.h"
 #include "parse_funcs.h"
 #include "sortor.h"
@@ -46,6 +47,7 @@ Classes and that implement the neural network.
 #include "dbg_prt.h"
 #include "dbg_ic.h"
 #include "dbg_config.h"
+#include "strings_html.h"
 
 //br_qu_tot_note0;
 
@@ -479,6 +481,8 @@ brain::init_brain(solver& ss){
 								&set_all_note0, &reset_all_its_note0,
 								&append_all_not_note0, &same_quantons_note0
   							);
+	
+	br_dbg_full_col.init_coloring();
 
 	br_deducer_anlsr.init_analyser(this);
 	br_neuromaper_anlsr.init_analyser(this);
@@ -830,6 +834,8 @@ brain::init_loading(long num_qua, long num_neu){
 		br_choices[idx] = qua_pos; 
 		qua_pos->qu_choice_idx = idx;
 		qua_neg->qu_choice_idx = idx;
+		
+		BRAIN_DBG(br_all_cy_quas.push(qua_pos));
 	}
 	BRAIN_CK_0(br_positons.size() == num_qua);
 	BRAIN_CK_0(br_negatons.size() == num_qua);
@@ -874,9 +880,8 @@ brain::learn_mots(row_quanton_t& the_mots, quanton& forced_qua){
 		the_mots.push(&forced_qua);
 
 		quanton* f_qua = NULL_PT;
-		the_neu = add_neuron(the_mots, f_qua, false);
-		BRAIN_CK(the_neu != NULL_PT);
-		//BRAIN_CK(f_qua == &forced_qua);
+		neuron& added_neu = add_neuron(the_mots, f_qua, false);
+		the_neu = &added_neu;
 
 		data_level().ld_learned.push(the_neu);
 	}
@@ -902,7 +907,7 @@ brain::learn_mots(row_quanton_t& the_mots, quanton& forced_qua){
 	return the_neu;
 }
 
-neuron*
+neuron&
 brain::add_neuron(row_quanton_t& quans, quanton*& forced_qua, bool orig){
 	brain& brn = *this;
 	neuron& neu = locate_neuron();
@@ -917,7 +922,7 @@ brain::add_neuron(row_quanton_t& quans, quanton*& forced_qua, bool orig){
 	BRAIN_DBG(neu.ne_dbg_creation_tk.update_ticket(brn));
 
 	DBG_PRT(26, os << "adding " << neu);
-	return &neu;
+	return neu;
 }
 
 void
@@ -1029,21 +1034,25 @@ brain::get_result(){
 	return the_result;
 }
 
-void
+neuron&
 brain::load_neuron(row_quanton_t& neu_quas){
 	DBG_PRT(29, os << "ADDING NEU=" << neu_quas);
 
+	neuron* the_neu = NULL_PT;
 	BRAIN_CK_0(neu_quas.size() > 0);
 	if(neu_quas.size() > 1){
 		bool is_orig = true;
 		quanton* forced_qua = NULL;
-		add_neuron(neu_quas, forced_qua, is_orig);
+		neuron& a_neu = add_neuron(neu_quas, forced_qua, is_orig);
+		the_neu = &a_neu;
 		BRAIN_CK_0(forced_qua == NULL);
 	} else {
 		BRAIN_CK_0(neu_quas.size() == 1);
 		BRAIN_CK_0(level() == ROOT_LEVEL);
 
 		neuron& neu = locate_neuron();
+		the_neu = &neu;
+		
 		neu.ne_original = false;
 		neu.ne_fibres.push(neu_quas.first());
 		br_unit_neurons.push(&neu);
@@ -1051,6 +1060,8 @@ brain::load_neuron(row_quanton_t& neu_quas){
 		send_psignal(*(neu_quas.first()), NULL, 0);
 	}
 	neu_quas.clear();
+	BRAIN_CK(the_neu != NULL_PT);
+	return *the_neu;
 }
 
 void
@@ -1135,10 +1146,12 @@ brain::load_brain(long num_neu, long num_var, row_long_t& load_ccls){
 				max_neu_sz = num_dens;
 			}
 
-			load_neuron(neu_quas);
+			neuron& b_neu = load_neuron(neu_quas);
+			MARK_USED(b_neu);
 			if(get_out_info().bjo_result != bjr_unknown_satisf){ 
 				break; 
 			}
+			BRAIN_DBG(br_all_cy_neus.push(&b_neu));
 
 			//first = ii + 1;
 			
@@ -1174,15 +1187,10 @@ brain::fill_with_origs(row<neuron*>& neus){
 }
 
 void 
-brain::aux_solve_instance(){
+brain::find_result(){
 	instance_info& inst_info = get_my_inst();
 	bj_output_t& o_info = get_out_info();
 	
-	bool all_ok = load_instance();
-	if(! all_ok){
-		throw instance_exception(inx_bad_lit);
-	}
-
 	get_skeleton().kg_instance_file_nam = inst_info.get_f_nam() + "\n";
 	
 	if(o_info.bjo_result != bjr_unknown_satisf){ 
@@ -2071,10 +2079,16 @@ set_file_err(file_exception& fl_ex, bj_output_t& o_inf){
 }
 
 bj_satisf_val_t
-brain::solve_instance(){
+brain::solve_instance(bool load_it){
 	bj_output_t& o_info = get_out_info();
 	try{
-		aux_solve_instance();
+		if(load_it){
+			bool all_ok = load_instance();
+			if(! all_ok){
+				throw instance_exception(inx_bad_lit);
+			}
+		}
+		find_result();
 	} catch (skeleton_exception& ex1){
 		print_ex(ex1);
 		o_info.bjo_result = bjr_error;
@@ -2213,6 +2227,7 @@ brain::reverse(){
 
 void
 brain::dbg_prt_full_stab(){
+#ifdef FULL_DEBUG
 	binder pru_bb;
 	grip pru_gg;
 	ss_srs_t pru_rr;
@@ -2224,7 +2239,7 @@ brain::dbg_prt_full_stab(){
 	
 	coloring full_col;
 	full_col.init_coloring(this);
-	full_col.set_brain_coloring();
+	full_col.dbg_set_brain_coloring();
 
 	//bj_out << "COLS_BEF=" << bj_eol << full_col;
 	
@@ -2255,9 +2270,318 @@ brain::dbg_prt_full_stab(){
 	BRAIN_CK(finl_col.co_neus.size() == full_col.co_neus.size());
 	
 	release_all_sortors();
+#endif
 }
 
 void
 brain::write_all_active(){
 }
 
+/*
+bj_ostream&
+qulayers::dbg_print_qulayers_cy_graph(bj_ostream& os){
+#ifdef FULL_DEBUG
+	brain& brn = get_ql_brain();
+	row_quanton_t& all_quas = brn.br_dbg_quly_cy_quas;
+	get_all_ordered_quantons(all_quas);
+	
+	os << "\t nodes: [";
+	os << std::endl;
+
+	long lst_ti = INVALID_TIER;
+	long num_ti = 0;
+	for(long aa = 0; aa < all_quas.size(); aa++){
+		BRAIN_CK(all_quas[aa] != NULL_PT);
+		quanton& qua = *(all_quas[aa]);
+		if(lst_ti != qua.qu_tier){
+			lst_ti = qua.qu_tier;
+			num_ti = 0;
+		}
+		num_ti++;
+		
+		long lv = qua.qlevel();
+		ch_string pnt = "l" + lv;
+		
+		long x_pos = num_ti * 100;
+		long y_pos = qua.qu_tier * 100;
+		
+		neuron* neu = qua.get_source();
+		long neu_id = 0;
+		long num_in = 0;
+		if(neu != NULL_PT){
+			neu_id = neu->ne_index;
+			num_in = neu->ne_fibres.size();
+		}
+
+		os << "\t\t ";
+		if(aa != 0){ os << ","; }
+		os << "{ data: {";
+		os << " id: 'd" << abs_long(qua.qu_id) << "',";
+		os << " nam: '" << qua.qu_id << ".n" << neu_id << ".i" << num_in << "',";
+		os << " parent: 'l" << lv << "'";
+		os << " }, ";
+		os << "position:{x:" << x_pos << ", y:" << y_pos << "}";
+		os << " }";
+		os << std::endl;
+	}
+	os << "\t ],";
+	os << std::endl;
+	
+	os << "\t edges: [";
+	os << std::endl;
+	
+	long num_edg = 0;
+	for(long aa = 0; aa < all_quas.size(); aa++){
+		BRAIN_CK(all_quas[aa] != NULL_PT);
+		quanton& qua = *(all_quas[aa]);
+		neuron* neu = qua.get_source();
+		if(neu != NULL_PT){
+			row_quanton_t& all_fib = neu->ne_fibres;
+			for(long bb = 0; bb < all_fib.size(); bb++){
+				BRAIN_CK(all_fib[bb] != NULL_PT);
+				quanton& fib = *(all_fib[bb]);
+				
+				if(&fib == &qua){
+					continue;
+				}
+				
+				os << "\t\t ";
+				if(num_edg != 0){
+					os << ",";
+				}
+				os << "{ data: { id: 'e" << num_edg << "'";
+				os << ", source: 'd" << abs_long(fib.qu_id) << "'";
+				os << ", target: 'd" << abs_long(qua.qu_id) << "' } }";
+				os << std::endl;
+				
+				num_edg++;
+			}
+		}
+	}
+	
+	os << "\t ],";
+	os << std::endl;
+	
+#endif
+	return os;
+}
+*/
+
+ch_string
+get_cy_name(brain& brn, ch_string cy_kk, long num_step){
+	ch_string num_stp = long_to_str(num_step);
+	ch_string pth_nm = brn.br_dbg.dbg_cy_prefix + cy_kk + num_stp + ".js";
+	return pth_nm;
+}
+
+ch_string
+get_cy_dir(brain& brn){
+	ch_string htm_pth = brn.get_solver().slv_dbg2.dbg_html_out_path;
+	ch_string ic_dir = htm_pth + "/" + brn.br_dbg.dbg_cy_prefix;
+	return ic_dir;
+}
+
+ch_string
+get_cy_rel_path(brain& brn, ch_string cy_kk, long num_step){
+	ch_string the_nm = get_cy_name(brn, cy_kk, num_step);
+	ch_string rel_pth = brn.br_dbg.dbg_cy_prefix + "/" + the_nm;
+	return rel_pth;
+}
+
+ch_string
+get_cy_htm_nm(brain& brn, ch_string cy_kk){
+	ch_string pth = brn.br_dbg.dbg_cy_prefix + "_all" + cy_kk + "steps.htm";
+	return pth;
+}
+
+ch_string
+get_cy_htm_path(brain& brn, ch_string cy_kk){
+	ch_string pth = get_cy_dir(brn) + "/" + get_cy_htm_nm(brn, cy_kk);
+	return pth;
+}
+
+ch_string
+get_cy_path(brain& brn, ch_string cy_kk, long num_step){
+	ch_string pth = get_cy_dir(brn) + "/" + get_cy_rel_path(brn, cy_kk, num_step);
+	return pth;
+}
+
+void
+brain::dbg_update_html_cy_graph(ch_string cy_kk, coloring* the_col, ch_string htm_str){
+#ifdef FULL_DEBUG
+	brain& brn = *this;
+	
+	ch_string htm_tit = brn.br_dbg.dbg_cy_prefix;
+	ch_string sub_dir = get_cy_dir(brn) + "/" + brn.br_dbg.dbg_cy_prefix;
+	if(! file_exists(sub_dir)){
+		path_create(sub_dir);
+		bj_out << "Created dir: '" << sub_dir << "'\n";
+	}
+	
+	long n_stp = -1;
+	ch_string js_grph_var_pref = "";
+	ch_string js_plays_var_pref = "";
+	ch_string js_tiers_var_pref = "";
+	ch_string js_fn_nm = "";
+	bool is_ic = false;
+	if(cy_kk == CY_IC_KIND){
+		is_ic = true;
+		js_grph_var_pref = "nmp_grph_";
+		js_plays_var_pref = "all_plays_";
+		js_tiers_var_pref = "all_tiers_";
+		js_fn_nm = "show_cnf";
+		//js_fn_nm = "show_cnf";
+		br_dbg.dbg_cy_ic_step++;
+		n_stp = br_dbg.dbg_cy_ic_step;
+	}
+	if(cy_kk == CY_NMP_KIND){
+		js_grph_var_pref = "nmp_grph_";
+		js_fn_nm = "show_cnf";
+		br_dbg.dbg_cy_nmp_step++;
+		n_stp = br_dbg.dbg_cy_nmp_step;
+	}
+	BRAIN_CK(n_stp != -1);
+	if(n_stp > MAX_CY_STEPS){
+		return;
+	}
+
+	ch_string& layo_str = br_dbg.dbg_cy_layout;
+	
+	ch_string stp_str = long_to_str(n_stp);
+	ch_string stp_pth = get_cy_path(brn, cy_kk, n_stp);
+	ch_string stp_js_grph_var_nm = js_grph_var_pref + stp_str;
+	ch_string stp_js_plays_var_nm = js_plays_var_pref + stp_str;
+	ch_string stp_js_tiers_var_nm = js_tiers_var_pref + stp_str;
+	
+	if(the_col == NULL_PT){
+		if(br_dbg_full_col.is_co_virgin()){
+			br_dbg_full_col.init_coloring(&brn);
+			br_dbg_full_col.dbg_set_brain_coloring();
+		}
+		the_col = &br_dbg_full_col;
+	}
+	BRAIN_CK(the_col != NULL_PT);
+	BRAIN_CK(the_col->get_dbg_brn() != NULL_PT);
+	
+	bj_ofstream of_st;
+	dbg_prt_open(stp_pth, of_st);
+	
+	of_st << stp_js_grph_var_nm << " = {" << bj_eol;
+	the_col->dbg_print_col_cy_graph(of_st, is_ic);
+	of_st << "};" << bj_eol;
+	
+	if(is_ic){
+		of_st << stp_js_plays_var_nm << " = [" << bj_eol;
+		dbg_print_cy_graph_node_plays(of_st);
+		of_st << "];" << bj_eol;
+
+		/*
+		of_st << stp_js_tiers_var_nm << " = [" << bj_eol;
+		dbg_print_cy_graph_node_tiers(of_st);
+		of_st << "];" << bj_eol;
+		*/
+	} 
+	
+	of_st.flush();
+	of_st.close();
+
+	bj_out << "Writed file: '" << stp_pth << "'\n";
+	
+	ch_string pth = get_cy_htm_path(brn, cy_kk);
+	ch_string pth_nm =  get_cy_htm_nm(brn, cy_kk);;
+	
+	bj_ofstream of;
+	dbg_prt_open(pth, of);
+	
+	of << HTMi_html << bj_eol;
+	of << "\t" << HTMi_head << bj_eol;
+	of << "\t\t" << HTMi_title << htm_tit << HTMe_title << bj_eol;
+	
+	for(long aa = 1; aa <= n_stp; aa++){
+		ch_string rel_aa_pth = get_cy_rel_path(brn, cy_kk, aa);
+		of << "\t\t " << HTMi_src << rel_aa_pth << HTMe_src << bj_eol;
+	}
+	of << "\t\t " << HTMi_src << "drw_grph_files/jquery.js" << HTMe_src << bj_eol;
+	of << "\t\t " << HTMi_src << "drw_grph_files/cytoscape.js" << HTMe_src << bj_eol;
+	of << "\t\t " << HTMi_src << "drw_grph_files/show_cnf_fn.js" << HTMe_src << bj_eol;
+	
+	of << "\t" << HTMe_head << bj_eol;
+	
+	of << "\t" << HTMi_body << bj_eol;
+	for(long aa = 1; aa <= n_stp; aa++){
+		ch_string stp_aa_str = long_to_str(aa);
+		ch_string h1_title = "Step " + stp_aa_str;
+		of << "\t\t " << HTMi_h1 << h1_title << HTMe_h1 << bj_eol;
+		
+		ch_string div_nm = "graph_" + stp_aa_str;
+		ch_string div_str = HTM_cy_div(div_nm);
+		of << "\t\t " << div_str << bj_eol;
+		
+		ch_string js_grph_var_aa_nm = js_grph_var_pref + stp_aa_str;
+		ch_string js_plays_var_aa_nm = js_plays_var_pref + stp_aa_str;
+		ch_string js_tiers_var_aa_nm = js_tiers_var_pref + stp_aa_str;
+		
+		of << "\t\t " << HTMi_script << js_fn_nm << "('" << div_nm << "'";
+		of << ", " << js_grph_var_aa_nm << ", " << layo_str;
+		if(is_ic){
+			//of << ", " << js_plays_var_aa_nm << ", " << js_tiers_var_aa_nm;
+			of << ", " << js_plays_var_aa_nm;
+		}
+		of << ")" << HTMe_script << bj_eol;
+	}
+	of << "\t" << HTMe_body << bj_eol;
+	
+	of << HTMe_html << bj_eol;
+	
+	of.flush();
+	of.close();
+
+	bj_out << "Updated file: '" << pth << "'\n";
+#endif
+}
+
+/*
+		<script src="drw_cnf_files/jquery.js"></script>
+		<script src="drw_cnf_files/cytoscape.js"></script>
+		<script src="drw_cnf_files/show_cnf_fn.js"></script>
+*/
+
+void
+brain::dbg_print_cy_graph_node_plays(bj_ostream& os){
+#ifdef FULL_DEBUG
+	bool is_fst = true;
+	for(long aa = 0; aa < br_positons.size(); aa++){
+		quanton& qua = br_positons[aa];
+		BRAIN_CK(qua.qu_id > 0);
+		if(qua.is_neg()){
+			os << "\t";
+			if(! is_fst){ os << ","; } else { is_fst = false; }
+			os << "'d" << qua.qu_id << "'" << bj_eol;
+		}
+	}
+#endif
+}
+
+/*
+void
+brain::dbg_print_cy_graph_node_tiers(bj_ostream& os){
+#ifdef FULL_DEBUG
+	os << "\t";
+	os << -1 << bj_eol;
+	for(long aa = 0; aa < br_positons.size(); aa++){
+		quanton& qua = br_positons[aa];
+		long qti = qua.qu_tier;
+		BRAIN_CK((aa + 1)== qua.qu_id);
+		
+		os << "\t";
+		os << ","; 
+		//if(aa != 0){ os << ","; }
+		if(qti > 0){
+			os << qti << bj_eol;
+		} else {
+			os << -1 << bj_eol;
+		}
+	}
+#endif
+}
+*/

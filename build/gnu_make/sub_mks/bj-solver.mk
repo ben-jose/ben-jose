@@ -13,7 +13,7 @@ SOURCES := \
 	$(SRC_BASE_DIR)/programs/solver/solver_main.cpp
 
 SRC_INCDIRS := \
-	$(SRC_BASE_DIR)/library/interface \
+	$(SRC_BASE_DIR)/library/api \
 	$(SRC_BASE_DIR)/external \
 	$(SRC_BASE_DIR)/utils 
 

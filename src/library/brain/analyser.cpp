@@ -845,6 +845,8 @@ brain::analyse(row<prop_signal>& all_confl, deduction& out_dct){
 	BRAIN_CK(! all_confl.is_empty());
 	//BRAIN_CK(all_confl.first().ps_tier >= tier());
 	
+	DBG_COMMAND(151, dbg_update_html_cy_graph(CY_IC_KIND, NULL_PT, ""));
+	
 	analyser& mper = br_neuromaper_anlsr;
 	analyser& dedser = br_deducer_anlsr;
 	

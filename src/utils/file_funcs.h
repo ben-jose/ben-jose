@@ -131,6 +131,22 @@ path_get_running_path();
 ch_string
 path_to_absolute_path(ch_string pth);
 
+bool
+path_create(ch_string n_pth);
+
+bool
+path_begins_with(ch_string the_pth, ch_string the_beg);
+
+bool
+path_ends_with(ch_string& the_str, ch_string& the_suf);
+
+void
+path_delete(ch_string full_pth, ch_string up_to);
+
+ch_string
+path_get_directory(ch_string the_pth, bool add_last_dir_sep);
+
+
 #endif		// FILE_FUNCS_H
 
 

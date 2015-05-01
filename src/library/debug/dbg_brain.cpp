@@ -292,6 +292,11 @@ dbg_inst_info::init_dbg_inst_info(){
 	dbg_clean_code = false;
 	
 	dbg_periodic_prt = true;
+	
+	dbg_cy_prefix = "no_file";
+	dbg_cy_ic_step = 0;
+	dbg_cy_nmp_step = 0;
+	dbg_cy_layout = CY_CIRCLE_LAYOUT;
 
 	/*
 	dbg_start_dbg_entries.clear();

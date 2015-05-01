@@ -1427,6 +1427,8 @@ neuromap::map_prepare_mem_oper(mem_op_t mm){
 	BRAIN_CK(tauto_ne_srg.ck_stab_inited());
 	BRAIN_CK(tauto_qu_srg.ck_stab_inited());
 	
+	DBG_COMMAND(150, brn.dbg_update_html_cy_graph(CY_NMP_KIND, &ini_tau_col, ""));
+	
 	ini_tau_col.load_colors_into(brn, tauto_ne_srg, tauto_qu_srg, dims1);
 
 	tauto_ne_srg.stab_mutual(tauto_qu_srg);
@@ -1558,7 +1560,10 @@ neuromap::map_get_initial_ps_coloring(brain& brn, row<prop_signal>& dtrace,
 	qua_colors.clear();
 	neu_colors.clear();
 	
-	long sig_col = 1;
+	//long sig_col = 1;
+	long col_qu = 1;
+	long col_ne = 0;
+	bool inc_col_ne_pend = true;
 
 	BRAIN_CK(brn.br_qu_tot_note1 == 0);
 
@@ -1583,7 +1588,8 @@ neuromap::map_get_initial_ps_coloring(brain& brn, row<prop_signal>& dtrace,
 			}
 		}
 	
-		if(inc_col){ sig_col++; }
+		if(inc_col){ col_qu++; }
+		if(inc_col && ! inc_col_ne_pend){ inc_col_ne_pend = true; }
 		
 		BRAIN_CK(q_sig1.ps_quanton != NULL_PT);
 
@@ -1596,17 +1602,22 @@ neuromap::map_get_initial_ps_coloring(brain& brn, row<prop_signal>& dtrace,
 		DBG(qua.set_note1(brn));
 		
 		all_quas.push(&qua);
-		qua_colors.push(sig_col);
+		qua_colors.push(col_qu);
 
 		all_quas.push(&opp);
-		qua_colors.push(sig_col);
+		qua_colors.push(col_qu);
 
 		if(q_sig1.ps_source != NULL_PT){
 			neuron& neu = *(q_sig1.ps_source);
 			BRAIN_CK(neu.ne_original);
 
+			if(inc_col_ne_pend){ 
+				inc_col_ne_pend = false;
+				col_ne++; 
+			}
+			
 			all_neus.push(&neu); 
-			neu_colors.push(sig_col);
+			neu_colors.push(col_ne);
 		}
 	}
 
@@ -1623,8 +1634,8 @@ neuromap::map_get_initial_tauto_coloring(coloring& prv_clr, coloring& tauto_clr)
 	
 	coloring& tmp_co = brn.br_tmp_tauto_col;
 
-	tmp_co.init_coloring();
-	tauto_clr.init_coloring();
+	tmp_co.init_coloring(&brn);
+	tauto_clr.init_coloring(&brn);
 	
 	row<neuron*>& all_co_neus = tmp_co.co_neus;
 
@@ -1843,7 +1854,8 @@ neuromap::map_ck_contained_in(coloring& colr, dbg_call_id dbg_id){
 }
 
 void
-coloring::set_brain_coloring(){
+coloring::dbg_set_brain_coloring(){
+#ifdef FULL_DEBUG
 	brain* pt_br = get_dbg_brn();
 	if(pt_br == NULL){
 		return;
@@ -1859,7 +1871,7 @@ coloring::set_brain_coloring(){
 	row<neuron*>&	all_neus = co_neus;
 	row<long>&	neu_colors = co_neu_colors;
 	
-	init_coloring();
+	init_coloring(&brn);
 	
 	for(long aa = 0; aa < all_br_quas.size(); aa++){
 		quanton& qua = all_br_quas[aa];
@@ -1879,7 +1891,7 @@ coloring::set_brain_coloring(){
 			neu_colors.push(1);
 		}
 	}
-	
+#endif
 }
 
 void
@@ -2187,4 +2199,152 @@ neuromap::map_set_stab_guide(){
 	
 	BRAIN_CK(has_stab_guide());
 }
+
+bj_ostream&
+quanton::dbg_qu_print_col_cy_node(bj_ostream& os, bool with_coma){
+#ifdef FULL_DEBUG
+#endif
+	return os;
+}*/
+
+bj_ostream&
+neuron::dbg_ne_print_col_cy_node(bj_ostream& os){
+#ifdef FULL_DEBUG
+	os << "\t\t ,{ data: { id: 'n" << ne_index << "'}, ";
+	os << "position:{x:" << ne_dbg_drw_x_pos << ", y:" << ne_dbg_drw_y_pos << "}, ";
+	os << "classes:'neuron' }";
+	os << std::endl;
+#endif
+	return os;
+}
+
+bj_ostream&
+brain::dbg_br_print_col_cy_nodes(bj_ostream& os, bool is_ic){
+#ifdef FULL_DEBUG
+
+	os << "\t nodes: [" << bj_eol;
+	
+	row_quanton_t& all_cy_quas = br_all_cy_quas;
+	for(long aa = 0 ; aa < all_cy_quas.size(); aa++){
+		BRAIN_CK(all_cy_quas[aa] != NULL_PT);
+		quanton& qua = *(all_cy_quas[aa]);
+		long qti = qua.qu_tier;
+		bool is_cho = qua.is_choice();
+		bool is_lrn = qua.is_learned_choice();
+
+		os << "\t\t ";
+		if(aa != 0){ os << ","; }
+		os << "{ data: { id: 'd" << qua.qu_id << "'";
+		if(is_ic && (qti > 0)){
+			os << ", lbl: " << qti;
+		}
+		os << "}, ";
+		os << "position:{x:" << qua.qu_dbg_drw_x_pos;
+		os << ", y:" << qua.qu_dbg_drw_y_pos << "}";
+		os << ", classes:'dipole";
+		if(is_ic){
+			if(is_cho){ os << " cho"; }
+			if(is_lrn){ os << " lrn"; }
+		}
+		os << "' }";
+		os << std::endl;
+		//qua.dbg_qu_print_col_cy_node(os, (aa != 0));
+	}
+	row_neuron_t& all_cy_neus = br_all_cy_neus;
+	for(long aa = 0 ; aa < all_cy_neus.size(); aa++){
+		BRAIN_CK(all_cy_neus[aa] != NULL_PT);
+		neuron& neu = *(all_cy_neus[aa]);
+		neu.dbg_ne_print_col_cy_node(os);
+	}
+
+	os << "\t ]," << bj_eol;
+#endif
+	return os;
+}
+
+bj_ostream&	
+coloring::dbg_print_col_cy_graph(bj_ostream& os, bool is_ic){
+#ifdef FULL_DEBUG
+
+	brain* pt_br = get_dbg_brn();
+	if(pt_br == NULL){
+		bj_out << "Cannot print col EMPTY BRN !!!\n";
+		return os;
+	}
+	bj_out << "Printing col=" << this << "\n\n";
+	
+	brain& brn = *pt_br;
+	//long num_step = 0;
+	//ch_string prefix = "brn_cnf_";
+	
+	brn.dbg_br_print_col_cy_nodes(os, is_ic);
+	
+	row_quanton_t& all_quas = co_quas;
+	
+	BRAIN_CK(brn.br_qu_tot_note1 == 0);
+	set_all_note1(brn, all_quas);
+	
+	os << "\t edges: [" << bj_eol;
+	long q_consec = 0;
+	row_neuron_t& all_neus = co_neus;
+	for(long aa = 0; aa < all_neus.size(); aa++){
+		BRAIN_CK(all_neus[aa] != NULL_PT);
+		neuron& neu = *(all_neus[aa]);
+		neu.dbg_ne_print_col_cy_edge(os, q_consec);
+	}
+	os << "\t ]," << bj_eol;
+	
+	reset_all_note1(brn, all_quas);
+	BRAIN_CK(brn.br_qu_tot_note1 == 0);
+	
+#endif
+	return os;
+}
+
+bj_ostream&
+quanton::dbg_qu_print_col_cy_edge(bj_ostream& os, long& consec, long neu_idx){
+#ifdef FULL_DEBUG
+	long var_id = qu_id;
+	ch_string pole_str = "in_pos";
+	if(qu_id < 0){
+		var_id = -qu_id;
+		pole_str = "in_neg";
+	}
+	BRAIN_CK(var_id > 0);
+	os << "\t\t ";
+	if(consec != 0){ os << ","; }
+	os << "{ data: { id: 'q" << consec << "', source: 'n" << neu_idx;
+	os << "', target: 'd" << var_id << "'}, classes: '" << pole_str << "' }";
+	os << std::endl;
+	
+	consec++;
+#endif
+	return os;
+}
+
+bj_ostream&
+neuron::dbg_ne_print_col_cy_edge(bj_ostream& os, long& consec){
+#ifdef FULL_DEBUG
+	for(long aa = 0; aa < ne_fibres.size(); aa++){
+		BRAIN_CK(ne_fibres[aa] != NULL_PT);
+		quanton& qua = *(ne_fibres[aa]);
+		if(qua.has_note1()){
+			qua.dbg_qu_print_col_cy_edge(os, consec, ne_index);
+		}
+	}
+#endif
+	return os;
+}
+
+/*
+the_cnf_001 = {
+	 edges: [
+		 { data: { id: 'q0', source: 'n0', target: 'd1'}, classes: 'in_neg' }
+		 ,{ data: { id: 'q1', source: 'n0', target: 'd2'}, classes: 'in_neg' }
+		 ,{ data: { id: 'q17', source: 'n8', target: 'd6'}, classes: 'in_pos' }
+	 ]
+};
+
+
 */
+

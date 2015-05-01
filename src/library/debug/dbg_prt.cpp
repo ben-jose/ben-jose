@@ -35,8 +35,6 @@ dbg_prt_brn funcs.
 
 --------------------------------------------------------------*/
 
-#include <fstream>
-
 #include "bj_stream.h"
 #include "ch_string.h"
 #include "brain.h"
@@ -67,7 +65,7 @@ dbg_prt_all_cho(brain& brn){
 	ch_string cho_nam = f_nam + "_chosen.log";
 
 	const char* log_nm = cho_nam.c_str();
-	std::ofstream log_stm;
+	bj_ofstream log_stm;
 	//log_stm.open(log_nm, std::ios::app);
 	log_stm.open(log_nm, std::ios::binary);
 	if(! log_stm.good() || ! log_stm.is_open()){
@@ -125,5 +123,17 @@ bool	dbg_print_cond_func(brain* brn, bool prm, bool is_ck, const ch_string fnam,
 	bad_cy = false;
 #endif
 	return resp;
+}
+
+void
+dbg_prt_open(ch_string& path, bj_ofstream& stm){
+#ifdef FULL_DEBUG
+	const char* log_nm = path.c_str();
+	stm.open(log_nm, std::ios::binary);
+	if(! stm.good() || ! stm.is_open()){
+		ch_string msg = "Could not open file " + path;
+		abort_func(1, msg.c_str());
+	}
+#endif
 }
 

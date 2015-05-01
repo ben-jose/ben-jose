@@ -60,6 +60,8 @@ public:
 	long	dbg_max_wrt_num_subnmp;
 	long	dbg_max_fnd_num_subnmp;
 	
+	ch_string	dbg_html_out_path;
+	
 	dbg_slvr_info(){
 		init_dbg_slvr_info();
 	}
@@ -68,6 +70,8 @@ public:
 		dbg_max_lv = 0;
 		dbg_max_wrt_num_subnmp = 0;
 		dbg_max_fnd_num_subnmp = 0;
+		
+		dbg_html_out_path = ".";
 	}
 };
 

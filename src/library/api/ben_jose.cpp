@@ -144,7 +144,7 @@ bj_satisf_val_t 	bj_solve_file(bj_solver_t bjs, const char* f_path){
 	//DBG(bj_out << bj_eol << "SOLVING_INSTANCE=" << inst.ist_id << bj_eol );
 	
 	brain the_brain(the_slvr);
-	bj_satisf_val_t res = the_brain.solve_instance();
+	bj_satisf_val_t res = the_brain.solve_instance(true /* load_it */);
 	
 	return res;
 }

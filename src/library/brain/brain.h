@@ -71,6 +71,12 @@ Declarations of classes and that implement the neural network.
 //=============================================================================
 // MAIN CLASSES
 
+#define CY_IC_KIND "_ic_"
+#define CY_NMP_KIND "_nmp_"
+#define CY_CIRCLE_LAYOUT "'circle'"
+#define CY_PRESET_LAYOUT "'preset'"
+#define MAX_CY_STEPS 1000
+
 #define ROOT_LEVEL 0
 #define MIN_TRAIL_SZ 1
 
@@ -506,6 +512,8 @@ class quanton {
 	DBG(
 		bj_big_int_t	qu_dbg_fst_lap_cho;
 		bj_big_int_t	qu_dbg_num_laps_cho;
+		long			qu_dbg_drw_x_pos;
+		long			qu_dbg_drw_y_pos;
 	);
 
 	// methods
@@ -592,6 +600,8 @@ class quanton {
 		DBG(
 			qu_dbg_fst_lap_cho = 0;
 			qu_dbg_num_laps_cho = 0;
+			qu_dbg_drw_x_pos = 0;
+			qu_dbg_drw_y_pos = 0;
 		);
 	}
 
@@ -696,10 +706,16 @@ class quanton {
 		return cho;
 	}
 	
+	bool		is_learned_choice();
+	
 	DBG(bool is_eonmp();)
 	
 	neuromap*	get_nmp_to_write(brain& brn);
 
+	//bj_ostream&		dbg_qu_print_col_cy_node(bj_ostream& os, bool with_coma);
+	
+	bj_ostream&		dbg_qu_print_col_cy_edge(bj_ostream& os, long& consec, long neu_idx);
+	
 	bj_ostream&		print_quanton_base(bj_ostream& os, bool from_pt, 
 									   long ps_ti, neuron* ps_src);
 	
@@ -959,6 +975,8 @@ class neuron {
 		bool			ne_dbg_in_used;
 		ticket			ne_dbg_filled_tk;	// all filled updated a filled time
 		ticket			ne_dbg_creation_tk;
+		long			ne_dbg_drw_x_pos;
+		long			ne_dbg_drw_y_pos;
 	)
 
 	// methods
@@ -1024,6 +1042,8 @@ class neuron {
 			ne_dbg_in_used = false;
 			ne_dbg_filled_tk.init_ticket();
 			ne_dbg_creation_tk.init_ticket();
+			ne_dbg_drw_x_pos = 0;
+			ne_dbg_drw_y_pos = 0;
 		)
 	}
 
@@ -1179,8 +1199,12 @@ class neuron {
 		return ne_tee.so_vessel;
 	}
 
+	bj_ostream&		dbg_ne_print_col_cy_node(bj_ostream& os);
+	bj_ostream&		dbg_ne_print_col_cy_edge(bj_ostream& os, long& consec);
+	
 	bj_ostream& 	print_neu_base(bj_ostream& os, bool detail, bool prt_src, 
 								   bool sort_fib);
+	
 	bj_ostream&	print_neuron(bj_ostream& os, bool from_pt = false);
 };
 
@@ -1514,7 +1538,7 @@ class coloring {
 		return is_vg;
 	}
 
-	void	set_brain_coloring();
+	void	dbg_set_brain_coloring();
 	
 	bool	has_diff_col_than_prev(row<long>& the_colors, long col_idx, dbg_call_id dbg_id);
 
@@ -1541,6 +1565,8 @@ class coloring {
 		return true;
 	}
 
+	bj_ostream&	dbg_print_col_cy_graph(bj_ostream& os, bool is_ic);
+	
 	bj_ostream&	print_coloring(bj_ostream& os, bool from_pt = false);
 };
 
@@ -2174,6 +2200,8 @@ class qulayers {
 		return true;
 	}
 
+	//bj_ostream&	dbg_print_qulayers_cy_graph(bj_ostream& os);
+	
 	bj_ostream&	print_qulayers(bj_ostream& os, bool from_pt = false);
 	
 };
@@ -2805,13 +2833,11 @@ public:
 	
 	bool	dbg_periodic_prt;
 
-	/*
-	row<debug_entry>	dbg_start_dbg_entries;
-	row<debug_entry>	dbg_stop_dbg_entries;
-	long			dbg_current_start_entry;
-	long			dbg_current_stop_entry;
-	row<bool>	dbg_levs_arr;
-	*/
+	ch_string	dbg_cy_prefix;
+	long		dbg_cy_ic_step;
+	long		dbg_cy_nmp_step;
+	ch_string	dbg_cy_layout;
+	
 	debug_info	dbg_conf_info;
 	
 	bool 		dbg_bad_cycle1;
@@ -2953,6 +2979,11 @@ public:
 	row_quanton_t		br_semi_monos_to_update;
 	
 	notekeeper		br_dbg_retract_nke0;
+	
+	row_quanton_t	br_all_cy_quas;
+	row_neuron_t	br_all_cy_neus;
+	coloring		br_dbg_full_col;
+	row_quanton_t	br_dbg_quly_cy_quas;
 	
 	row<sortee*> 		br_tmp_wrt_tauto_tees;
 	row<sortee*> 		br_tmp_wrt_guide_tees;
@@ -3230,7 +3261,7 @@ public:
 			BRAIN_CK(&(br_neurons[neu_idx]) == pt_neu);
 		} else {
 			pt_neu = &(br_neurons.inc_sz());
-			pt_neu->ne_index = br_neurons.size() - 1;
+			pt_neu->ne_index = br_neurons.last_idx();
 		}
 		BRAIN_CK(pt_neu != NULL);
 
@@ -3294,7 +3325,7 @@ public:
 	void	init_loading(long num_qua, long num_neu);
 	void	init_uncharged();
 
-	neuron*	add_neuron(row_quanton_t& quans, quanton*& forced_qua, bool orig);
+	neuron&	add_neuron(row_quanton_t& quans, quanton*& forced_qua, bool orig);
 	neuron*	learn_mots(row_quanton_t& the_mots, quanton& forced_qua);
 
 	quanton*	get_quanton(long q_id);
@@ -3488,13 +3519,13 @@ public:
 
 	void		read_cnf(dimacs_loader& ldr);
 	void		parse_cnf(dimacs_loader& ldr, row<long>& all_ccls);
-	void		load_neuron(row_quanton_t& neu_quas);
+	neuron& 	load_neuron(row_quanton_t& neu_quas);
 	bool		load_brain(long num_neu, long num_var, row_long_t& load_ccls);
 	
 	bool		load_instance();
-	void		aux_solve_instance();
+	void		find_result();
 	
-	bj_satisf_val_t 	solve_instance();
+	bj_satisf_val_t 	solve_instance(bool load_it);
 
 	neuromap*	get_last_upper_map(){
 		neuromap* up_dom = NULL_PT;
@@ -3527,10 +3558,16 @@ public:
 	void 	dbg_prt_lvs_active(bj_ostream& os);
 	void 	dbg_prt_lvs_cho(bj_ostream& os);
 	void	dbg_prt_full_stab();
+	
+	void	dbg_print_cy_graph_node_plays(bj_ostream& os);
+	void	dbg_print_cy_graph_node_tiers(bj_ostream& os);
+	void	dbg_update_html_cy_graph(ch_string cy_kk, coloring* col, ch_string htm_str);
 
 	void		print_active_blocks(bj_ostream& os);
 
-	bj_ostream& 	print_brain(bj_ostream& os);
+	bj_ostream&	dbg_br_print_col_cy_nodes(bj_ostream& os, bool is_ic);
+	
+	bj_ostream& print_brain(bj_ostream& os);
 
 	bj_ostream&	print_all_original(bj_ostream& os);
 };
@@ -3655,6 +3692,19 @@ quanton::reset_mark(brain& brn){
 	qu_mark = cg_neutral;
 	qu_inverse->qu_mark = cg_neutral;
 	brn.br_tot_qu_marks--;
+}
+
+inline
+bool
+quanton::is_learned_choice(){
+	neuron* neu = get_source();
+	if(neu == NULL_PT){
+		return false;
+	}
+	if(neu->ne_original){
+		return false;
+	}
+	return true;
 }
 
 DBG(

@@ -44,6 +44,7 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 
 #include "bj_stream.h"
 #include "tools.h"
+#include "file_funcs.h"
 #include "dimacs.h"
 #include "sha2.h"
 #include "print_macros.h"
@@ -190,12 +191,6 @@ ch_string	nam_subset_resp(cmp_is_sub rr);
 void		string_replace_char(ch_string& src_str, char orig, char repl);
 
 bool		path_is_dead_lock(ch_string the_pth);
-void		path_delete(ch_string full_pth, ch_string up_to);
-bool		path_create(ch_string n_pth);
-
-ch_string	path_get_directory(ch_string the_pth, bool add_last_dir_sep);
-bool		path_begins_with(ch_string the_pth, ch_string the_beg);
-bool		path_ends_with(ch_string& the_str, ch_string& the_suf);
 
 bool 		dims_path_exists(ch_string base_pth, const dima_dims& dims);
 

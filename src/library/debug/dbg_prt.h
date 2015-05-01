@@ -102,6 +102,7 @@ bool	dbg_print_cond_func(
 #define DBG_SLOW(prm)
 //define DBG_SLOW(prm)	DBG(prm)
 
+void dbg_prt_open(ch_string& path, bj_ofstream& stm);
 
 #endif		// DBG_PRINT_H
 
