@@ -2,10 +2,10 @@ the_cnf_001 = {
 	 nodes: [
 		 { data: { id: 'd1'}, position:{x:0, y:0}, classes:'dipole' }
 		 ,{ data: { id: 'd2'}, position:{x:50, y:0}, classes:'dipole' }
-		 ,{ data: { id: 'd3'}, position:{x:100, y:0}, classes:'dipole' }
+		 ,{ data: { id: 'd3'}, position:{x:100, y:0}, classes:'dipole lrn' }
 		 ,{ data: { id: 'd4'}, position:{x:150, y:0}, classes:'dipole' }
-		 ,{ data: { id: 'd5'}, position:{x:200, y:0}, classes:'dipole' }
-		 ,{ data: { id: 'd6'}, position:{x:250, y:0}, classes:'dipole' }
+		 ,{ data: { id: 'd5', lbl: 'HOLA'}, position:{x:200, y:0}, classes:'dipole' }
+		 ,{ data: { id: 'd6'}, position:{x:250, y:0}, classes:'dipole cho' }
 
 		 ,{ data: { id: 'n0'}, position:{x:25, y:-40}, classes:'neuron' }
 		 ,{ data: { id: 'n1'}, position:{x:50, y:-40}, classes:'neuron' }
@@ -51,9 +51,5 @@ all_to_play_cnf_001 = [
 	'd3'
 ];
 
-all_tiers_cnf_001 = [
-	-1
-	,1
-	,2
-	,2
-];
+the_text_cnf_001 = '<h2>Titulo dos</h2><h3>Titulo tres</h3><p>Un parrafito</p>';
+

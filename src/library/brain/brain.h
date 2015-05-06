@@ -706,9 +706,9 @@ class quanton {
 		return cho;
 	}
 	
-	bool		is_learned_choice();
+	bool	is_learned_choice();
 	
-	DBG(bool is_eonmp();)
+	bool 	is_eonmp();
 	
 	neuromap*	get_nmp_to_write(brain& brn);
 
@@ -2200,7 +2200,7 @@ class qulayers {
 		return true;
 	}
 
-	//bj_ostream&	dbg_print_qulayers_cy_graph(bj_ostream& os);
+	void 	dbg_ql_init_all_cy_pos();
 	
 	bj_ostream&	print_qulayers(bj_ostream& os, bool from_pt = false);
 	
@@ -2833,6 +2833,7 @@ public:
 	
 	bool	dbg_periodic_prt;
 
+	ch_string	dbg_cy_text;
 	ch_string	dbg_cy_prefix;
 	long		dbg_cy_ic_step;
 	long		dbg_cy_nmp_step;
@@ -3047,6 +3048,7 @@ public:
 	row<prop_signal>	br_tmp_nmp_get_all_propag_ps;
 	
 	coloring		br_tmp_all_quas_col;
+	coloring		br_tmp_ini_tauto_col;
 	coloring		br_tmp_tauto_col;
 	
 	// these var MUST start with 'br_qu_tot_' 
@@ -3308,17 +3310,7 @@ public:
 		return h_cfl;
 	}
 
-	bool 	ck_confl_ti(){
-		if(br_all_conflicts_found.size() < 2){
-			return true;
-		}
-		long lst_idx = br_all_conflicts_found.last_idx();
-		long prv_idx = lst_idx - 1;
-		prop_signal& cfl_0 = br_all_conflicts_found[lst_idx];
-		prop_signal& cfl_1 = br_all_conflicts_found[prv_idx];
-		BRAIN_CK(cfl_0.ps_tier == cfl_1.ps_tier);
-		return true;
-	}
+	bool 	ck_confl_ti();
 	
 	void	set_file_name_in_ic(ch_string f_nam = "");
 	void	config_brain(ch_string f_nam = "");
@@ -3562,7 +3554,8 @@ public:
 	void	dbg_print_cy_graph_node_plays(bj_ostream& os);
 	void	dbg_print_cy_graph_node_tiers(bj_ostream& os);
 	void	dbg_update_html_cy_graph(ch_string cy_kk, coloring* col, ch_string htm_str);
-
+	void 	dbg_br_init_all_cy_pos();
+	
 	void		print_active_blocks(bj_ostream& os);
 
 	bj_ostream&	dbg_br_print_col_cy_nodes(bj_ostream& os, bool is_ic);
@@ -3707,7 +3700,6 @@ quanton::is_learned_choice(){
 	return true;
 }
 
-DBG(
 inline
 bool
 quanton::is_eonmp(){
@@ -3718,7 +3710,7 @@ quanton::is_eonmp(){
 		return true;
 	}
 	return false;
-})
+}
 
 inline
 void

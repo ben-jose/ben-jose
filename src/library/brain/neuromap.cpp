@@ -550,6 +550,7 @@ neuromap::dbg_ck_all_neus(){
 void
 neuromap::map_set_all_ne_curr_dom(){
 	neuromap& nmp = *this;
+	MARK_USED(nmp);
 	brain& brn = get_brn();
 	row<neuron*>& all_neus = brn.br_tmp_ne_dom;
 	all_neus.clear();
@@ -781,6 +782,7 @@ coloring::load_colors_into(brain& brn, sort_glb& neus_srg, sort_glb& quas_srg,
 		row<sortee*>& neu_mates = neu.ne_reltee.so_mates;
 		BRAIN_CK_PRT(! neu_mates.is_empty(), os << "____\n neu=" << &neu);
 		if(! neu_mates.is_empty()){
+			BRAIN_CK(neu_mates.size() >= 2);
 			BRAIN_CK(neu_tee.is_unsorted());
 			neu_tee.sort_from(neus_srg, neus_consec);
 		}
@@ -1215,6 +1217,15 @@ neuromap::map_oper(mem_op_t mm){
 
 	bj_output_t& o_info = brn.get_out_info();
 	
+	DBG(
+		ch_string rc_str = brn.recoil().get_str();
+		ch_string op_str = (mm == mo_find)?("Find"):("Write");
+		brn.br_dbg.dbg_cy_text = "<h2>" + op_str + "</h2>";
+		brn.br_dbg.dbg_cy_text += "BRN_recoil=" + rc_str + "<br>";
+		brn.br_dbg.dbg_cy_text += "CNF_minisha=" + tmp_tauto_cnf.cf_minisha_str + "<br>";
+		brn.br_dbg.dbg_cy_text += "CNF_sha=" + tmp_tauto_cnf.cf_sha_str + "<br>";
+	);
+	
 	bool oper_ok = false;
 	if(mm == mo_find){
 		instance_info& iinfo = brn.get_my_inst();
@@ -1283,7 +1294,9 @@ neuromap::map_oper(mem_op_t mm){
 			oper_ok = tmp_diff_cnf.save_cnf(skg, sv_pth2);
 			tmp_guide_cnf.save_cnf(skg, sv_pth3);
 
-			o_info.bjo_saved_targets++;
+			if(oper_ok){
+				o_info.bjo_saved_targets++;
+			}
 			
 			//BRAIN_CK(! oper_ok || srg_forced.base_path_exists(skg));
 			
@@ -1303,6 +1316,11 @@ neuromap::map_oper(mem_op_t mm){
 			);			
 		}
 	}
+	
+	DBG_COMMAND(150, brn.dbg_update_html_cy_graph(CY_NMP_KIND, 
+					&(brn.br_tmp_ini_tauto_col), brn.br_dbg.dbg_cy_text)
+	);
+	
 	return oper_ok;
 }
 
@@ -1413,7 +1431,8 @@ neuromap::map_prepare_mem_oper(mem_op_t mm){
 	
 	// stab tauto
 
-	coloring ini_tau_col(&brn);
+	coloring& ini_tau_col = brn.br_tmp_ini_tauto_col;
+	
 	map_get_initial_tauto_coloring(uni_guide_col, ini_tau_col);
 
 	BRAIN_CK(map_ck_contained_in(ini_tau_col, dbg_call_3));
@@ -1426,8 +1445,6 @@ neuromap::map_prepare_mem_oper(mem_op_t mm){
 
 	BRAIN_CK(tauto_ne_srg.ck_stab_inited());
 	BRAIN_CK(tauto_qu_srg.ck_stab_inited());
-	
-	DBG_COMMAND(150, brn.dbg_update_html_cy_graph(CY_NMP_KIND, &ini_tau_col, ""));
 	
 	ini_tau_col.load_colors_into(brn, tauto_ne_srg, tauto_qu_srg, dims1);
 
@@ -1727,52 +1744,6 @@ neuromap::map_init_stab_guide(){
 	guide_col.add_coloring(brn, ini_guide_col);
 	
 	map_stab_guide_col();
-
-	/*
-	DBG(long old_quas_sz = guide_col.co_quas.size());
-	DBG(long old_neus_sz = guide_col.co_neus.size());
-
-	brn.all_mutual_init();
-	
-	sort_glb& neus_srg = brn.br_guide_neus_srg;
-	sort_glb& quas_srg = brn.br_guide_quas_srg;
-	dima_dims dims0;
-	
-	neus_srg.sg_one_ccl_per_ss = false;
-
-	DBG_PRT(129, os << " bef_load_col neus_srg=" << neus_srg);
-	DBG_PRT(129, os << " bef_load_col quas_srg=" << quas_srg);
-	DBG_PRT(129, os << " bef_load_col qui_col=" << guide_col);
-	guide_col.load_colors_into(brn, neus_srg, quas_srg, dims0);
-	DBG_PRT(129, os << " aft_load_col qui_col=" << guide_col);
-	DBG_PRT(129, os << " aft_load_col neus_srg=" << neus_srg);
-	DBG_PRT(129, os << " aft_load_col quas_srg=" << quas_srg);
-	
-	BRAIN_DBG(
-		coloring tmp_ck_guide_col(&brn);
-		tmp_ck_guide_col.save_colors_from(neus_srg, quas_srg, true);
-		BRAIN_CK_PRT((tmp_ck_guide_col.equal_co_to(guide_col)), 
-				os << "tmp_col=" << tmp_ck_guide_col << "\n";
-				os << "gui_col=" << guide_col << "\n";
-		);
-	);
-	
-	// THE STAB FOR THIS NMP BLOCK
-	neus_srg.stab_mutual(quas_srg);
-	
-	DBG_PRT(129, os << " aft_stab neus_srg=" << neus_srg);
-	DBG_PRT(129, os << " aft_stab quas_srg=" << quas_srg);
-	
-	DBG_PRT(129, os << " bef_guide_col=" << guide_col);
-	guide_col.save_colors_from(neus_srg, quas_srg, false);
-	DBG_PRT(129, os << " AFT_guide_col=" << guide_col);
-
-	BRAIN_CK(old_quas_sz == guide_col.co_quas.size());
-	BRAIN_CK_PRT((old_neus_sz == guide_col.co_neus.size()),
-			os << "_____\n old_neus_sz=" << old_neus_sz << " nw_sz=" 
-			<< guide_col.co_neus.size();
-	);
-	*/
 }
 
 void
@@ -2093,14 +2064,6 @@ coloring::equal_co_to(coloring& col2){
 	BRAIN_CK(col2.ck_cols());
 	bool c1 = (co_brn == col2.co_brn);
 		
-	/*
-	bool c2 = (co_quas.equal_to(col2.co_quas));
-	bool c3 = (co_qua_colors.equal_to(col2.co_qua_colors));
-
-	bool c4 = (co_neus.equal_to(col2.co_neus));
-	bool c5 = (co_neu_colors.equal_to(col2.co_neu_colors));
-	*/
-	
 	bool c2 = (co_quas.size() == col2.co_quas.size());
 	bool c3 = (co_neus.size() == col2.co_neus.size());
 
@@ -2178,35 +2141,6 @@ neuromap::map_set_stab_guide(){  // full_prep (uncomment and comment sibling)
 	BRAIN_CK(has_stab_guide());
 }
 
-/*
-void
-neuromap::map_set_stab_guide(){
-	if(has_stab_guide()){
-		return;
-	}
-	
-	brain& brn = get_brn();
-	coloring& guide_col = na_guide_col;
-	
-	guide_col.init_coloring(&brn);
-	
-	row<prop_signal>& all_ps = brn.br_tmp_nmp_get_all_propag_ps;
-	map_get_all_propag_ps(all_ps);
-	
-	map_get_initial_ps_coloring(brn, all_ps, guide_col, true);
-	
-	map_stab_guide_col();
-	
-	BRAIN_CK(has_stab_guide());
-}
-
-bj_ostream&
-quanton::dbg_qu_print_col_cy_node(bj_ostream& os, bool with_coma){
-#ifdef FULL_DEBUG
-#endif
-	return os;
-}*/
-
 bj_ostream&
 neuron::dbg_ne_print_col_cy_node(bj_ostream& os){
 #ifdef FULL_DEBUG
@@ -2228,15 +2162,22 @@ brain::dbg_br_print_col_cy_nodes(bj_ostream& os, bool is_ic){
 	for(long aa = 0 ; aa < all_cy_quas.size(); aa++){
 		BRAIN_CK(all_cy_quas[aa] != NULL_PT);
 		quanton& qua = *(all_cy_quas[aa]);
+		
+		long qid = qua.qu_id;
+		BRAIN_CK(qid > 0);
+		
 		long qti = qua.qu_tier;
 		bool is_cho = qua.is_choice();
 		bool is_lrn = qua.is_learned_choice();
 
 		os << "\t\t ";
 		if(aa != 0){ os << ","; }
-		os << "{ data: { id: 'd" << qua.qu_id << "'";
+		os << "{ data: { id: 'd" << qid << "'";
 		if(is_ic && (qti > 0)){
 			os << ", lbl: " << qti;
+		}
+		if(! is_ic){
+			os << ", lbl2: " << qid;
 		}
 		os << "}, ";
 		os << "position:{x:" << qua.qu_dbg_drw_x_pos;
@@ -2335,16 +2276,4 @@ neuron::dbg_ne_print_col_cy_edge(bj_ostream& os, long& consec){
 #endif
 	return os;
 }
-
-/*
-the_cnf_001 = {
-	 edges: [
-		 { data: { id: 'q0', source: 'n0', target: 'd1'}, classes: 'in_neg' }
-		 ,{ data: { id: 'q1', source: 'n0', target: 'd2'}, classes: 'in_neg' }
-		 ,{ data: { id: 'q17', source: 'n8', target: 'd6'}, classes: 'in_pos' }
-	 ]
-};
-
-
-*/
 

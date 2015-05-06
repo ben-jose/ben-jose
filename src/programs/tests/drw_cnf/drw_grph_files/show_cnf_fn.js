@@ -15,7 +15,7 @@ the_cnf_style = [
 		selector: 'node',
 		css: {
 			'content': 'data(lbl)',
-			'color': 'yellow',
+			//'color': 'aqua',
 			'width': nod_w
 		}
 	}
@@ -54,6 +54,18 @@ the_cnf_style = [
 		css: {
 			'height': dip_h,
 			'background-color': 'white'
+		}
+	}
+	,{
+		selector: 'node.clb1',
+		css: { 
+			'color': 'yellow'
+		}
+	}
+	,{
+		selector: 'node.clb2',
+		css: { 
+			'color': 'aqua'
 		}
 	}
 	,{
@@ -97,7 +109,7 @@ set_node_tier = function(gph, node, nd_tier) {
 	}
 };
 
-play_node = function(gph, node, nd_tier) {
+play_node = function(gph, node) {
 
 	q_tar = gph.elements('edge[target = "' + node + '"]');
 
@@ -108,14 +120,49 @@ play_node = function(gph, node, nd_tier) {
 	q_pos.addClass('in_neg');
 	q_neg.removeClass('in_neg');
 	q_neg.addClass('in_pos');
-	
-	set_node_tier(gph, node, nd_tier);
 };
 
-fn_handle_event = function(event) {
+fn_handle_tap = function(event) {
 	if(event.cyTarget.isNode()){
 		var nd_id = event.cyTarget.data("id");
 		play_node(event.cy, nd_id);
+	}
+};
+
+set_lbl2 = function(gph, node) {
+	the_nd = gph.filter('node[id = "' + node + '"]');
+	var tmp1 = the_nd.data('lbl');
+	var tmp2 = the_nd.data('lbl2'); 
+	if(tmp2 === undefined){
+		the_nd.data('lbl', '');
+		//the_nd.removeData(['lbl']);
+	} else {
+		the_nd.data('lbl', tmp2);
+	}
+	if(tmp1 === undefined){
+		the_nd.data('lbl2', '');
+		//the_nd.removeData(['lbl2']);
+	} else {
+		the_nd.data('lbl2', tmp1);
+	}
+	
+	if(the_nd.hasClass('clb1')){
+		the_nd.removeClass('clb1');
+		the_nd.addClass('clb2');
+	} else
+	if(the_nd.hasClass('clb2')){
+		the_nd.removeClass('clb2');
+		the_nd.addClass('clb1');
+	} else {
+		the_nd.removeClass('clb1');
+		the_nd.addClass('clb2');
+	}
+};
+
+fn_handle_mouseover = function(event) {
+	if(event.cyTarget.isNode()){
+		var nd_id = event.cyTarget.data("id");
+		set_lbl2(event.cy, nd_id);
 	}
 };
 
@@ -138,8 +185,14 @@ show_cnf = function(grph_div_id, grph_elems, layout_nm, all_to_play, all_tiers){
 			//window.cy = this;
 		}
 	});
+	
+	//all_dipoles = cnf_gph.filter('node[name = "d*"]');
+	//all_dipoles = cnf_gph.dipole;
+	all_dipoles = cnf_gph.filter('node.dipole');
+	all_dipoles.addClass('clb1');
 
-	cnf_gph.on('select', 'node', fn_handle_event);
+	cnf_gph.on('tap', 'node', fn_handle_tap);
+	cnf_gph.on('mouseover', 'node', fn_handle_mouseover);
 	
 	if(all_to_play === undefined){
 		all_to_play = null;
@@ -160,6 +213,6 @@ show_cnf = function(grph_div_id, grph_elems, layout_nm, all_to_play, all_tiers){
 	}
 	//var nd_id = 'd' + 1;
 	//set_node_tier(cnf_gph, nd_id, 20);
-	//play_node(cnf_gph, 'd2', 15);
+	//play_node(cnf_gph, 'd2');
 }
 

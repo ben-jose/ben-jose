@@ -51,8 +51,11 @@ sha_to_minsha(row<uchar_t>& sha_rr){
 	ch_string mnsh = "";
 	
 	const uchar_t* barr = sha_rr.get_c_array();
+	
 	long barr_sz = sha_rr.get_c_array_sz();
+	MARK_USED(barr_sz);
 	TOOLS_CK(barr_sz == NUM_BYTES_SHA2);
+	
 	TOOLS_CK(sha_rr.size() == NUM_BYTES_SHA2);
 	const unsigned long* larr = (const unsigned long*)barr;
 	

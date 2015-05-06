@@ -62,8 +62,15 @@ some strings for html printing.
 #define HTMi_script "<script>"
 #define HTMe_script "</script>"
 
+#define HTM_div(nm_dv) "<div id='" + nm_dv + "'></div>" 
+	
 #define HTM_cy_div(nm_dv) "<div id='" + nm_dv + \
 	"' style='height:600px;width:800px;border:1px solid #777;'></div>" \
+	
+// end_of_define
+
+#define JS_inner_htm(div_txt, var_htm_txt) "document.getElementById('" + \
+	div_txt + "').innerHTML = " + var_htm_txt + ";"
 	
 // end_of_define
 

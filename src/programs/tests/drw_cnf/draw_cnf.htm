@@ -10,18 +10,25 @@
 	</head>
 	<body>
 		<H1>CNF_001</H1>
+		<div id="text_01"></div>
 		<div id="grph_01" style="height:600px;width:800px;border:1px solid #777;"></div>
-		<script> show_cnf('grph_01', the_cnf_001, 'preset', 
-			all_to_play_cnf_001, all_tiers_cnf_001)
+		<script> show_cnf('grph_01', the_cnf_001, 'preset', all_to_play_cnf_001);
+			document.getElementById('text_01').innerHTML = the_text_cnf_001;
 		</script>
 
 		<H1>CNF_002</H1>
+		<div id="text_02"></div>
 		<div id="grph_02" style="height:600px;width:800px;border:1px solid #777;"></div>
-		<script> show_cnf('grph_02', the_cnf_002, 'preset')</script>
+		<script> show_cnf('grph_02', the_cnf_002, 'preset');
+			document.getElementById('text_02').innerHTML = this_var_does_not_exist;
+		</script>
 
 		<H1>CNF_003</H1>
+		<div id="text_03"></div>
 		<div id="grph_03" style='height:600px;width:800px;border:1px solid #777;'></div>
-		<script> show_cnf('grph_03', the_cnf_003, 'preset')</script>
+		<script> show_cnf('grph_03', the_cnf_003, 'preset')
+			document.getElementById('text_03').innerHTML = the_text_cnf_003;
+		</script>
 	</body>
 </html>
 

@@ -86,7 +86,7 @@ php_main(long num_h){
 	
 	brain the_brain(the_slvr);
 	
-	the_brain.br_dbg.dbg_cy_prefix = inst.ist_file_path;
+	BRAIN_DBG(the_brain.br_dbg.dbg_cy_prefix = inst.ist_file_path);
 	
 	bool ld_ok = load_php_by_hole_brain(the_brain, num_h);
 	if(! ld_ok){

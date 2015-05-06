@@ -1,7 +1,7 @@
 the_cnf_003 = {
 	 nodes: [
 		 { data: { id: 'd1'}, position:{x:0, y:0}, classes:'dipole' }
-		 ,{ data: { id: 'd2'}, position:{x:50, y:0}, classes:'dipole' }
+		 ,{ data: { id: 'd2', lbl2: 'JOSE'}, position:{x:50, y:0}, classes:'dipole' }
 		 ,{ data: { id: 'd3'}, position:{x:100, y:0}, classes:'dipole' }
 		 ,{ data: { id: 'd4'}, position:{x:150, y:0}, classes:'dipole lrn' }
 		 ,{ data: { id: 'd5', lbl: 321}, position:{x:200, y:0}, classes:'dipole cho' }
@@ -42,4 +42,5 @@ the_cnf_003 = {
 	 ]
 };
 
+the_text_cnf_003 = 'Solo texto adicional';
  

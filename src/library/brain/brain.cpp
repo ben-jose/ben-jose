@@ -607,16 +607,8 @@ quanton::set_charge(brain& brn, neuron* neu, charge_t cha, long n_tier){
 	BRAIN_CK(! is_pos() || (cha == cg_neutral));
 	BRAIN_CK(has_charge() || (cha == cg_positive));
 
-	bool is_ending = brn.br_last_retract;
-	//bool in_root = (brn.level() == ROOT_LEVEL);
-	//bool in_root = false;
+	BRAIN_DBG(bool is_ending = brn.br_last_retract);
 	bool with_src_before = has_source();
-
-	/*if(in_root){ 
-		BRAIN_CK(is_ending || (cha != cg_neutral));
-		neu = NULL; 
-		n_tier = 0;
-	}*/
 
 	qu_charge = cha;
 	qu_inverse->qu_charge = negate_trinary(cha);
@@ -1186,6 +1178,20 @@ brain::fill_with_origs(row<neuron*>& neus){
 	}
 }
 
+void
+brain::write_all_active(){
+	// write all pending
+	row<neuromap*>& to_wrt = br_tmp_maps_to_write;
+	to_wrt.clear();
+	
+	BRAIN_CK(! br_data_levels.is_empty());
+	BRAIN_CK(level() == ROOT_LEVEL);
+	leveldat& lv = get_data_level(ROOT_LEVEL);
+	
+	lv.ld_nmps_to_write.append_all_as<neuromap>(to_wrt);
+	write_all_neuromaps(to_wrt);
+}
+
 void 
 brain::find_result(){
 	instance_info& inst_info = get_my_inst();
@@ -1218,7 +1224,10 @@ brain::find_result(){
 		pulsate();
 	}
 	
-	if(get_result() == bjr_no_satisf){
+	bj_satisf_val_t resp_solv = get_result();
+	if(resp_solv == bjr_no_satisf){
+		write_all_active();
+		/*
 		// write all pending
 		row<neuromap*>& to_wrt = br_tmp_maps_to_write;
 		to_wrt.clear();
@@ -1229,6 +1238,7 @@ brain::find_result(){
 		
 		lv.ld_nmps_to_write.append_all_as<neuromap>(to_wrt);
 		write_all_neuromaps(to_wrt);
+		*/
 	}
 
 	br_tmp_assig_quantons.clear();
@@ -1238,11 +1248,6 @@ brain::find_result(){
 		br_charge_trail.get_all_ordered_quantons(the_assig);
 		get_ids_of(the_assig, inst_info.ist_assig);
 		inst_info.ist_assig.push(0);	// means the last lit
-	}
-	
-	bj_satisf_val_t resp_solv = o_info.bjo_result;
-	if(resp_solv == bjr_no_satisf){
-		write_all_active();
 	}
 	
 	BRAIN_DBG(
@@ -1289,9 +1294,10 @@ brain::find_result(){
 		os << " dbg_max_fnd_num_subnmp=" << br_dbg.dbg_max_fnd_num_subnmp;
 	);
 	
-	get_solver().update_dbg2(br_dbg);
+	BRAIN_DBG(get_solver().update_dbg2(br_dbg));
 }
 
+#ifdef FULL_DEBUG
 void
 solver::update_dbg2(dbg_inst_info& ist_info){
 	if(ist_info.dbg_max_lv > slv_dbg2.dbg_max_lv){
@@ -1304,6 +1310,7 @@ solver::update_dbg2(dbg_inst_info& ist_info){
 		slv_dbg2.dbg_max_fnd_num_subnmp = ist_info.dbg_max_fnd_num_subnmp;
 	}
 }
+#endif
 
 void
 brain::close_all_maps(){
@@ -1734,6 +1741,7 @@ brain::pulsate(){
 		BRAIN_CK(! found_conflict());
 
 		brain& brn = *this;
+		MARK_USED(brn);
 
 		quanton* pt_qua = NULL;
 		pt_qua = choose_quanton();
@@ -2163,9 +2171,9 @@ brain::reverse(){
 	deduction& dct = br_retract_dct;
 
 	// JLQ
-	bool dbg_full_anls = true;
-	DBG_COMMAND(141, dbg_full_anls = false);
-	if(dbg_full_anls){
+	bool in_full_anls = true;
+	DBG_COMMAND(141, in_full_anls = false);
+	if(in_full_anls){
 		analyse(br_all_conflicts_found, dct);
 	} else {
 		br_deducer_anlsr.set_conflicts(br_all_conflicts_found);
@@ -2273,100 +2281,7 @@ brain::dbg_prt_full_stab(){
 #endif
 }
 
-void
-brain::write_all_active(){
-}
-
-/*
-bj_ostream&
-qulayers::dbg_print_qulayers_cy_graph(bj_ostream& os){
 #ifdef FULL_DEBUG
-	brain& brn = get_ql_brain();
-	row_quanton_t& all_quas = brn.br_dbg_quly_cy_quas;
-	get_all_ordered_quantons(all_quas);
-	
-	os << "\t nodes: [";
-	os << std::endl;
-
-	long lst_ti = INVALID_TIER;
-	long num_ti = 0;
-	for(long aa = 0; aa < all_quas.size(); aa++){
-		BRAIN_CK(all_quas[aa] != NULL_PT);
-		quanton& qua = *(all_quas[aa]);
-		if(lst_ti != qua.qu_tier){
-			lst_ti = qua.qu_tier;
-			num_ti = 0;
-		}
-		num_ti++;
-		
-		long lv = qua.qlevel();
-		ch_string pnt = "l" + lv;
-		
-		long x_pos = num_ti * 100;
-		long y_pos = qua.qu_tier * 100;
-		
-		neuron* neu = qua.get_source();
-		long neu_id = 0;
-		long num_in = 0;
-		if(neu != NULL_PT){
-			neu_id = neu->ne_index;
-			num_in = neu->ne_fibres.size();
-		}
-
-		os << "\t\t ";
-		if(aa != 0){ os << ","; }
-		os << "{ data: {";
-		os << " id: 'd" << abs_long(qua.qu_id) << "',";
-		os << " nam: '" << qua.qu_id << ".n" << neu_id << ".i" << num_in << "',";
-		os << " parent: 'l" << lv << "'";
-		os << " }, ";
-		os << "position:{x:" << x_pos << ", y:" << y_pos << "}";
-		os << " }";
-		os << std::endl;
-	}
-	os << "\t ],";
-	os << std::endl;
-	
-	os << "\t edges: [";
-	os << std::endl;
-	
-	long num_edg = 0;
-	for(long aa = 0; aa < all_quas.size(); aa++){
-		BRAIN_CK(all_quas[aa] != NULL_PT);
-		quanton& qua = *(all_quas[aa]);
-		neuron* neu = qua.get_source();
-		if(neu != NULL_PT){
-			row_quanton_t& all_fib = neu->ne_fibres;
-			for(long bb = 0; bb < all_fib.size(); bb++){
-				BRAIN_CK(all_fib[bb] != NULL_PT);
-				quanton& fib = *(all_fib[bb]);
-				
-				if(&fib == &qua){
-					continue;
-				}
-				
-				os << "\t\t ";
-				if(num_edg != 0){
-					os << ",";
-				}
-				os << "{ data: { id: 'e" << num_edg << "'";
-				os << ", source: 'd" << abs_long(fib.qu_id) << "'";
-				os << ", target: 'd" << abs_long(qua.qu_id) << "' } }";
-				os << std::endl;
-				
-				num_edg++;
-			}
-		}
-	}
-	
-	os << "\t ],";
-	os << std::endl;
-	
-#endif
-	return os;
-}
-*/
-
 ch_string
 get_cy_name(brain& brn, ch_string cy_kk, long num_step){
 	ch_string num_stp = long_to_str(num_step);
@@ -2405,13 +2320,13 @@ get_cy_path(brain& brn, ch_string cy_kk, long num_step){
 	ch_string pth = get_cy_dir(brn) + "/" + get_cy_rel_path(brn, cy_kk, num_step);
 	return pth;
 }
+#endif
 
 void
 brain::dbg_update_html_cy_graph(ch_string cy_kk, coloring* the_col, ch_string htm_str){
 #ifdef FULL_DEBUG
 	brain& brn = *this;
 	
-	ch_string htm_tit = brn.br_dbg.dbg_cy_prefix;
 	ch_string sub_dir = get_cy_dir(brn) + "/" + brn.br_dbg.dbg_cy_prefix;
 	if(! file_exists(sub_dir)){
 		path_create(sub_dir);
@@ -2421,37 +2336,42 @@ brain::dbg_update_html_cy_graph(ch_string cy_kk, coloring* the_col, ch_string ht
 	long n_stp = -1;
 	ch_string js_grph_var_pref = "";
 	ch_string js_plays_var_pref = "";
-	ch_string js_tiers_var_pref = "";
 	ch_string js_fn_nm = "";
+	ch_string js_tit_suf = "";
 	bool is_ic = false;
 	if(cy_kk == CY_IC_KIND){
+		js_tit_suf = " trail CNF graphs";
 		is_ic = true;
 		js_grph_var_pref = "nmp_grph_";
 		js_plays_var_pref = "all_plays_";
-		js_tiers_var_pref = "all_tiers_";
 		js_fn_nm = "show_cnf";
-		//js_fn_nm = "show_cnf";
 		br_dbg.dbg_cy_ic_step++;
 		n_stp = br_dbg.dbg_cy_ic_step;
 	}
 	if(cy_kk == CY_NMP_KIND){
+		js_tit_suf = " sub CNF graphs";
 		js_grph_var_pref = "nmp_grph_";
 		js_fn_nm = "show_cnf";
 		br_dbg.dbg_cy_nmp_step++;
 		n_stp = br_dbg.dbg_cy_nmp_step;
 	}
+	
+	ch_string htm_tit = brn.br_dbg.dbg_cy_prefix + js_tit_suf;
+	
 	BRAIN_CK(n_stp != -1);
 	if(n_stp > MAX_CY_STEPS){
 		return;
 	}
 
+	ch_string js_txt_var_pref = "comment_";
+	
 	ch_string& layo_str = br_dbg.dbg_cy_layout;
 	
 	ch_string stp_str = long_to_str(n_stp);
 	ch_string stp_pth = get_cy_path(brn, cy_kk, n_stp);
 	ch_string stp_js_grph_var_nm = js_grph_var_pref + stp_str;
 	ch_string stp_js_plays_var_nm = js_plays_var_pref + stp_str;
-	ch_string stp_js_tiers_var_nm = js_tiers_var_pref + stp_str;
+	ch_string stp_js_txt_var_nm = js_txt_var_pref + stp_str;
 	
 	if(the_col == NULL_PT){
 		if(br_dbg_full_col.is_co_virgin()){
@@ -2474,13 +2394,12 @@ brain::dbg_update_html_cy_graph(ch_string cy_kk, coloring* the_col, ch_string ht
 		of_st << stp_js_plays_var_nm << " = [" << bj_eol;
 		dbg_print_cy_graph_node_plays(of_st);
 		of_st << "];" << bj_eol;
-
-		/*
-		of_st << stp_js_tiers_var_nm << " = [" << bj_eol;
-		dbg_print_cy_graph_node_tiers(of_st);
-		of_st << "];" << bj_eol;
-		*/
 	} 
+
+	//htm_str = "<p>texto prueba</p>";
+	if(htm_str.size() > 0){
+		of_st << stp_js_txt_var_nm << " = '" << htm_str << "';" << bj_eol;
+	}
 	
 	of_st.flush();
 	of_st.close();
@@ -2512,22 +2431,28 @@ brain::dbg_update_html_cy_graph(ch_string cy_kk, coloring* the_col, ch_string ht
 		ch_string stp_aa_str = long_to_str(aa);
 		ch_string h1_title = "Step " + stp_aa_str;
 		of << "\t\t " << HTMi_h1 << h1_title << HTMe_h1 << bj_eol;
+
+		ch_string div_txt_nm = "cnf_text_" + stp_aa_str;
+		of << "\t\t " << HTM_div(div_txt_nm) << bj_eol;
 		
-		ch_string div_nm = "graph_" + stp_aa_str;
+		ch_string div_nm = "cnf_graph_" + stp_aa_str;
 		ch_string div_str = HTM_cy_div(div_nm);
 		of << "\t\t " << div_str << bj_eol;
 		
 		ch_string js_grph_var_aa_nm = js_grph_var_pref + stp_aa_str;
 		ch_string js_plays_var_aa_nm = js_plays_var_pref + stp_aa_str;
-		ch_string js_tiers_var_aa_nm = js_tiers_var_pref + stp_aa_str;
+		ch_string js_txt_var_aa_nm = js_txt_var_pref + stp_aa_str;
 		
 		of << "\t\t " << HTMi_script << js_fn_nm << "('" << div_nm << "'";
 		of << ", " << js_grph_var_aa_nm << ", " << layo_str;
 		if(is_ic){
-			//of << ", " << js_plays_var_aa_nm << ", " << js_tiers_var_aa_nm;
 			of << ", " << js_plays_var_aa_nm;
 		}
-		of << ")" << HTMe_script << bj_eol;
+		of << ");" << bj_eol;
+		
+		of << "\t\t " << JS_inner_htm(div_txt_nm, js_txt_var_aa_nm) << bj_eol;
+		
+		of << "\t\t " << HTMe_script << bj_eol;
 	}
 	of << "\t" << HTMe_body << bj_eol;
 	
@@ -2539,12 +2464,6 @@ brain::dbg_update_html_cy_graph(ch_string cy_kk, coloring* the_col, ch_string ht
 	bj_out << "Updated file: '" << pth << "'\n";
 #endif
 }
-
-/*
-		<script src="drw_cnf_files/jquery.js"></script>
-		<script src="drw_cnf_files/cytoscape.js"></script>
-		<script src="drw_cnf_files/show_cnf_fn.js"></script>
-*/
 
 void
 brain::dbg_print_cy_graph_node_plays(bj_ostream& os){
@@ -2562,26 +2481,54 @@ brain::dbg_print_cy_graph_node_plays(bj_ostream& os){
 #endif
 }
 
-/*
-void
-brain::dbg_print_cy_graph_node_tiers(bj_ostream& os){
+bool 
+brain::ck_confl_ti(){
 #ifdef FULL_DEBUG
-	os << "\t";
-	os << -1 << bj_eol;
-	for(long aa = 0; aa < br_positons.size(); aa++){
-		quanton& qua = br_positons[aa];
-		long qti = qua.qu_tier;
-		BRAIN_CK((aa + 1)== qua.qu_id);
-		
-		os << "\t";
-		os << ","; 
-		//if(aa != 0){ os << ","; }
-		if(qti > 0){
-			os << qti << bj_eol;
-		} else {
-			os << -1 << bj_eol;
+	if(br_all_conflicts_found.size() < 2){
+		return true;
+	}
+	long lst_idx = br_all_conflicts_found.last_idx();
+	long prv_idx = lst_idx - 1;
+	prop_signal& cfl_0 = br_all_conflicts_found[lst_idx];
+	prop_signal& cfl_1 = br_all_conflicts_found[prv_idx];
+	BRAIN_CK(cfl_0.ps_tier == cfl_1.ps_tier);
+#endif
+	return true;
+}
+
+void
+brain::dbg_br_init_all_cy_pos(){
+#ifdef FULL_DEBUG
+#endif
+}
+
+void
+qulayers::dbg_ql_init_all_cy_pos(){
+#ifdef FULL_DEBUG
+	brain& brn = get_ql_brain();
+	row_quanton_t& all_quas = brn.br_dbg_quly_cy_quas;
+	get_all_ordered_quantons(all_quas);
+	
+	long lst_ti = INVALID_TIER;
+	long num_ti = 0;
+	for(long aa = 0; aa < all_quas.size(); aa++){
+		BRAIN_CK(all_quas[aa] != NULL_PT);
+		quanton& qua = *(all_quas[aa]);
+		if(lst_ti != qua.qu_tier){
+			lst_ti = qua.qu_tier;
+			num_ti = 0;
 		}
+		num_ti++;
+		
+		long lv = qua.qlevel();
+		ch_string pnt = "l" + lv;
+		
+		long x_pos = num_ti * 100;
+		long y_pos = qua.qu_tier * 100;
+		
+		qua.qu_dbg_drw_x_pos = x_pos;
+		qua.qu_dbg_drw_y_pos = y_pos;
 	}
 #endif
 }
-*/
+

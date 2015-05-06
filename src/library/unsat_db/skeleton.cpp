@@ -1935,6 +1935,7 @@ dbg_is_canon_pth(ch_string sv_name){
 
 void
 dbg_map_add_path(skeleton_glb& skg, ch_string sv_name){
+#ifdef FULL_DEBUG
 	bool is_taut = dbg_is_canon_pth(sv_name);
 	if(is_taut){
 		string_long_map_t& pmp = skg.kg_dbg_all_wrt_paths;
@@ -1944,6 +1945,7 @@ dbg_map_add_path(skeleton_glb& skg, ch_string sv_name){
 			pmp[sv_name]++;
 		}
 	}
+#endif
 }
 
 bool

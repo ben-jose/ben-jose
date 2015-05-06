@@ -845,7 +845,12 @@ brain::analyse(row<prop_signal>& all_confl, deduction& out_dct){
 	BRAIN_CK(! all_confl.is_empty());
 	//BRAIN_CK(all_confl.first().ps_tier >= tier());
 	
-	DBG_COMMAND(151, dbg_update_html_cy_graph(CY_IC_KIND, NULL_PT, ""));
+	DBG(
+		ch_string htm_str = "";
+		ch_string rc_str = recoil().get_str();
+		htm_str += "BRN_recoil=" + rc_str + "<br>";
+	);
+	DBG_COMMAND(151, dbg_update_html_cy_graph(CY_IC_KIND, NULL_PT, htm_str));
 	
 	analyser& mper = br_neuromaper_anlsr;
 	analyser& dedser = br_deducer_anlsr;
@@ -1095,13 +1100,13 @@ neuromap::reset_all_nmp_tag1(){
 void
 analyser::make_noted_dominated_and_deduced(row<neuromap*>& to_wrt){
 	brain& brn = get_de_brain();
-	qlayers_ref& qlr = de_ref;
 	row<prop_signal>& all_noted = de_all_noted;
 	
 	DBG_PRT(134, os << "mk dom_noted=\n" << this);
 	
 	make_all_ps_dominated(brn, all_noted, to_wrt);
 	
+	BRAIN_DBG(qlayers_ref& qlr = de_ref);
 	BRAIN_CK(last_qu_noted() == qlr.get_curr_quanton());
 }
 
