@@ -334,6 +334,7 @@ load_php_by_hole_brain(brain& brn, long holes){
 	
 	DBG_CK(verif_num_neu == num_neu);
 	
+	brn.init_alert_neus();
 	brn.init_uncharged();
 
 	double end_load_tm = run_time();

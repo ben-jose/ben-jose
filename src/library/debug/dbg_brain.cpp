@@ -317,8 +317,8 @@ dbg_inst_info::init_dbg_inst_info(){
 #endif
 
 void
-dbg_find_not_in_rr1(brain& brn, row<neuron*>& rr1, row<neuron*>& rr2, 
-					row<neuron*>& not_in_rr1){
+dbg_find_not_in_rr1(brain& brn, row_neuron_t& rr1, row_neuron_t& rr2, 
+					row_neuron_t& not_in_rr1){
 #ifdef FULL_DEBUG
 	not_in_rr1.clear();
 
@@ -340,13 +340,13 @@ dbg_find_not_in_rr1(brain& brn, row<neuron*>& rr1, row<neuron*>& rr2,
 }
 
 void
-dbg_find_diff_tauto_vs_simple_neus(brain& brn, row<neuron*>& not_in_tauto, 
-								   row<neuron*>& not_in_simple)
+dbg_find_diff_tauto_vs_simple_neus(brain& brn, row_neuron_t& not_in_tauto, 
+								   row_neuron_t& not_in_simple)
 {
 #ifdef FULL_DEBUG
-	row<neuron*>& dbg_simple_neus = brn.br_dbg.dbg_simple_neus;
+	row_neuron_t& dbg_simple_neus = brn.br_dbg.dbg_simple_neus;
 
-	row<neuron*> dbg_tauto_neus;
+	row_neuron_t dbg_tauto_neus;
 	srt_row_as<neuron>(brn.br_tauto_neus_srg.sg_step_sortees, dbg_tauto_neus);
 
 	dbg_find_not_in_rr1(brn, dbg_tauto_neus, dbg_simple_neus, not_in_tauto);
@@ -357,8 +357,8 @@ dbg_find_diff_tauto_vs_simple_neus(brain& brn, row<neuron*>& not_in_tauto,
 bool
 dbg_prt_diff_tauto_vs_simple_neus(bj_ostream& os, brain& brn){
 #ifdef FULL_DEBUG
-	row<neuron*> not_in_tauto;
-	row<neuron*> not_in_simple;
+	row_neuron_t not_in_tauto;
+	row_neuron_t not_in_simple;
 
 	dbg_find_diff_tauto_vs_simple_neus(brn, not_in_tauto, not_in_simple);
 
@@ -379,7 +379,7 @@ brain::dbg_check_sat_assig(){
 		br_charge_trail.get_all_ordered_quantons(the_assig);
 	}
 	
-	row<neuron*>& neus = br_tmp_ck_sat_neus;
+	row_neuron_t& neus = br_tmp_ck_sat_neus;
 	fill_with_origs(neus);
 
 	if(! brn_dbg_compute_binary(neus)){
@@ -397,7 +397,7 @@ brain::dbg_check_sat_assig(){
 }
 
 bool
-brain::brn_dbg_compute_binary(row<neuron*>& neus){
+brain::brn_dbg_compute_binary(row_neuron_t& neus){
 #ifdef FULL_DEBUG
 	long ii;
 	for(ii = 0; ii < neus.size(); ii++){
@@ -407,7 +407,7 @@ brain::brn_dbg_compute_binary(row<neuron*>& neus){
 		if(! neu.ne_original){
 			continue;
 		}
-		if(!(neu.neu_compute_binary())){
+		if(!(neu.is_ne_inert())){
 			DBG_PRT(49, os << "FAILED compute neu=" << &(neu));
 			return false;
 		}
@@ -418,7 +418,7 @@ brain::brn_dbg_compute_binary(row<neuron*>& neus){
 
 //for IS_SAT_CK
 bool
-brain::brn_dbg_compute_dots(row<neuron*>& neus){
+brain::brn_dbg_compute_dots(row_neuron_t& neus){
 #ifdef FULL_DEBUG
 	long ii;
 	for(ii = 0; ii < neus.size(); ii++){
@@ -438,7 +438,7 @@ brain::brn_dbg_compute_dots(row<neuron*>& neus){
 
 //for IS_SAT_CK
 bool
-brain::brn_dbg_compute_dots_of(row<neuron*>& neus, row_quanton_t& assig){
+brain::brn_dbg_compute_dots_of(row_neuron_t& neus, row_quanton_t& assig){
 	bool resp = true;
 #ifdef FULL_DEBUG
 	brain& brn = *this;
@@ -557,7 +557,7 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 		os << " #qu=" << all_ps.size();
 
 		/*
-		row<neuron*>& all_ne = brn.br_tmp_prt_neus;
+		row_neuron_t& all_ne = brn.br_tmp_prt_neus;
 		MARK_USED(all_ne);
 		
 		os << bj_eol;
@@ -756,7 +756,7 @@ brain::print_brain(bj_ostream& os){
 bj_ostream&
 brain::print_all_original(bj_ostream& os){
 #ifdef FULL_DEBUG
-	row<neuron*>& neus = br_tmp_prt_neus;
+	row_neuron_t& neus = br_tmp_prt_neus;
 	fill_with_origs(neus);
 	neus.print_row_data(os, false, "\n", -1, -1, true);
 #endif
@@ -990,7 +990,7 @@ neuron::dbg_old_set_motives(brain& brn, notekeeper& nke, bool is_first){
 
 	BRAIN_CK(! ne_fibres.is_empty());
 	BRAIN_CK(is_first || (ne_fibres[0]->get_charge() == cg_positive) );
-	BRAIN_CK(is_first || neu_compute_binary());
+	BRAIN_CK(is_first || is_ne_inert());
 
 	//ne_recoil_tk.update_ticket(brn);
 
@@ -1027,7 +1027,7 @@ brain::dbg_old_reverse(){
 	BRAIN_CK(nke0.dk_tot_noted == 0);
 	BRAIN_CK(level() != ROOT_LEVEL);
 	BRAIN_CK(all_notes0 == 0);
-	BRAIN_CK(br_semi_monos_to_update.is_empty());
+	BRAIN_CK(br_bimons_to_update.is_empty());
 	//BRAIN_CK(all_rev.is_empty());
 
 	// START REVERSE (init nke0)
@@ -1194,7 +1194,7 @@ brain::dbg_old_reverse(){
 		send_psignal(*nxt_qua, lnd_neu, tier() + 1);
 	}
 
-	update_semi_monos();
+	update_bimons();
 
 	// inc recoil
 
@@ -1286,7 +1286,7 @@ leveldat::print_leveldat(bj_ostream& os, bool from_pt){
 	os << "LVDAT(" << (void*)this <<")={" << bj_eol;
 	os << " ld_idx=" << ld_idx << bj_eol;
 	os << " ld_chosen=" << ld_chosen << bj_eol;
-	os << " ld_semi_monos_to_update=" << ld_semi_monos_to_update << bj_eol;
+	os << " ld_bimons_to_update=" << ld_bimons_to_update << bj_eol;
 	os << "}";
 	os.flush();
 	return os;

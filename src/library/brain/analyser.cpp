@@ -38,7 +38,7 @@ analyser class methos and funcs.
 #include "brain.h"
 #include "solver.h"
 
-long	set_spots_of(brain& brn, row<neuron*>& neus){
+long	set_spots_of(brain& brn, row_neuron_t& neus){
 	long num_neu = 0;
 	for(long ii = 0; ii < neus.size(); ii++){
 		neuron* neu = neus[ii];
@@ -50,7 +50,7 @@ long	set_spots_of(brain& brn, row<neuron*>& neus){
 	return num_neu;
 }
 
-long	reset_spots_of(brain& brn, row<neuron*>& neus){
+long	reset_spots_of(brain& brn, row_neuron_t& neus){
 	long num_neu = 0;
 	for(long ii = 0; ii < neus.size(); ii++){
 		neuron* neu = neus[ii];
@@ -1091,7 +1091,7 @@ analyser::calc_orig_neuromap(neuromap* nmp){
 void
 neuromap::reset_all_nmp_tag1(){
 	brain& brn = get_brn();
-	row<neuron*>& all_neus = brn.br_tmp_ck_neus;
+	row_neuron_t& all_neus = brn.br_tmp_ck_neus;
 	all_neus.clear();
 	map_get_all_neus(all_neus);
 	reset_all_tag1(brn, all_neus);

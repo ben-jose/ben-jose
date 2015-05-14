@@ -136,6 +136,7 @@ class instance_info;
 BRAIN_DBG(class dbg_inst_info;)
 
 class ticket;
+class alert_rel;
 class quanton;
 class neuron;
 class deduction;
@@ -188,12 +189,12 @@ void	dbg_prepare_used_dbg_ccl(row_quanton_t& rr_qua, canon_clause& dbg_ccl);
 void	dbg_print_ccls_neus(bj_ostream& os, row<canon_clause*>& dbg_ccls);
 bool	dbg_run_satex_on(brain& brn, ch_string f_nam);
 
-long	set_spots_of(brain& brn, row<neuron*>& neus);
-long	reset_spots_of(brain& brn, row<neuron*>& neus);
+long	set_spots_of(brain& brn, row_neuron_t& neus);
+long	reset_spots_of(brain& brn, row_neuron_t& neus);
 
 charge_t 	negate_trinary(charge_t val);
 
-bool	has_neu(row<neuron*>& rr_neus, neuron* neu);
+bool	has_neu(row_neuron_t& rr_neus, neuron* neu);
 
 long	set_dots_of(brain& brn, row_quanton_t& quans);
 long	reset_dots_of(brain& brn, row_quanton_t& quans);
@@ -258,6 +259,41 @@ is_ticket_eq(ticket& x, ticket& y){
 	if(x.tk_level != y.tk_level){ return false; }
 	return true;
 }
+
+//=============================================================================
+// alert_rel
+
+typedef receptor<alert_rel> rece_ar_t;
+
+class alert_rel {
+	public:
+	static
+	char*	CL_NAME;
+
+	virtual
+	char*	get_cls_name(){
+		return alert_rel::CL_NAME;
+	}
+
+	rece_ar_t	ar_alert;
+	quanton*	ar_qu_alert;
+	
+	rece_ar_t	ar_ref;
+	quanton*	ar_qu_ref;
+
+	alert_rel(){
+		init_alert_rel();
+	}
+
+	void	init_alert_rel(quanton* alert = NULL_PT, quanton* ref = NULL_PT);
+	
+	bool	is_ar_virgin(){
+		bool c1 = (ar_qu_alert == NULL_PT);
+		bool c2 = (ar_qu_ref == NULL_PT);
+		bool vg = (c1 && c2);
+		return vg;
+	}
+};
 
 //=============================================================================
 // quanton
@@ -485,15 +521,26 @@ class quanton {
 	neuron*			qu_source;	// source of signal when charged
 
 	// tunneling attributes
-	row<neuron*>		qu_tunnels;	// tunnelled neurons.
+	row_neuron_t	qu_tunnels;	// tunnelled neurons.
+	
+	// mono attributes
+	row_neuron_t	qu_neus;	// neurons with this qua
+	grip			qu_mono_alerts;	// quas to update alert_neu
+	grip			qu_mono_refs;	// alert_neu qua refs.
+	long			qu_alert_neu_idx; 	// not yet charged neu. index in qu_neus.
+	long			qu_lv_mono;
+	
+	// bimon attributes
 	neuron*			qu_uncharged_partner_neu;
 	neuron*			qu_bak_uncharged_partner_neu;
-	bool			qu_in_semi_monos_to_update;
+	bool			qu_in_bimons_to_update;
+	long			qu_bimon_lv;
+	long			qu_bimon_idx;
 
 	// choice attributes
 	long			qu_choice_idx;	// idx in brain's 'choices'
 
-	row<neuron*>		qu_full_charged;
+	row_neuron_t	qu_full_charged;
 
 	// maps in
 	neuromap*		qu_curr_nemap;
@@ -556,10 +603,15 @@ class quanton {
 		qu_index = ii;
 		qu_spin = spn;
 		qu_inverse = inv;
+		
+		qu_alert_neu_idx = INVALID_IDX;
+		qu_lv_mono = INVALID_LEVEL;
 
 		qu_uncharged_partner_neu = NULL_PT;
 		qu_bak_uncharged_partner_neu = NULL_PT;
-		qu_in_semi_monos_to_update = false;
+		qu_in_bimons_to_update = false;
+		qu_bimon_lv = INVALID_LEVEL;
+		qu_bimon_idx = INVALID_IDX;
 
 		qu_choice_idx = INVALID_IDX;
 
@@ -606,14 +658,23 @@ class quanton {
 	}
 
 	void	reset_and_add_tee(sort_glb& quas_srg, sort_id_t quas_consec);
+	
+	void	add_to_bimons_lv(brain& brn);
+	bool	in_bimons_lv();	
+	bool	ck_bimons_lv(brain& brn);
+	
+	void	reset_qu_bimon_lv(){
+		qu_bimon_lv = INVALID_LEVEL;
+		qu_bimon_idx = INVALID_IDX;
+	}
 
-	bool		is_semi_mono(){
+	bool		is_bimon(){
 		bool c1 = (opposite().qu_uncharged_partner_neu == NULL_PT);
 		bool c2 = (qu_uncharged_partner_neu == NULL_PT);
 		return (c1 || c2);
 	}
 
-	quanton*	get_semi_mono(){
+	quanton*	get_bimon(){
 		if(qu_uncharged_partner_neu != NULL_PT){
 			return this;
 		}
@@ -709,6 +770,15 @@ class quanton {
 	bool	is_learned_choice();
 	
 	bool 	is_eonmp();
+	
+	long	find_alert_idx(bool is_init);
+	void	update_alert_neu(brain& brn, bool is_init);
+	neuron*	get_alert_neu();
+	void	set_alert_neu(brain& brn, long the_idx);
+	void	append_all_to_alert(brain& brn, row_quanton_t& all_quas);
+	bool	ck_mono();
+	bool	is_mono();
+	bool	ck_alert_neu();
 	
 	neuromap*	get_nmp_to_write(brain& brn);
 
@@ -1164,14 +1234,18 @@ class neuron {
 	bool		ck_all_has_charge(long& npos);
 	bool		ck_no_source_of_any();
 
-	bool	neu_compute_binary(){
+	bool	is_ne_alert(){
 		for(long ii = 0; ii < fib_sz(); ii++){
-			charge_t chg = ne_fibres[ii]->get_charge();
-			if(chg == cg_positive){
-				return true;
+			BRAIN_CK(ne_fibres[ii] != NULL_PT);
+			if(ne_fibres[ii]->is_pos()){
+				return false;
 			}
 		}
-		return false;
+		return true;
+	}
+	
+	bool	is_ne_inert(){
+		return ! is_ne_alert();
 	}
 
 	bool	all_marked_after_idx(brain& brn, long trl_idx);
@@ -1210,7 +1284,7 @@ class neuron {
 
 inline
 void
-set_all_ne_nemap(row<neuron*>& all_neus, neuromap* nmp)
+set_all_ne_nemap(row_neuron_t& all_neus, neuromap* nmp)
 {
 	for(long ii = 0; ii < all_neus.size(); ii++){
 		BRAIN_CK(all_neus[ii] != NULL_PT);
@@ -1224,7 +1298,7 @@ set_all_ne_nemap(row<neuron*>& all_neus, neuromap* nmp)
 
 inline
 void
-make_all_ne_dominated(brain& brn, row<neuron*>& all_neus, 
+make_all_ne_dominated(brain& brn, row_neuron_t& all_neus, 
 			long first_idx = 0, long last_idx = -1)
 {
 	if(last_idx < 0){ last_idx = all_neus.size(); }
@@ -1494,7 +1568,7 @@ class coloring {
 	row<long>		co_qua_colors;
 	bool			co_all_qua_consec;
 
-	row<neuron*>		co_neus;
+	row_neuron_t	co_neus;
 	row<long>		co_neu_colors;
 	bool			co_all_neu_consec;
 
@@ -1688,20 +1762,20 @@ class neuromap {
 	BRAIN_DBG(long		na_dbg_num_submap);
 	
 	row<prop_signal>	na_trail_propag; // all trail propag in this nmp section
-	row<neuron*>		na_cov_by_trail_propag_quas;
+	row_neuron_t		na_cov_by_trail_propag_quas;
 	
-	row<neuron*>		na_all_filled_by_forced;
-	row<neuron*>		na_all_filled_by_propag;
-	row<neuron*>		na_all_filled_by_shadow;
+	row_neuron_t		na_all_filled_by_forced;
+	row_neuron_t		na_all_filled_by_propag;
+	row_neuron_t		na_all_filled_by_shadow;
 
 	row<prop_signal>	na_forced; // deduction with all confl visit these.
 	row<prop_signal>	na_propag; // psigs from na_all_propag NOT in all_forced
 	row<prop_signal>	na_shadow;  // psigs from br_shadow_ps NOT in all_forced NOR
 									// in all_propag
 
-	row<neuron*>		na_cov_by_forced_quas; 
-	row<neuron*>		na_cov_by_propag_quas; 
-	row<neuron*>		na_cov_by_shadow_quas; 
+	row_neuron_t		na_cov_by_forced_quas; 
+	row_neuron_t		na_cov_by_propag_quas; 
+	row_neuron_t		na_cov_by_shadow_quas; 
 	
 	row<prop_signal>	na_all_confl;  // only for last submap
 	
@@ -1831,15 +1905,15 @@ class neuromap {
 	bool	map_get_all_non_forced_ps(row<prop_signal>& all_ps);
 
 	void	map_get_all_quas(row_quanton_t& all_quas);
-	void	map_get_all_confl_neus(row<neuron*>& all_neus);
-	//void	map_get_all_forced_neus(row<neuron*>& all_neus, bool with_clear = true);
+	void	map_get_all_confl_neus(row_neuron_t& all_neus);
+	//void	map_get_all_forced_neus(row_neuron_t& all_neus, bool with_clear = true);
 	
-	void	map_get_all_cov_by_trail_propag_neus(row<neuron*>& all_neus, bool with_clear);
+	void	map_get_all_cov_by_trail_propag_neus(row_neuron_t& all_neus, bool with_clear);
 	
-	void	map_get_all_subcov_neus(row<neuron*>& all_neus, bool with_clear);
-	void	map_get_all_cov_neus(row<neuron*>& all_neus, bool with_clear);
+	void	map_get_all_subcov_neus(row_neuron_t& all_neus, bool with_clear);
+	void	map_get_all_cov_neus(row_neuron_t& all_neus, bool with_clear);
 	
-	void	map_get_all_neus(row<neuron*>& all_neus);
+	void	map_get_all_neus(row_neuron_t& all_neus);
 	
 	void 	map_get_all_upper_quas(row_quanton_t& all_upper_quas);
 
@@ -1875,7 +1949,7 @@ class neuromap {
 	void	set_min_ti_max_ti();
 
 	static
-	bool	set_all_filled_by(brain& brn, row_quanton_t& nmp_quas, row<neuron*>& all_filled);
+	bool	set_all_filled_by(brain& brn, row_quanton_t& nmp_quas, row_neuron_t& all_filled);
 	
 	bool	set_all_filled_by_trail_propag();
 	bool	set_all_filled_by_forced();
@@ -1920,13 +1994,13 @@ class neuromap {
 	void 	map_get_initial_tauto_coloring(coloring& prv_clr, coloring& tauto_clr);
 	
 	static
-	void	map_append_neus_in_nmp_from(brain& brn, row<neuron*>& all_neus, 
-							row<neuron*>& sel_neus, neurolayers& not_sel_neus, 
+	void	map_append_neus_in_nmp_from(brain& brn, row_neuron_t& all_neus, 
+							row_neuron_t& sel_neus, neurolayers& not_sel_neus, 
 							long min_ti, long max_ti, dbg_call_id dbg_call);
 	
 	static 
-	void	map_fill_cov(brain& brn, long min_ti, long max_ti, row<neuron*>& all_filled,
-								 neurolayers& not_sel_neus, row<neuron*>& all_cov);
+	void	map_fill_cov(brain& brn, long min_ti, long max_ti, row_neuron_t& all_filled,
+								 neurolayers& not_sel_neus, row_neuron_t& all_cov);
 	
 	void	map_fill_cov_by_trail_propag(neurolayers& not_sel_neus);
 	void	map_fill_cov_by_forced(neurolayers& not_sel_neus);
@@ -1991,7 +2065,7 @@ class neurolayers {
 	void	get_all_ordered_neurons(row_neuron_t& all_neus, long min_ly = 0, 
 						long max_ly = -1);
 	
-	row<neuron*>&	get_ne_layer(long lv){
+	row_neuron_t&	get_ne_layer(long lv){
 		BRAIN_CK(lv >= 0); 
 		BRAIN_CK(lv < MAX_LAYERS); 
 		while(nl_neus_by_layer.size() <= lv){
@@ -2000,7 +2074,7 @@ class neurolayers {
 		BRAIN_CK(lv >= 0);
 		BRAIN_CK(lv < MAX_LAYERS); 
 		BRAIN_CK(nl_neus_by_layer.is_valid_idx(lv));
-		row<neuron*>& ly_neus = nl_neus_by_layer[lv];
+		row_neuron_t& ly_neus = nl_neus_by_layer[lv];
 		return ly_neus;
 	}
 	
@@ -2693,10 +2767,12 @@ class leveldat {
 	brain*			ld_brn;
 		
 	long			ld_idx;
-	row<neuron*>	ld_learned;
+	row_neuron_t	ld_learned;
 	quanton*		ld_chosen;
+	
+	long			ld_bak_mono_idx;
 
-	row_quanton_t	ld_semi_monos_to_update;
+	row_quanton_t	ld_bimons_to_update;
 
 	grip			ld_nmps_to_write;
 	grip			ld_nmp_setup;
@@ -2714,9 +2790,11 @@ class leveldat {
 		ld_idx = INVALID_IDX;
 		ld_learned.clear();
 		ld_chosen = NULL_PT;
+		
+		ld_bak_mono_idx = INVALID_IDX;
 
-		BRAIN_CK(ld_semi_monos_to_update.is_empty());
-		ld_semi_monos_to_update.clear();
+		BRAIN_CK(ld_bimons_to_update.is_empty());
+		ld_bimons_to_update.clear();
 
 		BRAIN_CK(ld_nmps_to_write.is_alone());
 		BRAIN_CK(ld_nmp_setup.is_alone());
@@ -2789,9 +2867,11 @@ class leveldat {
 		return nmp;
 	}
 	
-	void	reset_semi_monos(brain& brn);
+	void	reset_bimons(brain& brn);
 	void	release_learned(brain& brn);
 
+	void	reset_monos(brain& brn);
+	
 	bj_ostream&	print_leveldat(bj_ostream& os, bool from_pt = false);
 };
 
@@ -2807,8 +2887,8 @@ public:
 	
 	deduction	dbg_deduc;
 	
-	row<neuron*>	 	dbg_simple_neus;
-	row<neuron*>	 	dbg_used_neus;
+	row_neuron_t	 	dbg_simple_neus;
+	row_neuron_t	 	dbg_used_neus;
 	row<canon_clause*> 	dbg_ccls;
 	canon_cnf		dbg_cnf;
 
@@ -2819,7 +2899,7 @@ public:
 	bj_big_int_t	dbg_canon_find_id;
 	bj_big_int_t	dbg_canon_save_id;
 
-	row<neuron*>	 	dbg_original_used;
+	row_neuron_t	 	dbg_original_used;
 	row_quanton_t		dbg_all_chosen;
 	
 	bool	dbg_ic_active;
@@ -2919,16 +2999,17 @@ public:
 	row_quanton_t 	br_tmp_shadw_ck_all_orig;
 	row_quanton_t 	br_tmp_qu_mk_all_dom;
 	row_quanton_t 	br_tmp_ck_all_qu_notes;
+	row_quanton_t 	br_tmp_uncharged_in_alert_neus;
 	
-	row<neuron*> 	br_tmp_ck_neus;
-	row<neuron*> 	br_tmp_ne_activate;
-	row<neuron*> 	br_tmp_ne_dom;
-	row<neuron*> 	br_tmp_ne_mk_all_dom;
-	row<neuron*> 	br_tmp_ne_ck_all_dom;
-	row<neuron*> 	br_tmp_ne_fill_nmp;
-	row<neuron*> 	br_tmp_nmp_neus_for_upper_qu;
-	row<neuron*> 	br_tmp_guide_confls;
-	row<neuron*> 	br_tmp_all_cfl;
+	row_neuron_t 	br_tmp_ck_neus;
+	row_neuron_t 	br_tmp_ne_activate;
+	row_neuron_t 	br_tmp_ne_dom;
+	row_neuron_t 	br_tmp_ne_mk_all_dom;
+	row_neuron_t 	br_tmp_ne_ck_all_dom;
+	row_neuron_t 	br_tmp_ne_fill_nmp;
+	row_neuron_t 	br_tmp_nmp_neus_for_upper_qu;
+	row_neuron_t 	br_tmp_guide_confls;
+	row_neuron_t 	br_tmp_all_cfl;
 	
 	row_quanton_t 	br_tmp_rever_quas;
 
@@ -2953,16 +3034,23 @@ public:
 	//long			br_choices_lim;	// last known choice idx
 	row_quanton_t		br_choices;	// to find non charged quantons quickly
 	row_quanton_t		br_chosen;	// the in 'root' level + chosen ones
+	
+	row_quanton_t		br_monos;
+	long				br_last_monocho_idx;
 
 	k_row<neuron>		br_neurons;	// all neurons
-	row<neuron*>		br_free_neurons;
+	row_neuron_t		br_free_neurons;
 	long 			br_num_active_neurons;
 
-	row<neuron*>		br_unit_neurons;
+	row_neuron_t		br_unit_neurons;
 
 	k_row<neuromap>		br_neuromaps;	// all maps
 	row<neuromap*>		br_free_neuromaps;
 	long 			br_num_active_neuromaps;
+
+	k_row<alert_rel>		br_alert_rels;	// all alert_rels
+	row<alert_rel*>		br_free_alert_rels;
+	long 			br_num_active_alert_rels;
 
 	long			br_first_psignal;
 	long			br_last_psignal;
@@ -2977,7 +3065,7 @@ public:
 	
 	deduction		br_retract_dct;
 
-	row_quanton_t		br_semi_monos_to_update;
+	row_quanton_t		br_bimons_to_update;
 	
 	notekeeper		br_dbg_retract_nke0;
 	
@@ -3022,18 +3110,18 @@ public:
 	long			br_tot_qu_marks;
 	long			br_tot_ne_spots;
 
-	row<neuron*>	br_tmp_found_neus;
-	row<neuron*>	br_tmp_selected;
-	row<neuron*>	br_tmp_not_selected;
-	row<neuron*>	br_tmp_not_sel_in_lower;
-	row<neuron*>	br_tmp_discarded;
-	row<neuron*>	br_tmp_ck_sat_neus;
-	row<neuron*>	br_tmp_prt_neus;
-	row<neuron*>	br_tmp_stab_neus;
-	row<neuron*>	br_tmp_forced;
-	row<neuron*>	br_tmp_tauto_neus;
-	row<neuron*>	br_tmp_all_neus;
-	row<neuron*>	br_tmp_all_confl;
+	row_neuron_t	br_tmp_found_neus;
+	row_neuron_t	br_tmp_selected;
+	row_neuron_t	br_tmp_not_selected;
+	row_neuron_t	br_tmp_not_sel_in_lower;
+	row_neuron_t	br_tmp_discarded;
+	row_neuron_t	br_tmp_ck_sat_neus;
+	row_neuron_t	br_tmp_prt_neus;
+	row_neuron_t	br_tmp_stab_neus;
+	row_neuron_t	br_tmp_forced;
+	row_neuron_t	br_tmp_tauto_neus;
+	row_neuron_t	br_tmp_all_neus;
+	row_neuron_t	br_tmp_all_confl;
 
 	row_quanton_t	br_tmp_stab_quas;
 	row_quanton_t	br_tmp_sorted_quas;
@@ -3121,7 +3209,13 @@ public:
 
 	long		brn_tunnel_signals(bool only_in_dom);
 	quanton*	choose_quanton();
-
+	quanton* 	choose_bimon();
+	
+	quanton* 	get_curr_mono();
+	void		update_curr_mono();
+	bool 		ck_prev_monos();
+	quanton* 	choose_mono();
+	
 	bool		dbg_ck_deducs(deduction& dct1, deduction& dct2);
 
 	long		propagate_signals();
@@ -3251,6 +3345,34 @@ public:
 		br_num_active_neuromaps--;
 	}
 
+	// aux alert_rels
+
+	alert_rel&	locate_alert_rel(){
+		alert_rel* pt_arl = NULL_PT;
+		if(! br_free_alert_rels.is_empty()){
+			pt_arl = br_free_alert_rels.pop();
+		} else {
+			pt_arl = &(br_alert_rels.inc_sz());
+		}
+		BRAIN_CK(pt_arl != NULL);
+
+		alert_rel& arl = *pt_arl;
+		BRAIN_CK(arl.is_ar_virgin());
+		
+		br_num_active_alert_rels++;
+		return arl;
+	}
+
+	void	release_alert_rel(alert_rel& arl){
+		BRAIN_CK(! br_alert_rels.is_empty());
+		br_free_alert_rels.push(&arl);
+		arl.init_alert_rel();
+
+		BRAIN_CK(arl.is_ar_virgin());
+
+		br_num_active_alert_rels--;
+	}
+
 	// aux neuron
 
 	neuron&	locate_neuron(){
@@ -3316,6 +3438,9 @@ public:
 	void	config_brain(ch_string f_nam = "");
 	void	init_loading(long num_qua, long num_neu);
 	void	init_uncharged();
+	
+	void	init_alert_neus();
+	void	update_monos();
 
 	neuron&	add_neuron(row_quanton_t& quans, quanton*& forced_qua, bool orig);
 	neuron*	learn_mots(row_quanton_t& the_mots, quanton& forced_qua);
@@ -3371,18 +3496,7 @@ public:
 		dat_lv.ld_chosen = &qua;
 	}
 
-	void	dec_level(){
-		br_current_ticket.tk_level--;
-
-		brain& brn = *this;
-		leveldat& lv = data_level();
-		lv.reset_semi_monos(brn);
-		lv.release_learned(brn);
-		lv.let_maps_go(brn);
-
-		leveldat* pt_lv = br_data_levels.pop();
-		leveldat::release_leveldat(pt_lv);
-	}
+	void	dec_level();
 
 	long	trail_level(){
 		return br_charge_trail.last_qlevel();
@@ -3402,7 +3516,7 @@ public:
 		return data_level().num_learned();
 	}
 
-	void	update_semi_monos();
+	void	update_bimons();
 
 	void	retract_choice();
 	void	retract_to(long tg_lv = ROOT_LEVEL);
@@ -3414,15 +3528,15 @@ public:
 	
 	bool 	ck_cov_flags();
 
-	bool	map_get_sorted_clauses_of(row<neuron*>& neus, long neus_sz, 
+	bool	map_get_sorted_clauses_of(row_neuron_t& neus, long neus_sz, 
 					row<sortee*>& qtees, row<canon_clause*>& sorted_ccls);
 
-	bool	map_sort_filled_with(mem_op_t mm, row<neuron*>& filled, long filled_sz, 
+	bool	map_sort_filled_with(mem_op_t mm, row_neuron_t& filled, long filled_sz, 
 					row<sortee*>& all_q_tees, row<canon_clause*>& sorted_ccls);
 
 
 	void	fill_mutual_tees(sort_glb& neus_srg, sort_glb& quas_srg, 
-							 row<neuron*>& all_neus, row_quanton_t& all_quas);
+							 row_neuron_t& all_neus, row_quanton_t& all_quas);
 	
 	long	append_all_to_write(analyser& dedcer, long fst_lv, long tg_lv, 
 								row<neuromap*>& all_nmps);
@@ -3505,9 +3619,9 @@ public:
 
 	bj_ostream& 	print_all_quantons(bj_ostream& os, long ln_sz, ch_string ln_fd);
 
-	bool	brn_dbg_compute_binary(row<neuron*>& neus);
-	bool	brn_dbg_compute_dots(row<neuron*>& neus);
-	bool	brn_dbg_compute_dots_of(row<neuron*>& neus, row_quanton_t& assig);
+	bool	brn_dbg_compute_binary(row_neuron_t& neus);
+	bool	brn_dbg_compute_dots(row_neuron_t& neus);
+	bool	brn_dbg_compute_dots_of(row_neuron_t& neus, row_quanton_t& assig);
 
 	void		read_cnf(dimacs_loader& ldr);
 	void		parse_cnf(dimacs_loader& ldr, row<long>& all_ccls);
@@ -3528,7 +3642,7 @@ public:
 		return up_dom;
 	}
 
-	void		fill_with_origs(row<neuron*>& neus);
+	void		fill_with_origs(row_neuron_t& neus);
 
 	void		check_timeout();
 	void		dbg_check_sat_assig();
