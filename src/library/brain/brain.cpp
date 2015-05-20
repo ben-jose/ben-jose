@@ -57,6 +57,7 @@ DEFINE_NI_FLAG_FUNCS(qu_flags, note2, true);
 DEFINE_NI_FLAG_FUNCS(qu_flags, note3, true);
 DEFINE_NI_FLAG_FUNCS(qu_flags, note4, true);
 DEFINE_NI_FLAG_FUNCS(qu_flags, note5, true);
+DEFINE_NI_FLAG_FUNCS(qu_flags, note6, false); // bina
 
 DEFINE_NI_FLAG_ALL_FUNCS(note0);
 DEFINE_NI_FLAG_ALL_FUNCS(note1);
@@ -396,8 +397,6 @@ neuron::neu_tunnel_signals(brain& brn, quanton& r_qua){
 		}
 		dbg2 = true;
 	}
-
-	update_uncharged(brn, &r_qua);
 
 	BRAIN_CK(! q_neg || dbg1 || ! ck_all_charges(&brn, 1));
 	BRAIN_DBG(long npos2 = 0; bool ck2 = ck_all_has_charge(npos2); );
@@ -754,6 +753,7 @@ brain::choose_quanton(){
 	//quanton* qua = NULL;
 	quanton* qua = choose_mono();
 	if(qua != NULL_PT){
+		DBG_PRT(148, os << "cho_mono=" << qua);
 		return qua;
 	}
 
@@ -763,6 +763,7 @@ brain::choose_quanton(){
 		neuromap& mpp_dom = *pt_mpp;
 		qua = mpp_dom.map_choose_quanton();
 		if(qua != NULL_PT){
+			DBG_PRT(148, os << "cho_map=" << qua);
 			return qua;
 		}
 		BRAIN_CK(qua == NULL_PT);
@@ -773,11 +774,9 @@ brain::choose_quanton(){
 	for(long ii = 0; ii < br_choices.size(); ii++){
 		quanton* qua_ii = br_choices[ii];
 		if(qua_ii->get_charge() == cg_neutral){
-			if(! qua_ii->is_bimon()){
-				qua = qua_ii; 
-				break;
-			}
-			if(qua == NULL_PT){ qua = qua_ii; }
+			//BRAIN_CK(! qua_ii->has_mono());
+			qua = qua_ii;
+			break;
 		}
 	}
 
@@ -790,6 +789,7 @@ brain::choose_quanton(){
 		qua = qua->qu_inverse;
 	}
 
+	DBG_PRT(148, os << "cho_all=" << qua);
 	return qua;
 }
 
@@ -914,10 +914,7 @@ brain::add_neuron(row_quanton_t& quans, quanton*& forced_qua, bool orig){
 
 	forced_qua = neu.update_fibres(quans, orig);
 
-	neu.update_uncharged(brn, NULL_PT);
 	BRAIN_CK(neu.fib_sz() > 0);
-	BRAIN_CK(! neu.ne_original || neu.ne_fibres[0]->ck_uncharged_partner_neu());
-	BRAIN_CK(! neu.ne_original || neu.ne_fibres[1]->ck_uncharged_partner_neu());
 	BRAIN_DBG(neu.ne_dbg_creation_tk.update_ticket(brn));
 
 	DBG_PRT(26, os << "adding " << neu);
@@ -1063,26 +1060,6 @@ brain::load_neuron(row_quanton_t& neu_quas){
 	return *the_neu;
 }
 
-void
-brain::init_uncharged(){
-	brain& brn = *this;
-	for(long ii = 0; ii < br_positons.size(); ii++){
-		quanton& qua_pos = br_positons[ii];
-		if(qua_pos.get_uncharged_partner_neu(dbg_call_1) == NULL_PT){
-			qua_pos.set_uncharged_partner_neu(brn, qua_pos.find_uncharged_partner_neu(), 
-											  100, NULL_PT);
-		}
-	}
-
-	for(long ii = 0; ii < br_negatons.size(); ii++){
-		quanton& qua_neg = br_negatons[ii];
-		if(qua_neg.get_uncharged_partner_neu(dbg_call_2) == NULL_PT){
-			qua_neg.set_uncharged_partner_neu(brn, qua_neg.find_uncharged_partner_neu(), 
-											  101, NULL_PT);
-		}
-	}
-}
-
 quanton*
 brain::get_quanton(long q_id){
 	quanton* qua = NULL;
@@ -1161,8 +1138,7 @@ brain::load_brain(long num_neu, long num_var, row_long_t& load_ccls){
 	//BRAIN_CK(net.nt_neurons.size() == num_neu_added);
 
 	init_alert_neus();
-	init_uncharged();
-
+	
 	double end_load_tm = run_time();
 	double ld_tm = (end_load_tm - br_start_load_tm);	
 	get_out_info().bjo_load_time = ld_tm;
@@ -1202,6 +1178,8 @@ brain::write_all_active(){
 
 void 
 brain::find_result(){
+	DBG_PRT(147, dbg_print_all_qua_rels(os));
+	
 	instance_info& inst_info = get_my_inst();
 	bj_output_t& o_info = get_out_info();
 	
@@ -1441,22 +1419,21 @@ notekeeper::clear_all_quantons(long lim_lv, bool reset_notes){
 
 void
 brain::dec_level(){
-	br_current_ticket.tk_level--;
-
-	brain& brn = *this;
 	leveldat& lv = data_level();
+	BRAIN_CK(lv.ld_idx == level());
+	
+	brain& brn = *this;
 	lv.reset_monos(brn);
-	lv.reset_bimons(brn);
 	lv.release_learned(brn);
 	lv.let_maps_go(brn);
 
+	br_current_ticket.tk_level--;
 	leveldat* pt_lv = br_data_levels.pop();
 	leveldat::release_leveldat(pt_lv);
 }
 
 void
 brain::retract_to(long tg_lv){
-	BRAIN_CK(br_bimons_to_update.is_empty());
 
 	brain& brn = *this;
 	while(level() >= 0){
@@ -1487,7 +1464,6 @@ brain::retract_to(long tg_lv){
 	BRAIN_CK((tg_lv == INVALID_LEVEL) || (level() == tg_lv));
 	BRAIN_CK((tg_lv == INVALID_LEVEL) || (trail_level() == tg_lv));
 	
-	update_bimons();
 }
 
 bool
@@ -1602,9 +1578,6 @@ brain::receive_psignal(bool only_in_dom){
 				brn.print_trail(os);
 		);
 
-		BRAIN_CK(qua.ck_uncharged_partner_neu());
-		BRAIN_CK(qua.opposite().ck_uncharged_partner_neu());
-
 		qua.set_charge(brn, neu, cg_positive, sg_tier);
 
 		DBG_PRT_COND(64, (neu != NULL_PT), os << "qua=" << &qua << " SRC=" << neu);
@@ -1698,11 +1671,7 @@ void
 brain::start_propagation(quanton& nxt_qua){
 	BRAIN_CK(data_level().ld_idx == level());
 	
-	quanton* pt_qua = &nxt_qua;
-	if(pt_qua->is_bimon()){
-		pt_qua = pt_qua->get_bimon();
-	}
-	quanton& qua = *pt_qua;
+	quanton& qua = nxt_qua;
 
 	inc_level(qua);
 
@@ -1713,9 +1682,6 @@ brain::start_propagation(quanton& nxt_qua){
 	send_psignal(qua, NULL, tier() + 1);
 	BRAIN_CK(has_psignals());
 
-	if(qua.is_bimon()){
-		return;
-	}
 	if(qua.is_mono() || qua.opposite().is_mono()){
 		return;
 	}
@@ -1756,7 +1722,7 @@ brain::pulsate(){
 			return;
 		}
 		//dbg_old_reverse();
-		reverse();
+		deduce_and_reverse();
 		/*if(br_last_retract){ 
 			set_result(bjr_no_satisf);
 			return;
@@ -1777,6 +1743,8 @@ brain::pulsate(){
 		}
 
 		quanton& qua = *pt_qua;
+		
+		//if(! qua.is_mono()){
 
 		start_propagation(qua);
 
@@ -1792,226 +1760,11 @@ brain::pulsate(){
 		}
 		BRAIN_DBG(if(cho->opposite().qu_has_been_cho){ cho->qu_dbg_num_laps_cho++; });
 		DBG_PRT(25, os << "**CHOICE** " << cho);
+			
+		/*} else {
+			reverse(br_mono_dct);
+		}*/
 	}
-}
-
-long
-quanton::find_uncharged_partner_neu(){
-	quanton& qua = *this;
-	long unchg_idx = INVALID_IDX;
-	long min_lv_idx = INVALID_IDX;
-	long min_par_lv = 0;
-	for(long ii = 0; ii < qu_tunnels.size(); ii++){
-		BRAIN_CK(qu_tunnels[ii] != NULL_PT);
-		neuron& neu = *(qu_tunnels[ii]);
-
-		if(! neu.ne_original){
-			continue;
-		}
-
-		quanton& par = neu.partner_fib(qua);
-		if(! par.has_charge()){
-			unchg_idx = ii;
-			break;
-		} else {
-			long plv = par.qlevel();
-			if(has_charge() && (plv >= qlevel()) && 
-				((min_lv_idx == INVALID_IDX) || (plv < min_par_lv))
-			){
-				min_lv_idx = ii;
-				min_par_lv = plv;
-			}
-		}
-	}
-	if((unchg_idx == INVALID_IDX) && (min_lv_idx != INVALID_IDX)){
-		unchg_idx = min_lv_idx;
-	}
-	return unchg_idx;
-}
-
-void
-neuron::update_uncharged(brain& brn, quanton* pt_chg_qua){
-	if(! ne_original){
-		return;
-	}
-
-	BRAIN_CK(fib_sz() > 1);
-
-	quanton& qua0 = *(ne_fibres[0]);
-	quanton& qua1 = *(ne_fibres[1]);
-
-	BRAIN_CK((pt_chg_qua == NULL_PT) || pt_chg_qua->has_charge());
-	if((pt_chg_qua != NULL_PT) && (pt_chg_qua != &qua0) && (pt_chg_qua != &qua1)){
-		quanton& chg_qua = *pt_chg_qua;
-		neuron* uchg_q = chg_qua.get_uncharged_partner_neu(dbg_call_1);
-		if(uchg_q == this){
-			chg_qua.set_uncharged_partner_neu(brn, chg_qua.find_uncharged_partner_neu(), 
-											  1, this);
-		}
-	}
-
-	bool has0 = qua0.has_charge();
-	bool has1 = qua1.has_charge();
-
-	neuron* uchg0 = qua0.get_uncharged_partner_neu(dbg_call_2);
-	neuron* uchg1 = qua1.get_uncharged_partner_neu(dbg_call_3);
-
-	if(! has0 && ! has1){
-		if(uchg0 == NULL_PT){
-			BRAIN_CK(qua0.qu_tunnels[ne_fibre_0_idx] == this);
-			qua0.set_uncharged_partner_neu(brn, ne_fibre_0_idx, 2, this);
-			BRAIN_CK(qua0.get_uncharged_partner_neu(dbg_call_4) == this);
-		}
-		if(uchg1 == NULL_PT){
-			BRAIN_CK(qua1.qu_tunnels[ne_fibre_1_idx] == this);
-			qua1.set_uncharged_partner_neu(brn, ne_fibre_1_idx, 3, this);
-			BRAIN_CK(qua1.get_uncharged_partner_neu(dbg_call_5) == this);
-		}
-	}
-
-	if(has0 && ! has1){
-
-		if(uchg0 == NULL_PT){
-			BRAIN_CK(qua0.qu_tunnels[ne_fibre_0_idx] == this);
-			qua0.set_uncharged_partner_neu(brn, ne_fibre_0_idx, 4, this);
-			BRAIN_CK(qua0.get_uncharged_partner_neu(dbg_call_6) == this);
-		}
-		if((uchg1 == this) || (uchg1 == NULL_PT)){
-			qua1.set_uncharged_partner_neu(brn, qua1.find_uncharged_partner_neu(), 5, this);
-		}
-	}
-
-	if(! has0 && has1){
-
-		if((uchg0 == this) || (uchg0 == NULL_PT)){
-			qua0.set_uncharged_partner_neu(brn, qua0.find_uncharged_partner_neu(), 6, this);
-		}
-		if(uchg1 == NULL_PT){
-			BRAIN_CK(qua1.qu_tunnels[ne_fibre_1_idx] == this);
-			qua1.set_uncharged_partner_neu(brn, ne_fibre_1_idx, 7, this);
-			BRAIN_CK(qua1.get_uncharged_partner_neu(dbg_call_7) == this);
-		}
-	}
-
-	if(has0 && has1){
-		if((uchg0 == this) || (uchg0 == NULL_PT)){
-			qua0.set_uncharged_partner_neu(brn, qua0.find_uncharged_partner_neu(), 8, this);
-		}
-		if((uchg1 == this) || (uchg1 == NULL_PT)){
-			qua1.set_uncharged_partner_neu(brn, qua1.find_uncharged_partner_neu(), 9, this);
-		}
-	}
-
-	//BRAIN_CK(qua0.ck_uncharged_partner_neu());
-	//BRAIN_CK(qua1.ck_uncharged_partner_neu());
-	//BRAIN_CK((pt_chg_qua == NULL_PT) || pt_chg_qua->ck_uncharged_partner_neu());
-}
-
-neuron*
-quanton::get_uncharged_partner_neu(dbg_call_id dbg_call){
-	BRAIN_CK((qu_uncharged_partner_neu == NULL_PT) || 
-			qu_uncharged_partner_neu->has_qua(*this));
-	return qu_uncharged_partner_neu;
-}
-
-void
-quanton::add_to_bimons_lv(brain& brn){
-	leveldat& lv = brn.data_level();
-	BRAIN_CK(lv.ld_idx == brn.level());
-	lv.ld_bimons_to_update.push(this);
-	
-	qu_bimon_lv = lv.ld_idx;
-	qu_bimon_idx = lv.ld_bimons_to_update.last_idx();
-	
-}
-
-bool
-quanton::ck_bimons_lv(brain& brn){
-#ifdef FULL_DEBUG
-	if(qu_bimon_lv == INVALID_LEVEL){
-		BRAIN_CK(qu_bimon_idx == INVALID_IDX);
-		return true;
-	}
-	leveldat& lv = brn.get_data_level(qu_bimon_lv);
-	BRAIN_CK(lv.ld_bimons_to_update.is_valid_idx(qu_bimon_idx));
-	BRAIN_CK(lv.ld_bimons_to_update[qu_bimon_idx] == this);
-#endif
-	return true;
-}
-
-bool
-quanton::in_bimons_lv(){
-	bool in_sm = (qu_bimon_lv != INVALID_LEVEL);
-	BRAIN_CK(! in_sm || (qu_bimon_idx != INVALID_IDX));
-	//BRAIN_CK(ck_bimons_lv(brn));
-	return in_sm;
-}
-
-void
-quanton::set_uncharged_partner_neu(brain& brn, long uidx, long dbg_call, neuron* dbg_neu){
-	if(uidx == INVALID_IDX){
-		qu_bak_uncharged_partner_neu = qu_uncharged_partner_neu;
-		add_to_bimons_lv(brn);
-
-		qu_uncharged_partner_neu = NULL_PT;
-		BRAIN_CK(ck_uncharged_partner_neu());
-		return;
-	}
-
-	BRAIN_CK(qu_tunnels.is_valid_idx(uidx));
-	BRAIN_CK(qu_tunnels[uidx] != NULL_PT);
-
-	qu_uncharged_partner_neu = qu_tunnels[uidx];
-
-	BRAIN_CK(qu_uncharged_partner_neu->ne_original);
-	BRAIN_CK(qu_uncharged_partner_neu->is_partner_fib(*this));
-	BRAIN_CK(ck_uncharged_partner_neu());
-}
-
-void
-quanton::reset_uncharged_partner_neu(brain& brn){
-
-	if((qu_uncharged_partner_neu == NULL_PT) && (qu_bak_uncharged_partner_neu != NULL_PT)){
-		qu_uncharged_partner_neu = qu_bak_uncharged_partner_neu;
-	}
-
-	quanton& qua = *this;
-	neuron* neu = qu_uncharged_partner_neu;
-	if((neu == NULL_PT) || ! neu->is_partner_fib(qua) || neu->partner_fib(qua).has_charge()){
-		set_uncharged_partner_neu(brn, find_uncharged_partner_neu(), 200, NULL_PT);
-	}
-	qu_bak_uncharged_partner_neu = NULL_PT;
-
-	BRAIN_CK(ck_uncharged_partner_neu());
-}
-
-
-void
-leveldat::reset_bimons(brain& brn){
-	while(! ld_bimons_to_update.is_empty()){
-		quanton& qua = *(ld_bimons_to_update.pop());
-		qua.reset_qu_bimon_lv();
-		
-		if(! qua.qu_in_bimons_to_update){
-			brn.br_bimons_to_update.push(&qua);
-			qua.qu_in_bimons_to_update = true;
-		}
-	}
-}
-
-void
-brain::update_bimons(){
-	row_quanton_t& to_upd = br_bimons_to_update;
-	
-	brain& brn = *this;
-	data_level().reset_bimons(brn);
-	while(! to_upd.is_empty()){
-		quanton& qua = *(to_upd.pop());
-		BRAIN_CK(qua.qu_in_bimons_to_update);
-		qua.qu_in_bimons_to_update = false;
-		qua.reset_uncharged_partner_neu(brn);
-	}
-	BRAIN_CK(to_upd.is_empty());
 }
 
 bool 
@@ -2029,7 +1782,6 @@ void
 brain::retract_choice(){
 	BRAIN_CK(! found_conflict());
 	BRAIN_CK(! has_psignals());
-	BRAIN_CK(br_bimons_to_update.is_empty());
 
 	brain& brn = *this;
 
@@ -2065,7 +1817,6 @@ brain::retract_choice(){
 	// resend opp chosen
 
 	data_level().reset_monos(brn);
-	update_bimons();
 
 	BRAIN_CK(chosen_qua != NULL_PT);
 	BRAIN_CK(data_level().ld_chosen == chosen_qua);
@@ -2144,6 +1895,25 @@ set_file_err(file_exception& fl_ex, bj_output_t& o_inf){
 
 bj_satisf_val_t
 brain::solve_instance(bool load_it){
+
+	BRAIN_DBG(
+		ch_string htm_pth = get_solver().slv_dbg2.dbg_html_out_path;
+		ch_string sub_dir = htm_pth + "/" + br_dbg.dbg_cy_prefix;
+		path_delete(sub_dir, htm_pth);
+		if(! file_exists(sub_dir)){
+			path_create(sub_dir);
+			DBG_PRT(150, os << "Created dir: '" << sub_dir << "'\n");
+		}
+		
+		ch_string js_dir = get_solver().slv_dbg2.dbg_cy_js_path;
+		ch_string lk_nm = sub_dir + "/drw_grph_files";
+		
+		DBG_PRT(150, os << "creating link \n js_dir=" << js_dir << "\n lk_nm=" << lk_nm);
+		DBG_PRT(151, os << "creating link \n js_dir=" << js_dir << "\n lk_nm=" << lk_nm);
+		bool ok = path_create_link(js_dir, lk_nm);
+		BRAIN_CK(ok);
+	);
+	
 	bj_output_t& o_info = get_out_info();
 	try{
 		if(load_it){
@@ -2208,14 +1978,49 @@ brain::solve_instance(bool load_it){
 }
 
 void
-brain::reverse(){
+brain::deduce_and_reverse(){
 	BRAIN_CK(! has_psignals());
 	
 	DBG_PRT(122, print_trail(os));
 	
 	BRAIN_CK(level() != ROOT_LEVEL);
 	BRAIN_CK(br_qu_tot_note0 == 0);
-	BRAIN_CK(br_bimons_to_update.is_empty());
+	BRAIN_CK(found_conflict());
+
+	BRAIN_DBG(br_dbg.dbg_before_retract_lv = level());
+	
+	// analyse
+	
+	BRAIN_DBG(if(level() > br_dbg.dbg_max_lv){ br_dbg.dbg_max_lv = level(); });
+	
+	deduction& dct = br_retract_dct;
+
+	bool in_full_anls = true;
+	DBG_COMMAND(141, in_full_anls = false);
+	if(in_full_anls){
+		analyse(br_all_conflicts_found, dct);
+	} else {
+		DBG_PRT(125, os << "bef_ana=" << bj_eol; print_trail(os);
+			os << " num_conf=" << br_all_conflicts_found.size() << " br_lv=" << level()
+			<< " br_ti=" << tier();
+		);
+		
+		br_deducer_anlsr.set_conflicts(br_all_conflicts_found);
+		br_deducer_anlsr.deduction_analysis(br_deducer_anlsr.get_first_causes(), dct);
+	}
+	
+	reverse(dct);
+}
+
+void
+brain::reverse(deduction& dct){
+	/*
+	BRAIN_CK(! has_psignals());
+	
+	DBG_PRT(122, print_trail(os));
+	
+	BRAIN_CK(level() != ROOT_LEVEL);
+	BRAIN_CK(br_qu_tot_note0 == 0);
 	BRAIN_CK(found_conflict());
 
 	BRAIN_DBG(br_dbg.dbg_before_retract_lv = level());
@@ -2235,6 +2040,7 @@ brain::reverse(){
 		br_deducer_anlsr.set_conflicts(br_all_conflicts_found);
 		br_deducer_anlsr.deduction_analysis(br_deducer_anlsr.get_first_causes(), dct);
 	}
+	*/
 	DBG_PRT(122, os << "AFTE_ANALYSE \ncfl=" << first_conflict() << "\ndct=" << dct);
 
 	DBG_PRT(122, dbg_prt_lvs_active(os));
@@ -2460,7 +2266,7 @@ brain::dbg_update_html_cy_graph(ch_string cy_kk, coloring* the_col, ch_string ht
 	of_st.flush();
 	of_st.close();
 
-	bj_out << "Writed file: '" << stp_pth << "'\n";
+	DBG_PRT(147, os << "Writed file: '" << stp_pth << "'\n");
 	
 	ch_string pth = get_cy_htm_path(brn, cy_kk);
 	ch_string pth_nm =  get_cy_htm_nm(brn, cy_kk);;
@@ -2517,7 +2323,7 @@ brain::dbg_update_html_cy_graph(ch_string cy_kk, coloring* the_col, ch_string ht
 	of.flush();
 	of.close();
 
-	bj_out << "Updated file: '" << pth << "'\n";
+	DBG_PRT(147, os << "Updated file: '" << pth << "'\n");
 #endif
 }
 
@@ -2588,35 +2394,12 @@ qulayers::dbg_ql_init_all_cy_pos(){
 #endif
 }
 
-quanton*
-brain::choose_bimon(){
-	quanton* cho = NULL_PT;
-	row<leveldat*>& all_lv = br_data_levels;
-	for(long aa = 0; aa < all_lv.size(); aa++){
-		BRAIN_CK(all_lv[aa] != NULL_PT);
-		leveldat& lv_dat = *(all_lv[aa]);
-		row_quanton_t& all_sm = lv_dat.ld_bimons_to_update;
-		
-		for(long bb = 0; bb < all_sm.size(); bb++){
-			BRAIN_CK(all_sm[bb] != NULL_PT);
-			quanton& qua = *(all_sm[bb]);
-			if(! qua.has_charge()){
-				cho = &qua;
-				break;
-			}
-		}
-		
-		if(cho != NULL_PT){
-			break;
-		}
-	}
-	return cho;
-}
-
 long
-quanton::find_alert_idx(bool is_init){
+quanton::find_alert_idx(bool is_init, row_quanton_t& all_pos){
 	row_neuron_t& all_neus = qu_neus;
 	long fst_idx = qu_alert_neu_idx;
+	
+	all_pos.clear();
 	
 	if(all_neus.is_empty()){
 		return INVALID_IDX;
@@ -2626,9 +2409,7 @@ quanton::find_alert_idx(bool is_init){
 		fst_idx = 0;
 	} 
 	
-	BRAIN_CK_PRT(all_neus.is_valid_idx(fst_idx), os << "_______\n" 
-		<< "fst_idx=" << fst_idx
-	);
+	BRAIN_CK(all_neus.is_valid_idx(fst_idx));
 	BRAIN_CK(all_neus[fst_idx] != NULL_PT);
 	
 	if(! is_init){
@@ -2640,9 +2421,16 @@ quanton::find_alert_idx(bool is_init){
 	for(long aa = fst_idx; aa < all_neus.size(); aa++){
 		BRAIN_CK(all_neus[aa] != NULL_PT);
 		neuron& neu = *(all_neus[aa]);
-		if(neu.is_ne_alert()){
+		quanton* pqu = neu.find_is_pos();
+		if(pqu == NULL_PT){
+			all_pos.clear();
 			found_idx = aa;
 			break;
+		}
+		if(is_init){
+			BRAIN_CK(pqu != NULL_PT);
+			quanton& opp = pqu->opposite();
+			all_pos.push(&opp);
 		}
 	}
 	if(is_init || (found_idx != INVALID_IDX)){
@@ -2665,14 +2453,6 @@ quanton::find_alert_idx(bool is_init){
 	return found_idx;
 }
 
-bool
-quanton::ck_mono(){
-#ifdef FULL_DEBUG
-	BRAIN_CK(find_alert_idx(true) == INVALID_IDX);
-#endif
-	return true;
-}
-
 void
 quanton::update_alert_neu(brain& brn, bool is_init){
 	quanton& qua = *this;
@@ -2681,8 +2461,11 @@ quanton::update_alert_neu(brain& brn, bool is_init){
 	BRAIN_CK(qu_lv_mono == INVALID_LEVEL);
 	BRAIN_CK(! is_init || (qu_alert_neu_idx == INVALID_IDX));
 	BRAIN_CK(! is_init || (brn.level() == ROOT_LEVEL));
+	BRAIN_CK(is_init || qu_neus.is_valid_idx(qu_alert_neu_idx));
+	BRAIN_CK(is_init || qu_neus[qu_alert_neu_idx] != NULL_PT);
+	BRAIN_CK(is_init || qu_neus[qu_alert_neu_idx]->is_ne_inert());
 
-	long found_idx = find_alert_idx(is_init);
+	long found_idx = find_alert_idx(is_init, brn.br_tmp_mono_all_neg);
 	if(found_idx != INVALID_IDX){
 		set_alert_neu(brn, found_idx);
 		
@@ -2714,6 +2497,8 @@ brain::update_monos(){
 	brain& brn = *this;
 	long lv = level();
 	
+	DBG_PRT(143, os << "start monos updte.......... lv=" << lv);
+	
 	qlayers_ref qtrl;
 	qtrl.init_qlayers_ref(&br_charge_trail);
 	qtrl.reset_curr_quanton();
@@ -2721,13 +2506,12 @@ brain::update_monos(){
 	row_quanton_t& all_quas = br_tmp_uncharged_in_alert_neus;
 	all_quas.clear();
 	
-	BRAIN_CK(br_qu_tot_note1 == 0);
+	BRAIN_CK(br_qu_tot_note6 == 0);
 	
 	while(qtrl.get_curr_qlevel() == lv){
 		quanton* qua = qtrl.get_curr_quanton();
 		BRAIN_CK(qua != NULL_PT);
 		
-		//DBG_PRT_COND(147, (qua->qu_id == 5), os << 
 		qua->append_all_to_alert(brn, all_quas);
 		
 		qtrl.dec_curr_quanton();
@@ -2736,12 +2520,15 @@ brain::update_monos(){
 	for(long bb = 0; bb < all_quas.size(); bb++){
 		BRAIN_CK(all_quas[bb] != NULL_PT);
 		quanton& qua = *(all_quas[bb]);
-		BRAIN_CK(qua.has_note1());
-		qua.reset_note1(brn);
+		BRAIN_CK(qua.is_note6());
+		qua.reset_note6(brn);
+		
+		DBG_PRT(143, os << "monos updte qua=" << &qua);
+		
 		qua.update_alert_neu(brn, false);
 	}
 
-	BRAIN_CK(br_qu_tot_note1 == 0);
+	BRAIN_CK(br_qu_tot_note6 == 0);
 	all_quas.clear();
 }
 
@@ -2776,13 +2563,16 @@ alert_rel::init_alert_rel(quanton* alert, quanton* ref){
 	ar_qu_ref = ref;
 	
 	ar_alert.let_go();
+	ar_ref.let_go();
+	
 	if(ar_qu_alert != NULL_PT){
-		ar_qu_alert->qu_mono_alerts.bind_to_my_right(ar_alert);
+		//ar_qu_alert->qu_mono_alerts.bind_to_my_right(ar_alert);
+		ar_qu_alert->qu_mono_refs.bind_to_my_right(ar_ref);
 	}
 	
-	ar_ref.let_go();
 	if(ar_qu_ref != NULL_PT){
-		ar_qu_ref->qu_mono_refs.bind_to_my_right(ar_ref);
+		//ar_qu_ref->qu_mono_refs.bind_to_my_right(ar_ref);
+		ar_qu_ref->qu_mono_alerts.bind_to_my_right(ar_alert);
 	}
 }
 
@@ -2814,9 +2604,12 @@ quanton::set_alert_neu(brain& brn, long the_idx){
 
 		BRAIN_DBG(if(&qua == &the_alert){ in_fibs = true; });
 		
-		alert_rel& rr = brn.locate_alert_rel();
-		rr.init_alert_rel(&the_alert, &qua);
+		alert_rel& rr1 = brn.locate_alert_rel();
+		rr1.init_alert_rel(&the_alert, &qua);
 	}
+	
+	DBG_PRT(143, os << "monos qua=" << &the_alert << " watch_neu=" << pt_neu);
+		
 	BRAIN_CK(in_fibs);
 }
 
@@ -2832,50 +2625,29 @@ quanton::append_all_to_alert(brain& brn, row_quanton_t& all_quas){
 		BRAIN_CK(rr.ar_qu_alert != NULL_PT);
 		quanton& qua = *(rr.ar_qu_alert);
 		
-		if(! qua.has_note1() && ! qua.has_charge() && ! qua.is_mono()){
-			qua.set_note1(brn);
+		DBG_PRT(143, os << "monos ck qua=" << this << " watch_qua=" << &qua);
+	
+		if(! qua.is_note6() && ! qua.has_charge() && ! qua.is_mono()){
+			qua.set_binote6(brn);
 			all_quas.push(&qua);
 		}
 	}
 }
 
-quanton*
-brain::get_curr_mono(){
-	long mo_idx = br_last_monocho_idx;
-	if(! br_monos.is_valid_idx(mo_idx)){
-		return NULL_PT;
-	}
-	quanton* qua = br_monos[mo_idx];
-	BRAIN_CK(qua != NULL_PT);
-	return qua;
-}
-
-quanton*
-brain::choose_mono(){
-	data_level().ld_bak_mono_idx = br_last_monocho_idx;
-	
-	quanton* qua = get_curr_mono();
-	while((qua != NULL_PT) && qua->has_charge()){
-		br_last_monocho_idx++;
-		qua = get_curr_mono();
-	}
-	//BRAIN_CK(ck_prev_monos());
-	if(qua == NULL_PT){
-		return NULL_PT;
-	}
-	BRAIN_CK(ck_prev_monos());
-	BRAIN_CK(qua->ck_mono());
-	
-	quanton& opp = qua->opposite();
-	BRAIN_CK(! opp.has_charge());
-	return &opp;
-}
-
 bool
 brain::ck_prev_monos(){
 #ifdef FULL_DEBUG
+	if(br_monos.is_empty()){
+		return true;
+	}
 	for(long aa = 0; aa < br_last_monocho_idx; aa++){
-		BRAIN_CK(br_monos.is_valid_idx(aa));
+		BRAIN_CK_PRT(br_monos.is_valid_idx(aa), os << "________________\n";
+			os << dbg_prt_margin(os);
+			os << " aa=" << aa;
+			os << " br_last_monocho_idx=" << br_last_monocho_idx;
+			os << " lv=" << br_data_levels.last_idx();
+			os << "\n br_monos=" << br_monos;
+		);
 		BRAIN_CK(br_monos[aa] != NULL_PT);
 		quanton& qua = *(br_monos[aa]);
 		BRAIN_CK(qua.is_mono());
@@ -2892,6 +2664,9 @@ brain::ck_prev_monos(){
 
 void
 leveldat::reset_monos(brain& brn){
+	DBG_PRT(143, os << "RESET monos ..........");
+	BRAIN_CK(ld_idx == brn.level());
+	
 	row_quanton_t& all_monos = brn.br_monos;
 	while(! all_monos.is_empty()){
 		quanton& lqua = *(all_monos.last());
@@ -2908,29 +2683,117 @@ leveldat::reset_monos(brain& brn){
 			if(ld_idx == ROOT_LEVEL){ continue; }
 			neuron* neu = qua.get_alert_neu();
 			BRAIN_CK(neu != NULL_PT);
-			BRAIN_CK(neu->is_ne_alert());
+			BRAIN_CK_PRT(neu->is_ne_alert(), os << "_______________\n";
+				brn.dbg_prt_margin(os);
+				os << " lvs_sz=" << brn.br_data_levels.size();
+				os << " ld_idx=" << ld_idx << " qua=" << &qua << " neu=" << neu;
+			);
 		);
 	}
 
-	brn.br_last_monocho_idx = brn.data_level().ld_bak_mono_idx;
+	if(brn.data_level().ld_bak_mono_idx != INVALID_IDX){
+		brn.br_last_monocho_idx = brn.data_level().ld_bak_mono_idx;
+	} else {
+		brn.br_last_monocho_idx = 0;
+	}
 	BRAIN_CK(brn.ck_prev_monos());
 }
 
-/*
 void
-brain::update_curr_mono(){
-	if(br_monos.is_empty()){
-		br_last_monocho_idx = 0;
-		return;
+brain::fill_mono_dct(deduction& dct, row_quanton_t& mots, quanton& mono){
+	BRAIN_DBG(brain& brn = *this);
+	
+	dct.init_deduction();
+	mots.move_to(dct.dt_motives);
+	dct.dt_target_level = find_max_level(dct.dt_motives);
+	dct.dt_forced = &mono;
+	
+	bool br_in_root = (level() == ROOT_LEVEL);
+
+	BRAIN_CK(ck_motives(brn, dct.dt_motives));
+
+	DBG_PRT(20, os << "find_dct of deduction=" << dct);
+	
+	if(br_in_root){
+		dct.dt_motives.clear();
+		BRAIN_CK(dct.dt_target_level == ROOT_LEVEL);
+		BRAIN_CK(dct.dt_motives.is_empty());
+		dct.dt_target_level = INVALID_LEVEL;
 	}
-	if(! br_monos.is_valid_idx(br_last_monocho_idx)){
-		br_last_monocho_idx = br_monos.last_idx();
+}
+
+bj_ostream&
+brain::dbg_print_all_qua_rels(bj_ostream& os){
+	row<alert_rel*> all_alert;
+	row<alert_rel*> all_refs;
+	
+	os << "ALL_RELS\n";
+		
+	//brain& brn = *this;
+	for(long ii = 0; ii < br_positons.size(); ii++){
+		quanton& qua_pos = br_positons[ii];
+		os << "QUA=" << &qua_pos << "\n";
+		qua_pos.qu_mono_alerts.append_all_as<alert_rel>(all_alert, true);
+		os << "alerts=" << all_alert << "\n";
+		qua_pos.qu_mono_refs.append_all_as<alert_rel>(all_refs, true);
+		os << "refs=" << all_refs << "\n";
 	}
+
+	for(long ii = 0; ii < br_negatons.size(); ii++){
+		quanton& qua_neg = br_negatons[ii];
+		os << "QUA=" << &qua_neg << "\n";
+		qua_neg.qu_mono_alerts.append_all_as<alert_rel>(all_alert, true);
+		os << "alerts=" << all_alert << "\n";
+		qua_neg.qu_mono_refs.append_all_as<alert_rel>(all_refs, true);
+		os << "refs=" << all_refs << "\n";
+	}
+	
+	return os;
+}
+
+quanton*
+brain::get_curr_mono(){
+	long mo_idx = br_last_monocho_idx;
+	if(! br_monos.is_valid_idx(mo_idx)){
+		DBG_PRT(148, os << "mo_idx=" << mo_idx << "\n all_mono=";
+			dbg_print_htm_all_monos(os);
+		);
+		return NULL_PT;
+	}
+	quanton* qua = br_monos[mo_idx];
+	BRAIN_CK(qua != NULL_PT);
+	return qua;
+}
+
+quanton*
+brain::choose_mono(){
+	br_mono_dct.init_deduction();
+	
+	if(data_level().ld_bak_mono_idx == INVALID_IDX){
+		data_level().ld_bak_mono_idx = br_last_monocho_idx;
+	}
+	
 	quanton* qua = get_curr_mono();
-	while((qua != NULL_PT) && ! qua->has_charge()){
-		br_last_monocho_idx--;
+	while((qua != NULL_PT) && qua->has_charge()){
+		br_last_monocho_idx++;
 		qua = get_curr_mono();
 	}
+	//BRAIN_CK(ck_prev_monos());
+	if(qua == NULL_PT){
+		return NULL_PT;
+	}
 	BRAIN_CK(ck_prev_monos());
+	
+	long alrt_idx = qua->find_alert_idx(true, br_tmp_mono_all_neg);
+	BRAIN_CK(alrt_idx == INVALID_IDX);
+	BRAIN_CK(br_tmp_mono_all_neg.size() == qua->qu_neus.size());
+	
+	quanton& opp = qua->opposite();
+	
+	fill_mono_dct(br_mono_dct, br_tmp_mono_all_neg, opp);
+	
+	BRAIN_CK(! opp.has_charge());
+	return &opp;
 }
-*/
+
+

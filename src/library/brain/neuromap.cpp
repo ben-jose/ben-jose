@@ -255,11 +255,9 @@ neuromap::map_choose_quanton(){
 		BRAIN_CK(all_quas[ii] != NULL_PT);
 		quanton& qua_ii = *(all_quas[ii]);
 		if(qua_ii.get_charge() == cg_neutral){
-			if(! qua_ii.is_bimon()){
-				qua = &qua_ii; 
-				break;
-			}
-			//if(qua == NULL_PT){ qua = qua_ii; }
+			//BRAIN_CK(! qua_ii.has_mono());
+			qua = &qua_ii;
+			break;
 		}
 	}
 
@@ -437,6 +435,7 @@ neuromap::map_activate(dbg_call_id dbg_id){
 
 	DBG_PRT(134, os << "ACTIVAting " << this);
 	DBG_PRT_COND(144, (na_dbg_num_submap > 3), os << "ACTIVAting " << this);
+	DBG_PRT(152, map_dbg_update_html_file("ACTIVAting "));
 }
 
 void
@@ -464,6 +463,7 @@ neuromap::map_deactivate(){
 	brain& brn = get_brn();
 	
 	DBG_PRT(134, os << "DEACTvating " << this);
+	DBG_PRT(152, map_dbg_update_html_file("DEACTvating "));
 	DBG_PRT_COND(144, (na_dbg_num_submap > 3), os << "DEACTvating  " << this
 		<< "\n dct=" << brn.br_retract_dct
 	);
@@ -1304,8 +1304,9 @@ neuromap::map_oper(mem_op_t mm){
 		}
 	}
 	
+	BRAIN_DBG(ch_string msg_htm = "copia");
 	DBG_COMMAND(150, brn.dbg_update_html_cy_graph(CY_NMP_KIND, 
-					&(brn.br_tmp_ini_tauto_col), brn.br_dbg.dbg_cy_text)
+					&(brn.br_tmp_ini_tauto_col), brn.br_dbg.dbg_cy_text);
 	);
 	
 	return oper_ok;
@@ -2199,7 +2200,7 @@ coloring::dbg_print_col_cy_graph(bj_ostream& os, bool is_ic){
 		bj_out << "Cannot print col EMPTY BRN !!!\n";
 		return os;
 	}
-	bj_out << "Printing col=" << this << "\n\n";
+	DBG_PRT(148, os << "Printing col=" << (void*)this);
 	
 	brain& brn = *pt_br;
 	//long num_step = 0;
@@ -2265,16 +2266,85 @@ neuron::dbg_ne_print_col_cy_edge(bj_ostream& os, long& consec){
 }
 
 void
+neuromap::map_get_cy_coloring(coloring& clr){
+	brain& brn = get_brn();
+	clr.init_coloring(&brn);
+
+	row_quanton_t& all_quas = clr.co_quas;
+	all_quas.clear();
+	map_get_all_quas(all_quas);
+	
+	row_neuron_t& all_neus = clr.co_neus;
+	all_neus.clear();
+	map_get_all_neus(all_neus);
+	
+	clr.co_qua_colors.fill(1, all_quas.size());
+	clr.co_neu_colors.fill(1, all_neus.size());
+}
+
+void
+neuromap::map_dbg_update_html_file(ch_string msg){
+#ifdef FULL_DEBUG
+	brain& brn = get_brn();
+	coloring full_col;
+	map_get_cy_coloring(full_col);
+	
+	ch_string rc_str = brn.recoil().get_str();
+	
+	bj_ostr_stream ss_msg;
+	ss_msg << "<h2>" << msg << "</h2>";
+	ss_msg << "nmp=" << (void*)this << "<br>";
+	ss_msg << "nmp_lv=" << na_orig_lv << "<br>";
+	ss_msg << "BRN_recoil=" << rc_str << "<br>";
+	ss_msg << "ALL_MONOS=";
+	brn.dbg_print_htm_all_monos(ss_msg);
+	ss_msg << "<br>";
+	
+	ch_string htm_msg = ss_msg.str();
+	brn.dbg_update_html_cy_graph(CY_NMP_KIND, &(full_col), htm_msg);
+#endif
+}
+
+bj_ostream&
+brain::dbg_print_htm_all_monos(bj_ostream& os){
+#ifdef FULL_DEBUG
+	os << "[";
+	for(long aa = 0; aa < br_monos.size(); aa++){
+		BRAIN_CK(br_monos[aa] != NULL_PT);
+		quanton& qua = *(br_monos[aa]);
+		if(aa != 0){ os << ","; };
+		os << " (" << qua.qu_id << "." << qua.qu_lv_mono << ")";
+	}
+	os << "]";
+#endif
+return os;
+}
+
+void
 neuromap::set_propag(){
 	//DBG(brain& brn = get_brn());
+	long lv_nmp = na_orig_lv;
+	
+	DBG_PRT(148, os << "set_propag nmp=" << (void*)this << " na_orig_lv=" << na_orig_lv);
+	
 	for(long aa = 0; aa < na_trail_propag.size(); aa++){
 		prop_signal& sgnl = na_trail_propag[aa];
 		quanton* qua = sgnl.ps_quanton;
 		BRAIN_CK(qua != NULL_PT);
 		
-		//bool in_sm = qua->in_bimons_lv();
-		//BRAIN_CK(! in_sm || qua->ck_bimons_lv(brn));
+		bool h_ne1 = qua->has_lv_alert_neu(lv_nmp);
+		bool h_ne2 = qua->opposite().has_lv_alert_neu(lv_nmp);
+		bool in_nmp = h_ne1 && h_ne2;
 		
+		DBG_PRT(148, os << "set_propag qua=" << qua->qu_id 
+			<< " h_ne1=" << h_ne1
+			<< " h_ne2=" << h_ne2
+			<< " lv_nmp=" << lv_nmp
+			<< " lv_mn=" << qua->qu_lv_mono
+			<< " opp_lv_mn=" << qua->opposite().qu_lv_mono
+		);
+		
+		//if(! qua->has_note2() && in_nmp){
 		if(! qua->has_note2()){
 			prop_signal& sgnl2 = na_propag.inc_sz();
 			sgnl2 = sgnl;
@@ -2282,3 +2352,13 @@ neuromap::set_propag(){
 	}
 }
 
+bool
+quanton::has_lv_alert_neu(long lv_nmp){
+	//long lv_mn = get_lv_mono();
+	//bool nmn = ! is_mono();
+	long lv_mn = qu_lv_mono;
+	bool nmn = (qu_lv_mono == INVALID_LEVEL);
+	bool c1 = (nmn || (lv_mn >= lv_nmp));
+	return c1;
+}
+	

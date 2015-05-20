@@ -548,6 +548,7 @@ get_errno_str(long val_errno){
 	case EPERM:		out_str = "EPERM";		break;
 	case EROFS:		out_str = "EROFS";		break;
 	case EXDEV:		out_str = "EXDEV";		break;
+	case EIO:		out_str = "EIO";		break;
 	};
 	return out_str;
 }
@@ -791,4 +792,16 @@ path_delete(ch_string full_pth, ch_string up_to){
 		if(resp != 0){ break; }
 	}
 }
+
+bool
+path_create_link(ch_string old_pth, ch_string new_pth){
+	int ok = symlink(old_pth.c_str(), new_pth.c_str());
+	MARK_USED(ok);
+	DBG_COND_COMM((ok != 0), 
+		os << "CANNOT create link old_pth=" << old_pth << " new_pth=" << new_pth << " err=" 
+			<< get_errno_str(errno) << "\n";
+	);
+	return (ok == 0);
+}
+
 

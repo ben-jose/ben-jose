@@ -159,6 +159,7 @@ typedef	row<row_neuron_t>	row_row_neuron_t;
 typedef bj_big_int_t	recoil_counter_t;
 
 DECLARE_PRINT_FUNCS(ticket)
+DECLARE_PRINT_FUNCS(alert_rel)
 DECLARE_PRINT_FUNCS(quanton)
 DECLARE_PRINT_FUNCS(neuron)
 DECLARE_PRINT_FUNCS(deduction)
@@ -292,6 +293,11 @@ class alert_rel {
 		bool c2 = (ar_qu_ref == NULL_PT);
 		bool vg = (c1 && c2);
 		return vg;
+	}
+	
+	bj_ostream&		print_alert_rel(bj_ostream& os, bool from_pt = false){
+		os << "ar={" << ar_qu_alert << "," << ar_qu_ref << "}";
+		return os;
 	}
 };
 
@@ -473,6 +479,7 @@ class alert_rel {
 #define k_note3_flag			k_flag3
 #define k_note4_flag			k_flag4
 #define k_note5_flag			k_flag5
+#define k_note6_flag			k_flag6
 
 DECLARE_NI_FLAG_ALL_FUNCS(note0);
 DECLARE_NI_FLAG_ALL_FUNCS(note1);
@@ -480,6 +487,7 @@ DECLARE_NI_FLAG_ALL_FUNCS(note2);
 DECLARE_NI_FLAG_ALL_FUNCS(note3);
 DECLARE_NI_FLAG_ALL_FUNCS(note4);
 DECLARE_NI_FLAG_ALL_FUNCS(note5);
+DECLARE_NI_FLAG_ALL_FUNCS(note6);
 
 class quanton {
 	public:
@@ -530,13 +538,6 @@ class quanton {
 	long			qu_alert_neu_idx; 	// not yet charged neu. index in qu_neus.
 	long			qu_lv_mono;
 	
-	// bimon attributes
-	neuron*			qu_uncharged_partner_neu;
-	neuron*			qu_bak_uncharged_partner_neu;
-	bool			qu_in_bimons_to_update;
-	long			qu_bimon_lv;
-	long			qu_bimon_idx;
-
 	// choice attributes
 	long			qu_choice_idx;	// idx in brain's 'choices'
 
@@ -583,6 +584,7 @@ class quanton {
 	DECLARE_NI_FLAG_FUNCS(qu_flags, note3); // sngle
 	DECLARE_NI_FLAG_FUNCS(qu_flags, note4); // sngle
 	DECLARE_NI_FLAG_FUNCS(qu_flags, note5); // sngle
+	DECLARE_NI_FLAG_FUNCS(qu_flags, note6); // bina
 
 	void	qua_tunnel_signals(brain* brn);
 	
@@ -606,12 +608,6 @@ class quanton {
 		
 		qu_alert_neu_idx = INVALID_IDX;
 		qu_lv_mono = INVALID_LEVEL;
-
-		qu_uncharged_partner_neu = NULL_PT;
-		qu_bak_uncharged_partner_neu = NULL_PT;
-		qu_in_bimons_to_update = false;
-		qu_bimon_lv = INVALID_LEVEL;
-		qu_bimon_idx = INVALID_IDX;
 
 		qu_choice_idx = INVALID_IDX;
 
@@ -659,29 +655,6 @@ class quanton {
 
 	void	reset_and_add_tee(sort_glb& quas_srg, sort_id_t quas_consec);
 	
-	void	add_to_bimons_lv(brain& brn);
-	bool	in_bimons_lv();	
-	bool	ck_bimons_lv(brain& brn);
-	
-	void	reset_qu_bimon_lv(){
-		qu_bimon_lv = INVALID_LEVEL;
-		qu_bimon_idx = INVALID_IDX;
-	}
-
-	bool		is_bimon(){
-		bool c1 = (opposite().qu_uncharged_partner_neu == NULL_PT);
-		bool c2 = (qu_uncharged_partner_neu == NULL_PT);
-		return (c1 || c2);
-	}
-
-	quanton*	get_bimon(){
-		if(qu_uncharged_partner_neu != NULL_PT){
-			return this;
-		}
-		quanton& opp = opposite();
-		return &opp;
-	}
-
 	quanton&	opposite(){
 		BRAIN_CK(qu_inverse != NULL_PT);
 		return (*qu_inverse);
@@ -755,13 +728,6 @@ class quanton {
 	bool		in_qu_dominated(brain& brn);
 	void		make_qu_dominated(brain& brn);
 
-	void		set_uncharged_partner_neu(brain& brn, long uidx, 
-										long dbg_call, neuron* dbg_neu);
-	neuron*		get_uncharged_partner_neu(dbg_call_id dbg_call);
-	long		find_uncharged_partner_neu();
-	void		reset_uncharged_partner_neu(brain& brn);
-	bool		ck_uncharged_partner_neu();
-
 	bool		is_choice(){
 		bool cho = (! has_source() && (qlevel() != ROOT_LEVEL));
 		return cho;
@@ -771,14 +737,28 @@ class quanton {
 	
 	bool 	is_eonmp();
 	
-	long	find_alert_idx(bool is_init);
+	long	find_alert_idx(bool is_init, row_quanton_t& all_pos);
 	void	update_alert_neu(brain& brn, bool is_init);
 	neuron*	get_alert_neu();
 	void	set_alert_neu(brain& brn, long the_idx);
 	void	append_all_to_alert(brain& brn, row_quanton_t& all_quas);
-	bool	ck_mono();
 	bool	is_mono();
 	bool	ck_alert_neu();
+	
+	bool	has_mono(){
+		bool h_mn = is_mono() || opposite().is_mono();
+		return h_mn;
+	}
+	
+	long	get_lv_mono(){
+		if(qu_lv_mono != INVALID_LEVEL){
+			return qu_lv_mono;
+		}
+		long opp_lv_mn = opposite().qu_lv_mono;
+		return opp_lv_mn;
+	}
+	
+	bool 	has_lv_alert_neu(long lv_nmp);
 	
 	neuromap*	get_nmp_to_write(brain& brn);
 
@@ -1228,20 +1208,24 @@ class neuron {
 		return qua0;
 	}
 
-	void		update_uncharged(brain& brn, quanton* chg_qua);
-
 	bool		ck_all_charges(brain* brn, long from);
 	bool		ck_all_has_charge(long& npos);
 	bool		ck_no_source_of_any();
 
-	bool	is_ne_alert(){
+	quanton*	find_is_pos(){
 		for(long ii = 0; ii < fib_sz(); ii++){
-			BRAIN_CK(ne_fibres[ii] != NULL_PT);
-			if(ne_fibres[ii]->is_pos()){
-				return false;
+			quanton* qua = ne_fibres[ii];
+			BRAIN_CK(qua != NULL_PT);
+			if(qua->is_pos()){
+				return qua;
 			}
 		}
-		return true;
+		return NULL_PT;
+	}
+	
+	bool	is_ne_alert(){ // not yet satisf
+		bool is_alrt = (find_is_pos() == NULL_PT);
+		return is_alrt;
 	}
 	
 	bool	is_ne_inert(){
@@ -1992,6 +1976,9 @@ class neuromap {
 	void	map_get_initial_guide_coloring(coloring& clr);
 	void 	map_get_initial_compl_coloring(coloring& prv_clr, coloring& all_quas_clr);
 	void 	map_get_initial_tauto_coloring(coloring& prv_clr, coloring& tauto_clr);
+	
+	void	map_get_cy_coloring(coloring& clr);
+	void	map_dbg_update_html_file(ch_string msg);
 	
 	static
 	void	map_append_neus_in_nmp_from(brain& brn, row_neuron_t& all_neus, 
@@ -2772,8 +2759,6 @@ class leveldat {
 	
 	long			ld_bak_mono_idx;
 
-	row_quanton_t	ld_bimons_to_update;
-
 	grip			ld_nmps_to_write;
 	grip			ld_nmp_setup;
 
@@ -2792,9 +2777,6 @@ class leveldat {
 		ld_chosen = NULL_PT;
 		
 		ld_bak_mono_idx = INVALID_IDX;
-
-		BRAIN_CK(ld_bimons_to_update.is_empty());
-		ld_bimons_to_update.clear();
 
 		BRAIN_CK(ld_nmps_to_write.is_alone());
 		BRAIN_CK(ld_nmp_setup.is_alone());
@@ -2867,7 +2849,6 @@ class leveldat {
 		return nmp;
 	}
 	
-	void	reset_bimons(brain& brn);
 	void	release_learned(brain& brn);
 
 	void	reset_monos(brain& brn);
@@ -3000,6 +2981,7 @@ public:
 	row_quanton_t 	br_tmp_qu_mk_all_dom;
 	row_quanton_t 	br_tmp_ck_all_qu_notes;
 	row_quanton_t 	br_tmp_uncharged_in_alert_neus;
+	row_quanton_t 	br_tmp_mono_all_neg;
 	
 	row_neuron_t 	br_tmp_ck_neus;
 	row_neuron_t 	br_tmp_ne_activate;
@@ -3064,9 +3046,8 @@ public:
 	analyser		br_neuromaper_anlsr;
 	
 	deduction		br_retract_dct;
+	deduction		br_mono_dct;
 
-	row_quanton_t		br_bimons_to_update;
-	
 	notekeeper		br_dbg_retract_nke0;
 	
 	row_quanton_t	br_all_cy_quas;
@@ -3146,6 +3127,7 @@ public:
 	long			br_qu_tot_note3;
 	long			br_qu_tot_note4;
 	long			br_qu_tot_note5;
+	long			br_qu_tot_note6;
 
 	// these var MUST start with 'br_ne_tot_' 
 	long			br_ne_tot_tag0;
@@ -3209,12 +3191,11 @@ public:
 
 	long		brn_tunnel_signals(bool only_in_dom);
 	quanton*	choose_quanton();
-	quanton* 	choose_bimon();
 	
 	quanton* 	get_curr_mono();
-	void		update_curr_mono();
 	bool 		ck_prev_monos();
 	quanton* 	choose_mono();
+	void		fill_mono_dct(deduction& dct, row_quanton_t& mots, quanton& mono);
 	
 	bool		dbg_ck_deducs(deduction& dct1, deduction& dct2);
 
@@ -3437,7 +3418,6 @@ public:
 	void	set_file_name_in_ic(ch_string f_nam = "");
 	void	config_brain(ch_string f_nam = "");
 	void	init_loading(long num_qua, long num_neu);
-	void	init_uncharged();
 	
 	void	init_alert_neus();
 	void	update_monos();
@@ -3516,15 +3496,14 @@ public:
 		return data_level().num_learned();
 	}
 
-	void	update_bimons();
-
 	void	retract_choice();
 	void	retract_to(long tg_lv = ROOT_LEVEL);
 	bool	dbg_in_edge_of_level();
 	bool	dbg_in_edge_of_target_lv(deduction& dct);
 	void	dbg_old_reverse();
 	
-	void	reverse();
+	void	deduce_and_reverse();
+	void	reverse(deduction& dct);
 	
 	bool 	ck_cov_flags();
 
@@ -3592,6 +3571,7 @@ public:
 		br_qu_tot_note3 = 0;
 		br_qu_tot_note4 = 0;
 		br_qu_tot_note5 = 0;
+		br_qu_tot_note6 = 0;
 	}
 
 	void 	init_ne_tots(){
@@ -3673,6 +3653,8 @@ public:
 	void		print_active_blocks(bj_ostream& os);
 
 	bj_ostream&	dbg_br_print_col_cy_nodes(bj_ostream& os, bool is_ic);
+	bj_ostream&	dbg_print_all_qua_rels(bj_ostream& os);
+	bj_ostream&	dbg_print_htm_all_monos(bj_ostream& os);
 	
 	bj_ostream& print_brain(bj_ostream& os);
 
@@ -3995,6 +3977,7 @@ long	find_max_tier(row_quanton_t& tmp_mots){
 // printing funcs
 
 DEFINE_PRINT_FUNCS(ticket)
+DEFINE_PRINT_FUNCS(alert_rel)
 DEFINE_PRINT_FUNCS(quanton)
 DEFINE_PRINT_FUNCS(neuron)
 DEFINE_PRINT_FUNCS(deduction)

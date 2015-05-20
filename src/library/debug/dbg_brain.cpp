@@ -790,33 +790,6 @@ quanton::ck_all_tunnels(){
 }
 
 bool
-quanton::ck_uncharged_partner_neu(){
-	bool ok_uchg2 = true;
-#ifdef FULL_DEBUG
-	if(has_charge()){
-		return true;
-	}
-	quanton& qua = *this;
-	neuron* neu = get_uncharged_partner_neu(dbg_call_1);
-	if(neu == NULL_PT){
-		long uch_idx = find_uncharged_partner_neu();
-		bool ok_uchg1 = (uch_idx == INVALID_IDX);
-		BRAIN_CK(ok_uchg1);
-		return ok_uchg1;
-	}
-
-	BRAIN_CK(neu->ne_original);
-	BRAIN_CK(neu == qu_uncharged_partner_neu);
-	BRAIN_CK(neu->is_partner_fib(qua));
-	quanton& par = neu->partner_fib(qua);
-
-	ok_uchg2 = (! par.has_charge());
-	BRAIN_CK(ok_uchg2);
-#endif
-	return ok_uchg2;
-}
-
-bool
 neuron::ck_all_charges(brain* brn, long from){
 	bool all_ok = true;
 #ifdef FULL_DEBUG
@@ -1027,7 +1000,6 @@ brain::dbg_old_reverse(){
 	BRAIN_CK(nke0.dk_tot_noted == 0);
 	BRAIN_CK(level() != ROOT_LEVEL);
 	BRAIN_CK(all_notes0 == 0);
-	BRAIN_CK(br_bimons_to_update.is_empty());
 	//BRAIN_CK(all_rev.is_empty());
 
 	// START REVERSE (init nke0)
@@ -1194,8 +1166,6 @@ brain::dbg_old_reverse(){
 		send_psignal(*nxt_qua, lnd_neu, tier() + 1);
 	}
 
-	update_bimons();
-
 	// inc recoil
 
 	inc_recoil();
@@ -1286,7 +1256,6 @@ leveldat::print_leveldat(bj_ostream& os, bool from_pt){
 	os << "LVDAT(" << (void*)this <<")={" << bj_eol;
 	os << " ld_idx=" << ld_idx << bj_eol;
 	os << " ld_chosen=" << ld_chosen << bj_eol;
-	os << " ld_bimons_to_update=" << ld_bimons_to_update << bj_eol;
 	os << "}";
 	os.flush();
 	return os;
@@ -1353,6 +1322,12 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 	long qlv = qlevel();
 	long qti = ps_ti;
 	
+	bool is_mn = (qu_lv_mono != INVALID_LEVEL);
+	bool is_opp_mn = (opposite().qu_lv_mono != INVALID_LEVEL);
+	bool hm = (is_mn || is_opp_mn);
+	//bool hm = false;
+	MARK_USED(hm);
+	
 	if(pt_brn != NULL_PT){
 		dominated = in_qu_dominated(*(pt_brn));
 	}
@@ -1373,7 +1348,7 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 		//if(! has_source() && has_charge()){ os << "*"; }
 		if(qlv == 0){ os << "#"; }
 		if(! h_src && h_chg){ os << "L" << qlv; }
-		if(! h_src && h_chg && (pt_brn != NULL_PT)){ 
+		/*if(! h_src && h_chg && (pt_brn != NULL_PT)){ 
 			brain& brn = *pt_brn;
 			
 			leveldat& lv = brn.get_data_level(qlv);
@@ -1399,7 +1374,7 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 			if(is_qu && (qlv != ROOT_LEVEL) && (lv.ld_chosen == NULL_PT)){
 				os << "[NULL_CHO!!!]"; 
 			}
-		}
+		}*/
 
 		if(! h_chg){ os << "("; }
 		if(is_nega){ os << '\\';  }
@@ -1415,6 +1390,7 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 		if(n2){ os << ".n2"; }
 		if(n3){ os << ".n3"; }
 		if(n4){ os << ".n4"; }
+		if(hm){ os << ".M." << qu_lv_mono; }
 		/*
 		if(with_dot){ os << ".d"; }
 		if(with_mark){ os << ".m"; }
