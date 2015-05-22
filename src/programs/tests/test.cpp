@@ -1383,11 +1383,22 @@ void test_minisha(){
 	}
 }
 
+void test_null_str(){
+	char* nu_str = NULL_PT;
+	bj_out << "test_null_str\n";
+	
+	ch_string o_str = nu_str;
+	if(o_str.empty()){
+		bj_out << "EMPTY !!!\n";
+	}
+}
+
 int	tests_main_(int argc, char** argv){
 	MARK_USED(argc);
 	MARK_USED(argv);
 	bj_ostream& os = bj_out;
 	
+	test_null_str();
 	//test_realpath(argc, argv);
 	//test_subsets();
 	//test_dims_to_path(argc, argv);

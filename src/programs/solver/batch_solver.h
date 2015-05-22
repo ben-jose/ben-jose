@@ -168,8 +168,6 @@ public:
 
 	bool			dbg_skip_print_info;
 	
-	DBG(bj_dbg_t	dbg_ops;)
-	
 	bj_ostr_stream	error_stm;
 	long			error_cod;
 
@@ -284,14 +282,6 @@ public:
 	void	do_all_instances();
 	void	do_cnf_file();
 	
-	DBG(
-		void 	prt_dbg_ops(){
-			bj_out << "DBG_OPS=";
-			if(dbg_ops.W > 0){ bj_out << "W"; }
-			if(dbg_ops.F > 0){ bj_out << "F"; }
-			bj_out << bj_eol;
-		}
-	)
 };
 
 //=================================================================

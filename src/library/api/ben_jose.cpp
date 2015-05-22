@@ -40,6 +40,7 @@ ben_jose interface impl.
 #include "ben_jose.h"
 #include "brain.h"
 #include "solver.h"
+#include "file_funcs.h"
 #include "dbg_prt.h"
 
 void 		bj_init_output(bj_output_t* the_out){
@@ -55,6 +56,9 @@ bj_solver_t bj_solver_create(const char* bjs_dir_path){
 	}
 	ch_string root_pth = bjs_dir_path;
 	bool is_no_pth = (root_pth.empty() || (root_pth == ""));
+	DBG(
+		ch_string rn_pth = path_get_running_path();
+	);
 	NOT_DBG(if(is_no_pth){ return NULL; })
 	
 	solver* nw_slv = solver::create_solver();
@@ -69,13 +73,6 @@ bj_solver_t bj_solver_create(const char* bjs_dir_path){
 	
 	bj_solver_t bjs = (bj_solver_t)nw_slv;
 
-	WF_DBG(bj_out << "NOT FIND (JUST AS DEFAULT_DBG)" << bj_eol);
-	DBG_CHECK_SAVED(
-		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-	);
 	BRAIN_CK((bj_out << "doing CKs (plain BRN_CKs)" << bj_eol) && true);
 	BRAIN_CK_0((bj_out << "doing BRN_CK_0s" << bj_eol) && true);
 	BRAIN_CK_1((bj_out << "doing BRN_CK_1s" << bj_eol) && true);
@@ -109,13 +106,6 @@ void 		bj_solver_release(bj_solver_t bjs){
 	BRAIN_CK_0((bj_out << "doing BRN_CK_0s" << bj_eol) && true);
 	BRAIN_CK_1((bj_out << "doing BRN_CK_1s" << bj_eol) && true);
 	BRAIN_CK_2((bj_out << "doing BRN_CK_2s" << bj_eol) && true);
-	DBG_CHECK_SAVED(
-		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-	);
-	WF_DBG(bj_out << bj_eol << "NOT FIND (JUST AS DEFAULT_DBG)" << bj_eol);
 }
 
 const char* bj_get_path(bj_solver_t bjs){
@@ -214,15 +204,5 @@ void		bj_print_paths(bj_solver_t bjs){
 	if(bjs == NULL){ return; }
 	solver& the_slvr = *((solver*)bjs);
 	the_slvr.slv_skl.print_paths(bj_out);
-}
-
-bj_dbg_t*	bj_debug(bj_solver_t bjs){
-	bj_dbg_t* dd = NULL;
-	DBG(
-		if(bjs == NULL){ return NULL; }
-		solver& the_slvr = *((solver*)bjs);
-		dd = &(the_slvr.slv_dbg);
-	)
-	return dd;
 }
 

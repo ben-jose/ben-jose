@@ -262,7 +262,7 @@ void
 dimacs_loader::calc_f_lit_equal_or(long d_lit, row<long>& or_lits,
 			row_row_long_t& rr_lits)
 {
-	DBG_PRT(41, os << "EQ_OR. d_lit=" << d_lit << " or_lits=" << or_lits);
+	DBG_PRT(10, os << "EQ_OR. d_lit=" << d_lit << " or_lits=" << or_lits);
 
 	DIMACS_CK(d_lit > 0);
 	DIMACS_CK(! or_lits.is_empty());
@@ -272,7 +272,7 @@ dimacs_loader::calc_f_lit_equal_or(long d_lit, row<long>& or_lits,
 	or_lits.copy_to(f1);
 	f1.push(-d_lit);
 
-	DBG_PRT(41, os << "EQ_OR. ccl=" << f1);
+	DBG_PRT(10, os << "EQ_OR. ccl=" << f1);
 
 	long ii = 0;
 	for(ii = 0; ii < or_lits.size(); ii++){
@@ -282,7 +282,7 @@ dimacs_loader::calc_f_lit_equal_or(long d_lit, row<long>& or_lits,
 		f2.push(-o_lit);
 		f2.push(d_lit);
 
-		DBG_PRT(41, os << "EQ_OR. ccl(" << ii << ")=" << f2);
+		DBG_PRT(10, os << "EQ_OR. ccl(" << ii << ")=" << f2);
 	}
 
 	or_lits.clear();
@@ -355,7 +355,7 @@ dimacs_loader::load_file(ch_string& f_nam){
 	read_file(ld_file_name, ld_content);
 	ld_content.push(END_OF_SEC); // it already has room for it
 
-	DBG_PRT(11, os << " ld_content=" << ld_content.print_row_data(os, true, ""));
+	DBG_PRT(9, os << " ld_content=" << ld_content.print_row_data(os, true, ""));
 }
 
 long
@@ -461,7 +461,7 @@ dimacs_loader::parse_all_ccls(row<long>& inst_ccls)
 {
 	parse_header();
 
-	DBG_PRT(11, os << "ld_cursor=" << ld_cursor);
+	DBG_PRT(9, os << "ld_cursor=" << ld_cursor);
 
 	DIMACS_CK(ld_nud_added_ccls == 0);
 	DIMACS_CK(ld_nud_added_vars == 0);
@@ -520,7 +520,7 @@ void
 dimacs_loader::calc_f_lit_equal_and(long d_lit, row<long>& and_lits,
 			row_row_long_t& rr_lits)
 {
-	DBG_PRT(42, os << "EQ_AND. d_lit=" << d_lit << " and_lits=" << and_lits);
+	DBG_PRT(11, os << "EQ_AND. d_lit=" << d_lit << " and_lits=" << and_lits);
 
 	DIMACS_CK(! and_lits.is_empty());
 	row<long>& f1 = rr_lits.inc_sz();
@@ -529,7 +529,7 @@ dimacs_loader::calc_f_lit_equal_and(long d_lit, row<long>& and_lits,
 	lits_opps(f1);
 	f1.push(d_lit);
 
-	DBG_PRT(42, os << "EQ_AND. ccl=" << f1);
+	DBG_PRT(11, os << "EQ_AND. ccl=" << f1);
 
 	long ii = 0;
 	for(ii = 0; ii < and_lits.size(); ii++){
@@ -539,7 +539,7 @@ dimacs_loader::calc_f_lit_equal_and(long d_lit, row<long>& and_lits,
 		f2.push(a_lit);
 		f2.push(-d_lit);
 
-		DBG_PRT(42, os << "EQ_AND. ccl(" << ii << ")=" << f2);
+		DBG_PRT(11, os << "EQ_AND. ccl(" << ii << ")=" << f2);
 	}
 
 	and_lits.clear();

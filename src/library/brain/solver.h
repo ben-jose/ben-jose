@@ -61,7 +61,6 @@ public:
 	long	dbg_max_fnd_num_subnmp;
 	
 	ch_string	dbg_html_out_path;
-	ch_string	dbg_cy_js_path;
 	
 	dbg_slvr_info(){
 		init_dbg_slvr_info();
@@ -73,8 +72,6 @@ public:
 		dbg_max_fnd_num_subnmp = 0;
 		
 		dbg_html_out_path = ".";
-		dbg_cy_js_path = 
-		"/home/jose/devel/ben-jose/src/programs/tests/drw_cnf/drw_grph_files/";
 	}
 };
 
@@ -96,7 +93,6 @@ private:
 public:
 	instance_info	slv_inst;
 	skeleton_glb	slv_skl;
-	DBG(bj_dbg_t		slv_dbg;)
 	DBG(dbg_slvr_info 	slv_dbg2;)
 	
 	solver(){
@@ -107,15 +103,9 @@ public:
 	}
 	
 	void	init_solver(){
-		DBG(init_debug();)
 	}
 	
 	DBG(
-		void	init_debug(){
-			slv_dbg.W = 1;
-			slv_dbg.F = 0;
-		}
-		
 		void	update_dbg2(dbg_inst_info& ist_info);
 	);
 	

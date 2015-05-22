@@ -52,12 +52,6 @@ Declarations of classes and that implement the neural network.
 //=============================================================================
 // defines
 
-#if defined AS_DBG_WF
-#define WF_DBG(prm) prm
-#else
-#define WF_DBG(prm) /**/
-#endif
-
 #define BRAIN_DBG(prm) DBG(prm)
 #define BRAIN_CK(prm) DBG_BJ_LIB_CK(prm)
 #define BRAIN_CK_PRT(prm, comms1)  DBG_CK_2(prm, comms1)
@@ -71,6 +65,7 @@ Declarations of classes and that implement the neural network.
 //=============================================================================
 // MAIN CLASSES
 
+#define CY_LIB_DIR "draw_cnf_js_lib"
 #define CY_IC_KIND "_ic_"
 #define CY_NMP_KIND "_nmp_"
 #define CY_CIRCLE_LAYOUT "'circle'"

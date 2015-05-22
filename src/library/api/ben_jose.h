@@ -79,11 +79,6 @@ typedef enum {
 } bj_error_t;
 
 typedef struct {
-	int W;
-	int F;
-} bj_dbg_t;
-
-typedef struct {
 	bj_satisf_val_t 	bjo_result;
 	
 	double		bjo_solve_time;
@@ -142,7 +137,6 @@ void			bj_restart(bj_solver_t bjs);
 int 		bj_update(bj_solver_t dest, bj_solver_t src);
 
 void		bj_print_paths(bj_solver_t bjs);
-bj_dbg_t*	bj_debug(bj_solver_t bjs);
 
 #ifdef __cplusplus
 }

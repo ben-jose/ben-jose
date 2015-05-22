@@ -67,13 +67,10 @@ config_reader::parse_debug_line(row<long>& dbg_line, ch_string& str_ln){
 void	
 config_reader::add_config_line(debug_info& dbg_info, ch_string& str_ln){
 #ifdef FULL_DEBUG
-	//dbg_inst_info& dbg_info = brn.br_dbg;
 	bj_ostream& os = bj_out;
 	MARK_USED(os);
 	row<long>& dbg_ln = dbg_config_line;
 	parse_debug_line(dbg_ln, str_ln);
-
-	//os << "Entendi:<<" << dbg_ln << ">>" << bj_eol;
 
 	if(! dbg_ln.is_empty()){
 		debug_entry& start_dbg = dbg_info.dbg_start_dbg_entries.inc_sz();
@@ -97,7 +94,6 @@ config_reader::add_config_line(debug_info& dbg_info, ch_string& str_ln){
 void
 config_reader::read_config(debug_info& dbg_info, const char* file_nm){
 #ifdef FULL_DEBUG
-	//dbg_inst_info& dbg_info = brn.br_dbg;
 	bj_ostream& os = bj_out;
 	CONFIG_CK(file_nm != NULL_PT);
 
@@ -120,7 +116,6 @@ config_reader::read_config(debug_info& dbg_info, const char* file_nm){
 	while(! in_stm.eof()){
 		std::getline(in_stm, str_ln);
 		
-		//os << "Lei:<<" << str_ln << ">>" << bj_eol;
 		add_config_line(dbg_info, str_ln);
 	}
 	in_stm.close();
@@ -129,48 +124,29 @@ config_reader::read_config(debug_info& dbg_info, const char* file_nm){
 
 	dbg_info.dbg_start_dbg_entries.mix_sort(cmp_dbg_entries);
 	dbg_info.dbg_stop_dbg_entries.mix_sort(cmp_dbg_entries);
-
-	//os << "start_dbgs=" << dbg_info.dbg_start_dbg_entries << bj_eol;
-	//os << "stop_dbgs=" << dbg_info.dbg_stop_dbg_entries << bj_eol;
 #endif
 }
 
 void	dbg_init_dbg_conf(debug_info& dbg_info){
 #ifdef FULL_DEBUG
-	//dbg_inst_info& dbg_info = brn.br_dbg;
 	config_reader conf_rdr;
-	conf_rdr.read_config(dbg_info, "yosoy.conf");
+	conf_rdr.read_config(dbg_info, "dbg_ben_jose.conf");
 
 	dbg_info.dbg_current_start_entry = 0;
 	dbg_info.dbg_current_stop_entry = 0;
 	
 	bj_big_int_t curr_round = 0;
 	dbg_update_config_entries(dbg_info, curr_round);
-
-	/*
-	DBG_COMMAND(37, os << "PRINT_FULL_INFO" << bj_eol; 
-		dbg_info.dbg_skip_print_info = true);
-
-	DBG_COMMAND(40, os << "SET IC GEN JPG" << bj_eol; 
-		dbg_info.dbg_ic_gen_jpg = true);
-
-	dbg_ic_max_seq = -1;
-	dbg_ic_seq = 0;
-	*/
 #endif
 }
 
 void
 dbg_update_config_entries(debug_info& dbg_info, bj_big_int_t curr_round){
 #ifdef FULL_DEBUG
-	
-	//dbg_inst_info& dbg_info = brn.br_dbg;
 	row<bool>& dbg_arr = dbg_info.dbg_levs_arr;
 	
 	bj_ostream& os = bj_out;
 	MARK_USED(os);
-
-	//recoil_counter_t curr_round = brn.recoil();
 
 	long& start_idx = dbg_info.dbg_current_start_entry;
 	long& stop_idx = dbg_info.dbg_current_stop_entry;

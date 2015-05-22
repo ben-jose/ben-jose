@@ -61,13 +61,6 @@ php_main(long num_h){
 	DBG(the_slvr.slv_skl.kg_keep_skeleton = false;)
 	the_slvr.slv_skl.init_paths();
 	
-	WF_DBG(bj_out << "NOT FIND (JUST AS DEFAULT_DBG)" << bj_eol);
-	DBG_CHECK_SAVED(
-		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-	);
 	BRAIN_CK((bj_out << "doing CKs (plain BRN_CKs)" << bj_eol) && true);
 	BRAIN_CK_0((bj_out << "doing BRN_CK_0s" << bj_eol) && true);
 	BRAIN_CK_1((bj_out << "doing BRN_CK_1s" << bj_eol) && true);
@@ -123,13 +116,6 @@ int	main(int argc, char** argv){
 	BRAIN_CK_0((bj_out << "doing BRN_CK_0s" << bj_eol) && true);
 	BRAIN_CK_1((bj_out << "doing BRN_CK_1s" << bj_eol) && true);
 	BRAIN_CK_2((bj_out << "doing BRN_CK_2s" << bj_eol) && true);
-	DBG_CHECK_SAVED(
-		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-	);
-	WF_DBG(bj_out << bj_eol << "NOT FIND (JUST AS DEFAULT_DBG)" << bj_eol);
 	
 	return 0;
 }

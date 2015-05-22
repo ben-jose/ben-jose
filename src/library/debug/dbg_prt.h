@@ -50,9 +50,6 @@ bool	dbg_check_lev(brain* brn, long lev);
 //=================================================================
 // debug defs
 
-//define DBG_CHECK_SAVED(cod)	;
-#define DBG_CHECK_SAVED(cod)		DBG(cod)
-
 #define DBG_ALL_LVS -1
 
 #define	DBG_BR_COND(pt_brn, lev, cond)	(dbg_check_lev(pt_brn, lev) && (cond))

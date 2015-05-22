@@ -1443,12 +1443,12 @@ canon_cnf::i_sub_of_vnt(skeleton_glb& skg, ch_string& vpth, bool& are_eq){
 bool
 skeleton_glb::find_skl_path(ch_string pth_to_find, instance_info* iinfo){
 	if(! kg_find_cnn_pth){
-		DBG_PRT(109, os << "NOT finding 1 pth=" << pth_to_find);
+		DBG_PRT(87, os << "NOT finding 1 pth=" << pth_to_find);
 		return false;
 	}
 
 	if(! in_skl(pth_to_find)){
-		DBG_PRT(109, os << "NOT finding 2 pth=" << pth_to_find);
+		DBG_PRT(87, os << "NOT finding 2 pth=" << pth_to_find);
 		SKELETON_CK(false);
 		return false; 
 	}
@@ -1458,7 +1458,7 @@ skeleton_glb::find_skl_path(ch_string pth_to_find, instance_info* iinfo){
 	bool found_it = strset_find_path(all_found, pth_to_find);
 
 	if(kg_dbg_local_verifying || kg_dbg_only_save){
-		DBG_PRT(109, os << "NOT finding 3 pth=" << pth_to_find);
+		DBG_PRT(87, os << "NOT finding 3 pth=" << pth_to_find);
 		return found_it;
 	}
 
@@ -1470,7 +1470,7 @@ skeleton_glb::find_skl_path(ch_string pth_to_find, instance_info* iinfo){
 		} else {
 			found_it = file_newer_than(pth_to_find, kg_verify_mtime);
 		}
-		DBG_PRT(109, os << "found_it=" << found_it << " for path " << pth_to_find);
+		DBG_PRT(87, os << "found_it=" << found_it << " for path " << pth_to_find);
 	}
 	if(found_it && to_inser){
 		DBG_PRT(98, os << "ADDING FOUND '" << pth_to_find << "'");
@@ -1527,7 +1527,7 @@ canon_cnf::all_nxt_vnt(skeleton_glb& skg, row<variant>& all_next, row<ch_string>
 	long num_eq = 0;
 	average avg_szs;
 
-	DBG_PRT(107, os << "getting all_vnts in=" 
+	DBG_PRT(84, os << "getting all_vnts in=" 
 			<< skg.as_full_path(get_all_variant_dir_name()));
 
 	all_next.clear();
@@ -1570,7 +1570,7 @@ canon_cnf::all_nxt_vnt(skeleton_glb& skg, row<variant>& all_next, row<ch_string>
 		} else {
 			ch_string vdir = get_variant_ref_fname(aa);
 			skg.ref_remove(vdir);
-			DBG_PRT(107, os << "UNLINKING=" << vdir << " num_vnts=" << num_vnts);
+			DBG_PRT(84, os << "UNLINKING=" << vdir << " num_vnts=" << num_vnts);
 
 			ch_string& the_del_pth = all_del.inc_sz();
 			the_del_pth = vpth;
@@ -1600,7 +1600,7 @@ canon_cnf::all_nxt_vnt(skeleton_glb& skg, row<variant>& all_next, row<ch_string>
 
 		ch_string vdir = get_variant_ref_fname(del_idx);
 		skg.ref_remove(vdir);
-		DBG_PRT(107, os << "UNLINKING CHOSEN=" << vdir << " num_vnts=" << num_vnts);
+		DBG_PRT(84, os << "UNLINKING CHOSEN=" << vdir << " num_vnts=" << num_vnts);
 
 		ch_string& the_del_pth = all_del.inc_sz();
 		the_del_pth = the_vnt.vn_real_path;
@@ -1671,12 +1671,9 @@ choose_variant(row<variant>& all_vnt, bj_big_float_t& avg_szs, bool in_dbg){
 		bj_big_int_t& n_avg_sz = nxt_avg.sz;
 
 		if(n_avg_sz < 0){
-			//DBG_PRT_COND(73, in_dbg, os << "n_avg_sz=" << n_avg_sz);
 			continue;
 		}
 		if(n_avg_sz > avg_szs){
-			//DBG_PRT_COND(73, in_dbg, os << "n_avg_sz=" << n_avg_sz 
-			//	<< " avg_szs=" << avg_szs);
 			continue;
 		}
 
@@ -1758,7 +1755,7 @@ canon_cnf::update_parent_variants(skeleton_glb& skg, ch_string nw_vnt_val){
 
 		skg.ref_remove(vnt_pth);
 		skg.ref_write(lnk_pth, vnt_pth);
-		DBG_PRT(107, os << "vnt_pth=" << vnt_pth << " to " << bj_eol 
+		DBG_PRT(84, os << "vnt_pth=" << vnt_pth << " to " << bj_eol 
 				<< " lnk_pth=" << lnk_pth);
 	}
 
@@ -1780,7 +1777,7 @@ canon_cnf::update_parent_variants(skeleton_glb& skg, ch_string nw_vnt_val){
 
 		skg.ref_remove(lst_pth);
 		skg.ref_write(nw_vnt_val, lst_pth);
-		DBG_PRT(107, os << "lst_pth=" << lst_pth << " to " 
+		DBG_PRT(84, os << "lst_pth=" << lst_pth << " to " 
 				<< bj_eol << " full_pth=" << nw_vnt_val);
 
 		SKELETON_CK(skg.ref_exists(lst_pth));
@@ -1793,7 +1790,7 @@ canon_cnf::update_parent_variants(skeleton_glb& skg, ch_string nw_vnt_val){
 	for(aa = 0; aa < all_del.size(); aa++){
 		ch_string& the_del_pth = all_del[aa];
 		path_delete(skg.as_full_path(the_del_pth), skg.kg_root_path);
-		DBG_PRT(107, os << "deleted=" << the_del_pth);
+		DBG_PRT(84, os << "deleted=" << the_del_pth);
 	}
 
 	SKELETON_CK(ck_vnts(skg));
@@ -1801,7 +1798,7 @@ canon_cnf::update_parent_variants(skeleton_glb& skg, ch_string nw_vnt_val){
 
 bool
 canon_cnf::ck_vnts(skeleton_glb& skg){
-	DBG_PRT(107, os << "checking=" << skg.as_full_path(get_all_variant_dir_name()));
+	DBG_PRT(84, os << "checking=" << skg.as_full_path(get_all_variant_dir_name()));
 
 	bj_big_int_t num_vnts = get_num_variants(skg);
 	long aa = 0;
@@ -1892,7 +1889,7 @@ canon_cnf::is_new(skeleton_glb& skg){
 ch_string
 canon_cnf::prepare_cnf(skeleton_glb& skg, ch_string sv_pth)
 {
-	DBG_PRT(122, os << "prepare_cnf'" << sv_pth << "'" << bj_eol 
+	DBG_PRT(73, os << "prepare_cnf'" << sv_pth << "'" << bj_eol 
 		<< cf_sha_str << bj_eol 
 		<< cf_phdat << bj_eol 
 		<< cf_dbg_shas
@@ -1992,7 +1989,6 @@ canon_cnf::save_cnf(skeleton_glb& skg, ch_string sv_pth){
 			DBG_PRT(DBG_ALL_LVS, os << "SAVING_CANON_CNF_SHA_STR=\n" << cf_sha_str);
 			skg.report_err(sv_pth, skg.kg_collisions_path);
 		}
-		//DBG_PRT_COND(106, sv_ok, os << "SAVING_EQU");
 		DBG(
 			if(existed && has_phases){
 				DBG_COND_COMM(! ((pth1 == "") || skg.ref_exists(pth1)),
@@ -2059,7 +2055,7 @@ canon_cnf::save_cnf(skeleton_glb& skg, ch_string sv_pth){
 		skg.ref_touch(sv_dir);
 	}
 
-	DBG_PRT(122, 
+	DBG_PRT(95, 
 		dbg_inst_info& dbg_inf = skg.get_dbg_brn()->br_dbg;
 		os << "AFTER save_cnf'" << sv_pth 
 		<< "' ok=" << sv_ok << " existed=" << existed

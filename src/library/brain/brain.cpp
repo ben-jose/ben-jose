@@ -383,7 +383,7 @@ neuron::neu_tunnel_signals(brain& brn, quanton& r_qua){
 		BRAIN_CK_2(ne_fibres[1]->ck_all_tunnels());
 		dbg1 = true;
 
-		DBG_PRT(102, os << "forcing " << this);
+		DBG_PRT(31, os << "forcing " << this);
 	}
 
 	if((cg0 != cg_neutral) && (cg1 != cg_neutral)){
@@ -393,7 +393,7 @@ neuron::neu_tunnel_signals(brain& brn, quanton& r_qua){
 		if(ne_original){
 			BRAIN_DBG(ne_dbg_filled_tk.update_ticket(brn));
 			r_qua.qu_full_charged.push(this);
-			DBG_PRT(102, os << "qua=" << &r_qua << " filled orig " << this);
+			DBG_PRT(32, os << "qua=" << &r_qua << " filled orig " << this);
 		}
 		dbg2 = true;
 	}
@@ -412,11 +412,11 @@ brain::brain(solver& ss) {
 }
 
 brain::~brain(){
-	DBG_PRT(6, os << "releasing brain 0");
+	DBG_PRT(37, os << "releasing brain 0");
 
 	release_brain();
 
-	DBG_PRT(6, os << "RELEASING brain 1");
+	DBG_PRT(37, os << "RELEASING brain 1");
 }
 
 solver&
@@ -753,7 +753,6 @@ brain::choose_quanton(){
 	//quanton* qua = NULL;
 	quanton* qua = choose_mono();
 	if(qua != NULL_PT){
-		DBG_PRT(148, os << "cho_mono=" << qua);
 		return qua;
 	}
 
@@ -763,12 +762,10 @@ brain::choose_quanton(){
 		neuromap& mpp_dom = *pt_mpp;
 		qua = mpp_dom.map_choose_quanton();
 		if(qua != NULL_PT){
-			DBG_PRT(148, os << "cho_map=" << qua);
 			return qua;
 		}
 		BRAIN_CK(qua == NULL_PT);
 		deactivate_last_map();
-		DBG_PRT(122, os << "deac_lst (choose)");
 	}
 
 	for(long ii = 0; ii < br_choices.size(); ii++){
@@ -789,7 +786,6 @@ brain::choose_quanton(){
 		qua = qua->qu_inverse;
 	}
 
-	DBG_PRT(148, os << "cho_all=" << qua);
 	return qua;
 }
 
@@ -1032,7 +1028,7 @@ brain::get_result(){
 
 neuron&
 brain::load_neuron(row_quanton_t& neu_quas){
-	DBG_PRT(29, os << "ADDING NEU=" << neu_quas);
+	DBG_PRT(22, os << "ADDING NEU=" << neu_quas);
 
 	neuron* the_neu = NULL_PT;
 	BRAIN_CK_0(neu_quas.size() > 0);
@@ -1190,10 +1186,12 @@ brain::find_result(){
 	}
 
 	BRAIN_DBG(
-		DBG_PRT(140, br_dbg.dbg_just_read = true);
-		if(br_dbg.dbg_just_read){
+		bool just_read = false; // ONLY_READ
+		DBG_COMMAND(6, just_read = true);
+		DBG_COMMAND(12, just_read = true);
+		if(just_read){
 			set_result(bjr_error);
-			DBG_PRT(140, os << "____\nFULL_BRAIN_STAB=\n"; dbg_prt_full_stab());
+			DBG_PRT(12, os << "____\nFULL_BRAIN_STAB=\n"; dbg_prt_full_stab());
 			return;
 		} 
 	)
@@ -1237,8 +1235,8 @@ brain::find_result(){
 	}
 	
 	BRAIN_DBG(
-		DBG_PRT(116, dbg_prt_all_cho(*this));
-		DBG_PRT(32, os << "BRAIN=" << bj_eol;
+		DBG_PRT(34, dbg_prt_all_cho(*this));
+		DBG_PRT(29, os << "BRAIN=" << bj_eol;
 			print_brain(os); 
 		);
 
@@ -1317,7 +1315,7 @@ notekeeper::set_motive_notes(row_quanton_t& rr_qua, long from, long until){
 
 	brain& brn = get_dk_brain();
 
-	DBG_PRT(104, os << "making notes " << rr_qua);
+	DBG_PRT(33, os << "making notes " << rr_qua);
 
 	if(from < 0){ from = 0; }
 	if(until > rr_qua.size()){ until = rr_qua.size(); }
@@ -1559,7 +1557,7 @@ brain::receive_psignal(bool only_in_dom){
 			//BRAIN_CK(! has_psignals()); // simple_propag
 			BRAIN_CK(found_conflict());
 			//BRAIN_CK(ck_confl_ti());
-			DBG_PRT_COND(136, (br_all_conflicts_found.size() > 1), 
+			DBG_PRT_COND(35, (br_all_conflicts_found.size() > 1), 
 					os << "num_confl=" << br_all_conflicts_found.size()
 			);
 		} 
@@ -1580,7 +1578,7 @@ brain::receive_psignal(bool only_in_dom){
 
 		qua.set_charge(brn, neu, cg_positive, sg_tier);
 
-		DBG_PRT_COND(64, (neu != NULL_PT), os << "qua=" << &qua << " SRC=" << neu);
+		DBG_PRT_COND(30, (neu != NULL_PT), os << "qua=" << &qua << " SRC=" << neu);
 
 		BRAIN_CK((qua.qu_source == neu) || 
 			((level() == ROOT_LEVEL) && (qua.qu_source == NULL_PT)));
@@ -1790,8 +1788,7 @@ brain::retract_choice(){
 
 	BRAIN_CK_0(level() != ROOT_LEVEL);
 
-	DBG_PRT(14, print_trail(os));
-	DBG_PRT(14, os << "chosen " << br_chosen);
+	DBG_PRT(14, print_trail(os); os << "chosen " << br_chosen);
 
 	// retract loop
 
@@ -1896,6 +1893,7 @@ set_file_err(file_exception& fl_ex, bj_output_t& o_inf){
 bj_satisf_val_t
 brain::solve_instance(bool load_it){
 
+	DBG_COMMAND(100, os << "CAREFUL RUNNING VERIF ON WRITE !!!!!");
 	BRAIN_DBG(
 		ch_string htm_pth = get_solver().slv_dbg2.dbg_html_out_path;
 		ch_string sub_dir = htm_pth + "/" + br_dbg.dbg_cy_prefix;
@@ -1905,8 +1903,10 @@ brain::solve_instance(bool load_it){
 			DBG_PRT(150, os << "Created dir: '" << sub_dir << "'\n");
 		}
 		
-		ch_string js_dir = get_solver().slv_dbg2.dbg_cy_js_path;
-		ch_string lk_nm = sub_dir + "/drw_grph_files";
+		ch_string rn_pth = path_get_running_path();
+		ch_string rn_dir = path_get_directory(rn_pth, true);
+		ch_string js_dir = rn_dir + "../" + CY_LIB_DIR;
+		ch_string lk_nm = sub_dir + "/" + CY_LIB_DIR;
 		
 		DBG_PRT(150, os << "creating link \n js_dir=" << js_dir << "\n lk_nm=" << lk_nm);
 		DBG_PRT(151, os << "creating link \n js_dir=" << js_dir << "\n lk_nm=" << lk_nm);
@@ -1981,8 +1981,6 @@ void
 brain::deduce_and_reverse(){
 	BRAIN_CK(! has_psignals());
 	
-	DBG_PRT(122, print_trail(os));
-	
 	BRAIN_CK(level() != ROOT_LEVEL);
 	BRAIN_CK(br_qu_tot_note0 == 0);
 	BRAIN_CK(found_conflict());
@@ -1996,11 +1994,11 @@ brain::deduce_and_reverse(){
 	deduction& dct = br_retract_dct;
 
 	bool in_full_anls = true;
-	DBG_COMMAND(141, in_full_anls = false);
+	DBG_COMMAND(2, in_full_anls = false); // ONLY_DEDUC
 	if(in_full_anls){
 		analyse(br_all_conflicts_found, dct);
 	} else {
-		DBG_PRT(125, os << "bef_ana=" << bj_eol; print_trail(os);
+		DBG_PRT(40, os << "bef_ana=" << bj_eol; print_trail(os);
 			os << " num_conf=" << br_all_conflicts_found.size() << " br_lv=" << level()
 			<< " br_ti=" << tier();
 		);
@@ -2014,38 +2012,6 @@ brain::deduce_and_reverse(){
 
 void
 brain::reverse(deduction& dct){
-	/*
-	BRAIN_CK(! has_psignals());
-	
-	DBG_PRT(122, print_trail(os));
-	
-	BRAIN_CK(level() != ROOT_LEVEL);
-	BRAIN_CK(br_qu_tot_note0 == 0);
-	BRAIN_CK(found_conflict());
-
-	BRAIN_DBG(br_dbg.dbg_before_retract_lv = level());
-	
-	// analyse
-	
-	BRAIN_DBG(if(level() > br_dbg.dbg_max_lv){ br_dbg.dbg_max_lv = level(); });
-	
-	deduction& dct = br_retract_dct;
-
-	// JLQ
-	bool in_full_anls = true;
-	DBG_COMMAND(141, in_full_anls = false);
-	if(in_full_anls){
-		analyse(br_all_conflicts_found, dct);
-	} else {
-		br_deducer_anlsr.set_conflicts(br_all_conflicts_found);
-		br_deducer_anlsr.deduction_analysis(br_deducer_anlsr.get_first_causes(), dct);
-	}
-	*/
-	DBG_PRT(122, os << "AFTE_ANALYSE \ncfl=" << first_conflict() << "\ndct=" << dct);
-
-	DBG_PRT(122, dbg_prt_lvs_active(os));
-	DBG_PRT(122, dbg_prt_lvs_have_learned(os));
-	
 	// retract
 	retract_to(dct.dt_target_level);
 	
@@ -2080,16 +2046,6 @@ brain::reverse(deduction& dct){
 	check_timeout();
 
 	BRAIN_CK((level() == ROOT_LEVEL) || lv_has_learned());
-
-	DBG_PRT(131, 
-			print_trail(os);
-			dbg_prt_lvs_cho(os);
-			os << "tr_lv=" << trail_level() << " tg_lv=" << dct.dt_target_level;
-			os << " f_qu=" << nxt_qua; 
-			//DO_GETCHAR()
-	);
-	DBG_PRT(122, dbg_prt_lvs_active(os));
-	DBG_PRT(122, print_trail(os); os << dct << bj_eol);
 
 	reset_conflict();
 	BRAIN_CK(! found_conflict());
@@ -2282,9 +2238,8 @@ brain::dbg_update_html_cy_graph(ch_string cy_kk, coloring* the_col, ch_string ht
 		ch_string rel_aa_pth = get_cy_rel_path(brn, cy_kk, aa);
 		of << "\t\t " << HTMi_src << rel_aa_pth << HTMe_src << bj_eol;
 	}
-	of << "\t\t " << HTMi_src << "drw_grph_files/jquery.js" << HTMe_src << bj_eol;
-	of << "\t\t " << HTMi_src << "drw_grph_files/cytoscape.js" << HTMe_src << bj_eol;
-	of << "\t\t " << HTMi_src << "drw_grph_files/show_cnf_fn.js" << HTMe_src << bj_eol;
+	of << "\t\t " << HTMi_src << CY_LIB_DIR << "/cytoscape.js" << HTMe_src << bj_eol;
+	of << "\t\t " << HTMi_src << CY_LIB_DIR << "/show_cnf_fn.js" << HTMe_src << bj_eol;
 	
 	of << "\t" << HTMe_head << bj_eol;
 	
@@ -2755,9 +2710,6 @@ quanton*
 brain::get_curr_mono(){
 	long mo_idx = br_last_monocho_idx;
 	if(! br_monos.is_valid_idx(mo_idx)){
-		DBG_PRT(148, os << "mo_idx=" << mo_idx << "\n all_mono=";
-			dbg_print_htm_all_monos(os);
-		);
 		return NULL_PT;
 	}
 	quanton* qua = br_monos[mo_idx];
