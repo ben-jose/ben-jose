@@ -1393,12 +1393,30 @@ void test_null_str(){
 	}
 }
 
+int*	GLB_PT_INT = NULL_PT;
+
+void fn_ref_pt_prm(int*& ref_pm){
+	if(&ref_pm == &GLB_PT_INT){
+		bj_out << "GLB_REF \n";
+	} else {
+		bj_out << "other ref \n";
+	}
+}
+
+void test_rf_pt(){
+	int* iref = NULL_PT;
+	
+	fn_ref_pt_prm(iref);
+	fn_ref_pt_prm(GLB_PT_INT);
+}
+
 int	tests_main_(int argc, char** argv){
 	MARK_USED(argc);
 	MARK_USED(argv);
 	bj_ostream& os = bj_out;
 	
-	test_null_str();
+	test_rf_pt();
+	//test_null_str();
 	//test_realpath(argc, argv);
 	//test_subsets();
 	//test_dims_to_path(argc, argv);
@@ -1416,7 +1434,7 @@ int	tests_main_(int argc, char** argv){
 	
 	//test_thrw_obj();
 	//pru_hex_as_txt();
-	test_minisha();
+	//test_minisha();
 	
 	os.flush();
 

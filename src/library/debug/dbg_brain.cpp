@@ -502,14 +502,7 @@ neuromap::print_subnmp(bj_ostream& os){
 	//os << " rel_idx=" << na_release_idx;
 	os << " #lv=" << na_dbg_num_submap;
 	
-	os << "\n all_filled=\n";
-	os << "\n\t na_all_filled_by_forced=\n";
-	na_all_filled_by_forced.print_row_data(os, true, "\n");
-	os << "\n\t na_all_filled_by_propag=\n";
-	na_all_filled_by_propag.print_row_data(os, true, "\n");
-	os << "\n\t na_all_filled_by_shadow=\n";
-	na_all_filled_by_shadow.print_row_data(os, true, "\n");
-
+	os << "\n ---------------------------";
 	os << "\n na_trail_propag=\n";
 	na_trail_propag.print_row_data(os, true, "\n");
 	
@@ -518,16 +511,24 @@ neuromap::print_subnmp(bj_ostream& os){
 	na_forced.print_row_data(os, true, "\n");
 	os << "\n\t na_propag=\n";
 	na_propag.print_row_data(os, true, "\n");
-	os << "\n\t na_shadow=\n";
-	na_shadow.print_row_data(os, true, "\n");
+	//os << "\n\t na_shadow=\n";
+	//na_shadow.print_row_data(os, true, "\n");
+
+	os << "\n all_filled=\n";
+	os << "\n\t na_all_filled_by_forced=\n";
+	na_all_filled_by_forced.print_row_data(os, true, "\n");
+	os << "\n\t na_all_filled_by_propag=\n";
+	na_all_filled_by_propag.print_row_data(os, true, "\n");
+	//os << "\n\t na_all_filled_by_shadow=\n";
+	//na_all_filled_by_shadow.print_row_data(os, true, "\n");
 
 	os << "\n all_cov=\n";
 	os << "\n\t na_cov_by_forced_quas=\n";
 	na_cov_by_forced_quas.print_row_data(os, true, "\n");
 	os << "\n\t na_cov_by_propag_quas=\n";
 	na_cov_by_propag_quas.print_row_data(os, true, "\n");
-	os << "\n\t na_cov_by_shadow_quas=\n";
-	na_cov_by_shadow_quas.print_row_data(os, true, "\n");
+	//os << "\n\t na_cov_by_shadow_quas=\n";
+	//na_cov_by_shadow_quas.print_row_data(os, true, "\n");
 	
 	os << "}\n";
 	os.flush();
@@ -978,6 +979,40 @@ neuron::dbg_old_set_motives(brain& brn, notekeeper& nke, bool is_first){
 #endif
 }
 
+bool
+brain::dbg_ck_deducs(deduction& dct1, deduction& dct2){
+#ifdef FULL_DEBUG
+	long lv1 = dct1.dt_target_level;
+	long lv2 = dct2.dt_target_level;
+
+	if(lv1 == INVALID_LEVEL){ lv1 = ROOT_LEVEL; }
+	if(lv2 == INVALID_LEVEL){ lv2 = ROOT_LEVEL; }
+
+	bool c1 = (dct1.dt_motives.equal_to(dct2.dt_motives));
+	bool c2 = (dct1.dt_forced == dct2.dt_forced);
+	bool c3 = (lv1 == lv2);
+
+	MARK_USED(c1);
+	MARK_USED(c2);
+	MARK_USED(c3);
+
+	DBG_COND_COMM(! (c1 && c2 && c3) ,
+		os << "ABORTING_DATA " << bj_eol;
+		os << "  c1=" << c1 << "  c2=" << c2 << "  c3=" << c3 << bj_eol;
+		os << "dct1=" << dct1 << bj_eol;
+		os << "dct2=" << dct2 << bj_eol;
+		print_trail(os);
+		os << "END_OF_aborting_data" << bj_eol;
+	);
+
+	BRAIN_CK(c1);
+	BRAIN_CK(c2);
+
+	BRAIN_CK(c3);
+#endif
+	return true;
+}
+
 void
 brain::dbg_old_reverse(){
 #ifdef FULL_DEBUG
@@ -1023,23 +1058,11 @@ brain::dbg_old_reverse(){
 
 	// REVERSE LOOP
 
-	//quanton* chosen_qua = NULL_PT;
-	bool has_in_mem = false;
-	MARK_USED(has_in_mem);
-
 	while(true){
 		bool end_of_recoil = dbg_in_edge_of_target_lv(dct);
 		if(end_of_recoil){
 			BRAIN_CK(! dct.is_dt_virgin());
-			bool in_mm = false;
-			if(! in_mm){ 
-				BRAIN_CK((trail_level() + 1) == level());
-				//break;
-			} else {
-				has_in_mem = true;
-				dct.init_deduction();
-				BRAIN_CK(dct.is_dt_virgin());
-			}
+			BRAIN_CK((trail_level() + 1) == level());
 		}
 		
 		BRAIN_CK(level() != ROOT_LEVEL);
@@ -1140,9 +1163,7 @@ brain::dbg_old_reverse(){
 
 	BRAIN_DBG(br_dbg.dbg_last_recoil_lv = dct.dt_target_level);
 
-	//BRAIN_CK(! has_in_mem);	// DBG purposes
-	
-	DBG(has_in_mem || dbg_ck_deducs(dct, dct2));
+	BRAIN_CK(dbg_ck_deducs(dct, dct2));
 	DBG(long rr_lv = trail_level());
 	BRAIN_CK((level() == ROOT_LEVEL) || (level() == dct.dt_target_level));
 	BRAIN_CK((level() == ROOT_LEVEL) || (rr_lv == dct.dt_target_level));

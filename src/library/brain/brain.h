@@ -730,7 +730,7 @@ class quanton {
 	
 	bool	is_learned_choice();
 	
-	bool 	is_eonmp();
+	bool 	is_qu_end_of_nmp();
 	
 	long	find_alert_idx(bool is_init, row_quanton_t& all_pos);
 	void	update_alert_neu(brain& brn, bool is_init);
@@ -783,23 +783,8 @@ class quanton {
 	}
 };
 
-inline
 void
-set_all_qu_nemap(row_quanton_t& all_quas, neuromap* nmp, long first_idx = 0)
-{
-	for(long ii = first_idx; ii < all_quas.size(); ii++){
-		BRAIN_CK(all_quas[ii] != NULL_PT);
-		quanton& qua = *(all_quas[ii]);
-		quanton& opp = qua.opposite();
-		BRAIN_CK_PRT((qua.qu_curr_nemap != nmp), os << "___" << bj_eol 
-			<< " qu=" << &qua << "\n nmp=\n" << nmp
-			<< " ii=" << ii
-		);
-		BRAIN_CK(opp.qu_curr_nemap != nmp);
-		qua.qu_curr_nemap = nmp;
-		opp.qu_curr_nemap = nmp;
-	}
-}
+set_all_qu_nemap(row_quanton_t& all_quas, neuromap* nmp, long first_idx = 0);
 
 inline
 void
@@ -1894,6 +1879,7 @@ class neuromap {
 	
 	void	map_get_all_neus(row_neuron_t& all_neus);
 	
+	bool 	map_ck_all_upper_quas(row_quanton_t& all_upper_quas);
 	void 	map_get_all_upper_quas(row_quanton_t& all_upper_quas);
 
 	void	map_make_dominated();
@@ -1901,6 +1887,7 @@ class neuromap {
 	quanton*	map_choose_quanton();
 	
 	bool	map_ck_orig();
+	bool	map_ck_all_quas();
 	bool	dbg_ck_all_neus();
 	bool	dbg_ck_all_confl_tag1();
 	
@@ -1916,7 +1903,6 @@ class neuromap {
 	void	map_add_to_release();
 
 	bool	map_can_activate();
-	bool	map_can_activate_2();
 	void	map_cond_activate(dbg_call_id dbg_id);
 	void	map_activate(dbg_call_id dbg_id);
 	void	map_full_activate(deduction& nxt_dct, 
@@ -2575,7 +2561,7 @@ class qlayers_ref {
 		if(cur_qu == NULL_PT){
 			return false;
 		}
-		bool eonmp = cur_qu->is_eonmp();
+		bool eonmp = cur_qu->is_qu_end_of_nmp();
 		return eonmp;
 	}
 	
@@ -2598,6 +2584,9 @@ class qlayers_ref {
 // analyser
 
 class analyser {
+	static
+	neuromap* 		NULL_NEUROMAP;
+	
 	public:
 
 	brain*			de_brain;
@@ -2619,7 +2608,7 @@ class analyser {
 	neurolayers 	de_propag_not_sel_neus;
 	neurolayers 	de_shadow_not_sel_neus;
 	
-	DBG(quanton*	de_dbg_last_eonmp);
+	neuromap*		de_tmp_neuromap;
 	
 	analyser(){
 		init_analyser();
@@ -2712,10 +2701,14 @@ class analyser {
 	void 		deduction_analysis(row_quanton_t& causes, deduction& dct);
 	
 	void		set_nxt_propag(quanton* nxt_qua);
+	void		set_nxt_noted(quanton* nxt_qua);
 	
-	void		find_next_source(bool only_origs = false);
-	void		find_next_noted();
-	void		inc_all_noted();
+	bool		is_null_neuromap(neuromap*& nmp){
+		return (&nmp == &NULL_NEUROMAP);
+	}
+	
+	bool		find_next_source(bool only_origs = false, bool stop_at_nmp_ends = false);
+	bool		find_next_noted(bool stop_at_nmp_ends = false);
 	void 		set_notes_of(row_quanton_t& causes, bool is_first);
 
 	neuromap*	update_neuromap(neuromap* prev_nmp);
@@ -3793,7 +3786,7 @@ quanton::is_learned_choice(){
 
 inline
 bool
-quanton::is_eonmp(){
+quanton::is_qu_end_of_nmp(){
 	if(qu_source == NULL_PT){
 		return true;
 	}

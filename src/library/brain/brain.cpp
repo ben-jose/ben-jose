@@ -1464,38 +1464,6 @@ brain::retract_to(long tg_lv){
 	
 }
 
-bool
-brain::dbg_ck_deducs(deduction& dct1, deduction& dct2){
-	long lv1 = dct1.dt_target_level;
-	long lv2 = dct2.dt_target_level;
-
-	if(lv1 == INVALID_LEVEL){ lv1 = ROOT_LEVEL; }
-	if(lv2 == INVALID_LEVEL){ lv2 = ROOT_LEVEL; }
-
-	bool c1 = (dct1.dt_motives.equal_to(dct2.dt_motives));
-	bool c2 = (dct1.dt_forced == dct2.dt_forced);
-	bool c3 = (lv1 == lv2);
-
-	MARK_USED(c1);
-	MARK_USED(c2);
-	MARK_USED(c3);
-
-	DBG_COND_COMM(! (c1 && c2 && c3) ,
-		os << "ABORTING_DATA " << bj_eol;
-		os << "  c1=" << c1 << "  c2=" << c2 << "  c3=" << c3 << bj_eol;
-		os << "dct1=" << dct1 << bj_eol;
-		os << "dct2=" << dct2 << bj_eol;
-		print_trail(os);
-		os << "END_OF_aborting_data" << bj_eol;
-	);
-
-	BRAIN_CK(c1);
-	BRAIN_CK(c2);
-
-	BRAIN_CK(c3);
-	return true;
-}
-
 quanton*
 brain::receive_psignal(bool only_in_dom){
 	//BRAIN_CK(! found_conflict()); // simple_propag
@@ -1721,10 +1689,6 @@ brain::pulsate(){
 		}
 		//dbg_old_reverse();
 		deduce_and_reverse();
-		/*if(br_last_retract){ 
-			set_result(bjr_no_satisf);
-			return;
-		}*/
 		BRAIN_CK(has_psignals());
 
 	} else {

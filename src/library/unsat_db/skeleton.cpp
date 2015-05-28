@@ -1632,6 +1632,8 @@ canon_cnf::first_vnt_i_super_of(skeleton_glb& skg, instance_info* iinfo){
 	SKELETON_CK(! has_instance_info());
 	cf_inst_inf = iinfo;
 	
+	DBG_PRT(101, os << "first_vnt_i_super_of");
+	
 	long fst_vnt = INVALID_NATURAL;
 
 	//for(long aa = 0; aa < SKG_MAX_NUM_VARIANT; aa++){
