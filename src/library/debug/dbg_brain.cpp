@@ -36,6 +36,7 @@ dbg_brain funcs.
 --------------------------------------------------------------*/
 
 #include "file_funcs.h"
+#include "solver.h"
 #include "brain.h"
 #include "dbg_run_satex.h"
 
@@ -282,12 +283,6 @@ dbg_inst_info::init_dbg_inst_info(){
 	dbg_original_used.clear();
 	dbg_all_chosen.clear();
 	
-	dbg_ic_active = false;
-	dbg_ic_after = false;
-	dbg_ic_max_seq = -1;
-	dbg_ic_seq = 0;
-	dbg_ic_gen_jpg = false;
-	
 	dbg_just_read = false;
 	dbg_clean_code = false;
 	
@@ -298,16 +293,6 @@ dbg_inst_info::init_dbg_inst_info(){
 	dbg_cy_nmp_step = 0;
 	dbg_cy_layout = CY_CIRCLE_LAYOUT;
 
-	/*
-	dbg_start_dbg_entries.clear();
-	dbg_stop_dbg_entries.clear();
-	dbg_current_start_entry = 0;
-	dbg_current_stop_entry = 0;
-	dbg_levs_arr.fill(false, DBG_NUM_LEVS);
-	*/
-	
-	dbg_bad_cycle1 = false;
-	
 	dbg_tot_nmps = 0;
 	
 	dbg_max_lv = 0;
@@ -1200,7 +1185,7 @@ brain::dbg_old_reverse(){
 	inc_recoil();
 
 	DBG(
-		dbg_update_config_entries(br_dbg.dbg_conf_info, recoil());
+		dbg_update_config_entries(get_solver().slv_dbg_conf_info, recoil());
 	);
 	check_timeout();
 

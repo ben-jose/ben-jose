@@ -61,6 +61,7 @@ classes to implement a sortor.
 #define FINAL_COMMENT	"final\n"
 #define MUTUAL_COMMENT	"mutual_stab\n"
 
+class solver;
 class brain;
 class skeleton_glb;
 
@@ -681,6 +682,8 @@ public:
 		DBG(the_brn = sg_pt_brn);
 		return the_brn;
 	}
+
+	solver*	get_dbg_slv();
 
 	void	set_dbg_brn(brain* the_brn){
 		DBG(

@@ -120,6 +120,17 @@ public:
 #define DBG_PREF "brain"
 #define DBG_SUFI ".myl"
 
+#define DEFINE_GET_DBG_SLV(cls_nm) \
+solver* \
+cls_nm::get_dbg_slv(){ \
+	brain* the_brn = get_dbg_brn(); \
+	if(the_brn == NULL_PT){ return NULL_PT; } \
+	solver* the_slv = the_brn->br_pt_slvr; \
+	return the_slv; \
+} \
+\
+
+// end_of_define
 
 //=============================================================================
 // decl
@@ -232,6 +243,10 @@ class ticket {
 		return NULL;
 	}
 	
+	solver*	get_dbg_slv(){
+		return NULL;
+	}
+		
 	bool	is_valid(){
 		return ((tk_recoil != INVALID_RECOIL) && (tk_level != INVALID_LEVEL));
 	}
@@ -589,6 +604,8 @@ class quanton {
 		return the_brn;
 	}
 
+	solver*	get_dbg_slv();
+	
 	void	init_quanton(brain* brn, charge_t spn, long ii, quanton* inv){
 		BRAIN_DBG(qu_pt_brn = brn);
 
@@ -766,7 +783,7 @@ class quanton {
 	
 	bj_ostream&		print_quanton(bj_ostream& os, bool from_pt = false);
 
-	bj_ostream& 		print_ic_label(bj_ostream& os){
+	/*bj_ostream& 		print_ic_label(bj_ostream& os){
 		os << "\"";
 		if(is_neg()){ os << "K"; }
 		if(qu_spin == cg_negative){ os << "["; }
@@ -780,7 +797,7 @@ class quanton {
 		os << ">";
 		os << "\"";
 		return os;
-	}
+	}*/
 };
 
 void
@@ -1027,6 +1044,8 @@ class neuron {
 		return the_brn;
 	}
 
+	solver*	get_dbg_slv();
+	
 	void	init_neuron(){
 		BRAIN_DBG(ne_pt_brn = NULL);
 		
@@ -1386,6 +1405,8 @@ class prop_signal {
 		return the_brn;
 	}
 
+	solver*	get_dbg_slv();
+	
 	bj_ostream& 	print_prop_signal(bj_ostream& os, bool from_pt = false);
 };
 
@@ -1467,6 +1488,8 @@ class deduction {
 		return the_brn;
 	}
 
+	solver*	get_dbg_slv();
+	
 	bool	is_dt_virgin(){
 		bool c1 = (dt_motives.is_empty());
 		bool c2 = (dt_forced == NULL_PT);
@@ -1562,6 +1585,8 @@ class coloring {
 		return the_brn;
 	}
 
+	solver*	get_dbg_slv();
+	
 	bool	is_co_virgin(){
 		bool c1 = (co_quas.is_empty());
 		bool c2 = (co_qua_colors.is_empty());
@@ -1850,6 +1875,8 @@ class neuromap {
 		return the_brn;
 	}
 	
+	solver*	get_dbg_slv();
+	
 	DECLARE_NA_FLAG_FUNCS(na_flags, tags0_n_notes0);
 	DECLARE_NA_FLAG_FUNCS(na_flags, tags1_n_notes1);
 	DECLARE_NA_FLAG_FUNCS(na_flags, tags2_n_notes2);
@@ -2048,6 +2075,8 @@ class neurolayers {
 		return the_brn;
 	}
 
+	solver*	get_dbg_slv();
+	
 	void	get_all_ordered_neurons(row_neuron_t& all_neus, long min_ly = 0, 
 						long max_ly = -1);
 	
@@ -2115,6 +2144,8 @@ class qulayers {
 		BRAIN_DBG(the_brn = ql_brain);
 		return the_brn;
 	}
+	
+	solver*	get_dbg_slv();
 
 	quanton*	pop_motive(){
 		row_row_quanton_t& mots_by_ly = dk_quas_by_layer;
@@ -2378,6 +2409,8 @@ class notekeeper {
 		return the_brn;
 	}
 
+	solver*	get_dbg_slv();
+	
 	void	init_funcs(long* cnter, has_fn_pt_t has_note, do_fn_pt_t set_note, 
 					   do_fn_pt_t reset_note, do_row_fn_pt_t set_all,	
 				 do_row_fn_pt_t reset_all_its, do_append_fn_pt_t append_not_noted,
@@ -2651,6 +2684,8 @@ class analyser {
 		return the_brn;
 	}
 
+	solver*	get_dbg_slv();
+	
 	brain&		get_de_brain();
 	qulayers& 	get_orig_trail();
 	
@@ -2799,6 +2834,8 @@ class leveldat {
 		return the_brn;
 	}
 	
+	solver*	get_dbg_slv();
+	
 	bool	ck_maps_active();
 	void	let_maps_go(brain& brn);
 	
@@ -2889,12 +2926,6 @@ public:
 	row_neuron_t	 	dbg_original_used;
 	row_quanton_t		dbg_all_chosen;
 	
-	bool	dbg_ic_active;
-	bool	dbg_ic_after;
-	long	dbg_ic_max_seq;
-	long	dbg_ic_seq;
-	bool	dbg_ic_gen_jpg;
-
 	bool	dbg_just_read;
 	bool	dbg_clean_code;
 	
@@ -2905,10 +2936,6 @@ public:
 	long		dbg_cy_nmp_step;
 	ch_string	dbg_cy_layout;
 	
-	debug_info	dbg_conf_info;
-	
-	bool 		dbg_bad_cycle1;
-
 	long	dbg_tot_nmps;
 	
 	long	dbg_max_lv;
@@ -3168,6 +3195,8 @@ public:
 		BRAIN_DBG(the_brn = br_pt_brn);
 		return the_brn;
 	}
+	
+	solver*	get_dbg_slv();
 	
 	void	all_mutual_init(){
 		br_guide_neus_srg.stab_mutual_init();
@@ -3637,13 +3666,8 @@ public:
 
 	void		dbg_add_to_used(neuron& neu);
 	
-	void	dbg_lv_on(long lv_idx){
-		BRAIN_DBG(br_dbg.dbg_conf_info.dbg_lv_on(lv_idx));
-	}
-
-	void	dbg_lv_off(long lv_idx){
-		BRAIN_DBG(br_dbg.dbg_conf_info.dbg_lv_off(lv_idx));
-	}
+	void	dbg_lv_on(long lv_idx);
+	void	dbg_lv_off(long lv_idx);
 	
 	void 	dbg_prt_lvs_have_learned(bj_ostream& os);
 	void 	dbg_prt_lvs_active(bj_ostream& os);
@@ -3652,6 +3676,11 @@ public:
 	
 	void	dbg_print_cy_graph_node_plays(bj_ostream& os);
 	void	dbg_print_cy_graph_node_tiers(bj_ostream& os);
+	
+	void	dbg_init_html();
+	void	dbg_start_html(ch_string cy_kk);
+	void	dbg_finish_html(ch_string cy_kk);
+	void	dbg_append_html(ch_string cy_kk, ch_string htm_str);
 	void	dbg_update_html_cy_graph(ch_string cy_kk, coloring* col, ch_string htm_str);
 	void 	dbg_br_init_all_cy_pos();
 	

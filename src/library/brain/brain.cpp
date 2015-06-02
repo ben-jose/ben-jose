@@ -45,11 +45,22 @@ Classes and that implement the neural network.
 #include "dimacs.h"
 #include "dbg_run_satex.h"
 #include "dbg_prt.h"
-//include "dbg_ic.h"
 #include "dbg_config.h"
-#include "strings_html.h"
+#include "dbg_strings_html.h"
 
-//br_qu_tot_note0;
+DEFINE_GET_DBG_SLV(quanton)
+DEFINE_GET_DBG_SLV(neuron)
+DEFINE_GET_DBG_SLV(prop_signal)
+DEFINE_GET_DBG_SLV(deduction)
+DEFINE_GET_DBG_SLV(coloring)
+DEFINE_GET_DBG_SLV(neuromap)
+DEFINE_GET_DBG_SLV(neurolayers)
+DEFINE_GET_DBG_SLV(qulayers)
+DEFINE_GET_DBG_SLV(notekeeper)
+DEFINE_GET_DBG_SLV(analyser)
+DEFINE_GET_DBG_SLV(leveldat)
+DEFINE_GET_DBG_SLV(brain)
+
 
 DEFINE_NI_FLAG_FUNCS(qu_flags, note0, true);
 DEFINE_NI_FLAG_FUNCS(qu_flags, note1, true);
@@ -516,7 +527,8 @@ brain::init_brain(solver& ss){
 
 	BRAIN_DBG(
 		init_all_dbg_brn();  // sets br_pt_brn indicating it is readi for DBG_PRT
-		dbg_init_dbg_conf(br_dbg.dbg_conf_info);
+		//dbg_init_dbg_conf(get_solver().slv_dbg_conf_info);
+		get_solver().slv_dbg_brn = this;
 	);
 	BRAIN_CK(br_dbg.dbg_tot_nmps == 0);
 }
@@ -541,6 +553,7 @@ brain::release_brain(){
 	br_last_retract = true;
 	
 	BRAIN_DBG(br_pt_brn = NULL);
+	BRAIN_DBG(get_solver().slv_dbg_brn = NULL_PT);
 	get_skeleton().set_dbg_brn(NULL);
 
 	bool has_chgs = (br_charge_trail.get_tot_quantons() > 0);
@@ -1865,29 +1878,49 @@ set_file_err(file_exception& fl_ex, bj_output_t& o_inf){
 	};
 }
 
+void
+brain::dbg_init_html(){
+#ifdef FULL_DEBUG
+	brain& brn = *this;
+	bj_ostream& os = bj_dbg; 
+	ch_string htm_pth = get_solver().slv_dbg2.dbg_html_out_path;
+	ch_string sub_dir = htm_pth + "/" + br_dbg.dbg_cy_prefix;
+	path_delete(sub_dir, htm_pth);
+	if(! file_exists(sub_dir)){
+		path_create(sub_dir);
+		os << "Created dir: '" << sub_dir << "'\n";
+	}
+	
+	ch_string rn_pth = path_get_running_path();
+	ch_string rn_dir = path_get_directory(rn_pth, true);
+	ch_string js_dir = rn_dir + "../" + CY_LIB_DIR;
+	ch_string lk_nm = sub_dir + "/" + CY_LIB_DIR;
+	
+	os << "creating link \n js_dir=" << js_dir << "\n lk_nm=" << lk_nm;
+	bool ok = path_create_link(js_dir, lk_nm);
+	BRAIN_CK(ok);
+
+	ch_string cnfs_dir = get_cy_dir(brn) + "/" + br_dbg.dbg_cy_prefix;
+	bool dir_ok = file_exists(cnfs_dir);
+	if(! dir_ok){
+		path_create(cnfs_dir);
+		os << "Created dir: '" << cnfs_dir << "'\n";
+	}
+	BRAIN_CK(file_exists(cnfs_dir));
+	
+	dbg_start_html(CY_NMP_KIND);
+	dbg_start_html(CY_IC_KIND);
+#endif
+}
+
 bj_satisf_val_t
 brain::solve_instance(bool load_it){
 
 	DBG_COMMAND(100, os << "CAREFUL RUNNING VERIF ON WRITE !!!!!");
-	BRAIN_DBG(
-		ch_string htm_pth = get_solver().slv_dbg2.dbg_html_out_path;
-		ch_string sub_dir = htm_pth + "/" + br_dbg.dbg_cy_prefix;
-		path_delete(sub_dir, htm_pth);
-		if(! file_exists(sub_dir)){
-			path_create(sub_dir);
-			DBG_PRT(150, os << "Created dir: '" << sub_dir << "'\n");
-		}
-		
-		ch_string rn_pth = path_get_running_path();
-		ch_string rn_dir = path_get_directory(rn_pth, true);
-		ch_string js_dir = rn_dir + "../" + CY_LIB_DIR;
-		ch_string lk_nm = sub_dir + "/" + CY_LIB_DIR;
-		
-		DBG_PRT(150, os << "creating link \n js_dir=" << js_dir << "\n lk_nm=" << lk_nm);
-		DBG_PRT(151, os << "creating link \n js_dir=" << js_dir << "\n lk_nm=" << lk_nm);
-		bool ok = path_create_link(js_dir, lk_nm);
-		BRAIN_CK(ok);
-	);
+	BRAIN_DBG(bool init_htm = false);
+	DBG_COMMAND(150, init_htm = true);
+	DBG_COMMAND(151, init_htm = true);
+	BRAIN_DBG(if(init_htm){ dbg_init_html(); });
 	
 	bj_output_t& o_info = get_out_info();
 	try{
@@ -2016,7 +2049,7 @@ brain::reverse(deduction& dct){
 	inc_recoil();
 
 	BRAIN_DBG(
-		dbg_update_config_entries(br_dbg.dbg_conf_info, recoil());
+		dbg_update_config_entries(get_solver().slv_dbg_conf_info, recoil());
 	);
 	check_timeout();
 
@@ -2074,205 +2107,6 @@ brain::dbg_prt_full_stab(){
 #endif
 }
 
-#ifdef FULL_DEBUG
-ch_string
-get_cy_name(brain& brn, ch_string cy_kk, long num_step){
-	ch_string num_stp = long_to_str(num_step);
-	ch_string pth_nm = brn.br_dbg.dbg_cy_prefix + cy_kk + num_stp + ".js";
-	return pth_nm;
-}
-
-ch_string
-get_cy_dir(brain& brn){
-	ch_string htm_pth = brn.get_solver().slv_dbg2.dbg_html_out_path;
-	ch_string ic_dir = htm_pth + "/" + brn.br_dbg.dbg_cy_prefix;
-	return ic_dir;
-}
-
-ch_string
-get_cy_rel_path(brain& brn, ch_string cy_kk, long num_step){
-	ch_string the_nm = get_cy_name(brn, cy_kk, num_step);
-	ch_string rel_pth = brn.br_dbg.dbg_cy_prefix + "/" + the_nm;
-	return rel_pth;
-}
-
-ch_string
-get_cy_htm_nm(brain& brn, ch_string cy_kk){
-	ch_string pth = brn.br_dbg.dbg_cy_prefix + "_all" + cy_kk + "steps.htm";
-	return pth;
-}
-
-ch_string
-get_cy_htm_path(brain& brn, ch_string cy_kk){
-	ch_string pth = get_cy_dir(brn) + "/" + get_cy_htm_nm(brn, cy_kk);
-	return pth;
-}
-
-ch_string
-get_cy_path(brain& brn, ch_string cy_kk, long num_step){
-	ch_string pth = get_cy_dir(brn) + "/" + get_cy_rel_path(brn, cy_kk, num_step);
-	return pth;
-}
-#endif
-
-void
-brain::dbg_update_html_cy_graph(ch_string cy_kk, coloring* the_col, ch_string htm_str){
-#ifdef FULL_DEBUG
-	brain& brn = *this;
-	
-	ch_string sub_dir = get_cy_dir(brn) + "/" + brn.br_dbg.dbg_cy_prefix;
-	if(! file_exists(sub_dir)){
-		path_create(sub_dir);
-		bj_out << "Created dir: '" << sub_dir << "'\n";
-	}
-	
-	long n_stp = -1;
-	ch_string js_grph_var_pref = "";
-	ch_string js_plays_var_pref = "";
-	ch_string js_fn_nm = "";
-	ch_string js_tit_suf = "";
-	bool is_ic = false;
-	if(cy_kk == CY_IC_KIND){
-		js_tit_suf = " trail CNF graphs";
-		is_ic = true;
-		js_grph_var_pref = "nmp_grph_";
-		js_plays_var_pref = "all_plays_";
-		js_fn_nm = "show_cnf";
-		br_dbg.dbg_cy_ic_step++;
-		n_stp = br_dbg.dbg_cy_ic_step;
-	}
-	if(cy_kk == CY_NMP_KIND){
-		js_tit_suf = " sub CNF graphs";
-		js_grph_var_pref = "nmp_grph_";
-		js_fn_nm = "show_cnf";
-		br_dbg.dbg_cy_nmp_step++;
-		n_stp = br_dbg.dbg_cy_nmp_step;
-	}
-	
-	ch_string htm_tit = brn.br_dbg.dbg_cy_prefix + js_tit_suf;
-	
-	BRAIN_CK(n_stp != -1);
-	if(n_stp > MAX_CY_STEPS){
-		return;
-	}
-
-	ch_string js_txt_var_pref = "comment_";
-	
-	ch_string& layo_str = br_dbg.dbg_cy_layout;
-	
-	ch_string stp_str = long_to_str(n_stp);
-	ch_string stp_pth = get_cy_path(brn, cy_kk, n_stp);
-	ch_string stp_js_grph_var_nm = js_grph_var_pref + stp_str;
-	ch_string stp_js_plays_var_nm = js_plays_var_pref + stp_str;
-	ch_string stp_js_txt_var_nm = js_txt_var_pref + stp_str;
-	
-	if(the_col == NULL_PT){
-		if(br_dbg_full_col.is_co_virgin()){
-			br_dbg_full_col.init_coloring(&brn);
-			br_dbg_full_col.dbg_set_brain_coloring();
-		}
-		the_col = &br_dbg_full_col;
-	}
-	BRAIN_CK(the_col != NULL_PT);
-	BRAIN_CK(the_col->get_dbg_brn() != NULL_PT);
-	
-	bj_ofstream of_st;
-	dbg_prt_open(stp_pth, of_st);
-	
-	of_st << stp_js_grph_var_nm << " = {" << bj_eol;
-	the_col->dbg_print_col_cy_graph(of_st, is_ic);
-	of_st << "};" << bj_eol;
-	
-	if(is_ic){
-		of_st << stp_js_plays_var_nm << " = [" << bj_eol;
-		dbg_print_cy_graph_node_plays(of_st);
-		of_st << "];" << bj_eol;
-	} 
-
-	//htm_str = "<p>texto prueba</p>";
-	if(htm_str.size() > 0){
-		of_st << stp_js_txt_var_nm << " = '" << htm_str << "';" << bj_eol;
-	}
-	
-	of_st.flush();
-	of_st.close();
-
-	DBG_PRT(147, os << "Writed file: '" << stp_pth << "'\n");
-	
-	ch_string pth = get_cy_htm_path(brn, cy_kk);
-	ch_string pth_nm =  get_cy_htm_nm(brn, cy_kk);;
-	
-	bj_ofstream of;
-	dbg_prt_open(pth, of);
-	
-	of << HTMi_html << bj_eol;
-	of << "\t" << HTMi_head << bj_eol;
-	of << "\t\t" << HTMi_title << htm_tit << HTMe_title << bj_eol;
-	
-	for(long aa = 1; aa <= n_stp; aa++){
-		ch_string rel_aa_pth = get_cy_rel_path(brn, cy_kk, aa);
-		of << "\t\t " << HTMi_src << rel_aa_pth << HTMe_src << bj_eol;
-	}
-	of << "\t\t " << HTMi_src << CY_LIB_DIR << "/cytoscape.js" << HTMe_src << bj_eol;
-	of << "\t\t " << HTMi_src << CY_LIB_DIR << "/show_cnf_fn.js" << HTMe_src << bj_eol;
-	
-	of << "\t" << HTMe_head << bj_eol;
-	
-	of << "\t" << HTMi_body << bj_eol;
-	for(long aa = 1; aa <= n_stp; aa++){
-		ch_string stp_aa_str = long_to_str(aa);
-		ch_string step_title = "Step " + stp_aa_str + HTM_br;
-		of << "\t\t " << step_title << bj_eol;
-
-		ch_string div_txt_nm = "cnf_text_" + stp_aa_str;
-		of << "\t\t " << HTM_div(div_txt_nm) << bj_eol;
-		
-		ch_string div_nm = "cnf_graph_" + stp_aa_str;
-		ch_string div_str = HTM_cy_div(div_nm);
-		of << "\t\t " << div_str << bj_eol;
-		
-		ch_string js_grph_var_aa_nm = js_grph_var_pref + stp_aa_str;
-		ch_string js_plays_var_aa_nm = js_plays_var_pref + stp_aa_str;
-		ch_string js_txt_var_aa_nm = js_txt_var_pref + stp_aa_str;
-		
-		of << "\t\t " << HTMi_script << js_fn_nm << "('" << div_nm << "'";
-		of << ", " << js_grph_var_aa_nm << ", " << layo_str;
-		if(is_ic){
-			of << ", " << js_plays_var_aa_nm;
-		}
-		of << ");" << bj_eol;
-		
-		of << "\t\t " << JS_inner_htm(div_txt_nm, js_txt_var_aa_nm) << bj_eol;
-		
-		of << "\t\t " << HTMe_script << bj_eol;
-	}
-	of << "\t" << HTMe_body << bj_eol;
-	
-	of << HTMe_html << bj_eol;
-	
-	of.flush();
-	of.close();
-
-	DBG_PRT(147, os << "Updated file: '" << pth << "'\n");
-#endif
-}
-
-void
-brain::dbg_print_cy_graph_node_plays(bj_ostream& os){
-#ifdef FULL_DEBUG
-	bool is_fst = true;
-	for(long aa = 0; aa < br_positons.size(); aa++){
-		quanton& qua = br_positons[aa];
-		BRAIN_CK(qua.qu_id > 0);
-		if(qua.is_neg()){
-			os << "\t";
-			if(! is_fst){ os << ","; } else { is_fst = false; }
-			os << "'d" << qua.qu_id << "'" << bj_eol;
-		}
-	}
-#endif
-}
-
 bool 
 brain::ck_confl_ti(){
 #ifdef FULL_DEBUG
@@ -2286,42 +2120,6 @@ brain::ck_confl_ti(){
 	BRAIN_CK(cfl_0.ps_tier == cfl_1.ps_tier);
 #endif
 	return true;
-}
-
-void
-brain::dbg_br_init_all_cy_pos(){
-#ifdef FULL_DEBUG
-#endif
-}
-
-void
-qulayers::dbg_ql_init_all_cy_pos(){
-#ifdef FULL_DEBUG
-	brain& brn = get_ql_brain();
-	row_quanton_t& all_quas = brn.br_dbg_quly_cy_quas;
-	get_all_ordered_quantons(all_quas);
-	
-	long lst_ti = INVALID_TIER;
-	long num_ti = 0;
-	for(long aa = 0; aa < all_quas.size(); aa++){
-		BRAIN_CK(all_quas[aa] != NULL_PT);
-		quanton& qua = *(all_quas[aa]);
-		if(lst_ti != qua.qu_tier){
-			lst_ti = qua.qu_tier;
-			num_ti = 0;
-		}
-		num_ti++;
-		
-		long lv = qua.qlevel();
-		ch_string pnt = "l" + lv;
-		
-		long x_pos = num_ti * 100;
-		long y_pos = qua.qu_tier * 100;
-		
-		qua.qu_dbg_drw_x_pos = x_pos;
-		qua.qu_dbg_drw_y_pos = y_pos;
-	}
-#endif
 }
 
 long
@@ -2723,4 +2521,18 @@ brain::choose_mono(){
 	return &opp;
 }
 
+void
+brain::dbg_lv_on(long lv_idx){
+	BRAIN_DBG(get_solver().slv_dbg_conf_info.dbg_lv_on(lv_idx));
+}
 
+void
+brain::dbg_lv_off(long lv_idx){
+	BRAIN_DBG(get_solver().slv_dbg_conf_info.dbg_lv_off(lv_idx));
+}
+
+void
+solver::init_solver(){
+	slv_dbg_brn = NULL_PT;
+	dbg_init_dbg_conf(slv_dbg_conf_info);
+}

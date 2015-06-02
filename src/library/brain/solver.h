@@ -38,11 +38,14 @@ the solver wrapper.
 #ifndef SOLVER_H
 #define SOLVER_H
 
+#include "dbg_config.h"
 #include "instance_info.h"
 #include "skeleton.h"
 #include "ben_jose.h"
 
 #define SOLVER_CK(prm) 	DBG_BJ_LIB_CK(prm)
+
+class brain;
 
 DBG(
 	class dbg_inst_info;
@@ -91,6 +94,8 @@ private:
 	}
 	
 public:
+	brain*			slv_dbg_brn;
+	debug_info		slv_dbg_conf_info;
 	instance_info	slv_inst;
 	skeleton_glb	slv_skl;
 	DBG(dbg_slvr_info 	slv_dbg2;)
@@ -102,8 +107,7 @@ public:
 	~solver(){
 	}
 	
-	void	init_solver(){
-	}
+	void	init_solver();
 	
 	DBG(
 		void	update_dbg2(dbg_inst_info& ist_info);

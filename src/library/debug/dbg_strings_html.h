@@ -29,7 +29,7 @@ Our Resurrected and Living, both in Body and Spirit,
 
 ------------------------------------------------------------
 
-strings_html.h
+dbg_strings_html.h
 
 some strings for html printing.
 

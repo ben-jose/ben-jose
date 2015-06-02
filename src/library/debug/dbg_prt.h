@@ -44,7 +44,7 @@ class brain;
 
 void	dbg_prt_all_cho(brain& brn);
 
-bool	dbg_check_lev(brain* brn, long lev);
+bool	dbg_check_lev(solver* slv, long lev);
 
 
 //=================================================================
@@ -52,14 +52,14 @@ bool	dbg_check_lev(brain* brn, long lev);
 
 #define DBG_ALL_LVS -1
 
-#define	DBG_BR_COND(pt_brn, lev, cond)	(dbg_check_lev(pt_brn, lev) && (cond))
+#define	DBG_BR_COND(pt_slv, lev, cond)	(dbg_check_lev(pt_slv, lev) && (cond))
 
-#define	DBG_COND(lev, cond)	DBG_BR_COND(get_dbg_brn(), lev, cond)
+#define	DBG_COND(lev, cond)	DBG_BR_COND(get_dbg_slv(), lev, cond)
 
 #define INVALID_DBG_LV 		-123
 
 bool	dbg_print_cond_func(
-	brain* pt_brn,
+	solver* pt_slv,
 	bool prm,
 	bool is_ck = false,
 	const ch_string fnam = "NO_NAME",
@@ -76,12 +76,12 @@ bool	dbg_print_cond_func(
 
 //--end_of_def
 	
-#define	DBG_PRT_COND(lev, cond, comm)	DBG_BR_PRT_COND(get_dbg_brn(), lev, cond, comm)
+#define	DBG_PRT_COND(lev, cond, comm)	DBG_BR_PRT_COND(get_dbg_slv(), lev, cond, comm)
 
 #define	DBG_PRT_COND_WITH(lev, obj, cond, comm)	\
-	DBG_BR_PRT_COND((obj).get_dbg_brn(), lev, cond, comm)
+	DBG_BR_PRT_COND((obj).get_dbg_slv(), lev, cond, comm)
 
-#define	DBG_PRT_WITH(lev, obj, comm)	DBG_BR_PRT_COND((obj).get_dbg_brn(), lev, true, comm)
+#define	DBG_PRT_WITH(lev, obj, comm)	DBG_BR_PRT_COND((obj).get_dbg_slv(), lev, true, comm)
 
 #define	DBG_PRT(lev, comm)	DBG_PRT_COND(lev, true, comm)
 
@@ -99,7 +99,12 @@ bool	dbg_print_cond_func(
 #define DBG_SLOW(prm)
 //define DBG_SLOW(prm)	DBG(prm)
 
-void dbg_prt_open(ch_string& path, bj_ofstream& stm);
+#ifdef FULL_DEBUG
+	ch_string get_cy_dir(brain& brn);
+#endif	
+
+void dbg_prt_open(ch_string& path, bj_ofstream& stm, bool append = false);
+
 
 #endif		// DBG_PRINT_H
 

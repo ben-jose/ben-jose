@@ -45,6 +45,10 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 #include "brain.h"
 #include "dbg_prt.h"
 
+DEFINE_GET_DBG_SLV(canon_clause)
+DEFINE_GET_DBG_SLV(canon_cnf)
+DEFINE_GET_DBG_SLV(skeleton_glb)
+
 bool
 not_skl_path(ch_string the_pth){
 	return ! path_begins_with(the_pth, SKG_SKELETON_DIR);

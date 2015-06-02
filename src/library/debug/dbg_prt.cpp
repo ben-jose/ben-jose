@@ -37,20 +37,23 @@ dbg_prt_brn funcs.
 
 #include "bj_stream.h"
 #include "ch_string.h"
+#include "solver.h"
 #include "brain.h"
 #include "dbg_config.h"
 #include "dbg_prt.h"
 #include "dbg_run_satex.h"
 
 bool
-dbg_check_lev(brain* brn, long lev){
+dbg_check_lev(solver* slv, long lev){
 	bool lv_ok = false;
 #ifdef FULL_DEBUG
-	if(brn == NULL){ return false; }
-	brain* pt_b = brn->get_dbg_brn();
-	if(pt_b == NULL){ return false; }
 	if(lev < 0){ return true; }
-	row<bool>& lvs_arr = pt_b->br_dbg.dbg_conf_info.dbg_levs_arr;
+	if(slv == NULL){ return false; }
+	//brain* pt_b = brn->get_dbg_brn();
+	//if(pt_b == NULL){ return false; }
+	
+	//row<bool>& lvs_arr = pt_b->get_solver().slv_dbg_conf_info.dbg_levs_arr;
+	row<bool>& lvs_arr = slv->slv_dbg_conf_info.dbg_levs_arr;
 	if(! lvs_arr.is_valid_idx(lev)){ return false; }
 	lv_ok = lvs_arr[lev];
 #endif
@@ -73,23 +76,22 @@ dbg_prt_all_cho(brain& brn){
 		abort_func(1, msg.c_str());
 	}
 
-	//dbg_get_all_chosen(br_dbg.dbg_all_chosen);
-
 	log_stm << brn.br_dbg.dbg_all_chosen;
 	log_stm << bj_eol; 
 	log_stm.close();
 #endif
 }
 
-bool	dbg_print_cond_func(brain* brn, bool prm, bool is_ck, const ch_string fnam, int lnum,
+bool	dbg_print_cond_func(solver* slv, bool prm, bool is_ck, const ch_string fnam, int lnum,
 		const ch_string prm_str, long dbg_lv)
 {
 	bool resp = true;
 #ifdef FULL_DEBUG
-	if(brn == NULL){
+	if(slv == NULL){
 		return false;
 	}
-	bool& bad_cy = brn->br_dbg.dbg_bad_cycle1;
+	//bool& bad_cy = brn->get_solver().slv_dbg_conf_info.dbg_bad_cycle1;
+	bool& bad_cy = slv->slv_dbg_conf_info.dbg_bad_cycle1;
 	
 	DBG_CK(! bad_cy);
 	bad_cy = true;
@@ -105,8 +107,8 @@ bool	dbg_print_cond_func(brain* brn, bool prm, bool is_ck, const ch_string fnam,
 		}
 		
 		ch_string f_nam = "UNKNOWN_FILE_NAME";
-		if(brn != NULL){
-			f_nam = brn->dbg_prt_margin(os, is_ck);
+		if(slv->slv_dbg_brn != NULL){
+			f_nam = slv->slv_dbg_brn->dbg_prt_margin(os, is_ck);
 		}
 
 		if(is_ck){
@@ -126,10 +128,14 @@ bool	dbg_print_cond_func(brain* brn, bool prm, bool is_ck, const ch_string fnam,
 }
 
 void
-dbg_prt_open(ch_string& path, bj_ofstream& stm){
+dbg_prt_open(ch_string& path, bj_ofstream& stm, bool append){
 #ifdef FULL_DEBUG
 	const char* log_nm = path.c_str();
-	stm.open(log_nm, std::ios::binary);
+	if(append){
+		stm.open(log_nm, std::ios::app);
+	} else {
+		stm.open(log_nm, std::ios::binary);
+	}
 	if(! stm.good() || ! stm.is_open()){
 		ch_string msg = "Could not open file " + path;
 		abort_func(1, msg.c_str());

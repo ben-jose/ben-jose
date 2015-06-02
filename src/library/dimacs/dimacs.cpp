@@ -40,10 +40,13 @@ Functions to read and parse dimacs files.
 #include "parse_funcs.h"
 #include "file_funcs.h"
 #include "util_funcs.h"
+#include "brain.h"
 #include "dbg_config.h"
 #include "dbg_prt.h"
 
 #define DIMACS_CK(prm) 	DBG_CK(prm)
+
+DEFINE_GET_DBG_SLV(dimacs_loader)
 
 bj_ostr_stream& 
 dimacs_loader::dimacs_err_msg(long num_line, char ch_err, ch_string msg){

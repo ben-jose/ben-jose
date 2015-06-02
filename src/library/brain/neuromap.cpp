@@ -37,8 +37,8 @@ neuromap class.
 
 #include "brain.h"
 #include "solver.h"
-#include "strings_html.h"
 #include "util_funcs.h"
+#include "dbg_strings_html.h"
 
 DEFINE_NA_FLAG_ALL_FUNCS(trail_propag, 2)
 DEFINE_NA_FLAG_ALL_FUNCS(forced, 2)
@@ -1291,8 +1291,11 @@ neuromap::map_oper(mem_op_t mm){
 		ss_msg << HTMi_h1 << "BRN_recoil=" << rc_str << HTMe_h1;
 		ss_msg << HTMi_h2 << op_str << HTMe_h2;
 		ss_msg << "nmp=" << (void*)this << HTM_br;
-		ss_msg << "nmp_lv=" << na_orig_lv << HTM_br;
-		ss_msg << "sub=" << (void*)na_submap << HTM_br;
+		ss_msg << "#sub=" << na_dbg_num_submap << HTM_br;
+		ss_msg << "all_sub=[";
+		print_all_subnmp(ss_msg, true);
+		ss_msg << "]";
+		ss_msg << HTM_br;
 		ss_msg << "CNF_minisha=" << na_dbg_tauto_min_sha_str << HTM_br;
 		ss_msg << "CNF_sha=" << na_dbg_tauto_sha_str << HTM_br;
 		
@@ -2435,9 +2438,10 @@ neuromap::map_dbg_update_html_file(ch_string msg){
 	bj_ostr_stream ss_msg;
 	ss_msg << HTMi_h2 << msg << HTMe_h2;
 	ss_msg << "nmp=" << (void*)this << HTM_br;
-	ss_msg << "nmp_lv=" << na_orig_lv << HTM_br;
-	ss_msg << "all_sub=";
+	ss_msg << "#sub=" << na_dbg_num_submap << HTM_br;
+	ss_msg << "all_sub=[";
 	print_all_subnmp(ss_msg, true);
+	ss_msg << "]";
 	ss_msg << HTM_br;
 	ss_msg << "BRN_recoil=" << rc_str << HTM_br;
 	ss_msg << "ALL_MONOS=";

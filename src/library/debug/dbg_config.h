@@ -80,6 +80,7 @@ class debug_info {
 	long			dbg_current_start_entry;
 	long			dbg_current_stop_entry;
 	row<bool>	dbg_levs_arr;
+	bool 		dbg_bad_cycle1;
 
 	debug_info(){
 		init_debug_info();
@@ -94,6 +95,7 @@ class debug_info {
 		dbg_current_start_entry = 0;
 		dbg_current_stop_entry = 0;
 		dbg_levs_arr.fill(false, DBG_NUM_LEVS);
+		dbg_bad_cycle1 = false;
 	}
 
 	void	dbg_lv_on(long lv_idx){

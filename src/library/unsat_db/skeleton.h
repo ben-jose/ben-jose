@@ -58,6 +58,7 @@ enum charge_t {
 
 class instance_info;
 
+class solver;
 class brain;
 class canon_clause;
 class variant;
@@ -302,6 +303,8 @@ public:
 		return the_brn;
 	}
 
+	solver*	get_dbg_slv();
+	
 	void	set_dbg_brn(brain* pt_brn){
 		SKELETON_DBG(cc_pt_brn = pt_brn);
 	}
@@ -491,6 +494,8 @@ public:
 		return the_brn;
 	}
 
+	solver*	get_dbg_slv();
+	
 	void	set_dbg_brn(brain* pt_brn){
 		SKELETON_DBG(cf_pt_brn = pt_brn);
 	}
@@ -732,6 +737,8 @@ public:
 		return the_brn;
 	}
 
+	solver*	get_dbg_slv();
+	
 	void	set_dbg_brn(brain* pt_brn){
 		SKELETON_DBG(
 			kg_pt_brn = pt_brn;

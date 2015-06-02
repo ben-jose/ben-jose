@@ -1,9 +1,6 @@
 <html>
 	<head>
 		<title>Draw_CNF</title>
-		<script src="test_cnfs/cnf_001.yos"></script>
-		<script src="test_cnfs/cnf_002.yos"></script>
-		<script src="test_cnfs/cnf_003.yos"></script>
 		<script src="draw_cnf_js_lib/cytoscape.js"></script>
 		<script src="draw_cnf_js_lib/show_cnf_fn.js"></script>
 	</head>
@@ -11,6 +8,7 @@
 		<H1>CNF_001</H1>
 		<div id="text_01"></div>
 		<div id="grph_01" style="height:600px;width:800px;border:1px solid #777;"></div>
+		<script src="test_cnfs/cnf_001.yos"></script>
 		<script> show_cnf('grph_01', the_cnf_001, 'preset', all_to_play_cnf_001);
 			document.getElementById('text_01').innerHTML = the_text_cnf_001;
 		</script>
@@ -18,6 +16,7 @@
 		<H1>CNF_002</H1>
 		<div id="text_02"></div>
 		<div id="grph_02" style="height:600px;width:800px;border:1px solid #777;"></div>
+		<script src="test_cnfs/cnf_002.yos"></script>
 		<script> show_cnf('grph_02', the_cnf_002, 'preset');
 			document.getElementById('text_02').innerHTML = this_var_does_not_exist;
 		</script>
@@ -25,6 +24,7 @@
 		<H1>CNF_003</H1>
 		<div id="text_03"></div>
 		<div id="grph_03" style='height:600px;width:800px;border:1px solid #777;'></div>
+		<script src="test_cnfs/cnf_003.yos"></script>
 		<script> show_cnf('grph_03', the_cnf_003, 'preset')
 			document.getElementById('text_03').innerHTML = the_text_cnf_003;
 		</script>

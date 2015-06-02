@@ -1198,12 +1198,13 @@ analyser::neuromap_find_analysis(analyser& deducer,
 	brain& brn = get_de_brain();
 	row_quanton_t& nmp_causes = brn.br_tmp_f_analysis;
 	if(brn.level() == ROOT_LEVEL){
+		DBG_PRT(39, os << "find.NULL_NMP root level");
 		BRAIN_CK(nxt_dct.dt_target_level == INVALID_LEVEL);
 		return NULL_PT;
 	}
 	
 	if(! to_wrt.is_empty() && brn.lv_has_setup_nmp(nxt_lv + 1)){
-		DBG_PRT(39, os << "NMP_NULL !to_wrt.empty && h_s_lv+1");
+		DBG_PRT(39, os << "find.NULL_NMP !to_wrt.empty && h_s_lv+1");
 		return NULL_PT;
 	}
 	
@@ -1247,6 +1248,7 @@ analyser::neuromap_find_analysis(analyser& deducer,
 		
 		DBG_PRT(39, os << "found nmp=" << (void*)(out_nmp));
 		if(nxt_lv <= 0){
+			DBG_PRT(39, os << "find stop. (nxt_lv <= 0). nmp=" << (void*)(out_nmp));
 			break;
 		}
 		
@@ -1260,6 +1262,7 @@ analyser::neuromap_find_analysis(analyser& deducer,
 		long old_lv = nxt_lv;
 		if(tmp_dct.dt_target_level >= old_lv){
 			BRAIN_CK(false);
+			DBG_PRT(39, os << "find stop. (tgt_lv >= old_lv). nmp=" << (void*)(out_nmp));
 			break;
 		}
 		
@@ -1284,9 +1287,11 @@ analyser::neuromap_find_analysis(analyser& deducer,
 		BRAIN_REL_CK(nxt_lv < old_lv);
 
 		if(! to_wrt.is_empty() && brn.lv_has_setup_nmp(nxt_lv + 1)){
+			DBG_PRT(39, os << "find stop. has_to_wrt && has_stup. nmp=" << (void*)(out_nmp));
 			break;
 		}
 		if(deducer.found_learned()){
+			DBG_PRT(39, os << "find stop. found_lrnd. nmp=" << (void*)(out_nmp));
 			break;
 		}
 

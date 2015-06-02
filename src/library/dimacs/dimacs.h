@@ -43,6 +43,7 @@ Declaration of functions to read and parse dimacs files.
 #include "tools.h"
 #include "top_exception.h"
 
+class solver;
 class brain;
 class dima_dims;
 
@@ -367,6 +368,8 @@ public:
 		return the_brn;
 	}
 
+	solver*	get_dbg_slv();
+	
 	void	set_dbg_brn(brain* the_brn){
 		DBG(ld_pt_brn = the_brn);
 	}

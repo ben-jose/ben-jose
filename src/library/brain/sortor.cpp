@@ -45,6 +45,8 @@ Classes and that implement a sortor.
 char* sortee::CL_NAME = as_pt_char("{sortee}");
 char* sorset::CL_NAME = as_pt_char("{sorset}");
 
+DEFINE_GET_DBG_SLV(sort_glb)
+
 sortee&
 as_sortee(binder* bdr){
 	SORTER_CK_1(bdr != NULL_PT);
@@ -1397,5 +1399,4 @@ sort_glb::ck_sorted_sorsets(row<sorset*>& dest_ss){
 #endif
 	return true;
 }
-
 

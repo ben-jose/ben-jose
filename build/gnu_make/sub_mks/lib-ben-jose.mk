@@ -17,6 +17,7 @@ SOURCES := \
 	$(SRC_BASE_DIR)/library/unsat_db/skeleton.cpp \
 	$(SRC_BASE_DIR)/library/debug/dbg_config.cpp \
 	$(SRC_BASE_DIR)/library/debug/dbg_brain.cpp \
+	$(SRC_BASE_DIR)/library/debug/dbg_cy_htm.cpp \
 	$(SRC_BASE_DIR)/library/debug/dbg_run_satex.cpp \
 	$(SRC_BASE_DIR)/library/debug/dbg_prt.cpp \
 	$(SRC_BASE_DIR)/utils/parse_funcs.cpp \
