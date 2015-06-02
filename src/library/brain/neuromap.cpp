@@ -37,6 +37,8 @@ neuromap class.
 
 #include "brain.h"
 #include "solver.h"
+#include "strings_html.h"
+#include "util_funcs.h"
 
 DEFINE_NA_FLAG_ALL_FUNCS(trail_propag, 2)
 DEFINE_NA_FLAG_ALL_FUNCS(forced, 2)
@@ -48,13 +50,15 @@ char* neuromap::CL_NAME = as_pt_char("{neuromap}");
 bool
 neuromap::map_find(){
 	DBG_COMMAND(4, return false);
+	BRAIN_CK(! is_na_mono());
 	return map_oper(mo_find);
-	//NOT_DBG(return map_oper(mo_find);)
 }
+//TODO: get rid of NOT_DBG macro
 
 bool
 neuromap::map_write(){
 	DBG_COMMAND(5, return false);
+	if(is_na_mono()){ return true; }
 	return map_oper(mo_save);
 }
 
@@ -473,14 +477,6 @@ neuromap::map_set_all_qu_curr_dom(){
 	row_quanton_t& all_quas = brn.br_tmp_qu_dom;
 	all_quas.clear();
 	map_get_all_quas(all_quas);
-	DBG_PRT(101, os << " all_quas=" << all_quas << "\n";
-		row<prop_signal> all_t_prop;
-		map_get_all_trail_propag_ps(all_t_prop, true);
-		os << " all_t_prop=" << all_t_prop << "\n";
-		row<prop_signal> all_f_prop;
-		map_get_all_forced_ps(all_f_prop);
-		os << " all_f_prop=" << all_f_prop << "\n";
-	);
 	set_all_qu_nemap(all_quas, this);
 }
 
@@ -1189,12 +1185,9 @@ neuromap::map_oper(mem_op_t mm){
 	bj_output_t& o_info = brn.get_out_info();
 	
 	DBG(
-		ch_string rc_str = brn.recoil().get_str();
-		ch_string op_str = (mm == mo_find)?("Find"):("Write");
-		brn.br_dbg.dbg_cy_text = "<h2>" + op_str + "</h2>";
-		brn.br_dbg.dbg_cy_text += "BRN_recoil=" + rc_str + "<br>";
-		brn.br_dbg.dbg_cy_text += "CNF_minisha=" + tmp_tauto_cnf.cf_minisha_str + "<br>";
-		brn.br_dbg.dbg_cy_text += "CNF_sha=" + tmp_tauto_cnf.cf_sha_str + "<br>";
+		na_dbg_nmp_mem_op = mm;
+		na_dbg_tauto_min_sha_str = tmp_tauto_cnf.cf_minisha_str;
+		na_dbg_tauto_sha_str = tmp_tauto_cnf.cf_sha_str;
 	);
 	
 	bool oper_ok = false;
@@ -1288,10 +1281,42 @@ neuromap::map_oper(mem_op_t mm){
 		}
 	}
 	
-	BRAIN_DBG(ch_string msg_htm = "copia");
-	DBG_COMMAND(150, brn.dbg_update_html_cy_graph(CY_NMP_KIND, 
-					&(brn.br_tmp_ini_tauto_col), brn.br_dbg.dbg_cy_text);
+	DBG_COMMAND(150, 
+		ch_string rc_str = brn.recoil().get_str();
+		ch_string op_ok_str = (oper_ok)?("YES"):("no");
+		ch_string op_str = (na_dbg_nmp_mem_op == mo_find)?("Find"):("Write");
+		op_str += op_ok_str;
+		
+		bj_ostr_stream ss_msg;
+		ss_msg << HTMi_h1 << "BRN_recoil=" << rc_str << HTMe_h1;
+		ss_msg << HTMi_h2 << op_str << HTMe_h2;
+		ss_msg << "nmp=" << (void*)this << HTM_br;
+		ss_msg << "nmp_lv=" << na_orig_lv << HTM_br;
+		ss_msg << "sub=" << (void*)na_submap << HTM_br;
+		ss_msg << "CNF_minisha=" << na_dbg_tauto_min_sha_str << HTM_br;
+		ss_msg << "CNF_sha=" << na_dbg_tauto_sha_str << HTM_br;
+		
+		ch_string msg_htm = ss_msg.str();
+		
+		brn.dbg_update_html_cy_graph(CY_NMP_KIND, 
+					&(brn.br_tmp_ini_tauto_col), msg_htm);
 	);
+	/*
+	DBG_COMMAND(150, 
+		BRAIN_DBG(
+			coloring full_col; 
+			map_get_cy_coloring(full_col);
+			BRAIN_CK(full_col.equal_nmp_to(brn, brn.br_tmp_ini_tauto_col));
+		);
+		if(na_dbg_tauto_min_sha_str == "6935a8517c"){
+			ch_string msg = "ALL_SUB for " + na_dbg_tauto_min_sha_str;
+			map_dbg_all_sub_update_html_file(msg);
+		}
+		if(na_dbg_tauto_min_sha_str == "1dd87482ed"){
+			ch_string msg = "ALL_SUB for " + na_dbg_tauto_min_sha_str;
+			map_dbg_all_sub_update_html_file(msg);
+		}
+	);*/
 	
 	return oper_ok;
 }
@@ -1391,6 +1416,7 @@ neuromap::map_prepare_mem_oper(mem_op_t mm){
 		bj_output_t& o_info = brn.get_out_info();
 		if(! found1){ 
 			o_info.bjo_quick_discards++;
+			DBG_PRT(39, os << "quick_find failed nmp=" << (void*)this);
 			return false; 
 		}
 		o_info.bjo_num_finds++;
@@ -2238,29 +2264,6 @@ neuromap::map_get_cy_coloring(coloring& clr){
 	clr.co_neu_colors.fill(1, all_neus.size());
 }
 
-void
-neuromap::map_dbg_update_html_file(ch_string msg){
-#ifdef FULL_DEBUG
-	brain& brn = get_brn();
-	coloring full_col;
-	map_get_cy_coloring(full_col);
-	
-	ch_string rc_str = brn.recoil().get_str();
-	
-	bj_ostr_stream ss_msg;
-	ss_msg << "<h2>" << msg << "</h2>";
-	ss_msg << "nmp=" << (void*)this << "<br>";
-	ss_msg << "nmp_lv=" << na_orig_lv << "<br>";
-	ss_msg << "BRN_recoil=" << rc_str << "<br>";
-	ss_msg << "ALL_MONOS=";
-	brn.dbg_print_htm_all_monos(ss_msg);
-	ss_msg << "<br>";
-	
-	ch_string htm_msg = ss_msg.str();
-	brn.dbg_update_html_cy_graph(CY_NMP_KIND, &(full_col), htm_msg);
-#endif
-}
-
 bj_ostream&
 brain::dbg_print_htm_all_monos(bj_ostream& os){
 #ifdef FULL_DEBUG
@@ -2401,3 +2404,66 @@ neuromap::map_ck_all_quas(){
 	return true;
 }
 
+bool
+coloring::equal_nmp_to(brain& brn, coloring& col2){
+	BRAIN_CK(ck_cols());
+	BRAIN_CK(col2.ck_cols());
+	
+	bool c1 = (co_brn == col2.co_brn);
+
+	bool c2 = same_quantons_note1(brn, co_quas, col2.co_quas);
+	bool c3 = same_quantons_note1(brn, col2.co_quas, co_quas);
+	bool c4 = same_neurons_tag4(brn, co_neus, col2.co_neus);
+	bool c5 = same_neurons_tag4(brn, col2.co_neus, co_neus);
+	
+	bool all_eq = (c1 && c2 && c3 && c4 && c5);
+	
+	BRAIN_CK(ck_cols());
+	BRAIN_CK(col2.ck_cols());
+	return all_eq;
+}
+
+void
+neuromap::map_dbg_update_html_file(ch_string msg){
+#ifdef FULL_DEBUG
+	brain& brn = get_brn();
+	coloring full_col;
+	map_get_cy_coloring(full_col);
+	
+	ch_string rc_str = brn.recoil().get_str();
+	
+	bj_ostr_stream ss_msg;
+	ss_msg << HTMi_h2 << msg << HTMe_h2;
+	ss_msg << "nmp=" << (void*)this << HTM_br;
+	ss_msg << "nmp_lv=" << na_orig_lv << HTM_br;
+	ss_msg << "all_sub=";
+	print_all_subnmp(ss_msg, true);
+	ss_msg << HTM_br;
+	ss_msg << "BRN_recoil=" << rc_str << HTM_br;
+	ss_msg << "ALL_MONOS=";
+	brn.dbg_print_htm_all_monos(ss_msg);
+	ss_msg << HTM_br;
+	
+	ch_string htm_msg = ss_msg.str();
+	brn.dbg_update_html_cy_graph(CY_NMP_KIND, &(full_col), htm_msg);
+#endif
+}
+
+void
+neuromap::map_dbg_all_sub_update_html_file(ch_string msg){
+#ifdef FULL_DEBUG
+	ch_string w_sub = (na_submap != NULL_PT)?(" SUB"):(" null_sub");
+	ch_string msg1 = msg + w_sub;
+	
+	map_dbg_update_html_file(msg1);
+	
+	neuromap* nxt_nmp = na_submap;
+	long sub_nn = 0;
+	while(nxt_nmp != NULL_PT){
+		sub_nn++;
+		ch_string msg2 = msg + " [" + long_to_str(sub_nn) + "]";
+		nxt_nmp->map_dbg_update_html_file(msg2);
+		nxt_nmp = nxt_nmp->na_submap;
+	}
+#endif
+}

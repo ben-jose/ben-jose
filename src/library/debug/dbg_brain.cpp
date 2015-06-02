@@ -464,19 +464,27 @@ brain::brn_dbg_compute_dots_of(row_neuron_t& neus, row_quanton_t& assig){
 // print methods
 
 bj_ostream&
-neuromap::print_all_subnmp(bj_ostream& os){
+neuromap::print_all_subnmp(bj_ostream& os, bool only_pts){
 #ifdef FULL_DEBUG
-	print_subnmp(os);
+	print_subnmp(os, only_pts);
 	if(has_submap()){
-		na_submap->print_all_subnmp(os);
+		na_submap->print_all_subnmp(os, only_pts);
 	}
 #endif
 	return os;
 }
 
 bj_ostream&
-neuromap::print_subnmp(bj_ostream& os){
+neuromap::print_subnmp(bj_ostream& os, bool only_pts){
 #ifdef FULL_DEBUG
+	if(only_pts){
+		os << "nmp(" << (void*)this <<")";
+		if(na_orig_cho != NULL_PT){
+			os << "." << na_orig_cho->qu_id << ", ";
+		}
+		os.flush();
+		return os;
+	}
 	os << "_______________________________________________________\n";
 	os << "NMP(" << (void*)this <<")={ " << bj_eol;
 

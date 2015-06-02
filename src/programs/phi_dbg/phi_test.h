@@ -29,16 +29,16 @@ Our Resurrected and Living, both in Body and Spirit,
 
 ------------------------------------------------------------
 
-php_test.h
+phi_test.h
 
-php_test func and classes decl.
+phi_test func and classes decl.
 
 --------------------------------------------------------------*/
 
-#ifndef PHP_DBG_H
-#define PHP_DBG_H
+#ifndef PHI_DBG_H
+#define PHI_DBG_H
 
 
-#endif		// PHP_DBG_H
+#endif		// PHI_DBG_H
 
 

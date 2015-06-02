@@ -1682,6 +1682,17 @@ brain::pulsate(){
 	BRAIN_CK(ck_trail());
 
 	if(found_conflict()){
+		DBG(
+			ch_string htm_str = "";
+			ch_string rc_str = recoil().get_str();
+			htm_str += "BRN_recoil=" + rc_str + "<br>";
+		);
+		DBG_PRT(151, os << "bef_htm=" << bj_eol; print_trail(os);
+			os << " num_conf=" << br_all_conflicts_found.size() << " br_lv=" << level()
+			<< " br_ti=" << tier();
+		);
+		DBG_COMMAND(151, dbg_update_html_cy_graph(CY_IC_KIND, NULL_PT, htm_str));
+	
 		br_last_retract = (level() == ROOT_LEVEL);
 		if(level() == ROOT_LEVEL){ 
 			set_result(bjr_no_satisf);
@@ -2210,8 +2221,8 @@ brain::dbg_update_html_cy_graph(ch_string cy_kk, coloring* the_col, ch_string ht
 	of << "\t" << HTMi_body << bj_eol;
 	for(long aa = 1; aa <= n_stp; aa++){
 		ch_string stp_aa_str = long_to_str(aa);
-		ch_string h1_title = "Step " + stp_aa_str;
-		of << "\t\t " << HTMi_h1 << h1_title << HTMe_h1 << bj_eol;
+		ch_string step_title = "Step " + stp_aa_str + HTM_br;
+		of << "\t\t " << step_title << bj_eol;
 
 		ch_string div_txt_nm = "cnf_text_" + stp_aa_str;
 		of << "\t\t " << HTM_div(div_txt_nm) << bj_eol;

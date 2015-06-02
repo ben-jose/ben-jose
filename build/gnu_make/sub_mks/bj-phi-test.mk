@@ -1,5 +1,5 @@
 
-TARGET := bj-php
+TARGET := bj-phi
 
 SRC_BASE_DIR := ../../../src
 
@@ -9,7 +9,7 @@ TGT_LDLIBS  := -lben-jose -lstdc++ -lgmpxx -lgmp
 
 TGT_PREREQS := libben-jose.a 
 
-SOURCES := $(SRC_BASE_DIR)/programs/php_dbg/php_test.cpp
+SOURCES := $(SRC_BASE_DIR)/programs/phi_dbg/phi_test.cpp
 
 SRC_INCDIRS := \
 	$(SRC_BASE_DIR)/library/brain \

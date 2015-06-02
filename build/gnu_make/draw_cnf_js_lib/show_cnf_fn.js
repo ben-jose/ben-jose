@@ -166,6 +166,23 @@ fn_handle_mouseover = function(event) {
 	}
 };
 
+var tappedBefore = null;
+
+fn_handle_click = function(event) {
+	var tappedNow = event.cyTarget;
+	setTimeout(function(){ tappedBefore = null; }, 300);
+	if(tappedBefore === tappedNow) {
+		tappedNow.trigger('doubleTap');
+		tappedBefore = null;
+	} else {
+		tappedBefore = tappedNow;
+	}
+};
+
+fn_handle_double_click = function(event) {
+	event.cy.fit();
+};
+
 show_cnf = function(grph_div_id, grph_elems, layout_nm, all_to_play, all_tiers){
 	
 	cnf_gph = cytoscape({
@@ -190,7 +207,10 @@ show_cnf = function(grph_div_id, grph_elems, layout_nm, all_to_play, all_tiers){
 	//all_dipoles = cnf_gph.dipole;
 	all_dipoles = cnf_gph.filter('node.dipole');
 	all_dipoles.addClass('clb1');
-
+	
+	cnf_gph.on('tap', fn_handle_click);
+	cnf_gph.on('doubleTap', fn_handle_double_click);
+	
 	cnf_gph.on('tap', 'node', fn_handle_tap);
 	cnf_gph.on('mouseover', 'node', fn_handle_mouseover);
 	

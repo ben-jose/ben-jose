@@ -451,7 +451,6 @@ analyser::fill_dct(deduction& dct){
 		dct.dt_target_level = INVALID_LEVEL;
 	}
 	
-	DBG_PRT(101, os << "find_dct of deduction=" << dct);
 }
 
 bool
@@ -532,10 +531,17 @@ analyser::update_neuromap(neuromap* sub_nmp){
 	nxt_nmp.na_orig_lv = qua->qlevel();
 	nxt_nmp.na_orig_cho = qua;
 	
+	if(qua->opposite().is_mono()){
+		BRAIN_CK(nxt_nmp.na_submap != NULL_PT);
+		nxt_nmp.na_nxt_no_mono = nxt_nmp.na_submap->na_nxt_no_mono;
+		BRAIN_CK(nxt_nmp.is_na_mono());
+	}
+	
 	BRAIN_CK(nxt_nmp.na_trail_propag.is_empty());
 	BRAIN_CK(nxt_nmp.na_forced.is_empty());
 	
 	if(sub_nmp == NULL_PT){
+		BRAIN_CK(! nxt_nmp.is_na_mono());
 		BRAIN_CK(! de_all_confl.is_empty());
 		de_all_confl.copy_to(nxt_nmp.na_all_confl);  // multi_confl
 	}
@@ -816,13 +822,6 @@ brain::analyse(row<prop_signal>& all_confl, deduction& out_dct){
 	BRAIN_CK(ck_trail());
 	BRAIN_CK(! all_confl.is_empty());
 	//BRAIN_CK(all_confl.first().ps_tier >= tier());
-	
-	DBG(
-		ch_string htm_str = "";
-		ch_string rc_str = recoil().get_str();
-		htm_str += "BRN_recoil=" + rc_str + "<br>";
-	);
-	DBG_COMMAND(151, dbg_update_html_cy_graph(CY_IC_KIND, NULL_PT, htm_str));
 	
 	analyser& mper = br_neuromaper_anlsr;
 	analyser& dedser = br_deducer_anlsr;
@@ -1212,18 +1211,31 @@ analyser::neuromap_find_analysis(analyser& deducer,
 	
 	BRAIN_CK(brn.br_qu_tot_note0 == 0);
 	
+	DBG_PRT(101, os << "mpa_find_________");
 	neuromap* out_nmp = calc_neuromap(nxt_lv, NULL_PT, true);
-	DBG_PRT(101, os << " nxt_lv=" << nxt_lv;
-			if(out_nmp != NULL_PT){ os << " orig_lv=" << out_nmp->na_orig_lv; }
-	);
 	
+	neuromap* last_found = NULL_PT;
 	BRAIN_DBG(long num_fnd = 0);
 	while(out_nmp != NULL_PT){
 		BRAIN_DBG(num_fnd++);
-		if(! out_nmp->map_find()){
+		
+		neuromap* to_find = out_nmp;
+		if(to_find->is_na_mono()){
+			to_find = to_find->na_nxt_no_mono;
+			BRAIN_CK(to_find != NULL_PT);
+		}
+		if((to_find != last_found) && ! to_find->map_find()){
 			DBG_PRT(39, os << "CANNOT find nmp=" << (void*)(out_nmp));
+			DBG_PRT(150, 
+				ch_string msg = "CANNOT find";
+				to_find->map_dbg_update_html_file(msg);
+			);
 			break;
 		}
+		if(! out_nmp->is_na_mono()){
+			last_found = out_nmp;
+		}
+		
 		BRAIN_DBG(
 			long& max_ns = brn.br_dbg.dbg_max_fnd_num_subnmp;
 			if(out_nmp->na_dbg_num_submap > max_ns){
@@ -1241,12 +1253,20 @@ analyser::neuromap_find_analysis(analyser& deducer,
 		nmp_causes.clear();
 		out_nmp->map_get_all_upper_quas(nmp_causes);
 	
-		DBG_COMMAND(101, os << "found_map. STARTING DEDUC causes=" << nmp_causes);
-		nxt_dct.init_deduction();
-		deducer.deduction_analysis(nmp_causes, nxt_dct);
-		deducer.make_noted_dominated_and_deduced(to_wrt);
+		deduction tmp_dct;
+		tmp_dct.init_deduction();
+		deducer.deduction_analysis(nmp_causes, tmp_dct);
  
-		BRAIN_DBG(long old_lv = nxt_lv);
+		long old_lv = nxt_lv;
+		if(tmp_dct.dt_target_level >= old_lv){
+			BRAIN_CK(false);
+			break;
+		}
+		
+		deducer.make_noted_dominated_and_deduced(to_wrt);
+		
+		nxt_dct.init_deduction();
+		tmp_dct.move_to_dct(nxt_dct);
 		nxt_lv = nxt_dct.dt_target_level;
 		
 		BRAIN_CK(nxt_lv < out_nmp->na_orig_lv);
@@ -1261,6 +1281,7 @@ analyser::neuromap_find_analysis(analyser& deducer,
 			os << ":::::::::::::::::::::::::::::::::::::::::::::\n"; 
 			brn.print_trail(os);
 		);
+		BRAIN_REL_CK(nxt_lv < old_lv);
 
 		if(! to_wrt.is_empty() && brn.lv_has_setup_nmp(nxt_lv + 1)){
 			break;

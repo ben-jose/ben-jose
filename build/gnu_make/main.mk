@@ -17,7 +17,7 @@ SUBMAKEFILES := \
 	sub_mks/lib-ben-jose.mk \
 	sub_mks/bj-solver.mk \
 	sub_mks/bj-test-sortor.mk \
-	sub_mks/bj-php-test.mk \
+	sub_mks/bj-phi-test.mk \
 	sub_mks/bj-c-test.mk \
 	sub_mks/bj-test.mk
 

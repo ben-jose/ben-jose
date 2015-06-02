@@ -374,8 +374,8 @@ class alert_rel {
 	long		set_all_##flag_nam(brain& brn, row_quanton_t& rr_all); \
 	long		append_all_not_##flag_nam(brain& brn, row_quanton_t& rr_src, \
 							row_quanton_t& rr_dst); \
-	bool		same_quantons_##flag_nam(brain& brn, row_quanton_t& rr1, \
-							row_quanton_t& rr2); \
+	bool		same_quantons_##flag_nam(brain& brn, row_quanton_t& sup_ss, \
+							row_quanton_t& sub_ss); \
 	bool		all_qu_have_##flag_nam(brain& brn, row_quanton_t& rr1); \
 \
 
@@ -435,19 +435,19 @@ class alert_rel {
 		return num_qua_app; \
 	} \
  	\
-	bool		same_quantons_##flag_nam(brain& brn, row_quanton_t& rr1, \
-						row_quanton_t& rr2) \
+	bool		same_quantons_##flag_nam(brain& brn, row_quanton_t& sup_ss, \
+						row_quanton_t& sub_ss) \
 	{ \
 		BRAIN_CK(brn.br_qu_tot_##flag_nam == 0); \
-		set_all_##flag_nam(brn, rr1); \
+		set_all_##flag_nam(brn, sup_ss); \
 		bool sm_quas = true; \
-		for(long aa = 0; aa < rr2.size(); aa++){ \
-			quanton& qua = *(rr2[aa]); \
+		for(long aa = 0; aa < sub_ss.size(); aa++){ \
+			quanton& qua = *(sub_ss[aa]); \
 			if(! qua.has_##flag_nam()){ \
 				sm_quas = false; \
 			} \
 		} \
-		reset_all_##flag_nam(brn, rr1); \
+		reset_all_##flag_nam(brn, sup_ss); \
 		BRAIN_CK(brn.br_qu_tot_##flag_nam == 0); \
 		return sm_quas; \
 	} \
@@ -851,8 +851,8 @@ make_all_qu_dominated(brain& brn, row_quanton_t& all_quas,
 	long		set_all_##flag_nam(brain& brn, row_neuron_t& rr_all); \
 	long		append_all_not_##flag_nam(brain& brn, row_neuron_t& rr_src, \
 							row_neuron_t& rr_dst); \
-	bool		same_neurons_##flag_nam(brain& brn, row_neuron_t& rr1, \
-							row_neuron_t& rr2); \
+	bool		same_neurons_##flag_nam(brain& brn, row_neuron_t& sup_ss, \
+							row_neuron_t& sub_ss); \
 	bool		all_neurons_have_##flag_nam(row_neuron_t& rr1); \
 \
 
@@ -912,19 +912,19 @@ make_all_qu_dominated(brain& brn, row_quanton_t& all_quas,
 		return num_neu_app; \
 	} \
  	\
-	bool		same_neurons_##flag_nam(brain& brn, row_neuron_t& rr1, \
-						row_neuron_t& rr2) \
+	bool		same_neurons_##flag_nam(brain& brn, row_neuron_t& sup_ss, \
+						row_neuron_t& sub_ss) \
 	{ \
 		BRAIN_CK(brn.br_ne_tot_##flag_nam == 0); \
-		set_all_##flag_nam(brn, rr1); \
+		set_all_##flag_nam(brn, sup_ss); \
 		bool sm_neus = true; \
-		for(long aa = 0; aa < rr2.size(); aa++){ \
-			neuron& neu = *(rr2[aa]); \
+		for(long aa = 0; aa < sub_ss.size(); aa++){ \
+			neuron& neu = *(sub_ss[aa]); \
 			if(! neu.has_##flag_nam()){ \
 				sm_neus = false; \
 			} \
 		} \
-		reset_all_##flag_nam(brn, rr1); \
+		reset_all_##flag_nam(brn, sup_ss); \
 		BRAIN_CK(brn.br_ne_tot_##flag_nam == 0); \
 		return sm_neus; \
 	} \
@@ -1589,6 +1589,7 @@ class coloring {
 	void	copy_co_to(coloring& col2);
 
 	bool	equal_co_to(coloring& col2);
+	bool	equal_nmp_to(brain& brn, coloring& col2);
 	
 	void	filter_unique_neus(coloring& col2);
 	void	force_unique_neus(coloring& col2);
@@ -1717,6 +1718,7 @@ class neuromap {
 	//bool			na_has_marks_and_spots;
 	long			na_orig_lv;
 	quanton*		na_orig_cho;
+	neuromap*		na_nxt_no_mono;
 	prop_signal		na_next_psig;
 	neuromap*		na_submap;
 	recemap_t		na_mates;
@@ -1751,6 +1753,10 @@ class neuromap {
 		long				na_dbg_orig_lv;
 		recoil_counter_t 	na_dbg_g_col_recoil;
 		ch_string			na_dbg_g_col_stk;
+		
+		mem_op_t 			na_dbg_nmp_mem_op;
+		ch_string			na_dbg_tauto_min_sha_str;
+		ch_string			na_dbg_tauto_sha_str;
 	);
 	
 	neuromap(brain* pt_brn = NULL) {
@@ -1770,6 +1776,7 @@ class neuromap {
 		//na_has_marks_and_spots = false;
 		na_orig_lv = INVALID_LEVEL;
 		na_orig_cho = NULL_PT;
+		na_nxt_no_mono = this;
 		na_next_psig.init_prop_signal();
 		na_submap = NULL_PT;
 
@@ -1809,6 +1816,10 @@ class neuromap {
 			na_dbg_orig_lv = INVALID_IDX;
 			na_dbg_g_col_recoil = INVALID_RECOIL;
 			na_dbg_g_col_stk = "INVALID_STACK";
+			
+			na_dbg_nmp_mem_op = mo_invalid;
+			na_dbg_tauto_min_sha_str = "INVALID_MINSHA";
+			na_dbg_tauto_sha_str = "INVALID_SHA";
 		);
 	}
 	
@@ -1846,6 +1857,12 @@ class neuromap {
 	DECLARE_NA_FLAG_FUNCS(na_flags, tags4_n_notes4);
 	DECLARE_NA_FLAG_FUNCS(na_flags, tags5_n_notes5);
 
+	bool	is_na_mono(){
+		BRAIN_CK(na_nxt_no_mono != NULL_PT);
+		bool is_mn = (na_nxt_no_mono != this);
+		return is_mn;
+	}
+	
 	bool		has_mates(){
 		return ! na_mates.is_alone();
 	}
@@ -1960,6 +1977,7 @@ class neuromap {
 	
 	void	map_get_cy_coloring(coloring& clr);
 	void	map_dbg_update_html_file(ch_string msg);
+	void	map_dbg_all_sub_update_html_file(ch_string msg);
 	
 	static
 	void	map_append_neus_in_nmp_from(brain& brn, row_neuron_t& all_neus, 
@@ -1988,8 +2006,8 @@ class neuromap {
 	
 	bj_ostream&	print_neuromap(bj_ostream& os, bool from_pt = false);
 	
-	bj_ostream&	print_all_subnmp(bj_ostream& os);
-	bj_ostream&	print_subnmp(bj_ostream& os);
+	bj_ostream&	print_all_subnmp(bj_ostream& os, bool only_pts = false);
+	bj_ostream&	print_subnmp(bj_ostream& os, bool only_pts = false);
 };
 
 inline
@@ -2882,7 +2900,6 @@ public:
 	
 	bool	dbg_periodic_prt;
 
-	ch_string	dbg_cy_text;
 	ch_string	dbg_cy_prefix;
 	long		dbg_cy_ic_step;
 	long		dbg_cy_nmp_step;

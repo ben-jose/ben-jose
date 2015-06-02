@@ -29,9 +29,9 @@ Our Resurrected and Living, both in Body and Spirit,
 
 ------------------------------------------------------------
 
-php_dbg.cpp  
+phi_dbg.cpp  
 
-php_dbg classes and funcs impl.
+phi_dbg classes and funcs impl.
 
 --------------------------------------------------------------*/
 
@@ -44,10 +44,10 @@ php_dbg classes and funcs impl.
 #include "dbg_prt.h"
 
 bool
-load_php_by_hole_brain(brain& brn, long holes);
+load_phi_by_hole_brain(brain& brn, long holes);
 
 solver*
-php_main(long num_h){
+phi_main(long num_h){
 	ch_string root_pth = ".";
 	
 	solver* nw_slv = solver::create_solver();
@@ -74,16 +74,16 @@ php_main(long num_h){
 	ch_string num_h_str = long_to_str(num_h);
 	
 	inst.init_instance_info(false, false);
-	inst.ist_file_path = "php_hole_" + num_h_str;
+	inst.ist_file_path = "phi_hole_" + num_h_str;
 	inst.ist_id = nxt_id;
 	
 	brain the_brain(the_slvr);
 	
 	BRAIN_DBG(the_brain.br_dbg.dbg_cy_prefix = inst.ist_file_path);
 	
-	bool ld_ok = load_php_by_hole_brain(the_brain, num_h);
+	bool ld_ok = load_phi_by_hole_brain(the_brain, num_h);
 	if(! ld_ok){
-		bj_out << "Cannot load php brain !!! \n";
+		bj_out << "Cannot load phi brain !!! \n";
 		return nw_slv;
 	}
 	bj_satisf_val_t res = the_brain.solve_instance(false);
@@ -98,7 +98,7 @@ int	main(int argc, char** argv){
 	MARK_USED(argv);
 	std::ostream& os = std::cout;
 
-	os << "THIS IS THE PHP TEST PROG \n";
+	os << "THIS IS THE PHI TEST PROG \n";
 	
 	if(argc < 2){
 		os << "args: <num_holes>";
@@ -106,7 +106,7 @@ int	main(int argc, char** argv){
 	}
 	long num_h = atol(argv[1]); 
 	
-	solver* nw_slv = php_main(num_h);
+	solver* nw_slv = phi_main(num_h);
 
 	if(nw_slv != NULL_PT){
 		solver::release_solver(nw_slv);
@@ -131,7 +131,7 @@ get_num_neu(long holes){
 }
 
 bool
-load_php_by_hole_brain(brain& brn, long holes){
+load_phi_by_hole_brain(brain& brn, long holes){
 #ifdef FULL_DEBUG
 
 	long pigeons = (holes + 1);
