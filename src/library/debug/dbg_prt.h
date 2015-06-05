@@ -45,54 +45,56 @@ class brain;
 void	dbg_prt_all_cho(brain& brn);
 
 bool	dbg_check_lev(solver* slv, long lev);
+bj_ostream&	dbg_get_out_stm(solver* slv);
 
 
 //=================================================================
 // debug defs
 
 #define DBG_ALL_LVS -1
+#define INVALID_DBG_LV 		-123
 
 #define	DBG_BR_COND(pt_slv, lev, cond)	(dbg_check_lev(pt_slv, lev) && (cond))
 
 #define	DBG_COND(lev, cond)	DBG_BR_COND(get_dbg_slv(), lev, cond)
 
-#define INVALID_DBG_LV 		-123
-
-bool	dbg_print_cond_func(
-	solver* pt_slv,
-	bool prm,
-	bool is_ck = false,
-	const ch_string fnam = "NO_NAME",
-	int lnum = 0,
-	const ch_string prm_str = "NO_PRM",
-	long dbg_lv = INVALID_DBG_LV);
-
-#define	DBG_BR_PRT_COND(pt_brn, lev, cond, comm) \
-	DBG_COND_COMM(DBG_BR_COND(pt_brn, lev, cond), \
-		dbg_print_cond_func(pt_brn, DBG_BR_COND(pt_brn, lev, cond), \
-			false, "NO_NAME", 0, #cond, lev); \
-		comm; \
+#define	DBG_COMMAND(lev, comm) \
+	DBG( \
+		if(DBG_COND(lev, true)){ \
+			comm; \
+		} \
 	) \
 
 //--end_of_def
-	
-#define	DBG_PRT_COND(lev, cond, comm)	DBG_BR_PRT_COND(get_dbg_slv(), lev, cond, comm)
 
-#define	DBG_PRT_COND_WITH(lev, obj, cond, comm)	\
-	DBG_BR_PRT_COND((obj).get_dbg_slv(), lev, cond, comm)
+void	dbg_print_left_margin(solver* pt_slv, bj_ostream& os, long dbg_lv);
 
-#define	DBG_PRT_WITH(lev, obj, comm)	DBG_BR_PRT_COND((obj).get_dbg_slv(), lev, true, comm)
-
-#define	DBG_PRT(lev, comm)	DBG_PRT_COND(lev, true, comm)
-
-#define	DBG_COMMAND(lev, comm) \
-		if(DBG_COND(lev, true)){ \
-			bj_ostream& os = bj_dbg; \
-			DBG(comm); \
+#define	DBG_PRT_SLV(pt_slv, o_stm, lev, cond, comm) \
+	DBG( \
+		if(DBG_BR_COND(pt_slv, lev, cond)){ \
+			bj_ostream& os = dbg_get_out_stm(pt_slv); \
+			bool is_htm_1 = (&bj_dbg != &os); \
+			if(is_htm_1){ os << bj_eol << "<pre>"; } \
+			dbg_print_left_margin(pt_slv, os, lev); \
+			comm; \
+			if(is_htm_1){ os << "</pre><br>" << bj_eol; } \
+			os << bj_eol; \
 			os.flush(); \
 		} \
-
+	) \
+	
 //--end_of_def
+
+#define	DBG_PRT_COND(lev, cond, comm) \
+	DBG_PRT_SLV(get_dbg_slv(), bj_dbg, lev, cond, comm)
+
+#define	DBG_PRT_COND_WITH(lev, obj, cond, comm) \
+	DBG_PRT_SLV((obj).get_dbg_slv(), bj_dbg, lev, cond, comm)
+
+#define	DBG_PRT_WITH(lev, obj, comm) \
+	DBG_PRT_SLV((obj).get_dbg_slv(), bj_dbg, lev, true, comm)
+
+#define	DBG_PRT(lev, comm)	DBG_PRT_COND(lev, true, comm)
 
 #define DBG_BJ_LIB_CK(prm) DBG_CK(prm) 
 

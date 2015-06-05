@@ -289,8 +289,7 @@ dbg_inst_info::init_dbg_inst_info(){
 	dbg_periodic_prt = true;
 	
 	dbg_cy_prefix = "no_file";
-	dbg_cy_ic_step = 0;
-	dbg_cy_nmp_step = 0;
+	dbg_cy_step = 0;
 	dbg_cy_layout = CY_CIRCLE_LAYOUT;
 
 	dbg_tot_nmps = 0;
@@ -489,7 +488,6 @@ neuromap::print_subnmp(bj_ostream& os, bool only_pts){
 	//os << " ac=" << is_active();
 	os << " lv=" << na_orig_lv;
 	os << " cho=" << na_orig_cho;
-	//os << " nx_ps=" << na_next_psig;
 	os << " subnmp=" << (void*)na_submap;
 	//os << " mat=" << na_mates;
 	//os << " rel_idx=" << na_release_idx;
@@ -546,7 +544,6 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 		os << "(" << (void*)this << ")";
 		os << " #lv=" << na_dbg_num_submap;
 		os << " lv=" << na_orig_lv;
-		os << " fo_ps=" << na_next_psig << bj_eol;
 		os << " all_ps=" << all_ps;
 		os << " #qu=" << all_ps.size();
 
@@ -830,24 +827,6 @@ brain::dbg_prt_lvs_have_learned(bj_ostream& os){
 	for(int aa = 0; aa < all_lv.size(); aa++){
 		leveldat& lv = *(all_lv[aa]);
 		if(lv.has_learned()){
-			os << "1.";
-		} else {
-			os << "0.";
-		}
-	}
-	os << "]";
-#endif
-}
-
-void
-brain::dbg_prt_lvs_active(bj_ostream& os){
-#ifdef FULL_DEBUG
-	os << "actv=[";
-	
-	row<leveldat*>& all_lv = br_data_levels;
-	for(int aa = 0; aa < all_lv.size(); aa++){
-		leveldat& lv = *(all_lv[aa]);
-		if(lv.has_active_neuromaps()){
 			os << "1.";
 		} else {
 			os << "0.";
@@ -1375,10 +1354,6 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 				os << ".s";
 				os << "(" << (void*)(&s_nmp) << ")"; 
 			}
-			if(is_qu && lv.has_to_write_neuromaps()){ 
-				os << ".w"; 
-				print_all_in_grip(os, lv.ld_nmps_to_write);
-			}
 			if(is_qu && lv.has_learned()){ 
 				os << ".l"; 
 				if(lv.ld_learned.size() > 1){
@@ -1456,5 +1431,83 @@ dbg_run_diff(ch_string fnm1, ch_string fnm2, ch_string dff_fnm){
 	ch_string o_str = "diff " + fnm1 + " " + fnm2 + " > " + dff_fnm;
 	system_exec(o_str);
 #endif
+}
+
+void
+neuromap::map_dbg_print(bj_ostream& os, mem_op_t mm){
+#ifdef FULL_DEBUG
+	brain& brn = get_brn();
+	canon_cnf& tmp_tauto_cnf = brn.br_tmp_wrt_tauto_cnf;
+	canon_cnf& tmp_diff_cnf = brn.br_tmp_wrt_diff_cnf;
+	canon_cnf& tmp_guide_cnf = brn.br_tmp_wrt_guide_cnf;
+
+	//os << STACK_STR << bj_eol;
+	os << "DBG_PRT=" << bj_eol;
+	os << this << bj_eol;
+	os << "brn_tk=" << brn.br_current_ticket << bj_eol;
+	if(mm == mo_save){ os << "SAVE "; }
+	if(mm == mo_find){ os << "FIND "; }
+
+	//os << "CERO FILLED___________________________________________ " << bj_eol;
+	sort_glb& tauto_srg = brn.br_tauto_neus_srg;
+	os << " sg_dbg_cnf_tot_onelit=" << tauto_srg.sg_dbg_cnf_tot_onelit << bj_eol;
+
+	os << " TAUTO_CNF=" << bj_eol;
+	os << tmp_tauto_cnf << bj_eol;
+	os << " DIFF_CNF=" << bj_eol;
+	os << tmp_diff_cnf << bj_eol;
+	os << " GUIDE_CNF=" << bj_eol;
+	os << tmp_guide_cnf << bj_eol;
+
+	os << bj_eol;
+	BRAIN_DBG(os << " RECOIL_LV=" << brn.br_dbg.dbg_last_recoil_lv);
+
+	os << bj_eol;
+	os << brn.get_my_inst().get_f_nam() << bj_eol;
+	os << "=========================================================" << bj_eol;
+#endif
+}
+
+bool
+neuromap::map_ck_contained_in(coloring& colr, dbg_call_id dbg_id){
+#ifdef FULL_DEBUG
+	brain& brn = get_brn();
+	
+	// CHECK QUAS
+	
+	row_quanton_t& m_quas = brn.br_tmp_ck_col;
+	map_get_all_quas(m_quas);
+	
+	BRAIN_CK(brn.br_qu_tot_note1 == 0);
+	set_all_note1(brn, m_quas);
+	
+	row_quanton_t& all_quas = colr.co_quas;
+	for(int ii = 0; ii < all_quas.size(); ii++){
+		BRAIN_CK(all_quas[ii] != NULL_PT);
+		BRAIN_CK(all_quas[ii]->has_note1());
+	}
+	
+	reset_all_note1(brn, m_quas);
+	BRAIN_CK(brn.br_qu_tot_note1 == 0);
+	
+	// CHECK NEUS
+	
+	row_neuron_t& m_neus = brn.br_tmp_all_neus;
+	map_get_all_neus(m_neus);
+	
+	BRAIN_CK(brn.br_tot_ne_spots == 0);
+	set_spots_of(brn, m_neus);
+	
+	row_neuron_t& all_neus = colr.co_neus;
+	for(long ii = 0; ii < all_neus.size(); ii++){
+		BRAIN_CK(all_neus[ii] != NULL_PT);
+		neuron& neu = *(all_neus[ii]);
+		BRAIN_CK_PRT(neu.ne_spot, os << "_______\n neu=" << &neu);
+	}
+
+	reset_spots_of(brn, m_neus);
+	BRAIN_CK(brn.br_tot_ne_spots == 0);
+#endif
+	return true;
 }
 

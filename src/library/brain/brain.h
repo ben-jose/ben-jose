@@ -91,6 +91,14 @@ enum mem_op_t {
 	mo_find = 2
 };
 
+enum cy_quk_t {
+	cq_invalid = 0,
+	cq_reg = 1,
+	cq_mono = 2,
+	cq_cho = 3,
+	cq_for = 4,
+};
+
 #define k_invalid_order		0
 #define k_left_order		1
 #define k_right_order		2
@@ -191,6 +199,8 @@ bool		ck_motives(brain& brn, row_quanton_t& mots);
 //=================================================================
 // funcs declarations
 
+void	dbg_set_cy_sigs(brain& brn, row<prop_signal>& trace);
+void	dbg_reset_cy_sigs(brain& brn, row<prop_signal>& trace);
 void	dbg_run_diff(ch_string fnm1, ch_string fnm2, ch_string dff_fnm);
 void	dbg_prepare_used_dbg_ccl(row_quanton_t& rr_qua, canon_clause& dbg_ccl);
 void	dbg_print_ccls_neus(bj_ostream& os, row<canon_clause*>& dbg_ccls);
@@ -558,7 +568,11 @@ class quanton {
 	
 	// finder data
 
-	DBG(long		qu_dbg_tee_ti);
+	DBG(
+		long			qu_dbg_tee_ti;
+		prop_signal*	qu_dbg_cy_sig;
+		neuromap*		qu_dbg_cy_nmp;
+	);
 	
 	sortee			qu_tee;
 	sortrel			qu_reltee;
@@ -639,7 +653,11 @@ class quanton {
 
 		qu_curr_nemap = NULL_PT;
 		
-		DBG(qu_dbg_tee_ti = INVALID_NATURAL);
+		DBG(
+			qu_dbg_tee_ti = INVALID_NATURAL;
+			qu_dbg_cy_sig = NULL_PT;
+			qu_dbg_cy_nmp = NULL_PT;
+		);
 
 		qu_tee.init_sortee(true);
 		qu_reltee.init_sortrel(true);
@@ -774,6 +792,7 @@ class quanton {
 	
 	neuromap*	get_nmp_to_write(brain& brn);
 
+	cy_quk_t	get_cy_kind();
 	//bj_ostream&		dbg_qu_print_col_cy_node(bj_ostream& os, bool with_coma);
 	
 	bj_ostream&		dbg_qu_print_col_cy_edge(bj_ostream& os, long& consec, long neu_idx);
@@ -1397,7 +1416,7 @@ class prop_signal {
 
 	void	make_ps_dominated(brain& brn, row<neuromap*>& to_wrt);
 	
-	bool	is_ps_of_qua(quanton& qua);
+	bool	is_ps_of_qua(quanton& qua, neuromap* dbg_nmp = NULL_PT);
 
 	brain*	get_dbg_brn(){
 		brain* the_brn = NULL;
@@ -1740,9 +1759,12 @@ class neuromap {
 	t_1byte			na_flags;
 	bool			na_is_head;
 	long			na_active_idx;
-	//bool			na_has_marks_and_spots;
+	
 	long			na_orig_lv;
+	long			na_orig_ti;
+	cy_quk_t		na_orig_ki;
 	quanton*		na_orig_cho;
+	
 	neuromap*		na_nxt_no_mono;
 	prop_signal		na_next_psig;
 	neuromap*		na_submap;
@@ -1798,9 +1820,12 @@ class neuromap {
 		na_flags = 0;
 		na_is_head = false;
 		na_active_idx = INVALID_IDX;
-		//na_has_marks_and_spots = false;
+		
 		na_orig_lv = INVALID_LEVEL;
+		na_orig_ti = INVALID_TIER;
+		na_orig_ki = cq_invalid;
 		na_orig_cho = NULL_PT;
+		
 		na_nxt_no_mono = this;
 		na_next_psig.init_prop_signal();
 		na_submap = NULL_PT;
@@ -2002,7 +2027,9 @@ class neuromap {
 	void 	map_get_initial_compl_coloring(coloring& prv_clr, coloring& all_quas_clr);
 	void 	map_get_initial_tauto_coloring(coloring& prv_clr, coloring& tauto_clr);
 	
-	void	map_get_cy_coloring(coloring& clr);
+	void	map_dbg_set_cy_maps();
+	void	map_dbg_reset_cy_maps();
+	void	map_dbg_get_cy_coloring(coloring& clr);
 	void	map_dbg_update_html_file(ch_string msg);
 	void	map_dbg_all_sub_update_html_file(ch_string msg);
 	
@@ -2020,7 +2047,7 @@ class neuromap {
 	void	map_fill_cov_by_propag(neurolayers& not_sel_neus);
 	void	map_fill_cov_by_shadow(neurolayers& not_sel_neus);
 	
-	bool	is_last_forced(quanton& qua);
+	//bool	is_last_forced(quanton& qua);
 	bool	has_qua_tier(quanton& qua);
 	
 	void	reset_all_nmp_tag1();
@@ -2800,7 +2827,6 @@ class leveldat {
 	
 	long			ld_bak_mono_idx;
 
-	grip			ld_nmps_to_write;
 	grip			ld_nmp_setup;
 
 	leveldat(brain* pt_brn = NULL) {
@@ -2819,13 +2845,8 @@ class leveldat {
 		
 		ld_bak_mono_idx = INVALID_IDX;
 
-		BRAIN_CK(ld_nmps_to_write.is_alone());
 		BRAIN_CK(ld_nmp_setup.is_alone());
-		BRAIN_REL_CK(ld_nmps_to_write.is_alone());
 		BRAIN_REL_CK(ld_nmp_setup.is_alone());
-		
-		//ld_nmps_to_write.let_all_go();
-		//ld_nmp_setup.let_all_go();
 	}
 	
 	brain*	get_dbg_brn(){
@@ -2850,7 +2871,6 @@ class leveldat {
 	static
 	void release_leveldat(leveldat* lv){
 		BRAIN_CK(lv != NULL_PT);
-		BRAIN_CK(lv->ld_nmps_to_write.is_alone());
 		BRAIN_CK(lv->ld_nmp_setup.is_alone());
 		lv->~leveldat();
 		tpl_free<leveldat>(lv);
@@ -2864,15 +2884,6 @@ class leveldat {
 		return ld_learned.size();
 	}
 	
-	bool 	has_active_neuromaps(){
-		return (has_to_write_neuromaps() || has_setup_neuromap());
-	}
-
-	bool 	has_to_write_neuromaps(){
-		bool h_w = ! ld_nmps_to_write.is_alone();
-		return h_w;
-	}
-
 	bool 	has_setup_neuromap(){
 		bool h_s = ! ld_nmp_setup.is_alone();
 		BRAIN_CK(! h_s || ld_nmp_setup.is_single());
@@ -2932,8 +2943,7 @@ public:
 	bool	dbg_periodic_prt;
 
 	ch_string	dbg_cy_prefix;
-	long		dbg_cy_ic_step;
-	long		dbg_cy_nmp_step;
+	long		dbg_cy_step;
 	ch_string	dbg_cy_layout;
 	
 	long	dbg_tot_nmps;
@@ -2972,6 +2982,7 @@ public:
 	BRAIN_DBG(
 		dbg_inst_info  	br_dbg;
 		brain*			br_pt_brn;
+		bj_ofstream 	br_dbg_htm_os;
 	)
 	
 	solver* 		br_pt_slvr;
@@ -3119,6 +3130,8 @@ public:
 
 	quanton			br_top_block;
 
+	long			br_tot_cy_sigs;
+	long			br_tot_cy_nmps;
 	long			br_tot_qu_dots;
 	long			br_tot_qu_marks;
 	long			br_tot_ne_spots;
@@ -3319,7 +3332,6 @@ public:
 	// aux memaps
 
 	void	deactivate_last_map();
-	void	write_all_active();
 	void	close_all_maps();
 
 	void	print_active_maps(bj_ostream& os);
@@ -3670,17 +3682,16 @@ public:
 	void	dbg_lv_off(long lv_idx);
 	
 	void 	dbg_prt_lvs_have_learned(bj_ostream& os);
-	void 	dbg_prt_lvs_active(bj_ostream& os);
 	void 	dbg_prt_lvs_cho(bj_ostream& os);
 	void	dbg_prt_full_stab();
 	
+	void	dbg_print_cy_nmp_node_plays(bj_ostream& os);
 	void	dbg_print_cy_graph_node_plays(bj_ostream& os);
 	void	dbg_print_cy_graph_node_tiers(bj_ostream& os);
 	
 	void	dbg_init_html();
-	void	dbg_start_html(ch_string cy_kk);
-	void	dbg_finish_html(ch_string cy_kk);
-	void	dbg_append_html(ch_string cy_kk, ch_string htm_str);
+	void	dbg_start_html();
+	void	dbg_finish_html();
 	void	dbg_update_html_cy_graph(ch_string cy_kk, coloring* col, ch_string htm_str);
 	void 	dbg_br_init_all_cy_pos();
 	

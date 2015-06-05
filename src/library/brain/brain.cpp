@@ -418,7 +418,7 @@ neuron::neu_tunnel_signals(brain& brn, quanton& r_qua){
 //============================================================
 // brain methods
 
-brain::brain(solver& ss) {
+brain::brain(solver& ss){
 	init_brain(ss);
 }
 
@@ -458,7 +458,9 @@ void
 brain::init_brain(solver& ss){
 	brain& brn = *this;
 	
-	BRAIN_DBG(br_pt_brn = NULL);
+	BRAIN_DBG(
+		br_pt_brn = NULL_PT;
+	);
 	br_pt_slvr = &ss;
 	
 	DBG_COMMAND(145, get_skeleton().kg_dbg_all_wrt_paths.clear());
@@ -516,7 +518,8 @@ brain::init_brain(solver& ss){
 	
 	DBG_CK(br_top_block.qu_tee.is_alone());
 
-	//br_tot_qu_spot0 = 0;
+	br_tot_cy_sigs = 0;
+	br_tot_cy_nmps = 0;
 	br_tot_qu_dots = 0;
 	br_tot_qu_marks = 0;
 	br_tot_ne_spots = 0;
@@ -778,6 +781,7 @@ brain::choose_quanton(){
 			return qua;
 		}
 		BRAIN_CK(qua == NULL_PT);
+		DBG_PRT(43, os << "DEACT_IN_CHO nmp=" << (void*)pt_mpp);
 		deactivate_last_map();
 	}
 
@@ -868,9 +872,11 @@ brain::init_loading(long num_qua, long num_neu){
 
 	br_top_block.qu_charge_tk.update_ticket(brn);
 
-	br_tot_qu_dots = 0;
-	br_tot_qu_marks = 0;
-	br_tot_ne_spots = 0;
+	BRAIN_CK(br_tot_cy_sigs == 0);
+	BRAIN_CK(br_tot_cy_nmps == 0);
+	BRAIN_CK(br_tot_qu_dots == 0);
+	BRAIN_CK(br_tot_qu_marks == 0);
+	BRAIN_CK(br_tot_ne_spots == 0);
 
 	init_all_tots();
 
@@ -1171,20 +1177,6 @@ brain::fill_with_origs(row_neuron_t& neus){
 	}
 }
 
-void
-brain::write_all_active(){
-	// write all pending
-	row<neuromap*>& to_wrt = br_tmp_maps_to_write;
-	to_wrt.clear();
-	
-	BRAIN_CK(! br_data_levels.is_empty());
-	BRAIN_CK(level() == ROOT_LEVEL);
-	leveldat& lv = get_data_level(ROOT_LEVEL);
-	
-	lv.ld_nmps_to_write.append_all_as<neuromap>(to_wrt);
-	write_all_neuromaps(to_wrt);
-}
-
 void 
 brain::find_result(){
 	DBG_PRT(147, dbg_print_all_qua_rels(os));
@@ -1223,19 +1215,7 @@ brain::find_result(){
 	
 	bj_satisf_val_t resp_solv = get_result();
 	if(resp_solv == bjr_no_satisf){
-		write_all_active();
-		/*
-		// write all pending
-		row<neuromap*>& to_wrt = br_tmp_maps_to_write;
-		to_wrt.clear();
-		
-		BRAIN_CK(! br_data_levels.is_empty());
-		BRAIN_CK(level() == ROOT_LEVEL);
-		leveldat& lv = get_data_level(ROOT_LEVEL);
-		
-		lv.ld_nmps_to_write.append_all_as<neuromap>(to_wrt);
-		write_all_neuromaps(to_wrt);
-		*/
+		// write_all_active
 	}
 
 	br_tmp_assig_quantons.clear();
@@ -1908,16 +1888,15 @@ brain::dbg_init_html(){
 	}
 	BRAIN_CK(file_exists(cnfs_dir));
 	
-	dbg_start_html(CY_NMP_KIND);
-	dbg_start_html(CY_IC_KIND);
+	dbg_start_html();
 #endif
 }
 
 bj_satisf_val_t
 brain::solve_instance(bool load_it){
 
-	DBG_COMMAND(100, os << "CAREFUL RUNNING VERIF ON WRITE !!!!!");
 	BRAIN_DBG(bool init_htm = false);
+	DBG_COMMAND(45, init_htm = true);
 	DBG_COMMAND(150, init_htm = true);
 	DBG_COMMAND(151, init_htm = true);
 	BRAIN_DBG(if(init_htm){ dbg_init_html(); });
@@ -1982,6 +1961,8 @@ brain::solve_instance(bool load_it){
 	o_info.bjo_max_variants = iinfo.ist_num_variants_stat.vs_max_val.get_d();
 	o_info.bjo_avg_variants = iinfo.ist_num_variants_stat.avg.get_d();
 
+	BRAIN_DBG(if(init_htm){ dbg_finish_html(); });
+	
 	return o_info.bjo_result;
 }
 
@@ -2536,3 +2517,6 @@ solver::init_solver(){
 	slv_dbg_brn = NULL_PT;
 	dbg_init_dbg_conf(slv_dbg_conf_info);
 }
+
+
+

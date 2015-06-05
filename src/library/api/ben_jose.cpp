@@ -77,6 +77,7 @@ bj_solver_t bj_solver_create(const char* bjs_dir_path){
 	BRAIN_CK_0((bj_out << "doing BRN_CK_0s" << bj_eol) && true);
 	BRAIN_CK_1((bj_out << "doing BRN_CK_1s" << bj_eol) && true);
 	BRAIN_CK_2((bj_out << "doing BRN_CK_2s" << bj_eol) && true);
+	DBG_PRT_SLV(nw_slv, bj_dbg, 3, true, os << "CAREFUL RUNNING VERIF ON WRITE !!!!!");
 	return bjs;
 }
 
@@ -93,11 +94,6 @@ void 		bj_solver_release(bj_solver_t bjs){
 			<< bj_eol) && 
 			true
 		);
-		/*BRAIN_CK(
-			! the_slvr->slv_skl.kg_dbg_all_wrt_paths.empty() &&
-			print_str_long_map(bj_out, the_slvr->slv_skl.kg_dbg_all_wrt_paths) &&
-			true
-		);*/
 	}
 	
 	solver::release_solver(the_slvr);
@@ -106,6 +102,7 @@ void 		bj_solver_release(bj_solver_t bjs){
 	BRAIN_CK_0((bj_out << "doing BRN_CK_0s" << bj_eol) && true);
 	BRAIN_CK_1((bj_out << "doing BRN_CK_1s" << bj_eol) && true);
 	BRAIN_CK_2((bj_out << "doing BRN_CK_2s" << bj_eol) && true);
+	DBG_PRT_SLV(the_slvr, bj_dbg, 3, true, os << "CAREFUL RUNNING VERIF ON WRITE !!!!!");
 }
 
 const char* bj_get_path(bj_solver_t bjs){

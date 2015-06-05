@@ -47,17 +47,35 @@ bool
 dbg_check_lev(solver* slv, long lev){
 	bool lv_ok = false;
 #ifdef FULL_DEBUG
-	if(lev < 0){ return true; }
 	if(slv == NULL){ return false; }
-	//brain* pt_b = brn->get_dbg_brn();
-	//if(pt_b == NULL){ return false; }
+	if(lev < 0){ return true; }
 	
-	//row<bool>& lvs_arr = pt_b->get_solver().slv_dbg_conf_info.dbg_levs_arr;
 	row<bool>& lvs_arr = slv->slv_dbg_conf_info.dbg_levs_arr;
 	if(! lvs_arr.is_valid_idx(lev)){ return false; }
 	lv_ok = lvs_arr[lev];
 #endif
 	return lv_ok;
+}
+
+bj_ostream&
+dbg_get_out_stm(solver* slv){
+	if(slv == NULL_PT){
+		return bj_dbg;
+	}
+	if(slv->slv_dbg_brn == NULL_PT){
+		return bj_dbg;
+	}
+	bj_ostream* htm_os = NULL_PT;
+	BRAIN_DBG(htm_os = &(slv->slv_dbg_brn->br_dbg_htm_os));
+	if(htm_os == NULL_PT){
+		return bj_dbg;
+	}
+	bj_ofstream& of = slv->slv_dbg_brn->br_dbg_htm_os;
+	if(! of.good() || ! of.is_open()){
+		return bj_dbg;
+	}
+	BRAIN_CK(htm_os != NULL_PT);
+	return *(htm_os);
 }
 
 void 
@@ -82,49 +100,33 @@ dbg_prt_all_cho(brain& brn){
 #endif
 }
 
-bool	dbg_print_cond_func(solver* slv, bool prm, bool is_ck, const ch_string fnam, int lnum,
-		const ch_string prm_str, long dbg_lv)
+void	dbg_print_left_margin(solver* slv, bj_ostream& os, long dbg_lv)
 {
-	bool resp = true;
 #ifdef FULL_DEBUG
 	if(slv == NULL){
-		return false;
+		return;
 	}
-	//bool& bad_cy = brn->get_solver().slv_dbg_conf_info.dbg_bad_cycle1;
 	bool& bad_cy = slv->slv_dbg_conf_info.dbg_bad_cycle1;
 	
 	DBG_CK(! bad_cy);
 	bad_cy = true;
 
-	if(prm){
-		bj_ostream& os = bj_dbg;
-		if(dbg_lv != INVALID_DBG_LV){
-			if(dbg_lv == DBG_ALL_LVS){
-				os << "ckALL.";
-			} else {
-				os << "ck" << dbg_lv << ".";
-			}
+	if(dbg_lv != INVALID_DBG_LV){
+		if(dbg_lv == DBG_ALL_LVS){
+			os << "ckALL.";
+		} else {
+			os << "ck" << dbg_lv << ".";
 		}
-		
-		ch_string f_nam = "UNKNOWN_FILE_NAME";
-		if(slv->slv_dbg_brn != NULL){
-			f_nam = slv->slv_dbg_brn->dbg_prt_margin(os, is_ck);
-		}
-
-		if(is_ck){
-			os << "ASSERT '" << prm_str << "' FAILED (";
-			os << f_nam;
-			os << ")";
-			os << " in " << fnam << " at " << lnum;
-			os << bj_eol;
-		}
-		os.flush();
-		resp = (! is_ck);
 	}
+	
+	if(slv->slv_dbg_brn != NULL){
+		slv->slv_dbg_brn->dbg_prt_margin(os, false);
+	}
+
+	os.flush();
 
 	bad_cy = false;
 #endif
-	return resp;
 }
 
 void
