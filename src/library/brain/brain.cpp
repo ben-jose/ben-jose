@@ -886,7 +886,11 @@ brain::init_loading(long num_qua, long num_neu){
 }
 
 neuron*
-brain::learn_mots(row_quanton_t& the_mots, quanton& forced_qua){
+brain::learn_mots(deduction& dct){
+	
+	row_quanton_t& the_mots = dct.dt_motives;
+	quanton& forced_qua = *dct.dt_forced;
+	
 	DBG_PRT(23, os << "**LEARNING** mots=" << the_mots << " forced=" 
 		<< &forced_qua);
 
@@ -902,7 +906,7 @@ brain::learn_mots(row_quanton_t& the_mots, quanton& forced_qua){
 		quanton* f_qua = NULL_PT;
 		neuron& added_neu = add_neuron(the_mots, f_qua, false);
 		the_neu = &added_neu;
-
+		
 		data_level().ld_learned.push(the_neu);
 	}
 
@@ -1177,6 +1181,20 @@ brain::fill_with_origs(row_neuron_t& neus){
 	}
 }
 
+void
+brain::write_all_active(){
+	// write all pending
+	row<neuromap*>& to_wrt = br_tmp_maps_to_write;
+	to_wrt.clear();
+	
+	BRAIN_CK(! br_data_levels.is_empty());
+	BRAIN_CK(level() == ROOT_LEVEL);
+	leveldat& lv = get_data_level(ROOT_LEVEL);
+	
+	lv.ld_nmps_to_write.append_all_as<neuromap>(to_wrt);
+	write_all_neuromaps(to_wrt);
+}
+
 void 
 brain::find_result(){
 	DBG_PRT(147, dbg_print_all_qua_rels(os));
@@ -1215,7 +1233,7 @@ brain::find_result(){
 	
 	bj_satisf_val_t resp_solv = get_result();
 	if(resp_solv == bjr_no_satisf){
-		// write_all_active
+		// write_all_active();
 	}
 
 	br_tmp_assig_quantons.clear();
@@ -1364,7 +1382,7 @@ leveldat::release_learned(brain& brn){
 		BRAIN_CK(ld_learned[aa] != NULL_PT);
 		neuron& neu = *(ld_learned[aa]);
 		BRAIN_CK(! neu.ne_original);
-
+		
 		brn.release_neuron(neu);
 	}
 }
@@ -2015,7 +2033,7 @@ brain::reverse(deduction& dct){
 
 	// learn motives
 	
-	neuron* lnd_neu = learn_mots(dct.dt_motives, *dct.dt_forced);
+	neuron* lnd_neu = learn_mots(dct);
 	
 	// send forced learned
 
@@ -2035,6 +2053,7 @@ brain::reverse(deduction& dct){
 	check_timeout();
 
 	BRAIN_CK((level() == ROOT_LEVEL) || lv_has_learned());
+	BRAIN_CK((level() == ROOT_LEVEL) || ! data_level().is_ld_mono());
 
 	reset_conflict();
 	BRAIN_CK(! found_conflict());

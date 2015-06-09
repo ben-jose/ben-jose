@@ -1149,7 +1149,7 @@ brain::dbg_old_reverse(){
 
 	BRAIN_CK(dct.dt_forced != NULL_PT);
 
-	neuron* lnd_neu = learn_mots(dct.dt_motives, *dct.dt_forced);
+	neuron* lnd_neu = learn_mots(dct);
 	
 	// send forced learned
 
@@ -1321,6 +1321,8 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 	//bool hm = false;
 	MARK_USED(hm);
 	
+	bool is_end_nmp = is_qu_end_of_nmp();
+	
 	if(pt_brn != NULL_PT){
 		dominated = in_qu_dominated(*(pt_brn));
 	}
@@ -1340,6 +1342,7 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 		}
 		//if(! has_source() && has_charge()){ os << "*"; }
 		if(qlv == 0){ os << "#"; }
+		if(is_end_nmp){ os << "E"; }
 		if(! h_src && h_chg){ os << "L" << qlv; }
 		/*if(! h_src && h_chg && (pt_brn != NULL_PT)){ 
 			brain& brn = *pt_brn;
@@ -1353,6 +1356,10 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 				//recoil_counter_t s_rc = s_nmp.na_setup_tk.tk_recoil;
 				os << ".s";
 				os << "(" << (void*)(&s_nmp) << ")"; 
+			}
+			if(is_qu && lv.has_to_write_neuromaps()){ 
+				os << ".w"; 
+				print_all_in_grip(os, lv.ld_nmps_to_write);
 			}
 			if(is_qu && lv.has_learned()){ 
 				os << ".l"; 

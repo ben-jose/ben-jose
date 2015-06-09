@@ -841,6 +841,105 @@ make_all_qu_dominated(brain& brn, row_quanton_t& all_quas,
 }
 
 //=============================================================================
+// coloring
+
+class coloring {
+	public:
+		
+	brain*			co_brn;
+		
+	row_quanton_t	co_quas;
+	row<long>		co_qua_colors;
+	bool			co_all_qua_consec;
+
+	row_neuron_t	co_neus;
+	row<long>		co_neu_colors;
+	bool			co_all_neu_consec;
+
+	coloring(brain* pt_brn = NULL_PT){
+		init_coloring(pt_brn);
+	}
+
+	~coloring(){
+		init_coloring();
+	}
+
+	void	init_coloring(brain* pt_brn = NULL){
+		co_brn = pt_brn;
+		
+		co_quas.clear();
+		co_qua_colors.clear();
+		co_all_qua_consec = false;
+
+		co_neus.clear();
+		co_neu_colors.clear();
+		co_all_neu_consec = false;
+	}
+
+	brain&	get_brn(){
+		BRAIN_CK(co_brn != NULL_PT);
+		return *co_brn;
+	}
+
+	brain*	get_dbg_brn(){
+		brain* the_brn = NULL;
+		BRAIN_DBG(the_brn = co_brn);
+		return the_brn;
+	}
+
+	solver*	get_dbg_slv();
+	
+	bool	is_co_virgin(){
+		bool c1 = (co_quas.is_empty());
+		bool c2 = (co_qua_colors.is_empty());
+		bool c3 = (co_all_qua_consec == false);
+
+		bool c4 = (co_neus.is_empty());
+		bool c5 = (co_neu_colors.is_empty());
+		bool c6 = (co_all_neu_consec == false);
+
+		bool is_vg = (c1 && c2 && c3 && c4 && c5 && c6);
+	
+		return is_vg;
+	}
+
+	void	dbg_set_brain_coloring();
+	
+	bool	has_diff_col_than_prev(row<long>& the_colors, long col_idx, dbg_call_id dbg_id);
+
+	void	save_colors_from(sort_glb& neus_srg, sort_glb& quas_srg, bool pre_walk);
+	void	load_colors_into(brain& brn, sort_glb& neus_srg, sort_glb& quas_srg, 
+							 dima_dims& dims);
+	void	add_coloring(brain& brn, coloring& clr);
+
+	void	move_co_to(coloring& col2);
+	void	copy_co_to(coloring& col2);
+
+	bool	equal_co_to(coloring& col2);
+	bool	equal_nmp_to(brain& brn, coloring& col2);
+	
+	void	filter_unique_neus(coloring& col2);
+	void	force_unique_neus(coloring& col2);
+	
+	void	set_tmp_colors();
+	void	reset_tmp_colors();
+	bool	equal_to_tmp_colors();
+	
+	bool	calc_join(neuromap& nmp, coloring& jn);
+	void	simple_join(coloring& prev_col);
+	
+	bool 	ck_cols(){
+		BRAIN_CK(co_quas.size() == co_qua_colors.size());
+		BRAIN_CK(co_neus.size() == co_neu_colors.size());
+		return true;
+	}
+
+	bj_ostream&	dbg_print_col_cy_graph(bj_ostream& os, bool is_ic);
+	
+	bj_ostream&	print_coloring(bj_ostream& os, bool from_pt = false);
+};
+
+//=============================================================================
 // neuron
 
 #define DECLARE_NE_FLAG_FUNCS(flag_attr, flag_nam) \
@@ -1034,7 +1133,7 @@ class neuron {
 	bool			ne_spot;
 
 	long			ne_tmp_col;
-	
+
 	DBG(
 		bool			ne_dbg_used_no_orig;
 		canon_clause	ne_dbg_ccl;
@@ -1483,9 +1582,9 @@ append_all_trace_neus(row<prop_signal>& trace, row_neuron_t& all_neus)
 class deduction {
 	public:
 
-	row_quanton_t		dt_motives;
-	quanton*			dt_forced;
-	long				dt_target_level;
+	row_quanton_t	dt_motives;
+	quanton*		dt_forced;
+	long			dt_target_level;
 
 	deduction(){
 		init_deduction();
@@ -1560,97 +1659,6 @@ class deduction {
 		os.flush();
 		return os;
 	}
-};
-
-//=============================================================================
-// coloring
-
-class coloring {
-	public:
-		
-	brain*			co_brn;
-		
-	row_quanton_t	co_quas;
-	row<long>		co_qua_colors;
-	bool			co_all_qua_consec;
-
-	row_neuron_t	co_neus;
-	row<long>		co_neu_colors;
-	bool			co_all_neu_consec;
-
-	coloring(brain* pt_brn = NULL_PT){
-		init_coloring(pt_brn);
-	}
-
-	~coloring(){
-		init_coloring();
-	}
-
-	void	init_coloring(brain* pt_brn = NULL){
-		co_brn = pt_brn;
-		
-		co_quas.clear();
-		co_qua_colors.clear();
-		co_all_qua_consec = false;
-
-		co_neus.clear();
-		co_neu_colors.clear();
-		co_all_neu_consec = false;
-	}
-
-	brain*	get_dbg_brn(){
-		brain* the_brn = NULL;
-		BRAIN_DBG(the_brn = co_brn);
-		return the_brn;
-	}
-
-	solver*	get_dbg_slv();
-	
-	bool	is_co_virgin(){
-		bool c1 = (co_quas.is_empty());
-		bool c2 = (co_qua_colors.is_empty());
-		bool c3 = (co_all_qua_consec == false);
-
-		bool c4 = (co_neus.is_empty());
-		bool c5 = (co_neu_colors.is_empty());
-		bool c6 = (co_all_neu_consec == false);
-
-		bool is_vg = (c1 && c2 && c3 && c4 && c5 && c6);
-	
-		return is_vg;
-	}
-
-	void	dbg_set_brain_coloring();
-	
-	bool	has_diff_col_than_prev(row<long>& the_colors, long col_idx, dbg_call_id dbg_id);
-
-	void	save_colors_from(sort_glb& neus_srg, sort_glb& quas_srg, bool pre_walk);
-	void	load_colors_into(brain& brn, sort_glb& neus_srg, sort_glb& quas_srg, 
-							 dima_dims& dims);
-	void	add_coloring(brain& brn, coloring& clr);
-
-	void	move_co_to(coloring& col2);
-	void	copy_co_to(coloring& col2);
-
-	bool	equal_co_to(coloring& col2);
-	bool	equal_nmp_to(brain& brn, coloring& col2);
-	
-	void	filter_unique_neus(coloring& col2);
-	void	force_unique_neus(coloring& col2);
-	
-	void	set_tmp_colors();
-	void	reset_tmp_colors();
-	bool	equal_to_tmp_colors();
-	
-	bool 	ck_cols(){
-		BRAIN_CK(co_quas.size() == co_qua_colors.size());
-		BRAIN_CK(co_neus.size() == co_neu_colors.size());
-		return true;
-	}
-
-	bj_ostream&	dbg_print_col_cy_graph(bj_ostream& os, bool is_ic);
-	
-	bj_ostream&	print_coloring(bj_ostream& os, bool from_pt = false);
 };
 
 //=============================================================================
@@ -2026,6 +2034,7 @@ class neuromap {
 	void	map_get_initial_guide_coloring(coloring& clr);
 	void 	map_get_initial_compl_coloring(coloring& prv_clr, coloring& all_quas_clr);
 	void 	map_get_initial_tauto_coloring(coloring& prv_clr, coloring& tauto_clr);
+	void 	map_get_simple_coloring(coloring& clr);
 	
 	void	map_dbg_set_cy_maps();
 	void	map_dbg_reset_cy_maps();
@@ -2050,7 +2059,7 @@ class neuromap {
 	//bool	is_last_forced(quanton& qua);
 	bool	has_qua_tier(quanton& qua);
 	
-	void	reset_all_nmp_tag1();
+	void	map_reset_all_notes_and_tags();
 
 	DECLARE_NA_FLAG_ALL_FUNCS(trail_propag, 2)
 	DECLARE_NA_FLAG_ALL_FUNCS(forced, 2)
@@ -2827,6 +2836,7 @@ class leveldat {
 	
 	long			ld_bak_mono_idx;
 
+	grip			ld_nmps_to_write;
 	grip			ld_nmp_setup;
 
 	leveldat(brain* pt_brn = NULL) {
@@ -2845,7 +2855,9 @@ class leveldat {
 		
 		ld_bak_mono_idx = INVALID_IDX;
 
+		BRAIN_CK(ld_nmps_to_write.is_alone());
 		BRAIN_CK(ld_nmp_setup.is_alone());
+		BRAIN_REL_CK(ld_nmps_to_write.is_alone());
 		BRAIN_REL_CK(ld_nmp_setup.is_alone());
 	}
 	
@@ -2871,6 +2883,7 @@ class leveldat {
 	static
 	void release_leveldat(leveldat* lv){
 		BRAIN_CK(lv != NULL_PT);
+		BRAIN_CK(lv->ld_nmps_to_write.is_alone());
 		BRAIN_CK(lv->ld_nmp_setup.is_alone());
 		lv->~leveldat();
 		tpl_free<leveldat>(lv);
@@ -2880,10 +2893,21 @@ class leveldat {
 		return ! ld_learned.is_empty();
 	}
 
+	bool	is_ld_mono(){
+		BRAIN_CK(ld_chosen != NULL_PT);
+		bool is_mn = (ld_chosen->opposite().is_mono());
+		return is_mn;
+	}
+	
 	long 	num_learned(){
 		return ld_learned.size();
 	}
 	
+	bool 	has_to_write_neuromaps(){
+		bool h_w = ! ld_nmps_to_write.is_alone();
+		return h_w;
+	}
+
 	bool 	has_setup_neuromap(){
 		bool h_s = ! ld_nmp_setup.is_alone();
 		BRAIN_CK(! h_s || ld_nmp_setup.is_single());
@@ -3332,6 +3356,7 @@ public:
 	// aux memaps
 
 	void	deactivate_last_map();
+	void    write_all_active();
 	void	close_all_maps();
 
 	void	print_active_maps(bj_ostream& os);
@@ -3469,7 +3494,7 @@ public:
 	void	update_monos();
 
 	neuron&	add_neuron(row_quanton_t& quans, quanton*& forced_qua, bool orig);
-	neuron*	learn_mots(row_quanton_t& the_mots, quanton& forced_qua);
+	neuron*	learn_mots(deduction& dct);
 
 	quanton*	get_quanton(long q_id);
 	

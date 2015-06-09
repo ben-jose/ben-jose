@@ -313,12 +313,12 @@ brain::dbg_br_print_col_cy_nodes(bj_ostream& os, bool is_ic){
 		long qti = qua.qu_tier;
 		bool is_cho = qua.is_choice();
 		bool is_lrn = qua.is_learned_choice();
-		bool is_mon = qua.opposite().is_mono();
+		//bool is_mon = qua.opposite().is_mono();
 		
 		if(has_cy_nmp){
 			is_cho =  false; 
 			is_lrn =  false; 
-			is_mon = false;
+			//is_mon = false;
 			
 			BRAIN_CK(qua.qu_dbg_cy_nmp != NULL_PT);
 			neuromap* nmp = qua.qu_dbg_cy_nmp;
@@ -331,7 +331,7 @@ brain::dbg_br_print_col_cy_nodes(bj_ostream& os, bool is_ic){
 
 			if(qki == cq_cho){ is_cho =  true; }
 			if(qki == cq_for){ is_lrn =  true; }
-			if(qki == cq_mono){ is_mon =  true; }
+			//if(qki == cq_mono){ is_mon =  true; }
 			
 		}
 		if(has_cy_sig){
@@ -457,19 +457,7 @@ neuron::dbg_ne_print_col_cy_edge(bj_ostream& os, long& consec){
 void
 neuromap::map_dbg_get_cy_coloring(coloring& clr){
 #ifdef FULL_DEBUG
-	brain& brn = get_brn();
-	clr.init_coloring(&brn);
-
-	row_quanton_t& all_quas = clr.co_quas;
-	all_quas.clear();
-	map_get_all_quas(all_quas);
-	
-	row_neuron_t& all_neus = clr.co_neus;
-	all_neus.clear();
-	map_get_all_neus(all_neus);
-	
-	clr.co_qua_colors.fill(1, all_quas.size());
-	clr.co_neu_colors.fill(1, all_neus.size());
+	map_get_simple_coloring(clr);
 #endif
 }
 
