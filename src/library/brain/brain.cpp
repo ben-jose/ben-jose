@@ -705,7 +705,6 @@ brain::brn_tunnel_signals(bool only_in_dom){
 	MARK_USED(brn);
 	BRAIN_CK(br_ne_tot_tag0 == 0);
 	BRAIN_CK(br_qu_tot_note0 == 0);
-	BRAIN_CK(br_shadow_quas.is_empty());
 	BRAIN_CK(! found_conflict());
 	BRAIN_CK(ck_trail());
 	BRAIN_DBG(
@@ -739,7 +738,6 @@ brain::brn_tunnel_signals(bool only_in_dom){
 	BRAIN_CK_0(! has_psignals());
 	reset_psignals();
 	
-	reset_all_note0(brn, br_shadow_quas);
 	BRAIN_CK(br_qu_tot_note0 == 0);
 	
 	// reset tag0
@@ -1442,7 +1440,19 @@ brain::dec_level(){
 }
 
 void
-brain::retract_to(long tg_lv){
+brain::write_all_lv_retracted(){
+	row<neuromap*>& to_wrt = br_tmp_maps_to_write;
+	leveldat& lv_dat = data_level();
+	
+	BRAIN_CK(to_wrt.is_empty());
+	
+	to_wrt.clear();
+	lv_dat.ld_nmp_setup.append_all_as<neuromap>(to_wrt);
+	write_all_neuromaps(to_wrt);
+}
+
+void
+brain::retract_to(long tg_lv, bool rev_retr){
 
 	brain& brn = *this;
 	while(level() >= 0){
@@ -1451,6 +1461,9 @@ brain::retract_to(long tg_lv){
 			BRAIN_CK((trail_level() + 1) == level());
 			BRAIN_CK(level() != ROOT_LEVEL);
 		
+			if(rev_retr){
+				//write_all_lv_retracted();
+			}
 			dec_level();
 		}
 
@@ -1565,50 +1578,10 @@ brain::receive_psignal(bool only_in_dom){
 			((level() == ROOT_LEVEL) && (qua.qu_tier == 0)));
 	}
 	
-	if(found_conflict()){
-		update_cfls_shadow(sgnl);
-	}
-	
 	DBG_PRT(21, os << "init sgnl" << sgnl);
 	sgnl.init_prop_signal();
 
 	return pt_qua;
-}
-
-void
-brain::update_cfls_shadow(prop_signal& sgnl){
-	brain& brn = *this;
-	
-	BRAIN_CK(sgnl.ps_quanton != NULL_PT);
-	quanton& qua = *(sgnl.ps_quanton);
-	if(qua.has_note0()){
-		return;
-	}
-	
-	if(qua.has_charge() && qua.is_neg()){
-		qua.set_note0(brn);
-		br_shadow_quas.push(&qua);
-		prop_signal& nxt_ps = br_shadow_ps.inc_sz();
-		nxt_ps = sgnl;
-		return;
-	} 
-	
-	neuron* neu = sgnl.ps_source;
-	if(neu == NULL_PT){
-		return;
-	}
-	row_quanton_t& all_fib = neu->ne_fibres;
-	for(long aa = 0; aa < all_fib.size(); aa++){
-		BRAIN_CK(all_fib[aa] != NULL_PT);
-		quanton& fib = *(all_fib[aa]);
-		if(fib.has_note0()){
-			qua.set_note0(brn);
-			br_shadow_quas.push(&qua);
-			prop_signal& nxt_ps = br_shadow_ps.inc_sz();
-			nxt_ps = sgnl;
-			break;
-		}
-	}
 }
 
 long
@@ -1744,10 +1717,6 @@ brain::pulsate(){
 		}
 		BRAIN_DBG(if(cho->opposite().qu_has_been_cho){ cho->qu_dbg_num_laps_cho++; });
 		DBG_PRT(25, os << "**CHOICE** " << cho);
-			
-		/*} else {
-			reverse(br_mono_dct);
-		}*/
 	}
 }
 
@@ -2020,7 +1989,8 @@ brain::deduce_and_reverse(){
 void
 brain::reverse(deduction& dct){
 	// retract
-	retract_to(dct.dt_target_level);
+	//retract_to(dct.dt_target_level);
+	retract_to(dct.dt_target_level, true);
 	
 	// some checks
 

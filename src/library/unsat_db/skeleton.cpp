@@ -1995,14 +1995,18 @@ canon_cnf::save_cnf(skeleton_glb& skg, ch_string sv_pth){
 		}
 		DBG(
 			if(existed && has_phases){
-				DBG_COND_COMM(! ((pth1 == "") || skg.ref_exists(pth1)),
-					os << "ABORTING_DATA " << bj_eol;
-					os << " cnf=" << this << bj_eol;
+				brain* pt_brn = skg.get_dbg_brn();
+				SKELETON_CK(pt_brn != NULL_PT);
+				brain& brn = *pt_brn;
+				SKELETON_CK_PRT(((pth1 == "") || skg.ref_exists(pth1)),
+					os << "______________\n ABORTING_DATA " << bj_eol;
+					brn.dbg_prt_margin(os);
+					os << " cnf=\n" << this << bj_eol;
 					os << " cf_phdat=" << cf_phdat << bj_eol;
 					os << " sv_name=" << sv_name << bj_eol;
+					os << " pth1=" << pth1 << bj_eol;
 					os << "END_OF_aborting_data" << bj_eol;
 				);
-				SKELETON_CK((pth1 == "") || skg.ref_exists(pth1));
 				SKELETON_CK((pth2 == "") || skg.ref_exists(pth2));
 
 				SKELETON_CK((pth1 == "") || skg.find_skl_path(skg.as_full_path(pth1)));
@@ -2061,9 +2065,14 @@ canon_cnf::save_cnf(skeleton_glb& skg, ch_string sv_pth){
 
 	DBG_PRT(95, 
 		dbg_inst_info& dbg_inf = skg.get_dbg_brn()->br_dbg;
-		os << "AFTER save_cnf'" << sv_pth 
-		<< "' ok=" << sv_ok << " existed=" << existed
-		<< " dbg_id=" << dbg_inf.dbg_canon_save_id << bj_eol << bj_eol);
+		os << "AFTER save_cnf \n";
+		os << " pth1=" << pth1 << "\n";
+		os << " sv_pth=" << sv_pth << "\n";
+		os << " sv_name=" << sv_name << "\n";
+		os << " ok=" << sv_ok << " existed=" << existed
+		<< " dbg_id=" << dbg_inf.dbg_canon_save_id << "\n";
+		//os << skg.kg_dbg_all_wrt_paths;
+	);
 
 	return sv_ok;
 }

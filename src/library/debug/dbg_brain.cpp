@@ -502,24 +502,18 @@ neuromap::print_subnmp(bj_ostream& os, bool only_pts){
 	na_forced.print_row_data(os, true, "\n");
 	os << "\n\t na_propag=\n";
 	na_propag.print_row_data(os, true, "\n");
-	//os << "\n\t na_shadow=\n";
-	//na_shadow.print_row_data(os, true, "\n");
 
 	os << "\n all_filled=\n";
 	os << "\n\t na_all_filled_by_forced=\n";
 	na_all_filled_by_forced.print_row_data(os, true, "\n");
 	os << "\n\t na_all_filled_by_propag=\n";
 	na_all_filled_by_propag.print_row_data(os, true, "\n");
-	//os << "\n\t na_all_filled_by_shadow=\n";
-	//na_all_filled_by_shadow.print_row_data(os, true, "\n");
 
 	os << "\n all_cov=\n";
 	os << "\n\t na_cov_by_forced_quas=\n";
 	na_cov_by_forced_quas.print_row_data(os, true, "\n");
 	os << "\n\t na_cov_by_propag_quas=\n";
 	na_cov_by_propag_quas.print_row_data(os, true, "\n");
-	//os << "\n\t na_cov_by_shadow_quas=\n";
-	//na_cov_by_shadow_quas.print_row_data(os, true, "\n");
 	
 	os << "}\n";
 	os.flush();
@@ -544,7 +538,7 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 		os << "(" << (void*)this << ")";
 		os << " #lv=" << na_dbg_num_submap;
 		os << " lv=" << na_orig_lv;
-		os << " all_ps=" << all_ps;
+		//os << " all_ps=" << all_ps;
 		os << " #qu=" << all_ps.size();
 
 		/*
@@ -569,6 +563,10 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 		os.flush();
 		return os;
 	}
+	
+	os << "######################################################\n";
+	os << "NMP_NMP_NMP_NMP_NMP_NMP_NMP_NMP_NMP_NMP_NMP_NMP_NMP_NMP\n";
+	os << "######################################################\n";
 	
 	print_all_subnmp(os);
 	
@@ -1179,8 +1177,9 @@ bj_ostream&
 prop_signal::print_prop_signal(bj_ostream& os, bool from_pt){
 	MARK_USED(from_pt);
 	if(from_pt){
-		os << " ps{";
+		os << " ps={";
 		os << ps_quanton;
+		os << "_";
 		os << ps_tier;
 		os << "}";
 		os.flush();
@@ -1383,6 +1382,7 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 		os << ".t" << qti;
 		
 		//if(n0){ os << ".n0"; }
+		if(n1){ os << ".n1"; }
 		if(n2){ os << ".n2"; }
 		if(n3){ os << ".n3"; }
 		if(n4){ os << ".n4"; }

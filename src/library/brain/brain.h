@@ -683,7 +683,7 @@ class quanton {
 		);
 	}
 
-	void	reset_and_add_tee(sort_glb& quas_srg, sort_id_t quas_consec);
+	void	reset_and_add_tee();
 	
 	quanton&	opposite(){
 		BRAIN_CK(qu_inverse != NULL_PT);
@@ -1787,16 +1787,12 @@ class neuromap {
 	
 	row_neuron_t		na_all_filled_by_forced;
 	row_neuron_t		na_all_filled_by_propag;
-	row_neuron_t		na_all_filled_by_shadow;
 
 	row<prop_signal>	na_forced; // deduction with all confl visit these.
 	row<prop_signal>	na_propag; // psigs from na_all_propag NOT in all_forced
-	row<prop_signal>	na_shadow;  // psigs from br_shadow_ps NOT in all_forced NOR
-									// in all_propag
 
 	row_neuron_t		na_cov_by_forced_quas; 
 	row_neuron_t		na_cov_by_propag_quas; 
-	row_neuron_t		na_cov_by_shadow_quas; 
 	
 	row<prop_signal>	na_all_confl;  // only for last submap
 	
@@ -1851,18 +1847,15 @@ class neuromap {
 		
 		na_all_filled_by_forced.clear();
 		na_all_filled_by_propag.clear();
-		na_all_filled_by_shadow.clear();
 		
 		na_trail_propag.clear(true, true);
 		na_cov_by_trail_propag_quas.clear();
 		
 		na_forced.clear(true, true);
 		na_propag.clear(true, true);
-		na_shadow.clear(true, true);
 		
 		na_cov_by_forced_quas.clear();
 		na_cov_by_propag_quas.clear();
-		na_cov_by_shadow_quas.clear();
 		
 		na_all_confl.clear(true, true);
 		
@@ -1996,7 +1989,6 @@ class neuromap {
 	bool	set_all_filled_by_trail_propag();
 	bool	set_all_filled_by_forced();
 	bool	set_all_filled_by_propag();
-	bool	set_all_filled_by_shadow();
 	
 	void	set_propag();
 	
@@ -2054,7 +2046,6 @@ class neuromap {
 	void	map_fill_cov_by_trail_propag(neurolayers& not_sel_neus);
 	void	map_fill_cov_by_forced(neurolayers& not_sel_neus);
 	void	map_fill_cov_by_propag(neurolayers& not_sel_neus);
-	void	map_fill_cov_by_shadow(neurolayers& not_sel_neus);
 	
 	//bool	is_last_forced(quanton& qua);
 	bool	has_qua_tier(quanton& qua);
@@ -2064,7 +2055,6 @@ class neuromap {
 	DECLARE_NA_FLAG_ALL_FUNCS(trail_propag, 2)
 	DECLARE_NA_FLAG_ALL_FUNCS(forced, 2)
 	DECLARE_NA_FLAG_ALL_FUNCS(propag, 3)
-	DECLARE_NA_FLAG_ALL_FUNCS(shadow, 4)
 
 	
 	bj_ostream&	print_neuromap(bj_ostream& os, bool from_pt = false);
@@ -2693,7 +2683,6 @@ class analyser {
 	neurolayers 	de_trail_propag_not_sel_neus;
 	neurolayers 	de_forced_not_sel_neus;
 	neurolayers 	de_propag_not_sel_neus;
-	neurolayers 	de_shadow_not_sel_neus;
 	
 	neuromap*		de_tmp_neuromap;
 	
@@ -3106,8 +3095,6 @@ public:
 	row<prop_signal>	br_psignals;	// forward propagated signals
 	row<prop_signal>	br_delayed_psignals;
 	row<prop_signal>	br_all_conflicts_found;
-	row_quanton_t	br_shadow_quas;
-	row<prop_signal>	br_shadow_ps;
 
 	analyser		br_deducer_anlsr;
 	analyser		br_neuromaper_anlsr;
@@ -3335,8 +3322,6 @@ public:
 
 	quanton*	receive_psignal(bool only_in_dom);
 	
-	void		update_cfls_shadow(prop_signal& sgnl);
-
 	bj_ostream& 	print_psignals(bj_ostream& os, bool just_qua = false){
 		os << "[";
 		for(long aa = br_first_psignal + 1; aa <= br_last_psignal; aa++){
@@ -3354,6 +3339,16 @@ public:
 	}
 
 	// aux memaps
+
+	void	deactivate_last_map_to_wrt(){
+		deactivate_last_map();
+	}
+
+	void	deactivate_last_setup_map(){
+		deactivate_last_map();
+	}
+	
+	void	get_all_retracted_to_write(deduction& dct, row<neuromap*>& to_wrt);
 
 	void	deactivate_last_map();
 	void    write_all_active();
@@ -3465,8 +3460,6 @@ public:
 
 	void	reset_conflict(){
 		br_all_conflicts_found.clear(true, true);
-		br_shadow_quas.clear();
-		br_shadow_ps.clear(true, true);
 	}
 	
 	prop_signal&	first_conflict(){
@@ -3547,6 +3540,7 @@ public:
 		dat_lv.ld_chosen = &qua;
 	}
 
+	void	write_all_lv_retracted();
 	void	dec_level();
 
 	long	trail_level(){
@@ -3568,7 +3562,7 @@ public:
 	}
 
 	void	retract_choice();
-	void	retract_to(long tg_lv = ROOT_LEVEL);
+	void	retract_to(long tg_lv = ROOT_LEVEL, bool rev_retr = false);
 	bool	dbg_in_edge_of_level();
 	bool	dbg_in_edge_of_target_lv(deduction& dct);
 	void	dbg_old_reverse();
