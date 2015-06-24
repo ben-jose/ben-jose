@@ -513,6 +513,8 @@ analyser::update_neuromap(neuromap* sub_nmp){
 
 	neuromap& nxt_nmp = brn.locate_neuromap();
 	
+	BRAIN_DBG(nxt_nmp.na_dbg_update_tk.update_ticket(brn));
+	
 	nxt_nmp.na_submap = sub_nmp;
 	BRAIN_DBG(
 		if(sub_nmp != NULL_PT){ 
@@ -571,6 +573,14 @@ analyser::update_neuromap(neuromap* sub_nmp){
 	// set covs
 	nxt_nmp.map_fill_cov_by_forced(de_forced_not_sel_neus);
 	nxt_nmp.map_fill_cov_by_propag(de_propag_not_sel_neus);
+	
+	DBG_PRT_COND(102, (nxt_nmp.na_index == 207) && 
+		(nxt_nmp.na_dbg_update_tk.tk_recoil == 43), 
+		nxt_nmp.dbg_prt_simple_coloring(os);
+		os << "all_sub=";
+		nxt_nmp.print_all_subnmp(os, true);
+		os << "\n";
+	);
 	
 	return &nxt_nmp;
 }

@@ -230,6 +230,11 @@ void	split_tees(sort_glb& srg, row<sortee*>& sorted_tees, row<sortee*>& sub_tees
 
 void	write_all_neuromaps(row<neuromap*>& to_wrt);
 
+void	get_all_positons(row_quanton_t& all_quas, row_quanton_t& all_pos, 
+						bool skip_all_n4);
+bool	equal_positons(brain& brn, row_quanton_t& quas1, row_quanton_t& quas2, 
+						bool skip_all_n4);
+
 //=============================================================================
 // ticket
 
@@ -683,7 +688,7 @@ class quanton {
 		);
 	}
 
-	void	reset_and_add_tee();
+	void	reset_qu_tee();
 	
 	quanton&	opposite(){
 		BRAIN_CK(qu_inverse != NULL_PT);
@@ -905,25 +910,24 @@ class coloring {
 
 	void	dbg_set_brain_coloring();
 	
-	bool	has_diff_col_than_prev(row<long>& the_colors, long col_idx, dbg_call_id dbg_id);
-
 	void	save_colors_from(sort_glb& neus_srg, sort_glb& quas_srg, bool pre_walk);
-	void	load_colors_into(brain& brn, sort_glb& neus_srg, sort_glb& quas_srg, 
-							 dima_dims& dims);
+	void	load_colors_into(sort_glb& neus_srg, sort_glb& quas_srg, 
+				dbg_call_id dbg_id, neuromap* nmp = NULL_PT);
 	void	add_coloring(brain& brn, coloring& clr);
 
 	void	move_co_to(coloring& col2);
 	void	copy_co_to(coloring& col2);
 
-	bool	equal_co_to(coloring& col2);
-	bool	equal_nmp_to(brain& brn, coloring& col2);
+	bool	equal_dipoles_to(coloring& col2, bool skip_all_n4);
+	bool	equal_nmp_to(coloring& col2, bool skip_all_n4);
+	bool	equal_co_to(coloring& col2, row_quanton_t* skip);
 	
 	void	filter_unique_neus(coloring& col2);
 	void	force_unique_neus(coloring& col2);
 	
-	void	set_tmp_colors();
-	void	reset_tmp_colors();
-	bool	equal_to_tmp_colors();
+	void	set_tmp_colors(bool skip_all_n4);
+	void	reset_tmp_colors(bool skip_all_n4);
+	bool	equal_to_tmp_colors(bool skip_all_n4);
 	
 	bool	calc_join(neuromap& nmp, coloring& jn);
 	void	simple_join(coloring& prev_col);
@@ -1797,9 +1801,10 @@ class neuromap {
 	row<prop_signal>	na_all_confl;  // only for last submap
 	
 	coloring		na_guide_col;
+	coloring		na_pend_col;
 	
 	row_neuron_t	na_all_neus_in_vnt_found;
-
+	
 	DBG(
 		long				na_dbg_orig_lv;
 		recoil_counter_t 	na_dbg_g_col_recoil;
@@ -1808,6 +1813,8 @@ class neuromap {
 		mem_op_t 			na_dbg_nmp_mem_op;
 		ch_string			na_dbg_tauto_min_sha_str;
 		ch_string			na_dbg_tauto_sha_str;
+		
+		ticket				na_dbg_update_tk;
 	);
 	
 	neuromap(brain* pt_brn = NULL) {
@@ -1860,6 +1867,7 @@ class neuromap {
 		na_all_confl.clear(true, true);
 		
 		na_guide_col.init_coloring();
+		na_pend_col.init_coloring();
 		
 		na_all_neus_in_vnt_found.clear();
 		
@@ -1871,6 +1879,8 @@ class neuromap {
 			na_dbg_nmp_mem_op = mo_invalid;
 			na_dbg_tauto_min_sha_str = "INVALID_MINSHA";
 			na_dbg_tauto_sha_str = "INVALID_SHA";
+			
+			na_dbg_update_tk.init_ticket();
 		);
 	}
 	
@@ -2027,6 +2037,9 @@ class neuromap {
 	void 	map_get_initial_compl_coloring(coloring& prv_clr, coloring& all_quas_clr);
 	void 	map_get_initial_tauto_coloring(coloring& prv_clr, coloring& tauto_clr);
 	void 	map_get_simple_coloring(coloring& clr);
+
+	bool 	dbg_has_simple_coloring_quas(coloring& clr);
+	void 	dbg_prt_simple_coloring(bj_ostream& os);
 	
 	void	map_dbg_set_cy_maps();
 	void	map_dbg_reset_cy_maps();
@@ -2037,11 +2050,14 @@ class neuromap {
 	static
 	void	map_append_neus_in_nmp_from(brain& brn, row_neuron_t& all_neus, 
 							row_neuron_t& sel_neus, neurolayers& not_sel_neus, 
-							long min_ti, long max_ti, dbg_call_id dbg_call);
+							long min_ti, long max_ti, dbg_call_id dbg_call, 
+							neuromap* dbg_nmp = NULL_PT);
 	
 	static 
 	void	map_fill_cov(brain& brn, long min_ti, long max_ti, row_neuron_t& all_filled,
-								 neurolayers& not_sel_neus, row_neuron_t& all_cov);
+								 neurolayers& not_sel_neus, row_neuron_t& all_cov, 
+								 neuromap* dbg_nmp
+						);
 	
 	void	map_fill_cov_by_trail_propag(neurolayers& not_sel_neus);
 	void	map_fill_cov_by_forced(neurolayers& not_sel_neus);
@@ -3038,6 +3054,8 @@ public:
 	row_quanton_t 	br_tmp_ck_all_qu_notes;
 	row_quanton_t 	br_tmp_uncharged_in_alert_neus;
 	row_quanton_t 	br_tmp_mono_all_neg;
+	row_quanton_t 	br_tmp_eq_nmp_all_pos1;
+	row_quanton_t 	br_tmp_eq_nmp_all_pos2;
 	
 	row_neuron_t 	br_tmp_ck_neus;
 	row_neuron_t 	br_tmp_ne_activate;

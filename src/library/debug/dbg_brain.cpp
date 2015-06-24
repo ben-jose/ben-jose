@@ -462,10 +462,14 @@ bj_ostream&
 neuromap::print_subnmp(bj_ostream& os, bool only_pts){
 #ifdef FULL_DEBUG
 	if(only_pts){
-		os << "nmp(" << (void*)this <<")";
-		if(na_orig_cho != NULL_PT){
-			os << "." << na_orig_cho->qu_id << ", ";
-		}
+		os << "{";
+		os << "idx=" << na_index;
+		//os << ".tk" << na_dbg_update_tk;
+		//os << "(" << (void*)this <<")";
+		/*if(na_orig_cho != NULL_PT){
+			os << ".cho=" << na_orig_cho->qu_id;
+		}*/
+		os << "}";
 		os.flush();
 		return os;
 	}
@@ -473,6 +477,7 @@ neuromap::print_subnmp(bj_ostream& os, bool only_pts){
 	os << "NMP(" << (void*)this <<")={ " << bj_eol;
 
 	os << " idx=" << na_index;
+	os << " TK=" << na_dbg_update_tk;
 	os << " brn=" << (void*)na_brn;
 	
 	/*
@@ -535,6 +540,7 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 		os << "na{";
 		if(na_is_head){ os << ".h"; }
 		os << "." << na_index;
+		os << ".tk." << na_dbg_update_tk;
 		os << "(" << (void*)this << ")";
 		os << " #lv=" << na_dbg_num_submap;
 		os << " lv=" << na_orig_lv;
@@ -1226,8 +1232,11 @@ bj_ostream&
 coloring::print_coloring(bj_ostream& os, bool from_pt){
 	MARK_USED(from_pt);
 	os << "CO(" << (void*)this <<")={ " << bj_eol;
+	os << " brn=" << (void*)co_brn;
+	os << " qu_sz=" << co_quas.size();
 	os << " quas=" << co_quas << bj_eol;
 	os << " cols_quas=" << co_qua_colors << bj_eol;
+	os << " ne_sz=" << co_neus.size();
 	os << " neus=" << bj_eol;
 	co_neus.print_row_data(os, true, "\n");
 	os << " cols_neus=" << co_neu_colors << bj_eol;

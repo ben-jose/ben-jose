@@ -2052,8 +2052,8 @@ brain::dbg_prt_full_stab(){
 
 	all_mutual_init();
 	
-	dima_dims dims0;
-	full_col.load_colors_into(brn, neus_srg, quas_srg, dims0);
+	//dima_dims dims0;
+	full_col.load_colors_into(neus_srg, quas_srg, dbg_call_5);
 
 	neus_srg.sg_cnf_clauses.clear();
 	
