@@ -913,7 +913,7 @@ class coloring {
 	void	save_colors_from(sort_glb& neus_srg, sort_glb& quas_srg, bool pre_walk);
 	void	load_colors_into(sort_glb& neus_srg, sort_glb& quas_srg, 
 				dbg_call_id dbg_id, neuromap* nmp = NULL_PT);
-	void	add_coloring(brain& brn, coloring& clr);
+	void	add_coloring(coloring& clr);
 
 	void	move_co_to(coloring& col2);
 	void	copy_co_to(coloring& col2);
