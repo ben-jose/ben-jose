@@ -529,23 +529,45 @@ neuromap::print_subnmp(bj_ostream& os, bool only_pts){
 bj_ostream&
 neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 #ifdef FULL_DEBUG
+	if(na_brn == NULL_PT){
+		bool is_vgn = is_na_virgin();
+		if(is_vgn){
+			os << "VIRGIN !!! ";
+		}
+		os << "NO BRN for nmp=" << (void*)this << " !!!!!!!!";
+		os.flush();
+		return os;
+	}
 	brain& brn = get_brn();
 	MARK_USED(brn);
 	MARK_USED(from_pt);
 	if(from_pt){
+		bool h_st = false;
+		if(brn.br_data_levels.is_valid_idx(na_orig_lv)){
+			leveldat& lv_dat = map_get_data_level();
+			h_st = lv_dat.has_setup_neuromap();
+		}
+	
 		row<prop_signal>& all_ps = brn.br_tmp_prt_ps;
 		all_ps.clear(true, true);
 		map_get_all_ps(all_ps);
 		
 		os << "na{";
-		if(na_is_head){ os << ".h"; }
-		os << "." << na_index;
-		os << ".tk." << na_dbg_update_tk;
+		if(na_is_head){ os << "H"; }
+		os << "i" << na_index;
+		os << ".u" << na_dbg_update_tk;
 		os << "(" << (void*)this << ")";
-		os << " #lv=" << na_dbg_num_submap;
-		os << " lv=" << na_orig_lv;
+		os << " o_cho=" << na_orig_cho;
+		os << " #sub=" << na_dbg_num_submap;
+		os << " o_lv=" << na_orig_lv;
+		os << " n_lv=" << na_dbg_nxt_lv;
+		os << " a_lv=" << na_dbg_ac_lv;
+		os << " s_lv=" << na_dbg_st_lv;
 		//os << " all_ps=" << all_ps;
 		os << " #qu=" << all_ps.size();
+		if(h_st){
+			os << " o_lv_has_ST";
+		}
 
 		/*
 		row_neuron_t& all_ne = brn.br_tmp_prt_neus;
@@ -864,15 +886,14 @@ brain::dbg_prt_lvs_cho(bj_ostream& os){
 }
 
 bool
-dbg_run_satex_on(brain& brn, ch_string f_nam){
+dbg_run_satex_on(brain& brn, ch_string f_nam, neuromap* dbg_nmp){
 #ifdef FULL_DEBUG
 	bool is_no = dbg_run_satex_is_no_sat(f_nam);
 	MARK_USED(is_no);
 	DBG_COND_COMM(! is_no ,
 		os << "ABORTING_DATA " << bj_eol;
 		ch_string o_ff = brn.dbg_prt_margin(os);
-		//os << "mmap_before_tk=" << ma_before_retract_tk << bj_eol;
-		//os << "mmap_after_tks=" << ma_after_retract_tks << bj_eol;
+		os << " nmp=" << dbg_nmp << bj_eol;
 		os << " brn_tk=" << brn.br_current_ticket << bj_eol;
 		os << "	LV=" << brn.level() << bj_eol;
 		os << " f_nam=" << f_nam << bj_eol;
@@ -1525,5 +1546,17 @@ neuromap::map_ck_contained_in(coloring& colr, dbg_call_id dbg_id){
 	BRAIN_CK(brn.br_tot_ne_spots == 0);
 #endif
 	return true;
+}
+
+void
+brain::dbg_prt_all_nmps(bj_ostream& os){
+#ifdef FULL_DEBUG
+	os << "ALL_NMPS=\n";
+	for(long aa = 0; aa < br_neuromaps.size(); aa++){
+		neuromap& nmp = br_neuromaps[aa];
+		os << &nmp << "\n";
+	}
+	os << "\n";
+#endif
 }
 

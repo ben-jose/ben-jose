@@ -1302,17 +1302,23 @@ solver::update_dbg2(dbg_inst_info& ist_info){
 #endif
 
 void
-brain::close_all_maps(){
+brain::deactivate_all_maps(){
 	while(! br_maps_active.is_empty()){
 		deactivate_last_map();
 	}
 	BRAIN_CK(br_maps_active.is_empty());
+}
+
+void
+brain::close_all_maps(){
+	deactivate_all_maps();
 	release_all_neuromaps();
 	BRAIN_CK_PRT((br_num_active_neuromaps == 0), 
 			os << "_______\n#act_nmps=" << br_num_active_neuromaps
 				<< " #fr_nmps=" << br_free_neuromaps.size() 
 				<< " #nmps=" << br_neuromaps.size() 
 				<< bj_eol;
+				dbg_prt_all_nmps(os);
 	);
 }
 

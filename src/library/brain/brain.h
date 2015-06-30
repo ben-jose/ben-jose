@@ -204,7 +204,7 @@ void	dbg_reset_cy_sigs(brain& brn, row<prop_signal>& trace);
 void	dbg_run_diff(ch_string fnm1, ch_string fnm2, ch_string dff_fnm);
 void	dbg_prepare_used_dbg_ccl(row_quanton_t& rr_qua, canon_clause& dbg_ccl);
 void	dbg_print_ccls_neus(bj_ostream& os, row<canon_clause*>& dbg_ccls);
-bool	dbg_run_satex_on(brain& brn, ch_string f_nam);
+bool	dbg_run_satex_on(brain& brn, ch_string f_nam, neuromap* dbg_nmp);
 
 long	set_spots_of(brain& brn, row_neuron_t& neus);
 long	reset_spots_of(brain& brn, row_neuron_t& neus);
@@ -234,6 +234,8 @@ void	get_all_positons(row_quanton_t& all_quas, row_quanton_t& all_pos,
 						bool skip_all_n4);
 bool	equal_positons(brain& brn, row_quanton_t& quas1, row_quanton_t& quas2, 
 						bool skip_all_n4);
+
+neuromap* 	cut_neuromap(neuromap* nmp, neuromap* nxt_nmp);
 
 //=============================================================================
 // ticket
@@ -1612,6 +1614,12 @@ class deduction {
 
 	solver*	get_dbg_slv();
 	
+	long	get_deduc_lv(){
+		BRAIN_CK(dt_forced != NULL_PT);
+		long d_lv = dt_forced->qlevel();
+		return d_lv;
+	}
+	
 	bool	is_dt_virgin(){
 		bool c1 = (dt_motives.is_empty());
 		bool c2 = (dt_forced == NULL_PT);
@@ -1771,6 +1779,7 @@ class neuromap {
 	t_1byte			na_flags;
 	bool			na_is_head;
 	long			na_active_idx;
+	long			na_old_active_idx;
 	
 	long			na_orig_lv;
 	long			na_orig_ti;
@@ -1784,7 +1793,6 @@ class neuromap {
 	long			na_release_idx;
 	long			na_min_ti;
 	long			na_max_ti;
-	BRAIN_DBG(long		na_dbg_num_submap);
 	
 	row<prop_signal>	na_trail_propag; // all trail propag in this nmp section
 	row_neuron_t		na_cov_by_trail_propag_quas;
@@ -1805,7 +1813,12 @@ class neuromap {
 	
 	row_neuron_t	na_all_neus_in_vnt_found;
 	
-	DBG(
+	BRAIN_DBG(
+		long				na_dbg_num_submap;
+		long				na_dbg_nxt_lv;
+		long				na_dbg_ac_lv;
+		long				na_dbg_st_lv;
+		
 		long				na_dbg_orig_lv;
 		recoil_counter_t 	na_dbg_g_col_recoil;
 		ch_string			na_dbg_g_col_stk;
@@ -1831,6 +1844,7 @@ class neuromap {
 		na_flags = 0;
 		na_is_head = false;
 		na_active_idx = INVALID_IDX;
+		na_old_active_idx = INVALID_IDX;
 		
 		na_orig_lv = INVALID_LEVEL;
 		na_orig_ti = INVALID_TIER;
@@ -1847,7 +1861,6 @@ class neuromap {
 		//na_mates.let_go();
 		
 		na_release_idx = INVALID_IDX;
-		BRAIN_DBG(na_dbg_num_submap = 1);
 		
 		na_min_ti = INVALID_TIER;
 		na_max_ti = INVALID_TIER;
@@ -1872,6 +1885,11 @@ class neuromap {
 		na_all_neus_in_vnt_found.clear();
 		
 		DBG(
+			na_dbg_num_submap = 1;
+			na_dbg_nxt_lv = INVALID_LEVEL;
+			na_dbg_ac_lv = INVALID_LEVEL;
+			na_dbg_st_lv = INVALID_LEVEL;
+			
 			na_dbg_orig_lv = INVALID_IDX;
 			na_dbg_g_col_recoil = INVALID_RECOIL;
 			na_dbg_g_col_stk = "INVALID_STACK";
@@ -1932,6 +1950,16 @@ class neuromap {
 	
 	bool ck_act_idx();
 	
+	bool ck_rel_idx();
+	
+	bool is_to_release(){
+		bool tr = (na_release_idx != INVALID_IDX);
+		BRAIN_CK(! tr || na_is_head);
+		BRAIN_CK(! tr || (na_active_idx == INVALID_IDX));
+		BRAIN_CK(ck_rel_idx());
+		return tr;
+	}
+	
 	bool is_active(){
 		bool ac = (na_active_idx != INVALID_IDX);
 		BRAIN_CK(ck_act_idx());
@@ -1962,6 +1990,7 @@ class neuromap {
 	bool 	map_ck_all_upper_quas(row_quanton_t& all_upper_quas);
 	void 	map_get_all_upper_quas(row_quanton_t& all_upper_quas);
 
+	void	map_make_all_dominated();
 	void	map_make_dominated();
 	
 	quanton*	map_choose_quanton();
@@ -1981,7 +2010,9 @@ class neuromap {
 	bool	map_ck_all_ne_dominated(dbg_call_id dbg_id);
 	
 	void	map_add_to_release();
+	void	map_remove_from_release();
 
+	bool	map_is_setup_nmp(long nxt_lv, long st_lv);
 	bool	map_can_activate();
 	void	map_cond_activate(dbg_call_id dbg_id);
 	void	map_activate(dbg_call_id dbg_id);
@@ -1989,7 +2020,7 @@ class neuromap {
 							  row<neuromap*>& to_wrt, dbg_call_id dbg_id);
 	void	map_deactivate();
 	
-	void	deactivate_until_me();
+	void	deactivate_until_me(bool including_me);
 	
 	void	set_min_ti_max_ti();
 
@@ -2015,6 +2046,14 @@ class neuromap {
 		BRAIN_CK(na_max_ti != INVALID_TIER);
 		return na_max_ti;
 	}
+	
+	bool	in_root(){
+		return (na_orig_lv == ROOT_LEVEL);
+	}
+	
+	leveldat& 	map_get_data_level();
+	
+	bool 	map_lv_already_has_setup();
 	
 	bool	map_ck_contained_in(coloring& colr, dbg_call_id dbg_id);
 	void	map_dbg_print(bj_ostream& os, mem_op_t mm);
@@ -2807,12 +2846,13 @@ class analyser {
 
 	neuromap*	update_neuromap(neuromap* prev_nmp);
 	void 		init_calc_nmp(long min_lv);
-	neuromap*	calc_neuromap(long min_lv, neuromap* prev_nmp, bool with_lrnd);
+	neuromap*	calc_neuromap(long min_lv, neuromap* prev_nmp, bool with_lrnd, 
+							  bool in_setup);
 	void 		end_analysis();
 	
-	neuromap*	cut_neuromap(neuromap* nmp, neuromap* nxt_nmp);
-	neuromap*	calc_setup_neuromap(neuromap* nmp, long nxt_lv);
-	neuromap*	calc_orig_neuromap(neuromap* nmp);
+	//neuromap*	cut_neuromap(neuromap* nmp, neuromap* nxt_nmp);
+	neuromap*	calc_setup_neuromap(neuromap* nmp, long nxt_lv, long st_lv);
+	//neuromap*	calc_orig_neuromap(neuromap* nmp);
 	
 	long		find_min_lv_to_setup(long tg_lv);
 
@@ -2820,7 +2860,7 @@ class analyser {
 						long& nxt_lv, deduction& nxt_dct, row<neuromap*>& to_wrt);
 	neuromap* 	neuromap_find_analysis_2(analyser& deducer, 
 						deduction& nxt_dct, row<neuromap*>& to_wrt);
-	neuromap* 	neuromap_setup_analysis(long tg_lv, neuromap* in_nmp);
+	neuromap* 	neuromap_setup_analysis(long tg_lv, neuromap* in_nmp, deduction& dct);
 	neuromap* 	neuromap_setup_analysis_2(long tg_lv, neuromap* in_nmp);
 	
 	bj_ostream&	print_analyser(bj_ostream& os, bool from_pt = false);
@@ -3366,10 +3406,11 @@ public:
 		deactivate_last_map();
 	}
 	
-	void	get_all_retracted_to_write(deduction& dct, row<neuromap*>& to_wrt);
+	//void	get_all_retracted_to_write(deduction& dct, row<neuromap*>& to_wrt);
 
 	void	deactivate_last_map();
 	void    write_all_active();
+	void	deactivate_all_maps();
 	void	close_all_maps();
 
 	void	print_active_maps(bj_ostream& os);
@@ -3602,7 +3643,10 @@ public:
 	
 	long	append_all_to_write(analyser& dedcer, long fst_lv, long tg_lv, 
 								row<neuromap*>& all_nmps);
-	void	add_lv_neuromap_to_write(long nxt_lv, quanton* dct_qu);
+	
+	void	make_lv_last_active(long nxt_lv);
+	void	cut_old_head_of(neuromap& nmp, long old_num_to_rl);
+	void	add_lv_neuromap_to_write(long nxt_lv, deduction& dct);
 	
 	bool 	lv_has_setup_nmp(long nxt_lv){
 		leveldat& lv_s = get_data_level(nxt_lv);
@@ -3717,6 +3761,8 @@ public:
 	
 	void	dbg_lv_on(long lv_idx);
 	void	dbg_lv_off(long lv_idx);
+	
+	void 	dbg_prt_all_nmps(bj_ostream& os);
 	
 	void 	dbg_prt_lvs_have_learned(bj_ostream& os);
 	void 	dbg_prt_lvs_cho(bj_ostream& os);
