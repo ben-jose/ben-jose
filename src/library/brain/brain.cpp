@@ -1590,6 +1590,25 @@ brain::receive_psignal(bool only_in_dom){
 	return pt_qua;
 }
 
+bool
+brain::ck_mono_propag(){
+#ifdef FULL_DEBUG
+	if(level() == ROOT_LEVEL){
+		return true;
+	}
+	
+	if(! data_level().is_ld_mono()){
+		return true;
+	}
+	
+	quanton* l_qua = br_charge_trail.last_quanton();
+	
+	BRAIN_CK(l_qua != NULL_PT);
+	BRAIN_CK(data_level().ld_chosen == l_qua);
+#endif
+	return true;
+}
+
 long
 brain::propagate_signals(){
 	if(found_conflict() || ! has_psignals()){
@@ -1619,6 +1638,8 @@ brain::propagate_signals(){
 
 	update_monos();
 	
+	BRAIN_CK(ck_mono_propag());
+	
 	long tot_psigs = num_psigs1 + num_psigs2;
 	return tot_psigs;
 }
@@ -1628,6 +1649,8 @@ brain::start_propagation(quanton& nxt_qua){
 	BRAIN_CK(data_level().ld_idx == level());
 	
 	quanton& qua = nxt_qua;
+	
+	BRAIN_CK(! qua.is_mono() || qua.opposite().is_mono());
 
 	inc_level(qua);
 

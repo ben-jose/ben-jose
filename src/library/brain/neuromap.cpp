@@ -77,6 +77,27 @@ neuromap::map_make_all_dominated(){
 }
 
 void
+neuromap::map_make_nxt_monos_dominated(){
+	brain& brn = get_brn();
+	
+	BRAIN_CK(! is_na_mono());
+	
+	neuromap* nxt_nmp = na_submap;
+	while(nxt_nmp != NULL_PT){
+		if(! nxt_nmp->is_na_mono()){
+			break;
+		}
+		BRAIN_CK(ck_na_mono());
+		
+		quanton* qua = nxt_nmp->na_orig_cho;
+		BRAIN_CK(qua != NULL_PT);
+		qua->make_qu_dominated(brn);
+		
+		nxt_nmp = nxt_nmp->na_submap;
+	}
+}
+
+void
 neuromap::map_make_dominated(){
 	brain& brn = get_brn();
 	
@@ -277,10 +298,13 @@ neuromap::map_ck_all_qu_dominated(dbg_call_id dbg_id){
 		quanton* qua = all_quas[ii];
 		MARK_USED(qua);
 		BRAIN_CK(qua != NULL_PT);
-		BRAIN_CK_PRT(qua->in_qu_dominated(brn), os << "___________" << dbg_id << "\n";
-				brn.dbg_prt_margin(os); 
-				os << "nmp=" << this;
-				os << "\n qua=" << qua;
+		BRAIN_CK_PRT(qua->in_qu_dominated(brn), os << "___________\n ABORT_DATA\n";
+			os << dbg_id << "\n";
+			brn.dbg_prt_margin(os); 
+			//dbg_prt_simple_coloring(os);
+			os << " nxt_no_mono=" << na_nxt_no_mono << "\n";
+			os << " nmp=" << this << "\n";
+			os << " qua=" << qua;
 		);
 	}
 #endif
@@ -2528,3 +2552,16 @@ get_all_positons(row_quanton_t& all_quas, row_quanton_t& all_pos, bool skip_all_
 	}
 }
 
+bool
+neuromap::ck_na_mono(){
+	if(na_nxt_no_mono == this){
+		return true;
+	}
+	BRAIN_CK(na_forced.is_empty());
+	BRAIN_CK(na_orig_cho != NULL_PT);
+	BRAIN_CK(na_orig_cho->opposite().is_mono());
+	BRAIN_CK(na_trail_propag.size() == 1);
+	BRAIN_CK(na_trail_propag[0].ps_quanton == na_orig_cho);
+	BRAIN_CK(na_trail_propag[0].ps_source == NULL_PT);
+	return true;
+}

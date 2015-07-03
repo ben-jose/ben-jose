@@ -1938,6 +1938,8 @@ class neuromap {
 	DECLARE_NA_FLAG_FUNCS(na_flags, tags4_n_notes4);
 	DECLARE_NA_FLAG_FUNCS(na_flags, tags5_n_notes5);
 
+	bool	ck_na_mono();
+	
 	bool	is_na_mono(){
 		BRAIN_CK(na_nxt_no_mono != NULL_PT);
 		bool is_mn = (na_nxt_no_mono != this);
@@ -1991,6 +1993,8 @@ class neuromap {
 	void 	map_get_all_upper_quas(row_quanton_t& all_upper_quas);
 
 	void	map_make_all_dominated();
+	
+	void	map_make_nxt_monos_dominated();
 	void	map_make_dominated();
 	
 	quanton*	map_choose_quanton();
@@ -3315,6 +3319,7 @@ public:
 	
 	bool		dbg_ck_deducs(deduction& dct1, deduction& dct2);
 
+	bool		ck_mono_propag();
 	long		propagate_signals();
 	void		pulsate();
 	void		start_propagation(quanton& qua);

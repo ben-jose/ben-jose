@@ -674,8 +674,13 @@ analyser::calc_neuromap(long min_lv, neuromap* prev_nmp, bool with_lrnd, bool in
 			BRAIN_DBG(out_nmp->na_dbg_nxt_lv = min_lv);
 			
 			if(in_setup){
+				DBG_PRT(101, os << " out_nmp=" << out_nmp);
 				BRAIN_CK(! found_learned());
-				out_nmp->map_make_dominated();
+				if(! out_nmp->is_na_mono()){
+					DBG_PRT(101, os << " make_dom nmp=" << out_nmp);
+					out_nmp->map_make_nxt_monos_dominated();
+					out_nmp->map_make_dominated();
+				}
 				if(out_nmp->map_lv_already_has_setup()){
 					break;
 				}
@@ -881,13 +886,15 @@ brain::add_lv_neuromap_to_write(long nxt_lv, deduction& dct){
 		);
 		BRAIN_CK(nmp.na_mates.is_alone());
 		
+		nmp.na_next_psig.ps_quanton = dct_qu;
+		nmp.na_next_psig.ps_tier = n_ti;
+		
+		DBG_PRT(43, os << " COND_WRT_PSIG=" << nmp.na_next_psig << " dct=" << dct);
+		
 		lv_w.ld_nmps_to_write.bind_to_my_right(nmp.na_mates);
 		nmp.map_activate(dbg_call_1);
 		BRAIN_CK(nmp.is_active());
 		BRAIN_CK(br_maps_active.last() == &nmp);
-		
-		nmp.na_next_psig.ps_quanton = dct_qu;
-		nmp.na_next_psig.ps_tier = n_ti;
 		
 		BRAIN_DBG(nmp.na_dbg_st_lv = nxt_lv);
 		
@@ -1028,9 +1035,6 @@ brain::release_all_neuromaps(){
 		}
 		neuromap& nmp = *nmp_pt;
 		BRAIN_CK_PRT(nmp.na_is_head, os << "____" << bj_eol << "NMP=" << &nmp);
-		DBG_PRT(101, os << "#alloc_maps=" << br_num_active_neuromaps;
-			os << " RELEASE NMP=" << &nmp;
-		);
 		nmp.full_release();
 	}
 }
@@ -1101,7 +1105,10 @@ quanton::get_nmp_to_write(brain& brn){
 	
 	//if(! to_wrt->na_next_psig.is_ps_of_qua(qua, to_wrt)){ 
 	if(! o_ps.is_ps_of_qua(qua, to_wrt)){
-		DBG_PRT(55, os << "NOT_to_wrt (not_is_ps) to_wrt=(" << (void*)to_wrt << ")");
+		DBG_PRT(55, os << "NOT_to_wrt (not_is_ps)\n to_wrt=" << to_wrt << "\n";
+			os << " o_ps=" << o_ps << "\n";
+			os << " qua=" << &qua << "\n";
+		);
 		return NULL_PT; 
 	}
 	
@@ -1207,9 +1214,7 @@ analyser::calc_setup_neuromap(neuromap* nmp, long nxt_lv, long ded_lv){
 		nxt_nmp = nxt_nmp->na_submap;
 	}
 	
-	DBG_PRT(101, os << "calc_setup nmp=" << nmp << "\n" << " nxt_lv=" << nxt_lv);
 	if((nmp != NULL_PT) && ! nmp->map_is_setup_nmp(nxt_lv, ded_lv)){
-		DBG_PRT(101, os << "calc_setup RELEASE nmp=" << nmp);
 		nmp->map_reset_all_notes_and_tags();
 		nmp->full_release();
 		nmp = NULL_PT;
@@ -1288,22 +1293,33 @@ analyser::neuromap_setup_analysis(long nxt_lv, neuromap* in_nmp, deduction& dct)
 	BRAIN_CK((in_nmp == NULL_PT) || ! in_nmp->na_is_head);
 	
 	if(in_nmp != NULL_PT){
-		in_nmp->map_make_all_dominated();
+		DBG_PRT(150, 
+			ch_string msg = "SETUP mk_dom:";
+			in_nmp->map_dbg_update_html_file(msg);
+		);
+		BRAIN_CK(in_nmp->na_nxt_no_mono != NULL_PT);
+		DBG_PRT(101, os << "SETUP mk_dom\n";
+			os << " in_nmp=" << in_nmp << "\n";
+			os << " nx_mon=" << in_nmp->na_nxt_no_mono << "\n";
+			in_nmp->print_all_subnmp(os, true);
+		);
+		
+		in_nmp->na_nxt_no_mono->map_make_all_dominated();
 	}
-	neuromap* orig_nmp = calc_neuromap(0, in_nmp, false, true);
-	if(orig_nmp != NULL_PT){
-		BRAIN_CK(orig_nmp->map_ck_all_qu_dominated(dbg_call_1));
-		BRAIN_CK(orig_nmp->map_ck_all_ne_dominated(dbg_call_1));
-		//orig_nmp->map_make_all_dominated();
-	}
-
+	neuromap* orig_nmp = calc_neuromap(ROOT_LEVEL, in_nmp, false, true);
+	
 	long d_lv = dct.get_deduc_lv();
 	neuromap* setup_nmp = calc_setup_neuromap(orig_nmp, nxt_lv, d_lv);
 	if(setup_nmp != NULL_PT){
 		DBG_PRT(101, os << "SETUP NMP=" << setup_nmp << "\n";
 			setup_nmp->print_all_subnmp(os, true);
 		);
+		
 		BRAIN_CK(setup_nmp->map_can_activate());
+		BRAIN_CK(setup_nmp->map_is_setup_nmp(nxt_lv, d_lv));
+		BRAIN_CK(setup_nmp->map_ck_all_qu_dominated(dbg_call_1));
+		BRAIN_CK(setup_nmp->map_ck_all_ne_dominated(dbg_call_1));
+		
 		setup_nmp->na_is_head = true;
 	}
 	
@@ -1433,7 +1449,11 @@ analyser::neuromap_find_analysis(analyser& deducer,
 			BRAIN_CK(to_find != NULL_PT);
 		}
 		if((to_find != last_found) && ! to_find->map_find()){
-			DBG_PRT(39, os << "CANNOT find nmp=" << (void*)(out_nmp));
+			DBG_PRT(39, os << "CANNOT find nmp=" << (void*)(out_nmp) << "\n";
+				os << " nxt_dct=" << nxt_dct << "\n";
+				os << " nxt_lv=" << nxt_lv << "\n";
+				to_wrt.print_row_data(os, true, "\n");
+			);
 			DBG_PRT(150, 
 				ch_string msg = "CANNOT find";
 				to_find->map_dbg_update_html_file(msg);
