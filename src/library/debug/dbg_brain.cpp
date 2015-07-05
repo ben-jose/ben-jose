@@ -688,6 +688,13 @@ neuron::print_neu_base(bj_ostream& os, bool detail, bool prt_src, bool sort_fib)
 	if(pt_brn != NULL_PT){
 		in_dom = in_ne_dominated(*pt_brn);
 	}
+	
+	bool tg0 = has_tag0();
+	bool tg1 = has_tag1();
+	bool tg2 = has_tag2();
+	bool tg3 = has_tag3();
+	bool tg4 = has_tag4();
+	bool tg5 = has_tag5();
 
 	if(! detail){
 		os << "ne={";
@@ -699,6 +706,13 @@ neuron::print_neu_base(bj_ostream& os, bool detail, bool prt_src, bool sort_fib)
 		} else {
 			os << "+";
 		}
+		if(tg0){ os << ".g0"; }
+		if(tg1){ os << ".g1"; }
+		if(tg2){ os << ".g2"; }
+		if(tg3){ os << ".g3"; }
+		if(tg4){ os << ".g4"; }
+		if(tg5){ os << ".g5"; }
+		
 		if(in_dom){ os << ".D"; }
 		os << ne_fibres;
 		os << "}";

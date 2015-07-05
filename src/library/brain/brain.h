@@ -2024,6 +2024,19 @@ class neuromap {
 							  row<neuromap*>& to_wrt, dbg_call_id dbg_id);
 	void	map_deactivate();
 	
+	quanton*	map_get_active_qua();
+	
+	long		map_get_active_lv(){
+		BRAIN_CK(is_active());
+		quanton* qua = map_get_active_qua();
+		if(qua == NULL_PT){
+			BRAIN_CK(na_orig_cho == NULL_PT);
+			BRAIN_CK(na_orig_lv == ROOT_LEVEL);
+			return ROOT_LEVEL;
+		}
+		return qua->qlevel();
+	}
+	
 	void	deactivate_until_me(bool including_me);
 	
 	void	set_min_ti_max_ti();

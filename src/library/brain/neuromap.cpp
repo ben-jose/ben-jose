@@ -78,7 +78,7 @@ neuromap::map_make_all_dominated(){
 
 void
 neuromap::map_make_nxt_monos_dominated(){
-	brain& brn = get_brn();
+	//brain& brn = get_brn();
 	
 	BRAIN_CK(! is_na_mono());
 	
@@ -88,10 +88,12 @@ neuromap::map_make_nxt_monos_dominated(){
 			break;
 		}
 		BRAIN_CK(ck_na_mono());
-		
+		/*
 		quanton* qua = nxt_nmp->na_orig_cho;
 		BRAIN_CK(qua != NULL_PT);
 		qua->make_qu_dominated(brn);
+		*/
+		nxt_nmp->map_make_dominated();
 		
 		nxt_nmp = nxt_nmp->na_submap;
 	}
@@ -1149,17 +1151,6 @@ neuromap::map_append_neus_in_nmp_from(brain& brn, row_neuron_t& all_neus,
 		if(! can_append_neu(neu)){
 			continue;
 		}
-		/*
-		bool neu_presel = neu.has_tag2() || neu.has_tag3() || neu.has_tag4();
-		if(neu_presel){ // do not add presel ones to sel_neus
-			continue;
-		}
-		if(! neu.ne_original){
-			continue;
-		}
-		if(neu.has_tag1()){
-			continue;
-		}*/
 
 		BRAIN_CK(neu.ne_original);
 		
@@ -2565,3 +2556,23 @@ neuromap::ck_na_mono(){
 	BRAIN_CK(na_trail_propag[0].ps_source == NULL_PT);
 	return true;
 }
+
+quanton*
+neuromap::map_get_active_qua(){
+	if(! is_active()){
+		return NULL_PT;
+	}
+	if(na_orig_cho == NULL_PT){
+		BRAIN_CK(na_orig_lv == ROOT_LEVEL);
+		return NULL_PT;
+	}
+	
+	quanton* nx_qua = na_orig_cho;
+	if(! na_next_psig.is_ps_virgin()){
+		nx_qua = na_next_psig.ps_quanton;
+	}
+	BRAIN_CK(nx_qua != NULL_PT);
+	BRAIN_CK(nx_qua->has_charge());
+	return nx_qua;
+}
+
