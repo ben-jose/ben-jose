@@ -977,8 +977,6 @@ neuron::dbg_old_set_motives(brain& brn, notekeeper& nke, bool is_first){
 	BRAIN_CK(is_first || (ne_fibres[0]->get_charge() == cg_positive) );
 	BRAIN_CK(is_first || is_ne_inert());
 
-	//ne_recoil_tk.update_ticket(brn);
-
 	BRAIN_DBG(brn.dbg_add_to_used(neu));
 
 	row_quanton_t& causes = ne_fibres;
@@ -1396,7 +1394,6 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 			if(is_qu && lv.has_setup_neuromap()){ 
 				neuromap& s_nmp = lv.get_setup_neuromap();
 				BRAIN_CK(s_nmp.is_active());
-				//recoil_counter_t s_rc = s_nmp.na_setup_tk.tk_recoil;
 				os << ".s";
 				os << "(" << (void*)(&s_nmp) << ")"; 
 			}

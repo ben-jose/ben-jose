@@ -1420,15 +1420,14 @@ neuromap::map_oper(mem_op_t mm){
 	}
 	
 	DBG_COMMAND(150, 
-		ch_string rc_str = brn.recoil().get_str();
 		ch_string op_ok_str = (oper_ok)?("YES"):("no");
 		ch_string op_str = (na_dbg_nmp_mem_op == mo_find)?("Find"):("Write");
 		op_str += op_ok_str;
 		
 		bj_ostr_stream ss_msg;
-		ss_msg << HTMi_h1 << "BRN_recoil=" << rc_str << HTMe_h1;
+		ss_msg << HTMi_h1 << "BRN_recoil=" << brn.recoil() << HTMe_h1;
 		ss_msg << HTMi_h2 << op_str << HTMe_h2;
-		ss_msg << "nmp=" << (void*)this << HTM_br;
+		ss_msg << "nmp=" << this << HTM_br;
 		ss_msg << "#sub=" << na_dbg_num_submap << HTM_br;
 		ss_msg << "all_sub=[";
 		print_all_subnmp(ss_msg, true);
@@ -1442,22 +1441,6 @@ neuromap::map_oper(mem_op_t mm){
 		brn.dbg_update_html_cy_graph(CY_NMP_KIND, 
 					&(brn.br_tmp_ini_tauto_col), msg_htm);
 	);
-	/*
-	DBG_COMMAND(150, 
-		BRAIN_DBG(
-			coloring full_col; 
-			map_dbg_get_cy_coloring(full_col);
-			BRAIN_CK(full_col.equal_nmp_to(brn, brn.br_tmp_ini_tauto_col));
-		);
-		if(na_dbg_tauto_min_sha_str == "6935a8517c"){
-			ch_string msg = "ALL_SUB for " + na_dbg_tauto_min_sha_str;
-			map_dbg_all_sub_update_html_file(msg);
-		}
-		if(na_dbg_tauto_min_sha_str == "1dd87482ed"){
-			ch_string msg = "ALL_SUB for " + na_dbg_tauto_min_sha_str;
-			map_dbg_all_sub_update_html_file(msg);
-		}
-	);*/
 	
 	return oper_ok;
 }
@@ -1469,7 +1452,7 @@ neuromap::map_prepare_mem_oper(mem_op_t mm){
 	MARK_USED(guide_col);
 	
 	//BRAIN_DBG(coloring dbg_smpl_col;);
-	//DBG_COMMAND(101, map_get_simple_coloring(dbg_smpl_col););
+	//DBG_COMMAND(41, map_get_simple_coloring(dbg_smpl_col););
 	
 	DBG_PRT(41, os << "map_mem_oper=" << ((void*)this));
 	DBG_PRT(41, os << "map_mem_oper=" << this);
@@ -1481,10 +1464,6 @@ neuromap::map_prepare_mem_oper(mem_op_t mm){
 	
 	if(! has_stab_guide()){
 		map_set_stab_guide();
-		DBG(
-			na_dbg_g_col_recoil = brn.recoil();
-			na_dbg_g_col_stk = STACK_STR;
-		);
 	} else {
 		DBG_PRT(41, os << "HAD_STAB_GUIDE !!! nmp=(" << (void*)this << ")");
 		
@@ -2097,7 +2076,7 @@ coloring::equal_to_tmp_colors(bool skip_all_n4){
 		BRAIN_CK(col_aa != INVALID_COLOR);
 		
 		if(qua.qu_tmp_col != col_aa){
-			DBG_PRT(102, os << " NOT_EQ_COL qua=" << &qua << " aa=" << aa;
+			DBG_PRT(67, os << " NOT_EQ_COL qua=" << &qua << " aa=" << aa;
 				os << " c1=" << qua.qu_tmp_col;
 				os << " c2=" << qua_colors1[aa] << "\n";
 			);
@@ -2118,7 +2097,7 @@ coloring::equal_to_tmp_colors(bool skip_all_n4){
 		neuron& neu = *(all_neus1[bb]);
 
 		if(neu.ne_tmp_col != neu_colors1[bb]){
-			DBG_PRT(102, os << " NOT_EQ_COL neu=" << &neu << " bb=" << bb);
+			DBG_PRT(67, os << " NOT_EQ_COL neu=" << &neu << " bb=" << bb);
 			eq_all = false;
 			break;
 		}

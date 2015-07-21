@@ -532,17 +532,15 @@ neuromap::map_dbg_update_html_file(ch_string msg){
 #ifdef FULL_DEBUG
 	brain& brn = get_brn();
 	
-	ch_string rc_str = brn.recoil().get_str();
-	
 	bj_ostr_stream ss_msg;
 	ss_msg << HTMi_h2 << msg << HTMe_h2;
-	ss_msg << "nmp=" << (void*)this << HTM_br;
+	ss_msg << "nmp=" << this << HTM_br;
 	ss_msg << "#sub=" << na_dbg_num_submap << HTM_br;
 	ss_msg << "all_sub=[";
 	print_all_subnmp(ss_msg, true);
 	ss_msg << "]";
 	ss_msg << HTM_br;
-	ss_msg << "BRN_recoil=" << rc_str << HTM_br;
+	ss_msg << "BRN_recoil=" << brn.recoil() << HTM_br;
 	ss_msg << "ALL_MONOS=";
 	brn.dbg_print_htm_all_monos(ss_msg);
 	ss_msg << HTM_br;
@@ -668,7 +666,7 @@ brain::dbg_print_cy_nmp_node_plays(bj_ostream& os){
 			quanton* n_cho = sg->ps_quanton;
 			BRAIN_CK((n_cho == &qua) || (n_cho == &opp));
 			
-			DBG_PRT(101, os << "PLAY qua=" << &qua << " sig=" << sg);
+			//DBG_PRT(, os << "PLAY qua=" << &qua << " sig=" << sg);
 			
 			bool was_neg = (n_cho == &opp);
 			if(was_neg){

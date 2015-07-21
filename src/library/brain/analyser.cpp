@@ -37,6 +37,7 @@ analyser class methos and funcs.
 
 #include "brain.h"
 #include "solver.h"
+#include "dbg_strings_html.h"
 
 //============================================================
 // static vars
@@ -674,10 +675,10 @@ analyser::calc_neuromap(long min_lv, neuromap* prev_nmp, bool with_lrnd, bool in
 			BRAIN_DBG(out_nmp->na_dbg_nxt_lv = min_lv);
 			
 			if(in_setup){
-				DBG_PRT(101, os << " out_nmp=" << out_nmp);
+				DBG_PRT(65, os << " out_nmp=" << out_nmp);
 				BRAIN_CK(! found_learned());
 				if(! out_nmp->is_na_mono()){
-					DBG_PRT(101, os << " make_dom nmp=" << out_nmp);
+					DBG_PRT(65, os << " make_dom nmp=" << out_nmp);
 					out_nmp->map_make_nxt_monos_dominated();
 					out_nmp->map_make_dominated();
 				}
@@ -942,7 +943,7 @@ brain::analyse(row<prop_signal>& all_confl, deduction& out_dct){
 	to_wrt.clear();
 	
 	dedser.deduction_analysis(dedser.get_first_causes(), out_dct);
-	DBG_PRT(40, os << "out_dct=" << out_dct);
+	DBG_PRT(40, os << HTMi_h1 << "out_dct=" << HTMe_h1 << out_dct);
 	dedser.make_noted_dominated_and_deduced(to_wrt);
 	//get_all_retracted_to_write(out_dct, to_wrt);
 	f_lrnd = dedser.found_learned();
@@ -1292,11 +1293,11 @@ analyser::neuromap_setup_analysis(long nxt_lv, neuromap* in_nmp, deduction& dct)
 	if(in_nmp != NULL_PT){
 		neuromap* no_mono_nmp = in_nmp->na_nxt_no_mono;
 		BRAIN_CK(no_mono_nmp != NULL_PT);
-		DBG_PRT(150, 
+		DBG_PRT(65, 
 			ch_string msg = "SETUP mk_dom:";
 			no_mono_nmp->map_dbg_update_html_file(msg);
 		);
-		DBG_PRT(101, os << "SETUP mk_dom\n";
+		DBG_PRT(65, os << "SETUP mk_dom\n";
 			os << " in_nmp=" << in_nmp << "\n";
 			os << " nx_mon=" << no_mono_nmp << "\n";
 			no_mono_nmp->print_all_subnmp(os, true);
@@ -1309,7 +1310,7 @@ analyser::neuromap_setup_analysis(long nxt_lv, neuromap* in_nmp, deduction& dct)
 	long d_lv = dct.get_deduc_lv();
 	neuromap* setup_nmp = calc_setup_neuromap(orig_nmp, nxt_lv, d_lv);
 	if(setup_nmp != NULL_PT){
-		DBG_PRT(101, os << "SETUP NMP=" << setup_nmp << "\n";
+		DBG_PRT(65, os << "SETUP NMP=" << setup_nmp << "\n";
 			setup_nmp->print_all_subnmp(os, true);
 		);
 		
@@ -1321,8 +1322,16 @@ analyser::neuromap_setup_analysis(long nxt_lv, neuromap* in_nmp, deduction& dct)
 		setup_nmp->na_is_head = true;
 	}
 	
-	neuromap* nxt_nmp = setup_nmp;
+	DBG_PRT_COND(66, (setup_nmp != NULL_PT),
+		os << HTMi_h1 << "TOP_SETUP" << HTMe_h1 << "nmp=" << setup_nmp << "\n";
+		ch_string msg = "top_setup";
+		os << "\n";
+		brn.print_trail(os);
+		os << "\n";
+		setup_nmp->map_dbg_update_html_file(msg);
+	);
 	
+	neuromap* nxt_nmp = setup_nmp;
 	while(nxt_nmp != NULL_PT){
 		nxt_nmp->map_cond_activate(dbg_call_1);
 		nxt_nmp = nxt_nmp->na_submap;
@@ -1434,7 +1443,7 @@ analyser::neuromap_find_analysis(analyser& deducer,
 				to_wrt.print_row_data(os, true, "\n");
 			);
 			DBG_PRT(150, 
-				ch_string msg = "CANNOT find";
+				ch_string msg = HTMi_h1 "FindNOT" HTMe_h1;
 				to_find->map_dbg_update_html_file(msg);
 			);
 			break;
@@ -1550,3 +1559,4 @@ brain::get_all_retracted_to_write(deduction& dct, row<neuromap*>& to_wrt){
 	}
 }
 */
+

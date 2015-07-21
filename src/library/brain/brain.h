@@ -264,6 +264,13 @@ class ticket {
 		return NULL;
 	}
 		
+	bool	is_tk_virgin(){
+		bool c1 = (tk_recoil == INVALID_RECOIL);
+		bool c2 = (tk_level == INVALID_LEVEL);
+
+		return (c1 && c2);
+	}
+	
 	bool	is_valid(){
 		return ((tk_recoil != INVALID_RECOIL) && (tk_level != INVALID_LEVEL));
 	}
@@ -406,6 +413,8 @@ class alert_rel {
 	long		set_all_##flag_nam(brain& brn, row_quanton_t& rr_all); \
 	long		append_all_not_##flag_nam(brain& brn, row_quanton_t& rr_src, \
 							row_quanton_t& rr_dst); \
+	void		append_all_has_##flag_nam(brain& brn, row_quanton_t& rr_src, \
+							row_quanton_t& rr_dst); \
 	bool		same_quantons_##flag_nam(brain& brn, row_quanton_t& sup_ss, \
 							row_quanton_t& sub_ss); \
 	bool		all_qu_have_##flag_nam(brain& brn, row_quanton_t& rr1); \
@@ -457,6 +466,7 @@ class alert_rel {
 	{ \
 		long num_qua_app = 0; \
 		for(long aa = 0; aa < rr_src.size(); aa++){ \
+			BRAIN_CK(rr_src[aa] != NULL_PT); \
 			quanton& qua = *(rr_src[aa]); \
 			if(! qua.has_##flag_nam()){ \
 				qua.set_##flag_nam(brn); \
@@ -465,6 +475,18 @@ class alert_rel {
 			} \
 		} \
 		return num_qua_app; \
+	} \
+ 	\
+	void		append_all_has_##flag_nam(brain& brn, row_quanton_t& rr_src, \
+							row_quanton_t& rr_dst) \
+	{ \
+		for(long aa = 0; aa < rr_src.size(); aa++){ \
+			BRAIN_CK(rr_src[aa] != NULL_PT); \
+			quanton& qua = *(rr_src[aa]); \
+			if(qua.has_##flag_nam()){ \
+				rr_dst.push(&qua); \
+			} \
+		} \
 	} \
  	\
 	bool		same_quantons_##flag_nam(brain& brn, row_quanton_t& sup_ss, \
@@ -554,15 +576,18 @@ class quanton {
 	long			qu_tier;	// the tier at which it was charged
 
 	neuron*			qu_source;	// source of signal when charged
+	
+	ticket			qu_cicle_tk;
+	row_neuron_t	qu_all_cicle_sources;	// all src neurons for charged qua
 
 	// tunneling attributes
 	row_neuron_t	qu_tunnels;	// tunnelled neurons.
 	
 	// mono attributes
-	row_neuron_t	qu_neus;	// neurons with this qua
+	row_neuron_t	qu_all_neus;	// neurons with this qua
 	grip			qu_mono_alerts;	// quas to update alert_neu
 	grip			qu_mono_refs;	// alert_neu qua refs.
-	long			qu_alert_neu_idx; 	// not yet charged neu. index in qu_neus.
+	long			qu_alert_neu_idx; 	// not yet charged neu. index in qu_all_neus.
 	long			qu_lv_mono;
 	
 	// choice attributes
@@ -657,6 +682,9 @@ class quanton {
 		qu_tier = INVALID_TIER;
 
 		qu_source = NULL;
+		
+		qu_cicle_tk.init_ticket();
+		qu_all_cicle_sources.clear();
 
 		qu_curr_nemap = NULL_PT;
 		
@@ -690,6 +718,16 @@ class quanton {
 		);
 	}
 
+	void	update_cicle_srcs(brain& brn, neuron* neu);
+		
+	void	reset_cicle_src(){
+		qu_cicle_tk.init_ticket();
+		opposite().qu_cicle_tk.init_ticket();
+		
+		qu_all_cicle_sources.clear();
+		opposite().qu_all_cicle_sources.clear();
+	}
+	
 	void	reset_qu_tee();
 	
 	quanton&	opposite(){
@@ -1376,6 +1414,8 @@ class neuron {
 
 	bool	has_qua(quanton& tg_qua);
 
+	quanton*	get_ne_biqu(brain& brn, quanton& cho, quanton& pos_qu);
+	
 	sorset*	get_sorset(){
 		return ne_tee.so_vessel;
 	}
@@ -1820,8 +1860,6 @@ class neuromap {
 		long				na_dbg_st_lv;
 		
 		long				na_dbg_orig_lv;
-		recoil_counter_t 	na_dbg_g_col_recoil;
-		ch_string			na_dbg_g_col_stk;
 		
 		mem_op_t 			na_dbg_nmp_mem_op;
 		ch_string			na_dbg_tauto_min_sha_str;
@@ -1891,8 +1929,6 @@ class neuromap {
 			na_dbg_st_lv = INVALID_LEVEL;
 			
 			na_dbg_orig_lv = INVALID_IDX;
-			na_dbg_g_col_recoil = INVALID_RECOIL;
-			na_dbg_g_col_stk = "INVALID_STACK";
 			
 			na_dbg_nmp_mem_op = mo_invalid;
 			na_dbg_tauto_min_sha_str = "INVALID_MINSHA";
@@ -3113,6 +3149,12 @@ public:
 	row_quanton_t 	br_tmp_mono_all_neg;
 	row_quanton_t 	br_tmp_eq_nmp_all_pos1;
 	row_quanton_t 	br_tmp_eq_nmp_all_pos2;
+	row_quanton_t 	br_tmp_prv_biqus;
+	row_quanton_t 	br_tmp_nxt_biqus;
+	row_quanton_t 	br_tmp_all_cicles;
+	row_quanton_t 	br_tmp_biqus_lv1;
+	row_quanton_t 	br_tmp_biqus_lv2;
+	row_quanton_t 	br_tmp_biqus_lv3;
 	
 	row_neuron_t 	br_tmp_ck_neus;
 	row_neuron_t 	br_tmp_ne_activate;
@@ -3397,6 +3439,11 @@ public:
 	}
 
 	quanton*	receive_psignal(bool only_in_dom);
+	
+	void 		get_bineu_sources(quanton& cho, quanton& qua, row_quanton_t& all_src);
+	void 		get_all_bineu_sources(quanton& cho, row_quanton_t& all_src);
+	void 		get_all_cicle_cho(row_quanton_t& all_cicl);
+	quanton*	get_cicles_common_cho(quanton*& replace_cho);
 	
 	bj_ostream& 	print_psignals(bj_ostream& os, bool just_qua = false){
 		os << "[";
@@ -3836,38 +3883,6 @@ quanton::tunnel_swapop(long idx_pop){
 		}
 		BRAIN_CK(neu2->ck_tunnels());
 	}
-}
-
-inline 
-void			
-quanton::set_source(brain& brn, neuron* neu){
-	BRAIN_CK((qu_source == NULL_PT) || (qu_inverse->qu_source == NULL_PT));
-	BRAIN_CK((qu_inverse->qu_source == NULL_PT) || (neu == NULL_PT));
-	BRAIN_CK((neu == NULL_PT) || neu->ne_original || ! neu->ne_dbg_used_no_orig);
-
-	BRAIN_DBG(
-		if((neu != NULL_PT) && ! neu->ne_original){
-			BRAIN_CK(neu->ne_dbg_used_no_orig == false);
-			neu->ne_dbg_used_no_orig = true;
-		}
-
-		if(! has_charge()){
-			BRAIN_CK(neu == NULL_PT);
-			BRAIN_CK(qu_inverse->qu_source == NULL_PT);
-			if((qu_source != NULL_PT) && ! qu_source->ne_original){
-				qu_source->ne_dbg_used_no_orig = false;
-			}		
-		}
-	)
-	
-	qu_source = neu;
-	if(neu == NULL_PT){ 
-		qu_inverse->qu_source = NULL_PT;
-		return; 
-	}
-
-	BRAIN_CK_0(qu_source != NULL_PT);
-	BRAIN_CK(qu_source->ck_all_charges(&brn, 1));
 }
 
 inline
