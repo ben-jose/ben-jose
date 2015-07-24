@@ -414,7 +414,7 @@ class alert_rel {
 	long		append_all_not_##flag_nam(brain& brn, row_quanton_t& rr_src, \
 							row_quanton_t& rr_dst); \
 	void		append_all_has_##flag_nam(brain& brn, row_quanton_t& rr_src, \
-							row_quanton_t& rr_dst); \
+							row_quanton_t& rr_dst, bool val_has = true); \
 	bool		same_quantons_##flag_nam(brain& brn, row_quanton_t& sup_ss, \
 							row_quanton_t& sub_ss); \
 	bool		all_qu_have_##flag_nam(brain& brn, row_quanton_t& rr1); \
@@ -478,12 +478,12 @@ class alert_rel {
 	} \
  	\
 	void		append_all_has_##flag_nam(brain& brn, row_quanton_t& rr_src, \
-							row_quanton_t& rr_dst) \
+							row_quanton_t& rr_dst, bool val_has) \
 	{ \
 		for(long aa = 0; aa < rr_src.size(); aa++){ \
 			BRAIN_CK(rr_src[aa] != NULL_PT); \
 			quanton& qua = *(rr_src[aa]); \
-			if(qua.has_##flag_nam()){ \
+			if(qua.has_##flag_nam() == val_has){ \
 				rr_dst.push(&qua); \
 			} \
 		} \
@@ -719,15 +719,8 @@ class quanton {
 	}
 
 	void	update_cicle_srcs(brain& brn, neuron* neu);
+	void	reset_cicle_src();
 		
-	void	reset_cicle_src(){
-		qu_cicle_tk.init_ticket();
-		opposite().qu_cicle_tk.init_ticket();
-		
-		qu_all_cicle_sources.clear();
-		opposite().qu_all_cicle_sources.clear();
-	}
-	
 	void	reset_qu_tee();
 	
 	quanton&	opposite(){
@@ -1414,7 +1407,8 @@ class neuron {
 
 	bool	has_qua(quanton& tg_qua);
 
-	quanton*	get_ne_biqu(brain& brn, quanton& cho, quanton& pos_qu);
+	void	append_ne_biqu(brain& brn, quanton& cho, quanton& pos_qu, 
+							row_quanton_t& all_biqus);
 	
 	sorset*	get_sorset(){
 		return ne_tee.so_vessel;
@@ -3155,6 +3149,8 @@ public:
 	row_quanton_t 	br_tmp_biqus_lv1;
 	row_quanton_t 	br_tmp_biqus_lv2;
 	row_quanton_t 	br_tmp_biqus_lv3;
+	row_quanton_t 	br_tmp_cicle_chos;
+	row_quanton_t	br_tmp_all_impl_cho;
 	
 	row_neuron_t 	br_tmp_ck_neus;
 	row_neuron_t 	br_tmp_ne_activate;
@@ -3276,6 +3272,7 @@ public:
 	row_neuron_t	br_tmp_tauto_neus;
 	row_neuron_t	br_tmp_all_neus;
 	row_neuron_t	br_tmp_all_confl;
+	
 
 	row_quanton_t	br_tmp_stab_quas;
 	row_quanton_t	br_tmp_sorted_quas;
@@ -3364,7 +3361,7 @@ public:
 
 	// core methods
 
-	long		brn_tunnel_signals(bool only_in_dom);
+	long		brn_tunnel_signals(bool only_in_dom, row_quanton_t& all_impl_cho);
 	quanton*	choose_quanton();
 	
 	quanton* 	get_curr_mono();
@@ -3443,7 +3440,7 @@ public:
 	void 		get_bineu_sources(quanton& cho, quanton& qua, row_quanton_t& all_src);
 	void 		get_all_bineu_sources(quanton& cho, row_quanton_t& all_src);
 	void 		get_all_cicle_cho(row_quanton_t& all_cicl);
-	quanton*	get_cicles_common_cho(quanton*& replace_cho);
+	quanton*	get_cicles_common_cho(quanton*& replace_cho, row_quanton_t& all_impl_cho);
 	
 	bj_ostream& 	print_psignals(bj_ostream& os, bool just_qua = false){
 		os << "[";
@@ -3671,10 +3668,14 @@ public:
 		return br_charge_trail.last_qlevel();
 	}
 
-	quanton*	curr_choice(){
+	quanton&	curr_choice(){
+		BRAIN_CK(! br_data_levels.is_empty());
 		leveldat* lv = br_data_levels.last();
 		BRAIN_CK(lv != NULL);
-		return lv->ld_chosen;
+		quanton* cho = lv->ld_chosen;
+		BRAIN_CK(cho != NULL);
+		BRAIN_CK(! cho->has_charge() || (cho->qlevel() == level()));
+		return *cho;
 	}
 
 	bool 	lv_has_learned(){
@@ -3685,8 +3686,9 @@ public:
 		return data_level().num_learned();
 	}
 
-	void	retract_choice();
-	void	retract_to(long tg_lv = ROOT_LEVEL, bool rev_retr = false);
+	void	replace_choice(quanton& cho, quanton& nw_cho);
+	//void	retract_choice();
+	void	retract_to(long tg_lv, bool full_reco);
 	bool	dbg_in_edge_of_level();
 	bool	dbg_in_edge_of_target_lv(deduction& dct);
 	void	dbg_old_reverse();
