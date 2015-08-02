@@ -1240,7 +1240,7 @@ brain::find_result(){
 	
 	bj_satisf_val_t resp_solv = get_result();
 	if(resp_solv == bjr_no_satisf){
-		// write_all_active();
+		write_all_active();
 	}
 
 	br_tmp_assig_quantons.clear();
@@ -2200,7 +2200,7 @@ brain::dbg_prt_full_stab(){
 	bj_out << "END_of_cnf=" << bj_eol;
 	
 	coloring finl_col;
-	finl_col.save_colors_from(neus_srg, quas_srg, false);
+	finl_col.save_colors_from(neus_srg, quas_srg, tid_tee_consec);
 	
 	BRAIN_CK(finl_col.co_quas.size() == full_col.co_quas.size());
 	BRAIN_CK(finl_col.co_neus.size() == full_col.co_neus.size());

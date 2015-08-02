@@ -125,6 +125,13 @@ public:
 //=================================================================
 // sortee
 
+enum tee_id_t {
+	tid_none,
+	tid_wlk_consec,
+	tid_tee_consec,
+	tid_qua_id
+};
+
 class sortee : public binder {
 public:
 	static
@@ -148,8 +155,8 @@ public:
 	//long		so_saved_tee_consec;
 	long		so_wlk_consec;
 	long		so_tee_consec;
+	
 	canon_clause	so_ccl;
-
 	long		so_qua_id;
 
 	sortee(){
@@ -273,7 +280,7 @@ srt_row_as(row<sortee*>& rr1, row<obj_t1*>& rr2){
 template<class obj_t1>
 bool
 srt_row_as_colors(row<sortee*>& rr1, row<obj_t1*>& rr2, row<long>& cols, 
-				  bool from_wlk_consecs = false)
+				tee_id_t consec_kk = tid_tee_consec)
 {
 	long last_item_id = INVALID_NATURAL;
 	bool all_consec = true;
@@ -284,8 +291,11 @@ srt_row_as_colors(row<sortee*>& rr1, row<obj_t1*>& rr2, row<long>& cols,
 	for(long ii = 0; ii < rr1.size(); ii++){
 		sortee& srt = *(rr1[ii]);
 		long the_consec = srt.so_tee_consec;
-		if(from_wlk_consecs){
+		if(consec_kk == tid_wlk_consec){
 			the_consec = srt.so_wlk_consec;
+		}
+		if(consec_kk == tid_qua_id){
+			the_consec = srt.so_qua_id;
 		}
 
 		all_consec = all_consec && (last_item_id != the_consec);

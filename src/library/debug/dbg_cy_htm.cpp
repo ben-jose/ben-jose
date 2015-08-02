@@ -528,24 +528,60 @@ neuromap::map_dbg_reset_cy_maps(){
 }
 
 void
-neuromap::map_dbg_update_html_file(ch_string msg){
+coloring::dbg_print_qua_ids(bj_ostream& os){
+#ifdef FULL_DEBUG
+	os << "[";
+	long fst_aa = co_quas.size() / 2;
+	for(long aa = fst_aa; aa < co_quas.size(); aa++){
+		BRAIN_CK(co_quas.is_valid_idx(aa));
+		BRAIN_CK(co_qua_colors.is_valid_idx(aa));
+		
+		quanton* qua = co_quas[aa];
+		BRAIN_CK(qua != NULL_PT);
+		long col = co_qua_colors[aa];
+		
+		os << " " << qua->qu_id << "=" << col;
+	}
+	os << "]\n";
+#endif
+}
+
+ch_string
+neuromap::map_dbg_html_data_str(ch_string msg){
+	ch_string htm_msg = "INVALID_HTML";
 #ifdef FULL_DEBUG
 	brain& brn = get_brn();
 	
 	bj_ostr_stream ss_msg;
-	ss_msg << HTMi_h2 << msg << HTMe_h2;
-	ss_msg << "nmp=" << this << HTM_br;
-	ss_msg << "#sub=" << na_dbg_num_submap << HTM_br;
+	ss_msg << HTMi_h1 << "BRN_recoil=" << brn.recoil() << HTMe_h1 << "\n";
+	ss_msg << HTMi_h2 << msg << HTMe_h2 << "\n";
+	ss_msg << "nmp=" << this << HTM_br << "\n";
+	ss_msg << "#sub=" << na_dbg_num_submap << HTM_br << "\n";
 	ss_msg << "all_sub=[";
 	print_all_subnmp(ss_msg, true);
 	ss_msg << "]";
-	ss_msg << HTM_br;
-	ss_msg << "BRN_recoil=" << brn.recoil() << HTM_br;
+	ss_msg << HTM_br << "\n";
 	ss_msg << "ALL_MONOS=";
 	brn.dbg_print_htm_all_monos(ss_msg);
-	ss_msg << HTM_br;
+	ss_msg << HTM_br << "\n";
+	ss_msg << "min_sha=" << na_dbg_tauto_min_sha_str << HTM_br << "\n";
+	ss_msg << "sha=" << na_dbg_tauto_sha_str << HTM_br << "\n";
+	ss_msg << "path=" << HTM_br << na_dbg_tauto_pth << HTM_br << "\n";
+	ss_msg << "COL=" << HTM_br;
+	na_dbg_tauto_col.dbg_print_qua_ids(ss_msg);
+	ss_msg << HTM_br << "\n";
 	
-	ch_string htm_msg = ss_msg.str();
+	htm_msg = ss_msg.str();
+#endif
+	return htm_msg;
+}
+
+void
+neuromap::map_dbg_update_html_file(ch_string msg){
+#ifdef FULL_DEBUG
+	brain& brn = get_brn();
+	
+	ch_string htm_msg = map_dbg_html_data_str(msg);;
 	
 	coloring full_col;
 	map_dbg_get_cy_coloring(full_col);

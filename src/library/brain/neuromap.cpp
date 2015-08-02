@@ -405,7 +405,8 @@ neuromap::map_can_activate(){
 	leveldat& lv_dat = map_get_data_level();
 	bool c1 = ! lv_dat.has_setup_neuromap();
 	bool c2 = ! is_na_mono();
-	bool can_act = (c1 && c2);
+	bool c3 = ! na_found_in_skl;
+	bool can_act = (c1 && c2 && c3);
 	//bool can_act = c1;
 	return can_act;
 }
@@ -697,16 +698,20 @@ neuromap::full_release(){
 }
 
 void
-coloring::save_colors_from(sort_glb& neus_srg, sort_glb& quas_srg, bool pre_walk){
-	if(pre_walk){
+coloring::save_colors_from(sort_glb& neus_srg, sort_glb& quas_srg, tee_id_t consec_kk){
+	init_coloring(co_brn);
+	
+	if(consec_kk == tid_wlk_consec){
 		neus_srg.stab_mutual_walk();
 		quas_srg.stab_mutual_walk();
 	}
 
-	co_all_neu_consec = srt_row_as_colors<neuron>(neus_srg.sg_step_sortees, 
-												  co_neus, co_neu_colors, pre_walk);
+	if(consec_kk != tid_qua_id){
+		co_all_neu_consec = srt_row_as_colors<neuron>(neus_srg.sg_step_sortees, 
+												  co_neus, co_neu_colors, consec_kk);
+	}
 	co_all_qua_consec = srt_row_as_colors<quanton>(quas_srg.sg_step_sortees, 
-												   co_quas, co_qua_colors, pre_walk);
+												   co_quas, co_qua_colors, consec_kk);
 
 	BRAIN_CK(ck_cols());
 }
@@ -1296,10 +1301,10 @@ neuromap::map_oper(mem_op_t mm){
 	bool prep_ok = map_prepare_mem_oper(mm);
 
 	if(! prep_ok){
-		DBG_PRT(47, os << "map_oper skip (prepare == false)");
+		DBG_PRT(47, os << "map_oper skip (prepare == false) nmp=" << (void*)this);
 		return false;
 	}
-	DBG_PRT(47, os << "map_oper_go");
+	DBG_PRT(47, os << "map_oper_go nmp=" << (void*)this);
 
 	skeleton_glb& skg = brn.get_skeleton();
 
@@ -1325,6 +1330,7 @@ neuromap::map_oper(mem_op_t mm){
 		na_dbg_nmp_mem_op = mm;
 		na_dbg_tauto_min_sha_str = tmp_tauto_cnf.cf_minisha_str;
 		na_dbg_tauto_sha_str = tmp_tauto_cnf.cf_sha_str;
+		na_dbg_tauto_pth = tmp_tauto_cnf.get_cnf_path();
 	);
 	
 	bool oper_ok = false;
@@ -1364,6 +1370,8 @@ neuromap::map_oper(mem_op_t mm){
 			
 			o_info.bjo_sub_cnf_hits++;
 
+			na_found_in_skl = true;
+			
 			row_neuron_t& all_neus_in_vnt = na_all_neus_in_vnt_found;
 			all_neus_in_vnt.clear();
 			
@@ -1419,24 +1427,13 @@ neuromap::map_oper(mem_op_t mm){
 		}
 	}
 	
-	DBG_COMMAND(150, 
+	//DBG_COMMAND(150, 
+	DBG_PRT(150, 
 		ch_string op_ok_str = (oper_ok)?("YES"):("no");
 		ch_string op_str = (na_dbg_nmp_mem_op == mo_find)?("Find"):("Write");
 		op_str += op_ok_str;
 		
-		bj_ostr_stream ss_msg;
-		ss_msg << HTMi_h1 << "BRN_recoil=" << brn.recoil() << HTMe_h1;
-		ss_msg << HTMi_h2 << op_str << HTMe_h2;
-		ss_msg << "nmp=" << this << HTM_br;
-		ss_msg << "#sub=" << na_dbg_num_submap << HTM_br;
-		ss_msg << "all_sub=[";
-		print_all_subnmp(ss_msg, true);
-		ss_msg << "]";
-		ss_msg << HTM_br;
-		ss_msg << "CNF_minisha=" << na_dbg_tauto_min_sha_str << HTM_br;
-		ss_msg << "CNF_sha=" << na_dbg_tauto_sha_str << HTM_br;
-		
-		ch_string msg_htm = ss_msg.str();
+		ch_string msg_htm = map_dbg_html_data_str(op_str);;
 		
 		brn.dbg_update_html_cy_graph(CY_NMP_KIND, 
 					&(brn.br_tmp_ini_tauto_col), msg_htm);
@@ -1480,7 +1477,7 @@ neuromap::map_prepare_mem_oper(mem_op_t mm){
 	
 	BRAIN_DBG(
 		coloring tmp_ck_guide_col(&brn);
-		tmp_ck_guide_col.save_colors_from(guide_ne_srg, guide_qu_srg, true);
+		tmp_ck_guide_col.save_colors_from(guide_ne_srg, guide_qu_srg, tid_wlk_consec);
 		BRAIN_CK_PRT((tmp_ck_guide_col.equal_co_to(guide_col, &(na_pend_col.co_quas))), 
 				os << "tmp_col=" << tmp_ck_guide_col << "\n";
 				os << "gui_col=" << guide_col << "\n";
@@ -1508,7 +1505,7 @@ neuromap::map_prepare_mem_oper(mem_op_t mm){
 	guide_ne_srg.stab_mutual_unique(guide_qu_srg);
 	
 	coloring uni_guide_col(&brn);
-	uni_guide_col.save_colors_from(guide_ne_srg, guide_qu_srg, false);
+	uni_guide_col.save_colors_from(guide_ne_srg, guide_qu_srg, tid_tee_consec);
 	if(! na_pend_col.co_quas.is_empty()){
 		uni_guide_col.add_coloring(na_pend_col);
 	}
@@ -1578,6 +1575,10 @@ neuromap::map_prepare_mem_oper(mem_op_t mm){
 	BRAIN_CK(tauto_qu_srg.sg_step_all_consec);
 
 	// finish prepare
+	
+	DBG(
+		na_dbg_tauto_col.save_colors_from(tauto_ne_srg, tauto_qu_srg, tid_qua_id);
+	);
 
 	map_prepare_wrt_cnfs(mm, nxt_diff_phdat, dbg_shas);
 
@@ -1824,7 +1825,7 @@ neuromap::map_stab_guide_col(){
 	
 	BRAIN_DBG(
 		coloring tmp_ck_guide_col(&brn);
-		tmp_ck_guide_col.save_colors_from(neus_srg, quas_srg, true);
+		tmp_ck_guide_col.save_colors_from(neus_srg, quas_srg, tid_wlk_consec);
 		bool eq1 = tmp_ck_guide_col.equal_co_to(guide_col, &(na_pend_col.co_quas));
 		BRAIN_CK_PRT(eq1, 
 				os << "_______________\n";
@@ -1843,7 +1844,7 @@ neuromap::map_stab_guide_col(){
 	DBG_PRT(42, os << " aft_stab quas_srg=" << quas_srg);
 	
 	DBG_PRT(42, os << " bef_guide_col=" << guide_col);
-	guide_col.save_colors_from(neus_srg, quas_srg, false);
+	guide_col.save_colors_from(neus_srg, quas_srg, tid_tee_consec);
 	if(! na_pend_col.co_quas.is_empty()){
 		guide_col.add_coloring(na_pend_col);
 	}

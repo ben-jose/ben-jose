@@ -1324,7 +1324,7 @@ analyser::neuromap_setup_analysis(long nxt_lv, neuromap* in_nmp, deduction& dct)
 	
 	DBG_PRT_COND(66, (setup_nmp != NULL_PT),
 		os << HTMi_h1 << "TOP_SETUP" << HTMe_h1 << "nmp=" << setup_nmp << "\n";
-		ch_string msg = "top_setup";
+		ch_string msg = "top setup";
 		os << "\n";
 		brn.print_trail(os);
 		os << "\n";

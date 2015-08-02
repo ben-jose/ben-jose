@@ -466,9 +466,11 @@ neuromap::print_subnmp(bj_ostream& os, bool only_pts){
 		os << "idx=" << na_index;
 		//os << ".tk" << na_dbg_update_tk;
 		//os << "(" << (void*)this <<")";
-		/*if(na_orig_cho != NULL_PT){
+		if(na_orig_cho != NULL_PT){
 			os << ".cho=" << na_orig_cho->qu_id;
-		}*/
+		} else {
+			os << ".cho=null";
+		}
 		os << "}";
 		os.flush();
 		return os;

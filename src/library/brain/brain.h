@@ -110,6 +110,11 @@ enum cy_quk_t {
 #define INVALID_BLOCK -1
 #define INVALID_COLOR -1
 
+#define INVALID_MINSHA "invalid_minsha"
+#define INVALID_SHA "invalid_sha"
+#define INVALID_PATH "invalid_path"
+
+
 #define MAX_LAYERS 1000
 
 //======================================================================
@@ -943,7 +948,7 @@ class coloring {
 
 	void	dbg_set_brain_coloring();
 	
-	void	save_colors_from(sort_glb& neus_srg, sort_glb& quas_srg, bool pre_walk);
+	void	save_colors_from(sort_glb& neus_srg, sort_glb& quas_srg, tee_id_t consec_kk);
 	void	load_colors_into(sort_glb& neus_srg, sort_glb& quas_srg, 
 				dbg_call_id dbg_id, neuromap* nmp = NULL_PT);
 	void	add_coloring(coloring& clr);
@@ -972,6 +977,7 @@ class coloring {
 	}
 
 	bj_ostream&	dbg_print_col_cy_graph(bj_ostream& os, bool is_ic);
+	void		dbg_print_qua_ids(bj_ostream& os);
 	
 	bj_ostream&	print_coloring(bj_ostream& os, bool from_pt = false);
 };
@@ -1845,6 +1851,7 @@ class neuromap {
 	coloring		na_guide_col;
 	coloring		na_pend_col;
 	
+	bool			na_found_in_skl;
 	row_neuron_t	na_all_neus_in_vnt_found;
 	
 	BRAIN_DBG(
@@ -1858,8 +1865,11 @@ class neuromap {
 		mem_op_t 			na_dbg_nmp_mem_op;
 		ch_string			na_dbg_tauto_min_sha_str;
 		ch_string			na_dbg_tauto_sha_str;
+		ch_string			na_dbg_tauto_pth;
 		
 		ticket				na_dbg_update_tk;
+		
+		coloring			na_dbg_tauto_col;
 	);
 	
 	neuromap(brain* pt_brn = NULL) {
@@ -1914,6 +1924,7 @@ class neuromap {
 		na_guide_col.init_coloring();
 		na_pend_col.init_coloring();
 		
+		na_found_in_skl = false;
 		na_all_neus_in_vnt_found.clear();
 		
 		DBG(
@@ -1925,10 +1936,13 @@ class neuromap {
 			na_dbg_orig_lv = INVALID_IDX;
 			
 			na_dbg_nmp_mem_op = mo_invalid;
-			na_dbg_tauto_min_sha_str = "INVALID_MINSHA";
-			na_dbg_tauto_sha_str = "INVALID_SHA";
+			na_dbg_tauto_min_sha_str = INVALID_MINSHA;
+			na_dbg_tauto_sha_str = INVALID_SHA;
+			na_dbg_tauto_pth = INVALID_PATH;
 			
 			na_dbg_update_tk.init_ticket();
+			
+			na_dbg_tauto_col.init_coloring();
 		);
 	}
 	
@@ -2127,11 +2141,12 @@ class neuromap {
 	bool 	dbg_has_simple_coloring_quas(coloring& clr);
 	void 	dbg_prt_simple_coloring(bj_ostream& os);
 	
-	void	map_dbg_set_cy_maps();
-	void	map_dbg_reset_cy_maps();
-	void	map_dbg_get_cy_coloring(coloring& clr);
-	void	map_dbg_update_html_file(ch_string msg);
-	void	map_dbg_all_sub_update_html_file(ch_string msg);
+	void		map_dbg_set_cy_maps();
+	void		map_dbg_reset_cy_maps();
+	void		map_dbg_get_cy_coloring(coloring& clr);
+	ch_string	map_dbg_html_data_str(ch_string msg);
+	void		map_dbg_update_html_file(ch_string msg);
+	void		map_dbg_all_sub_update_html_file(ch_string msg);
 	
 	static
 	void	map_append_neus_in_nmp_from(brain& brn, row_neuron_t& all_neus, 

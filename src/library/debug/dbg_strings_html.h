@@ -74,7 +74,7 @@ some strings for html printing.
 	
 // end_of_define
 
-#define HTM_br "<br>"
+#define HTM_br "<br>\n"
 
 #endif		// STR_HTML_H
 
