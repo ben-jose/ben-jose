@@ -204,6 +204,7 @@ bool		ck_motives(brain& brn, row_quanton_t& mots);
 //=================================================================
 // funcs declarations
 
+bool	dbg_all_consec(row<long>& rr1);
 void	dbg_set_cy_sigs(brain& brn, row<prop_signal>& trace);
 void	dbg_reset_cy_sigs(brain& brn, row<prop_signal>& trace);
 void	dbg_run_diff(ch_string fnm1, ch_string fnm2, ch_string dff_fnm);
@@ -778,6 +779,9 @@ class quanton {
 	void	reset_mark(brain& brn);
 
 	long		qlevel(){ return qu_charge_tk.tk_level; }
+	leveldat*	qlv_dat(brain& brn);
+	
+	bool		is_lv_choice(brain& brn);
 
 	bool		ck_charge(brain& brn);
 
@@ -806,9 +810,14 @@ class quanton {
 		return cho;
 	}
 	
+	bool		is_cicle_choice(){
+		bool is_clc_cho = is_choice() && ! is_opp_mono();
+		return is_clc_cho;
+	}
+	
 	bool	is_learned_choice();
 	
-	bool 	is_qu_end_of_nmp();
+	bool 	is_qu_end_of_nmp(brain& brn);
 	
 	long	find_alert_idx(bool is_init, row_quanton_t& all_pos);
 	void	update_alert_neu(brain& brn, bool is_init);
@@ -818,8 +827,12 @@ class quanton {
 	bool	is_mono();
 	bool	ck_alert_neu();
 	
+	bool	is_opp_mono(){
+		return opposite().is_mono();
+	}
+	
 	bool	has_mono(){
-		bool h_mn = is_mono() || opposite().is_mono();
+		bool h_mn = is_mono() || is_opp_mono();
 		return h_mn;
 	}
 	
@@ -836,7 +849,6 @@ class quanton {
 	neuromap*	get_nmp_to_write(brain& brn);
 
 	cy_quk_t	get_cy_kind();
-	//bj_ostream&		dbg_qu_print_col_cy_node(bj_ostream& os, bool with_coma);
 	
 	bj_ostream&		dbg_qu_print_col_cy_edge(bj_ostream& os, long& consec, long neu_idx);
 	
@@ -844,22 +856,6 @@ class quanton {
 									   long ps_ti, neuron* ps_src);
 	
 	bj_ostream&		print_quanton(bj_ostream& os, bool from_pt = false);
-
-	/*bj_ostream& 		print_ic_label(bj_ostream& os){
-		os << "\"";
-		if(is_neg()){ os << "K"; }
-		if(qu_spin == cg_negative){ os << "["; }
-		os << abs_id();
-		if(qu_spin == cg_negative){ os << "]"; }
-
-
-		os << "<";
-		os << qlevel();
-		DBG(os << "_" << qu_dbg_ic_trail_idx);
-		os << ">";
-		os << "\"";
-		return os;
-	}*/
 };
 
 void
@@ -976,6 +972,8 @@ class coloring {
 		return true;
 	}
 
+	bool 	dbg_ck_consec_col();
+	
 	bj_ostream&	dbg_print_col_cy_graph(bj_ostream& os, bool is_ic);
 	void		dbg_print_qua_ids(bj_ostream& os);
 	
@@ -1823,8 +1821,8 @@ class neuromap {
 	
 	long			na_orig_lv;
 	long			na_orig_ti;
-	cy_quk_t		na_orig_ki;
 	quanton*		na_orig_cho;
+	cy_quk_t		na_orig_cy_ki;
 	
 	neuromap*		na_nxt_no_mono;
 	prop_signal		na_next_psig;
@@ -1890,8 +1888,8 @@ class neuromap {
 		
 		na_orig_lv = INVALID_LEVEL;
 		na_orig_ti = INVALID_TIER;
-		na_orig_ki = cq_invalid;
 		na_orig_cho = NULL_PT;
+		na_orig_cy_ki = cq_invalid;
 		
 		na_nxt_no_mono = this;
 		na_next_psig.init_prop_signal();
@@ -2750,12 +2748,12 @@ class qlayers_ref {
 		return nxt_qua;
 	}
 	
-	bool	is_end_of_nmp(){
+	bool	is_end_of_nmp(brain& brn){
 		quanton* cur_qu = get_curr_quanton();
 		if(cur_qu == NULL_PT){
 			return false;
 		}
-		bool eonmp = cur_qu->is_qu_end_of_nmp();
+		bool eonmp = cur_qu->is_qu_end_of_nmp(brn);
 		return eonmp;
 	}
 	
@@ -3002,7 +3000,7 @@ class leveldat {
 
 	bool	is_ld_mono(){
 		BRAIN_CK(ld_chosen != NULL_PT);
-		bool is_mn = (ld_chosen->opposite().is_mono());
+		bool is_mn = (ld_chosen->is_opp_mono());
 		return is_mn;
 	}
 	
@@ -3111,9 +3109,10 @@ private:
 public:
 
 	BRAIN_DBG(
-		dbg_inst_info  	br_dbg;
-		brain*			br_pt_brn;
-		bj_ofstream 	br_dbg_htm_os;
+		dbg_inst_info  		br_dbg;
+		brain*				br_pt_brn;
+		bj_ofstream 		br_dbg_htm_os;
+		recoil_counter_t 	br_dbg_round;
 	)
 	
 	solver* 		br_pt_slvr;
@@ -3452,6 +3451,8 @@ public:
 
 	quanton*	receive_psignal(bool only_in_dom);
 	
+	void	send_next_mono();
+	
 	void 		get_bineu_sources(quanton& cho, quanton& qua, row_quanton_t& all_src);
 	void 		get_all_bineu_sources(quanton& cho, row_quanton_t& all_src);
 	void 		get_all_cicle_cho(row_quanton_t& all_cicl);
@@ -3683,14 +3684,28 @@ public:
 		return br_charge_trail.last_qlevel();
 	}
 
-	quanton&	curr_choice(){
+	quanton*	curr_cho(){
 		BRAIN_CK(! br_data_levels.is_empty());
 		leveldat* lv = br_data_levels.last();
 		BRAIN_CK(lv != NULL);
 		quanton* cho = lv->ld_chosen;
+		return cho;
+	}
+	
+	quanton&	curr_choice(){
+		quanton* cho = curr_cho();
 		BRAIN_CK(cho != NULL);
 		BRAIN_CK(! cho->has_charge() || (cho->qlevel() == level()));
 		return *cho;
+	}
+	
+	bool	is_curr_cho_mono(){
+		quanton* cho = curr_cho();
+		if(cho == NULL_PT){
+			return false;
+		}
+		bool is_mn = cho->is_opp_mono();
+		return is_mn;
 	}
 
 	bool 	lv_has_learned(){
@@ -3963,22 +3978,11 @@ quanton::reset_mark(brain& brn){
 
 inline
 bool
-quanton::is_learned_choice(){
-	neuron* neu = get_source();
-	if(neu == NULL_PT){
-		return false;
-	}
-	if(neu->ne_original){
-		return false;
-	}
-	return true;
-}
-
-inline
-bool
-quanton::is_qu_end_of_nmp(){
+quanton::is_qu_end_of_nmp(brain& brn){
 	if(qu_source == NULL_PT){
-		return true;
+		bool is_cho = is_lv_choice(brn);
+		return is_cho;
+		//return true;
 	}
 	if(! qu_source->ne_original){
 		return true;

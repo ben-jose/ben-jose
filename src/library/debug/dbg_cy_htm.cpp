@@ -296,7 +296,6 @@ neuron::dbg_ne_print_col_cy_node(bj_ostream& os){
 bj_ostream&
 brain::dbg_br_print_col_cy_nodes(bj_ostream& os, bool is_ic){
 #ifdef FULL_DEBUG
-
 	os << "\t nodes: [" << bj_eol;
 	
 	row_quanton_t& all_cy_quas = br_all_cy_quas;
@@ -313,7 +312,7 @@ brain::dbg_br_print_col_cy_nodes(bj_ostream& os, bool is_ic){
 		long qti = qua.qu_tier;
 		bool is_cho = qua.is_choice();
 		bool is_lrn = qua.is_learned_choice();
-		//bool is_mon = qua.opposite().is_mono();
+		//bool is_mon = qua.is_opp_mono();
 		
 		if(has_cy_nmp){
 			is_cho =  false; 
@@ -326,7 +325,7 @@ brain::dbg_br_print_col_cy_nodes(bj_ostream& os, bool is_ic){
 			BRAIN_CK((n_cho == &qua) || (n_cho == &opp));
 			
 			qti = nmp->na_orig_ti;
-			cy_quk_t qki = nmp->na_orig_ki;
+			cy_quk_t qki = nmp->na_orig_cy_ki;
 			BRAIN_CK(qki != cq_invalid);
 
 			if(qki == cq_cho){ is_cho =  true; }
@@ -713,5 +712,24 @@ brain::dbg_print_cy_nmp_node_plays(bj_ostream& os){
 		}
 	}
 #endif
+}
+
+cy_quk_t
+quanton::get_cy_kind(){
+	cy_quk_t kk = cq_invalid;
+#ifdef FULL_DEBUG
+	kk = cq_reg;
+	bool is_cy_cho = is_choice();
+	bool is_cy_lrn = is_learned_choice();
+	//bool is_mon = is_opp_mono();
+	if(is_cy_cho){ kk = cq_cho; }
+	if(is_cy_lrn){ kk = cq_for; }
+	BRAIN_CK_PRT((qlevel() == ROOT_LEVEL) || is_cy_cho || is_cy_lrn, 
+		os << "____________\n"; 
+		os << " qua=" << this;
+	);
+	//if(is_mon){ kk = cq_mono; }
+#endif
+	return kk;
 }
 

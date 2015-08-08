@@ -58,10 +58,6 @@ dbg_trinary_to_str(charge_t obj){
 bool
 quanton::ck_charge(brain& brn){
 #ifdef FULL_DEBUG
-	/*if((qlevel() == ROOT_LEVEL) && (get_source() != NULL)){
-		ch_string ab_mm = "case00." + brn.br_file_name;
-		abort_func(-1, ab_mm.c_str());
-	}*/
 	BRAIN_CK_0(	(is_pos()) || 
 			(! has_charge()) || 
 			(is_neg()) );
@@ -84,10 +80,11 @@ brain::dbg_prt_margin(bj_ostream& os, bool is_ck){
 
 	f_nam = inst_info.ist_file_path;
 	
-	recoil_counter_t the_lap = recoil();
-	if(the_lap > 0){
+	recoil_counter_t the_rec = recoil();
+	recoil_counter_t the_lap = br_dbg_round;
+	if(the_lap >= 0){
 		if(is_ck){ os << "LAP="; }
-		os << the_lap << ".";
+		os << the_lap << "." << the_rec << ".";
 	}
 #endif
 	return f_nam;
@@ -149,13 +146,8 @@ brain::ck_trail(){
 		}
 		prev_tier = qua->qu_tier;
 		
-		/*if((qua->qlevel() == ROOT_LEVEL) && (qua->get_source() != NULL)){
-			print_trail(os);
-			ab_mm = "case1." + br_file_name;
-			abort_func(-1, ab_mm.c_str());
-		}*/
-
-		if((qua->qu_source == NULL) && (qua->qlevel() != ROOT_LEVEL)){
+		//if((qua->qu_source == NULL) && (qua->qlevel() != ROOT_LEVEL)){
+		if(qua->is_lv_choice(brn)){
 			num_null_src++;
 		}
 		if(qua->get_charge() == cg_neutral){
@@ -187,7 +179,7 @@ brain::ck_trail(){
 			ch_idx++;
 		}
 
-		if(	!cho && (qua->get_source() == NULL))
+		if(	!cho && ! qua->has_source())
 		{
 			quanton* cls = qua;
 			BRAIN_CK_0(cls->qlevel() == qua->qlevel());
@@ -632,7 +624,7 @@ bj_ostream&
 brain::print_all_quantons(bj_ostream& os, long ln_sz, ch_string ln_fd){
 #ifdef FULL_DEBUG
 	BRAIN_CK_0(br_choices.size() == br_positons.size());
-	long num_null_src = 0;
+	long num_no_src = 0;
 	for(long ii = 0; ii < br_choices.size(); ii++){
 		if((ii > 0) && ((ii % ln_sz) == 0)){
 			os << ln_fd;
@@ -652,11 +644,12 @@ brain::print_all_quantons(bj_ostream& os, long ln_sz, ch_string ln_fd){
 		if(qua->qlevel() == ROOT_LEVEL){
 			os << "r";
 		}
-		if(	(qua->get_source() == NULL) && 
+		
+		if(	! qua->has_source() && 
 			(qua->qlevel() != 0) &&
 			(chg != cg_neutral)
 		){
-			num_null_src++;
+			num_no_src++;
 			os << "*";
 		} else {
 			os << " ";
@@ -665,7 +658,7 @@ brain::print_all_quantons(bj_ostream& os, long ln_sz, ch_string ln_fd){
 
 	}
 
-	BRAIN_CK_0(num_null_src == level());
+	BRAIN_CK_0(num_no_src == level());
 	os.flush();
 #endif
 	return os;
@@ -1358,16 +1351,19 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 	long qlv = qlevel();
 	long qti = ps_ti;
 	
+	quanton& opp = opposite();
+	
 	bool is_mn = (qu_lv_mono != INVALID_LEVEL);
-	bool is_opp_mn = (opposite().qu_lv_mono != INVALID_LEVEL);
+	bool is_opp_mn = (opp.qu_lv_mono != INVALID_LEVEL);
 	bool hm = (is_mn || is_opp_mn);
 	//bool hm = false;
 	MARK_USED(hm);
 	
-	bool is_end_nmp = is_qu_end_of_nmp();
+	bool is_end_nmp = false;
 	
 	if(pt_brn != NULL_PT){
-		dominated = in_qu_dominated(*(pt_brn));
+		is_end_nmp = is_qu_end_of_nmp(*pt_brn);
+		dominated = in_qu_dominated(*pt_brn);
 	}
 
 	/*if(from_pt){
@@ -1429,7 +1425,10 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 		if(n2){ os << ".n2"; }
 		if(n3){ os << ".n3"; }
 		if(n4){ os << ".n4"; }
-		if(hm){ os << ".M." << qu_lv_mono; }
+		if(is_choice()){
+			if(is_mn){ os << ".M." << qu_lv_mono; }
+			if(is_opp_mn){ os << ".m." << opp.qu_lv_mono; }
+		}
 		/*
 		if(with_dot){ os << ".d"; }
 		if(with_mark){ os << ".m"; }
@@ -1455,7 +1454,7 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 	os << "ps_src ";
 		os << neu;
 	os << "current_src ";
-	if(get_source() != NULL){
+	if(has_source()){
 		os << get_source();
 	} else {
 		os << "NULL";

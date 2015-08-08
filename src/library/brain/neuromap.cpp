@@ -1505,8 +1505,14 @@ neuromap::map_prepare_mem_oper(mem_op_t mm){
 	guide_ne_srg.stab_mutual_unique(guide_qu_srg);
 	
 	coloring uni_guide_col(&brn);
+	BRAIN_DBG(coloring old_uni_col(&brn));
+	
 	uni_guide_col.save_colors_from(guide_ne_srg, guide_qu_srg, tid_tee_consec);
+	BRAIN_CK(uni_guide_col.dbg_ck_consec_col());
+	
 	if(! na_pend_col.co_quas.is_empty()){
+		//BRAIN_CK(false);
+		BRAIN_DBG(uni_guide_col.copy_co_to(old_uni_col));
 		uni_guide_col.add_coloring(na_pend_col);
 	}
 	
@@ -1514,6 +1520,7 @@ neuromap::map_prepare_mem_oper(mem_op_t mm){
 	BRAIN_CK(uni_guide_col.co_all_qua_consec);
 	BRAIN_CK(uni_guide_col.co_all_neu_consec);
 	BRAIN_CK(map_ck_contained_in(uni_guide_col, dbg_call_2));
+	//BRAIN_CK(uni_guide_col.dbg_ck_consec_col());
 
 	// set nxt_diff_phdat and ck it
 	
@@ -1571,15 +1578,32 @@ neuromap::map_prepare_mem_oper(mem_op_t mm){
 	
 	ini_tau_col.load_colors_into(tauto_ne_srg, tauto_qu_srg, dbg_call_3, this);
 
-	tauto_ne_srg.stab_mutual(tauto_qu_srg);
-	BRAIN_CK(tauto_qu_srg.sg_step_all_consec);
-
-	// finish prepare
+	tauto_ne_srg.stab_mutual_unique(tauto_qu_srg);
 	
 	DBG(
 		na_dbg_tauto_col.save_colors_from(tauto_ne_srg, tauto_qu_srg, tid_qua_id);
+		coloring pos_tau_col(&brn);
+		pos_tau_col.save_colors_from(tauto_ne_srg, tauto_qu_srg, tid_tee_consec);
+		bool tau_consc = dbg_all_consec(pos_tau_col.co_qua_colors);
+	);
+	BRAIN_CK(tau_consc); 
+
+	BRAIN_CK_PRT((tauto_qu_srg.sg_step_all_consec), 
+		brn.dbg_prt_margin(os);
+		os << "______________ \n ABORT_DATA \n"; 
+		brn.print_trail(os);
+		os << "\n";
+		os << " pend_col=" << na_pend_col << "\n\n";
+		os << " old_uni=" << old_uni_col << "\n\n";
+		os << " uni_col=" << uni_guide_col << "\n\n";
+		os << " pre_tau_col=" << ini_tau_col << "\n\n";
+		os << " pos_tau_col=" << pos_tau_col << "\n\n";
+		os << " ids_tau_col=" << na_dbg_tauto_col << "\n\n";
+		os << " nmp=" << this << "\n\n";
 	);
 
+	// finish prepare
+	
 	map_prepare_wrt_cnfs(mm, nxt_diff_phdat, dbg_shas);
 
 	return true;
@@ -2530,7 +2554,7 @@ neuromap::ck_na_mono(){
 	}
 	BRAIN_CK(na_forced.is_empty());
 	BRAIN_CK(na_orig_cho != NULL_PT);
-	BRAIN_CK(na_orig_cho->opposite().is_mono());
+	BRAIN_CK(na_orig_cho->is_opp_mono());
 	BRAIN_CK(na_trail_propag.size() == 1);
 	BRAIN_CK(na_trail_propag[0].ps_quanton == na_orig_cho);
 	BRAIN_CK(na_trail_propag[0].ps_source == NULL_PT);
@@ -2555,4 +2579,28 @@ neuromap::map_get_active_qua(){
 	BRAIN_CK(nx_qua->has_charge());
 	return nx_qua;
 }
+
+bool	dbg_all_consec(row<long>& rr1){
+	long lst_val = -1;
+	bool all_consc = true;
+	for(long aa = 0; aa < rr1.size(); aa++){
+		long vv = rr1[aa];
+		BRAIN_CK(vv > 0);
+		all_consc = all_consc && (vv != lst_val);
+		lst_val = vv;
+	}
+	return all_consc;
+}
+
+bool
+coloring::dbg_ck_consec_col(){
+	bool all_ok = true;
+#ifdef FULL_DEBUG
+	bool c1 = dbg_all_consec(co_qua_colors);
+	bool c2 = dbg_all_consec(co_neu_colors);
+	all_ok = (c1 && c2);
+#endif
+	return all_ok;
+}
+
 
