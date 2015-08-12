@@ -461,6 +461,7 @@ brain::init_brain(solver& ss){
 	BRAIN_DBG(
 		br_pt_brn = NULL_PT;
 		br_dbg_round = 0;
+		br_dbg_num_phi_grps = INVALID_NATURAL;
 	);
 	br_pt_slvr = &ss;
 	
@@ -1841,7 +1842,12 @@ brain::pulsate(){
 			return;
 		}
 		//dbg_old_reverse();
-		deduce_and_reverse();
+		bool go_on = deduce_and_reverse();
+		if(! go_on){
+			//BRAIN_CK(false);
+			set_result(bjr_no_satisf);
+			return;
+		}
 		BRAIN_CK(has_psignals());
 
 	} else {
@@ -2112,8 +2118,9 @@ brain::solve_instance(bool load_it){
 	return o_info.bjo_result;
 }
 
-void
+bool
 brain::deduce_and_reverse(){
+	bool go_on = true;
 	BRAIN_CK(! has_psignals());
 	
 	BRAIN_CK(level() != ROOT_LEVEL);
@@ -2131,7 +2138,7 @@ brain::deduce_and_reverse(){
 	bool in_full_anls = true;
 	DBG_COMMAND(2, in_full_anls = false); // ONLY_DEDUC
 	if(in_full_anls){
-		analyse(br_all_conflicts_found, dct);
+		go_on = analyse(br_all_conflicts_found, dct);
 	} else {
 		DBG_PRT(40, os << "bef_ana=" << bj_eol; print_trail(os);
 			os << " num_conf=" << br_all_conflicts_found.size() << " br_lv=" << level()
@@ -2143,6 +2150,7 @@ brain::deduce_and_reverse(){
 	}
 	
 	reverse(dct);
+	return go_on;
 }
 
 void

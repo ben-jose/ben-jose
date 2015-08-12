@@ -235,6 +235,8 @@ load_phi_by_hole_brain(brain& brn, long holes){
 		}
 	}
 	
+	brn.br_dbg_num_phi_grps = holes;
+	
 	for(jj = 1; jj <= pigeons; jj++){
 		neu_quas.clear();
 		for(ii = 0; ii < holes; ii++){
@@ -243,6 +245,10 @@ load_phi_by_hole_brain(brain& brn, long holes){
 			quanton* qua1 = brn.get_quanton(var1);
 			BRAIN_CK(qua1 != NULL_PT);
 			neu_quas.push(qua1);
+			if(qua1->qu_dbg_phi_grp == INVALID_NATURAL){
+				qua1->qu_dbg_phi_grp = (ii + 1);
+				qua1->opposite().qu_dbg_phi_grp = (ii + 1);
+			}
 			
 			//os << "\t\t ,{ data: { id: 'q" << ii_qua << "', source: 'n" << ii_neu;
 			//os << "', target: 'd" << var1 << "'}, classes: 'in_pos' }";

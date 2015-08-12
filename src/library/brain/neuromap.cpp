@@ -775,14 +775,24 @@ reset_all_qu_tees(row_quanton_t& all_quas){
 }
 
 void
-sort_all_qu_tees(row_quanton_t& all_quas, row<long>& qua_colors, sort_glb& quas_srg,
-				 coloring* pend_col)
+sort_all_qu_tees(brain& brn, row_quanton_t& all_quas, row<long>& qua_colors, 
+				 sort_glb& quas_srg, coloring* pend_col, row_long_t* all_srted)
 {
 	sort_id_t& quas_consec = quas_srg.sg_curr_stab_consec;
 	quas_consec++;
 	
+	BRAIN_CK(brn.br_qu_tot_note4 == 0);
+	
 	if(pend_col != NULL_PT){
 		pend_col->init_coloring();
+	}
+	if(all_srted != NULL_PT){
+		BRAIN_CK(false);
+		all_srted->clear();
+		BRAIN_DBG(
+			brn.br_dbg_phi_id_quas.clear();
+			all_srted->fill(0, brn.br_dbg_num_phi_grps)
+		);
 	}
 
 	BRAIN_DBG(long num_qu_in = quas_srg.sg_dbg_num_items);
@@ -812,8 +822,33 @@ sort_all_qu_tees(row_quanton_t& all_quas, row<long>& qua_colors, sort_glb& quas_
 		
 		BRAIN_DBG(num_qu_in++);
 		qua.qu_tee.sort_from(quas_srg, quas_consec);
+		
+		BRAIN_DBG(
+			if(all_srted != NULL_PT){
+				quanton& pos_qu = *(qua.get_positon());
+				long grp_idx = pos_qu.qu_dbg_phi_grp;
+				bool idx_ok = all_srted->is_valid_idx(grp_idx);
+				if(idx_ok && ! pos_qu.has_note4()){
+					pos_qu.set_note4(brn);
+					brn.br_dbg_phi_id_quas.push(&pos_qu);
+					((*all_srted)[grp_idx])++;
+				}
+			}
+		);
 	}
+	
+	BRAIN_DBG(
+		if(all_srted != NULL_PT){
+			reset_all_note4(brn, brn.br_dbg_phi_id_quas);
+			
+			row_long_t& the_id = *all_srted;
+			the_id.mix_sort(cmp_long);
+		}
+	);
+	
+	
 	BRAIN_CK(quas_srg.sg_dbg_num_items == num_qu_in);
+	BRAIN_CK(brn.br_qu_tot_note4 == 0);
 }
 
 void
@@ -851,7 +886,7 @@ coloring::load_colors_into(sort_glb& neus_srg, sort_glb& quas_srg,
 	);
 	DBG_PRT(42, os << "COL_QUAS=" << all_quas);
 
-	//sort_all_qu_tees(all_quas, qua_colors, quas_srg, NULL_PT);
+	//sort_all_qu_tees(brn, all_quas, qua_colors, quas_srg, NULL_PT, NULL_PT);
 	//BRAIN_CK(quas_srg.sg_dbg_num_items == all_quas.size());
 
 	sort_id_t& neus_consec = neus_srg.sg_curr_stab_consec;
@@ -910,8 +945,18 @@ coloring::load_colors_into(sort_glb& neus_srg, sort_glb& quas_srg,
 	BRAIN_CK(brn.br_ne_tot_tag0 == 0);
 
 	coloring* pend_col = NULL_PT;
-	if(nmp != NULL_PT){ pend_col = &(nmp->na_pend_col); }
-	sort_all_qu_tees(all_quas, qua_colors, quas_srg, pend_col);
+	row_long_t* dbg_phi_id = NULL_PT;
+	if(nmp != NULL_PT){ 
+		pend_col = &(nmp->na_pend_col); 
+		BRAIN_DBG(
+			if((brn.br_dbg_num_phi_grps != INVALID_NATURAL) &&
+				nmp->na_dbg_phi_id.is_empty())
+			{
+				dbg_phi_id = &(nmp->na_dbg_phi_id);
+			}
+		);
+	}
+	sort_all_qu_tees(brn, all_quas, qua_colors, quas_srg, pend_col, dbg_phi_id);
 	
 	//BRAIN_CK((nmp == NULL_PT) || nmp->na_pend_col.co_quas.is_empty());
 	

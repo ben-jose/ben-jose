@@ -610,6 +610,7 @@ class quanton {
 		long			qu_dbg_tee_ti;
 		prop_signal*	qu_dbg_cy_sig;
 		neuromap*		qu_dbg_cy_nmp;
+		long			qu_dbg_phi_grp;
 	);
 	
 	sortee			qu_tee;
@@ -698,6 +699,7 @@ class quanton {
 			qu_dbg_tee_ti = INVALID_NATURAL;
 			qu_dbg_cy_sig = NULL_PT;
 			qu_dbg_cy_nmp = NULL_PT;
+			qu_dbg_phi_grp = INVALID_NATURAL;
 		);
 
 		qu_tee.init_sortee(true);
@@ -1868,6 +1870,7 @@ class neuromap {
 		ticket				na_dbg_update_tk;
 		
 		coloring			na_dbg_tauto_col;
+		row_long_t 			na_dbg_phi_id;
 	);
 	
 	neuromap(brain* pt_brn = NULL) {
@@ -1941,6 +1944,7 @@ class neuromap {
 			na_dbg_update_tk.init_ticket();
 			
 			na_dbg_tauto_col.init_coloring();
+			na_dbg_phi_id.clear();
 		);
 	}
 	
@@ -2890,8 +2894,9 @@ class analyser {
 	
 	row_quanton_t&	get_all_causes(row_quanton_t& all_quas);
 		
-	void		deduction_init(row_quanton_t& causes);
-	void 		deduction_analysis(row_quanton_t& causes, deduction& dct);
+	void		deduction_init(row_quanton_t& causes, long max_lv = INVALID_LEVEL);
+	void 		deduction_analysis(row_quanton_t& causes, deduction& dct, 
+								   long max_lv = INVALID_LEVEL);
 	
 	void		set_nxt_propag(quanton* nxt_qua);
 	void		set_nxt_noted(quanton* nxt_qua);
@@ -2916,7 +2921,7 @@ class analyser {
 	
 	long		find_min_lv_to_setup(long tg_lv);
 
-	neuromap* 	neuromap_find_analysis(analyser& deducer, 
+	neuromap* 	neuromap_find_analysis(bool& found_top, analyser& deducer, 
 						long& nxt_lv, deduction& nxt_dct, row<neuromap*>& to_wrt);
 	neuromap* 	neuromap_find_analysis_2(analyser& deducer, 
 						deduction& nxt_dct, row<neuromap*>& to_wrt);
@@ -3113,6 +3118,8 @@ public:
 		brain*				br_pt_brn;
 		bj_ofstream 		br_dbg_htm_os;
 		recoil_counter_t 	br_dbg_round;
+		long			 	br_dbg_num_phi_grps;
+		row_quanton_t		br_dbg_phi_id_quas;
 	)
 	
 	solver* 		br_pt_slvr;
@@ -3723,7 +3730,7 @@ public:
 	bool	dbg_in_edge_of_target_lv(deduction& dct);
 	void	dbg_old_reverse();
 	
-	void	deduce_and_reverse();
+	bool	deduce_and_reverse();
 	void	reverse(deduction& dct);
 	
 	bool 	ck_cov_flags();
@@ -3753,7 +3760,7 @@ public:
 	
 	bool 	needs_lv_setup(long nxt_lv, neuromap* in_nmp);
 
-	void	analyse(row<prop_signal>& all_confl, deduction& dct);
+	bool	analyse(row<prop_signal>& all_confl, deduction& dct);
 	void	analyse_2(row<prop_signal>& all_confl, deduction& dct);
 	void	release_all_neuromaps();
 
@@ -4138,6 +4145,7 @@ long	find_max_level(row_quanton_t& tmp_mots){
 	for(long aa = 0; aa < tmp_mots.size(); aa++){
 		BRAIN_CK(tmp_mots[aa] != NULL_PT);
 		quanton& qua = *(tmp_mots[aa]);
+		BRAIN_CK(qua.has_charge());
 		max_lev = max_val(max_lev, qua.qlevel());
 	}
 	return max_lev;

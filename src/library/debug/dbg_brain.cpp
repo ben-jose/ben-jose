@@ -553,6 +553,7 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 		os << "(" << (void*)this << ")";
 		os << " o_cho=" << na_orig_cho;
 		os << " #sub=" << na_dbg_num_submap;
+		os << " sub1=(" << (void*)na_submap << ")";
 		os << " o_lv=" << na_orig_lv;
 		os << " n_lv=" << na_dbg_nxt_lv;
 		os << " a_lv=" << na_dbg_ac_lv;
