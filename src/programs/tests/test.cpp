@@ -1410,12 +1410,27 @@ void test_rf_pt(){
 	fn_ref_pt_prm(GLB_PT_INT);
 }
 
+void test_str_set(){
+	string_set_t ss1;
+
+	ch_string vv1 = "Hola_jose";
+	bool c1 = strset_find_path(ss1, vv1);
+	if(! c1){
+		strset_add_path(ss1, vv1);
+		BRAIN_CK(strset_find_path(ss1, vv1));
+	}
+	
+	strset_print(bj_out, ss1);
+	//bj_out << ss1 << "\n";
+}
+
 int	tests_main_(int argc, char** argv){
 	MARK_USED(argc);
 	MARK_USED(argv);
 	bj_ostream& os = bj_out;
 	
-	test_rf_pt();
+	test_str_set();
+	//test_rf_pt();
 	//test_null_str();
 	//test_realpath(argc, argv);
 	//test_subsets();

@@ -348,12 +348,14 @@ brain::dbg_br_print_col_cy_nodes(bj_ostream& os, bool is_ic){
 		if(is_ic && (qti > 0)){
 			os << ", lbl: " << qti;
 			os << ", lbl2: " << qid;
+			//os << ", lbl2: " << qua.qu_dbg_phi_grp;
 		}
 		if(! is_ic){
 			if(has_cy_sig){
 				os << ", lbl: " << qti;
 			}
 			os << ", lbl2: " << qid;
+			//os << ", lbl2: " << qua.qu_dbg_phi_grp;
 		}
 		os << "}, ";
 		os << "position:{x:" << qua.qu_dbg_drw_x_pos;
@@ -563,6 +565,7 @@ neuromap::map_dbg_html_data_str(ch_string msg){
 	ss_msg << "ALL_MONOS=";
 	brn.dbg_print_htm_all_monos(ss_msg);
 	ss_msg << HTM_br << "\n";
+	ss_msg << "nmp_phi_id=" << na_dbg_phi_id << HTM_br << "\n";
 	ss_msg << "min_sha=" << na_dbg_tauto_min_sha_str << HTM_br << "\n";
 	ss_msg << "sha=" << na_dbg_tauto_sha_str << HTM_br << "\n";
 	ss_msg << "path=" << HTM_br << na_dbg_tauto_pth << HTM_br << "\n";

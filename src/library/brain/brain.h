@@ -49,6 +49,10 @@ Declarations of classes and that implement the neural network.
 #include "dbg_config.h"
 #include "dbg_prt.h"
 
+#ifdef FULL_DEBUG
+#include "str_set.h"
+#endif 
+
 //=============================================================================
 // defines
 
@@ -948,7 +952,7 @@ class coloring {
 	
 	void	save_colors_from(sort_glb& neus_srg, sort_glb& quas_srg, tee_id_t consec_kk);
 	void	load_colors_into(sort_glb& neus_srg, sort_glb& quas_srg, 
-				dbg_call_id dbg_id, neuromap* nmp = NULL_PT);
+				dbg_call_id dbg_id, neuromap* nmp = NULL_PT, bool calc_phi_id = false);
 	void	add_coloring(coloring& clr);
 
 	void	move_co_to(coloring& col2);
@@ -3120,6 +3124,7 @@ public:
 		recoil_counter_t 	br_dbg_round;
 		long			 	br_dbg_num_phi_grps;
 		row_quanton_t		br_dbg_phi_id_quas;
+		string_set_t 		br_dbg_phi_wrt_ids;
 	)
 	
 	solver* 		br_pt_slvr;

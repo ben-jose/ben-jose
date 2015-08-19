@@ -462,6 +462,7 @@ brain::init_brain(solver& ss){
 		br_pt_brn = NULL_PT;
 		br_dbg_round = 0;
 		br_dbg_num_phi_grps = INVALID_NATURAL;
+		strset_clear(br_dbg_phi_wrt_ids);
 	);
 	br_pt_slvr = &ss;
 	

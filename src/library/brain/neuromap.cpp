@@ -787,7 +787,7 @@ sort_all_qu_tees(brain& brn, row_quanton_t& all_quas, row<long>& qua_colors,
 		pend_col->init_coloring();
 	}
 	if(all_srted != NULL_PT){
-		BRAIN_CK(false);
+		//BRAIN_CK(false);
 		all_srted->clear();
 		BRAIN_DBG(
 			brn.br_dbg_phi_id_quas.clear();
@@ -826,7 +826,7 @@ sort_all_qu_tees(brain& brn, row_quanton_t& all_quas, row<long>& qua_colors,
 		BRAIN_DBG(
 			if(all_srted != NULL_PT){
 				quanton& pos_qu = *(qua.get_positon());
-				long grp_idx = pos_qu.qu_dbg_phi_grp;
+				long grp_idx = pos_qu.qu_dbg_phi_grp - 1;
 				bool idx_ok = all_srted->is_valid_idx(grp_idx);
 				if(idx_ok && ! pos_qu.has_note4()){
 					pos_qu.set_note4(brn);
@@ -853,7 +853,7 @@ sort_all_qu_tees(brain& brn, row_quanton_t& all_quas, row<long>& qua_colors,
 
 void
 coloring::load_colors_into(sort_glb& neus_srg, sort_glb& quas_srg, 
-						   dbg_call_id dbg_id, neuromap* nmp) 
+						   dbg_call_id dbg_id, neuromap* nmp, bool calc_phi_id) 
 {
 	BRAIN_CK(neus_srg.has_head());
 	BRAIN_CK(quas_srg.has_head());
@@ -949,7 +949,7 @@ coloring::load_colors_into(sort_glb& neus_srg, sort_glb& quas_srg,
 	if(nmp != NULL_PT){ 
 		pend_col = &(nmp->na_pend_col); 
 		BRAIN_DBG(
-			if((brn.br_dbg_num_phi_grps != INVALID_NATURAL) &&
+			if(calc_phi_id && (brn.br_dbg_num_phi_grps != INVALID_NATURAL) &&
 				nmp->na_dbg_phi_id.is_empty())
 			{
 				dbg_phi_id = &(nmp->na_dbg_phi_id);
@@ -1483,6 +1483,34 @@ neuromap::map_oper(mem_op_t mm){
 		brn.dbg_update_html_cy_graph(CY_NMP_KIND, 
 					&(brn.br_tmp_ini_tauto_col), msg_htm);
 	);
+	BRAIN_DBG(
+		bool has_phi = (brn.br_dbg_num_phi_grps != INVALID_NATURAL);
+		if(has_phi && ! na_dbg_phi_id.is_empty() && 
+			oper_ok && (na_dbg_nmp_mem_op == mo_save))
+		{
+			bj_ostr_stream ss_msg;
+			ss_msg << na_dbg_phi_id;
+			
+			ch_string str_id = ss_msg.str();
+			
+			bool id_was_wrt = strset_find_path(brn.br_dbg_phi_wrt_ids, str_id);
+			if(! id_was_wrt){
+				strset_add_path(brn.br_dbg_phi_wrt_ids, str_id);
+				DBG_PRT_COND(105, id_was_wrt, 
+					os << "ADDED wrt_id=" << na_dbg_phi_id
+				);
+				BRAIN_CK(strset_find_path(brn.br_dbg_phi_wrt_ids, str_id));
+			}
+			DBG_PRT_COND(105, id_was_wrt, 
+				os << "REPEATED_WRITE for wrt_id=" << na_dbg_phi_id
+			);
+			DBG_PRT_COND(105, ! id_was_wrt, 
+				os << "FIRST_WRITE_OK for wrt_id=" << na_dbg_phi_id 
+					<< "\n wrt_is_str='" << str_id << "'"
+			);
+			//brn.
+		}
+	);
 	
 	return oper_ok;
 }
@@ -1496,7 +1524,6 @@ neuromap::map_prepare_mem_oper(mem_op_t mm){
 	//BRAIN_DBG(coloring dbg_smpl_col;);
 	//DBG_COMMAND(41, map_get_simple_coloring(dbg_smpl_col););
 	
-	DBG_PRT(41, os << "map_mem_oper=" << ((void*)this));
 	DBG_PRT(41, os << "map_mem_oper=" << this);
 
 	sort_glb& guide_ne_srg = brn.br_guide_neus_srg;
@@ -1507,7 +1534,7 @@ neuromap::map_prepare_mem_oper(mem_op_t mm){
 	if(! has_stab_guide()){
 		map_set_stab_guide();
 	} else {
-		DBG_PRT(41, os << "HAD_STAB_GUIDE !!! nmp=(" << (void*)this << ")");
+		DBG_PRT(41, os << "HAD_STAB_GUIDE !!! nmp=" << this);
 		
 		guide_ne_srg.sg_one_ccl_per_ss = false;
 		guide_col.load_colors_into(guide_ne_srg, guide_qu_srg, dbg_call_1, this);
@@ -1621,7 +1648,7 @@ neuromap::map_prepare_mem_oper(mem_op_t mm){
 	BRAIN_CK(tauto_ne_srg.ck_stab_inited());
 	BRAIN_CK(tauto_qu_srg.ck_stab_inited());
 	
-	ini_tau_col.load_colors_into(tauto_ne_srg, tauto_qu_srg, dbg_call_3, this);
+	ini_tau_col.load_colors_into(tauto_ne_srg, tauto_qu_srg, dbg_call_3, this, true);
 
 	tauto_ne_srg.stab_mutual_unique(tauto_qu_srg);
 	

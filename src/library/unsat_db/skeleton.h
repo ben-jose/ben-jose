@@ -39,9 +39,6 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 #ifndef SKELETON_H
 #define SKELETON_H
 
-#include <set>
-#include <map>
-
 #include "bj_stream.h"
 #include "tools.h"
 #include "file_funcs.h"
@@ -49,6 +46,7 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 #include "sha2.h"
 #include "print_macros.h"
 #include "dbg_prt.h"
+#include "str_set.h"
 
 enum charge_t {
 	cg_negative = -1,
@@ -98,47 +96,6 @@ class ref_strs;
 
 //--end_of_def
 
-//=================================================================
-// strset
-
-typedef std::set<ch_string> 	string_set_t;
-//typedef mem_redblack<ch_string>						string_set_t;
-typedef std::map<ch_string, long> 	string_long_map_t;
-
-inline
-void strset_clear(string_set_t ss){
-	//ss.clear_redblack();
-	ss.clear();
-}
-
-inline
-bool strset_is_empty(string_set_t ss){
-	//bool ee = ss.is_empty();
-	bool ee = ss.empty();
-	return ee;
-}
-
-inline
-long strset_size(string_set_t ss){
-	//long nn = ss.size();
-	long nn = ss.size();
-	return nn;
-}
-
-inline
-bool strset_find_path(string_set_t ss, ch_string pth){
-	//bool ff = ss.search(pth);
-	bool ff = (ss.find(pth) != ss.end());
-	return ff;
-}
-
-inline
-void strset_add_path(string_set_t ss, ch_string pth){
-	if(pth.empty()){ return; }
-	if(pth == ""){ return; }
-	//ss.push(pth);
-	ss.insert(pth);
-}
 
 //=================================================================
 // skeleton defines
