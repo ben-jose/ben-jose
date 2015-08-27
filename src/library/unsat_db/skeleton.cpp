@@ -771,7 +771,11 @@ canon_clause::print_canon_clause(bj_ostream& os, bool from_pt){
 
 	os << "ccl{";
 	print_row_data(os, true, " ");
-	os << " " << neu;
+	//os << " " << neu;
+	if(neu != NULL_PT){
+		os << " ";
+		neu->print_neu_base(os, true, true, false);
+	}
 	os << "}";
 #endif
 	return os;

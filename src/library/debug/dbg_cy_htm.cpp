@@ -565,7 +565,8 @@ neuromap::map_dbg_html_data_str(ch_string msg){
 	ss_msg << "ALL_MONOS=";
 	brn.dbg_print_htm_all_monos(ss_msg);
 	ss_msg << HTM_br << "\n";
-	ss_msg << "nmp_phi_id=" << na_dbg_phi_id << HTM_br << "\n";
+	ch_string id_str = map_dbg_get_phi_ids_str();
+	ss_msg << "nmp_phi_id='" << id_str << "'" << HTM_br << "\n";
 	ss_msg << "min_sha=" << na_dbg_tauto_min_sha_str << HTM_br << "\n";
 	ss_msg << "sha=" << na_dbg_tauto_sha_str << HTM_br << "\n";
 	ss_msg << "path=" << HTM_br << na_dbg_tauto_pth << HTM_br << "\n";

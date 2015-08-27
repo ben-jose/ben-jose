@@ -794,11 +794,11 @@ analyser::find_min_lv_to_setup(long tg_lv){
 	return min_lv;
 }
 
-bool
+/*bool
 brain::needs_lv_setup(long nxt_lv, neuromap* in_nmp){
 	bool nds = ((in_nmp != NULL_PT) && ! lv_has_setup_nmp(nxt_lv + 1));
 	return nds;
-}
+}*/
 
 void
 brain::make_lv_last_active(long nxt_lv){

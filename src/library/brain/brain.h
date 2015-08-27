@@ -859,7 +859,7 @@ class quanton {
 	bj_ostream&		dbg_qu_print_col_cy_edge(bj_ostream& os, long& consec, long neu_idx);
 	
 	bj_ostream&		print_quanton_base(bj_ostream& os, bool from_pt, 
-									   long ps_ti, neuron* ps_src);
+									   long ps_ti, neuron* ps_src, bool from_tee);
 	
 	bj_ostream&		print_quanton(bj_ostream& os, bool from_pt = false);
 };
@@ -957,6 +957,7 @@ class coloring {
 
 	void	move_co_to(coloring& col2);
 	void	copy_co_to(coloring& col2);
+	void	reset_as_simple_col();
 
 	bool	equal_dipoles_to(coloring& col2, bool skip_all_n4);
 	bool	equal_nmp_to(coloring& col2, bool skip_all_n4);
@@ -1427,7 +1428,8 @@ class neuron {
 	bj_ostream&		dbg_ne_print_col_cy_node(bj_ostream& os);
 	bj_ostream&		dbg_ne_print_col_cy_edge(bj_ostream& os, long& consec);
 	
-	bj_ostream& 	print_neu_base(bj_ostream& os, bool detail, bool prt_src, 
+	bj_ostream& 	print_tees(bj_ostream& os);
+	bj_ostream& 	print_neu_base(bj_ostream& os, bool from_pt, bool from_tee, 
 								   bool sort_fib);
 	
 	bj_ostream&	print_neuron(bj_ostream& os, bool from_pt = false);
@@ -2124,6 +2126,8 @@ class neuromap {
 	
 	bool	map_ck_contained_in(coloring& colr, dbg_call_id dbg_id);
 	void	map_dbg_print(bj_ostream& os, mem_op_t mm);
+	
+	ch_string 	map_dbg_get_phi_ids_str();
 
 	bool 	map_find();
 	bool 	map_write();
@@ -3124,7 +3128,7 @@ public:
 		recoil_counter_t 	br_dbg_round;
 		long			 	br_dbg_num_phi_grps;
 		row_quanton_t		br_dbg_phi_id_quas;
-		string_set_t 		br_dbg_phi_wrt_ids;
+		str_str_map_t 		br_dbg_phi_wrt_ids;
 	)
 	
 	solver* 		br_pt_slvr;
@@ -3763,7 +3767,7 @@ public:
 		return h_s;
 	}
 	
-	bool 	needs_lv_setup(long nxt_lv, neuromap* in_nmp);
+	//bool 	needs_lv_setup(long nxt_lv, neuromap* in_nmp);
 
 	bool	analyse(row<prop_signal>& all_confl, deduction& dct);
 	void	analyse_2(row<prop_signal>& all_confl, deduction& dct);

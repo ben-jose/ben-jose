@@ -444,6 +444,7 @@ neuromap::print_all_subnmp(bj_ostream& os, bool only_pts){
 #ifdef FULL_DEBUG
 	print_subnmp(os, only_pts);
 	if(has_submap()){
+		os << "->";
 		na_submap->print_all_subnmp(os, only_pts);
 	}
 #endif
@@ -668,16 +669,35 @@ brain::print_all_quantons(bj_ostream& os, long ln_sz, ch_string ln_fd){
 bj_ostream&
 quanton::print_quanton(bj_ostream& os, bool from_pt){
 	neuron* src = get_source();
-	return print_quanton_base(os, from_pt, qu_tier, src);
+	return print_quanton_base(os, from_pt, qu_tier, src, false);
 }
 
 bj_ostream&
 neuron::print_neuron(bj_ostream& os, bool from_pt){
-	return print_neu_base(os, ! from_pt, true, true);
+	return print_neu_base(os, from_pt, false, false);
 }
 
 bj_ostream&	
-neuron::print_neu_base(bj_ostream& os, bool detail, bool prt_src, bool sort_fib){
+neuron::print_tees(bj_ostream& os){
+	os << " tees[";
+	for(long ii = 0; ii < fib_sz(); ii++){
+		quanton* qua = ne_fibres[ii];
+		BRAIN_CK(qua != NULL_PT);
+		if(qua->qu_tee.is_unsorted()){
+			continue;
+		}
+		
+		neuron* src = qua->get_source();
+		qua->print_quanton_base(os, true, qua->qu_tier, src, true);
+		os << " ";
+	}
+	os << "]";
+	os.flush();
+	return os;
+}
+
+bj_ostream&	
+neuron::print_neu_base(bj_ostream& os, bool from_pt, bool from_tee, bool sort_fib){
 #ifdef FULL_DEBUG
 	bool in_dom = false;
 	brain* pt_brn = get_dbg_brn();
@@ -692,7 +712,7 @@ neuron::print_neu_base(bj_ostream& os, bool detail, bool prt_src, bool sort_fib)
 	bool tg4 = has_tag4();
 	bool tg5 = has_tag5();
 
-	if(! detail){
+	if(from_pt){
 		os << "ne={";
 		os << ((void*)(this)) << " ";
 		os << ne_index << " ";
@@ -710,7 +730,11 @@ neuron::print_neu_base(bj_ostream& os, bool detail, bool prt_src, bool sort_fib)
 		if(tg5){ os << ".g5"; }
 		
 		if(in_dom){ os << ".D"; }
-		os << ne_fibres;
+		if(! from_tee){
+			os << ne_fibres;
+		} else {
+			print_tees(os);
+		}
 		os << "}";
 
 		os.flush();
@@ -1222,7 +1246,7 @@ prop_signal::print_prop_signal(bj_ostream& os, bool from_pt){
 	}
 	
 	if(ps_quanton != NULL_PT){
-		return ps_quanton->print_quanton_base(os, true, ps_tier, ps_source);
+		return ps_quanton->print_quanton_base(os, true, ps_tier, ps_source, false);
 	}
 	
 	os << " ps{";
@@ -1260,6 +1284,11 @@ neurolayers::print_neurolayers(bj_ostream& os, bool from_pt){
 bj_ostream&
 coloring::print_coloring(bj_ostream& os, bool from_pt){
 	MARK_USED(from_pt);
+	if(from_pt){
+		dbg_print_qua_ids(os);
+		return os;
+	}
+	
 	os << "CO(" << (void*)this <<")={ " << bj_eol;
 	os << " brn=" << (void*)co_brn;
 	os << " qu_sz=" << co_quas.size();
@@ -1315,7 +1344,9 @@ print_all_in_grip(bj_ostream& os, binder& grp){
 }
 
 bj_ostream&
-quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps_src){
+quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps_src, 
+							bool from_tee)
+{
 #ifdef FULL_DEBUG
 	MARK_USED(from_pt);
 
@@ -1323,6 +1354,12 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 
 	if((pt_brn != NULL_PT) && (this == &(pt_brn->br_top_block))){
 		os << "TOP_BLOCK_QUA";
+		os.flush();
+		return os;
+	}
+	if(from_tee){
+		os << qu_id; 
+		os << "|" << qu_tee.so_qua_id;
 		os.flush();
 		return os;
 	}

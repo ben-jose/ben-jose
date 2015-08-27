@@ -47,6 +47,7 @@ string set wrapper.
 typedef std::set<ch_string> 	string_set_t;
 //typedef mem_redblack<ch_string>						string_set_t;
 typedef std::map<ch_string, long> 	string_long_map_t;
+typedef std::map<ch_string, ch_string> 	str_str_map_t;
 
 inline
 void strset_clear(string_set_t& ss){

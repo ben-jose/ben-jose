@@ -207,7 +207,7 @@ public:
 
 	void		unsort_me(sort_glb& srg);
 	void		sort_me_to(sort_glb& srg, sorset& nsr);
-	void		sort_from(sort_glb& srg, sort_id_t curr_nid,	void* id_src = NULL_PT);
+	void		sort_from(sort_glb& srg, sort_id_t curr_nid, void* id_src = NULL_PT);
 
 	//void		save_consec(sort_glb& srg);
 	//long		recover_consec(sort_glb& srg);
@@ -250,6 +250,7 @@ public:
 		}
 
 		so_ccl.cc_clear(false);
+		so_qua_id = 0;
 	}
 	
 	bj_ostream&	print_sortee(bj_ostream& os, bool from_pt = false);
@@ -309,6 +310,7 @@ srt_row_as_colors(row<sortee*>& rr1, row<obj_t1*>& rr2, row<long>& cols,
 	return all_consec;
 }
 
+/*
 inline
 bool
 srt_row_as_clauses(row<sortee*>& rr1, row<canon_clause*>& rr2){
@@ -326,6 +328,7 @@ srt_row_as_clauses(row<sortee*>& rr1, row<canon_clause*>& rr2){
 	}
 	return all_consec;
 }
+*/
 
 template<class obj_t1>
 void
@@ -529,7 +532,7 @@ public:
 	void		walk_release(sort_glb& srg);
 	void		walk_reset_values(sort_glb& srg, grip& flat_ss);
 
-	bool		walk_to_row(row<sortee*>& sorted, bool set_consecs){
+	/*bool		walk_to_row(row<sortee*>& sorted, bool set_consecs){
 		long consec = 0;
 		bool has_diff = false;
 		sorted.clear();
@@ -540,6 +543,7 @@ public:
 
 	void		walk_to_row_rec(bool set_consecs, long& consec,
 				row<sortee*>& sorted, bool& has_diff);
+	*/
 
 	void		walk_to_srs_row(row<sorset*>& sorted){
 		long consec = 0;
@@ -861,6 +865,13 @@ public:
 	void		clear_consecs();
 
 	bool		sort_to_tmp_srts(bool set_consecs = false){
+		sg_tmp_srts.clear();
+		stab_mutual_walk();
+		sg_step_sortees.copy_to(sg_tmp_srts);
+		return sg_step_has_diff;
+	}
+	
+	/*bool		sort_to_tmp_srts(bool set_consecs = false){
 		bool has_diff = false;
 		sg_tmp_srts.clear();
 		if(has_head()){
@@ -870,7 +881,7 @@ public:
 			has_diff = hd.walk_to_row(sg_tmp_srts, set_consecs);
 		}
 		return has_diff;
-	}
+	}*/
 
 	void		sort_to_tmp_srss(){
 		sg_tmp_srss.clear();
