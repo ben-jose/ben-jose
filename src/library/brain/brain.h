@@ -242,6 +242,7 @@ void	write_all_neuromaps(row<neuromap*>& to_wrt);
 
 void	get_all_positons(row_quanton_t& all_quas, row_quanton_t& all_pos, 
 						bool skip_all_n4);
+void	append_missing_opps(brain& brn, row_quanton_t& all_quas);
 bool	equal_positons(brain& brn, row_quanton_t& quas1, row_quanton_t& quas2, 
 						bool skip_all_n4);
 
@@ -418,6 +419,7 @@ class alert_rel {
 // end_of_define
 
 #define DECLARE_NI_FLAG_ALL_FUNCS(flag_nam) \
+ 	long		set_all_bi##flag_nam(brain& brn, row_quanton_t& rr_all); \
  	long		reset_all_its_##flag_nam(brain& brn, row_quanton_t& rr_all); \
  	long		reset_all_##flag_nam(brain& brn, row_quanton_t& rr_all); \
 	long		set_all_##flag_nam(brain& brn, row_quanton_t& rr_all); \
@@ -433,6 +435,18 @@ class alert_rel {
 // end_of_define
 
 #define DEFINE_NI_FLAG_ALL_FUNCS(flag_nam) \
+	long		set_all_bi##flag_nam(brain& brn, row_quanton_t& rr_all){ \
+		long num_qua_mod = 0; \
+		for(long aa = 0; aa < rr_all.size(); aa++){ \
+			quanton& qua = *(rr_all[aa]); \
+			if(! qua.is_##flag_nam()){ \
+				qua.set_bi##flag_nam(brn); \
+				num_qua_mod++; \
+			} \
+		} \
+		return num_qua_mod; \
+	} \
+ 	\
  	long		reset_all_its_##flag_nam(brain& brn, row_quanton_t& rr_all){ \
 		long num_qua = 0; \
 		for(long aa = 0; aa < rr_all.size(); aa++){ \
@@ -970,8 +984,8 @@ class coloring {
 	void	reset_tmp_colors(bool skip_all_n4);
 	bool	equal_to_tmp_colors(bool skip_all_n4);
 	
-	bool	calc_join(neuromap& nmp, coloring& jn);
-	void	simple_join(coloring& prev_col);
+	//bool	calc_join(neuromap& nmp, coloring& jn);
+	//void	simple_join(coloring& prev_col);
 	
 	bool 	ck_cols(){
 		BRAIN_CK(co_quas.size() == co_qua_colors.size());
@@ -2028,7 +2042,7 @@ class neuromap {
 	void	map_get_all_trail_propag_ps(row<prop_signal>& all_ps, bool with_clear = true);
 	neuromap&	map_get_all_propag_ps(row<prop_signal>& all_ps, bool with_clear = true);
 	void	map_get_all_ps(row<prop_signal>& all_ps);
-	bool	map_get_all_non_forced_ps(row<prop_signal>& all_ps);
+	//bool	map_get_all_non_forced_ps(row<prop_signal>& all_ps);
 
 	void	map_get_all_quas(row_quanton_t& all_quas);
 	void	map_get_all_confl_neus(row_neuron_t& all_neus);
@@ -2173,6 +2187,8 @@ class neuromap {
 	void	map_fill_cov_by_trail_propag(neurolayers& not_sel_neus);
 	void	map_fill_cov_by_forced(neurolayers& not_sel_neus);
 	void	map_fill_cov_by_propag(neurolayers& not_sel_neus);
+	
+	void	map_update_with(analyser& anlsr, neuromap* sub_nmp);
 	
 	//bool	is_last_forced(quanton& qua);
 	bool	has_qua_tier(quanton& qua);

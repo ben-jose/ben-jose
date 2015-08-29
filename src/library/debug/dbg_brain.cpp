@@ -1404,11 +1404,11 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 		dominated = in_qu_dominated(*pt_brn);
 	}
 
-	/*if(from_pt){
+	if(from_pt){
 		os << qu_id; 
 		os.flush();
 		return os;
-	}*/
+	}
 
 	if(from_pt){
 		//if(qu_block != NULL_PT){ os << "b"; }

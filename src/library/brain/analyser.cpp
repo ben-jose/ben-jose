@@ -485,112 +485,6 @@ analyser::ck_end_of_lrn_nmp(){
 	return true;
 }
 
-void
-neuromap::set_min_ti_max_ti(){
-	BRAIN_CK(na_orig_cho != NULL_PT);
-	BRAIN_REL_CK(na_orig_cho != NULL_PT);
-	BRAIN_CK(na_min_ti == INVALID_TIER);
-	BRAIN_CK(na_max_ti == INVALID_TIER);
-	BRAIN_CK(na_orig_cho->qu_tier != INVALID_TIER);
-	
-	na_min_ti = na_orig_cho->qu_tier;
-	
-	if(has_submap()){
-		quanton* nxt_cho = na_submap->na_orig_cho;
-		BRAIN_CK(nxt_cho != NULL_PT);
-		BRAIN_CK(nxt_cho->qu_tier != INVALID_TIER);
-		
-		na_max_ti = nxt_cho->qu_tier - 1;
-	} else {
-		brain& brn = get_brn();
-		na_max_ti = brn.tier();
-	}
-	BRAIN_CK(na_min_ti != INVALID_TIER);
-	BRAIN_CK(na_max_ti != INVALID_TIER);
-	BRAIN_CK_PRT((na_min_ti <= na_max_ti), os << "____________ \n ABORT_DATA\n";
-		get_brn().dbg_prt_margin(os);
-		os << "\n";
-		get_brn().print_trail(os);
-		os << " na_min_ti=" << na_min_ti << "\n";
-		os << " na_max_ti=" << na_max_ti << "\n";
-		os << " nmp=" << this << "\n";
-		os << " sub=" << na_submap << "\n";
-	);
-}
-
-neuromap*
-analyser::update_neuromap(neuromap* sub_nmp){
-	qlayers_ref& qlr = de_ref;
-	
-	brain& brn = get_de_brain();
-	BRAIN_CK(qlr.is_end_of_nmp(brn));
-
-	neuromap& nxt_nmp = brn.locate_neuromap();
-	
-	BRAIN_DBG(nxt_nmp.na_dbg_update_tk.update_ticket(brn));
-	
-	nxt_nmp.na_submap = sub_nmp;
-	BRAIN_DBG(
-		if(sub_nmp != NULL_PT){ 
-			nxt_nmp.na_dbg_num_submap = sub_nmp->na_dbg_num_submap + 1;
-		}
-	);
-	
-	BRAIN_CK(! nxt_nmp.has_submap() || nxt_nmp.na_all_confl.is_empty());
-	
-	quanton* qua = qlr.get_curr_quanton();
-	BRAIN_CK(qua != NULL_PT);
-	BRAIN_REL_CK(qua != NULL_PT);
-	
-	nxt_nmp.na_orig_lv = qua->qlevel();
-	nxt_nmp.na_orig_ti = qua->qu_tier;
-	nxt_nmp.na_orig_cho = qua;
-	nxt_nmp.na_orig_cy_ki = qua->get_cy_kind();
-	
-	if(qua->is_opp_mono()){
-		BRAIN_CK(nxt_nmp.na_submap != NULL_PT);
-		nxt_nmp.na_nxt_no_mono = nxt_nmp.na_submap->na_nxt_no_mono;
-		BRAIN_CK(nxt_nmp.is_na_mono());
-	}
-	
-	BRAIN_CK(nxt_nmp.na_trail_propag.is_empty());
-	BRAIN_CK(nxt_nmp.na_forced.is_empty());
-	
-	if(sub_nmp == NULL_PT){
-		BRAIN_CK(! nxt_nmp.is_na_mono());
-		BRAIN_CK(! de_all_confl.is_empty());
-		de_all_confl.copy_to(nxt_nmp.na_all_confl);  // multi_confl
-	}
-	
-	de_all_propag.move_to(nxt_nmp.na_trail_propag);
-	de_all_noted.move_to(nxt_nmp.na_forced);  // full_prep
-	
-	nxt_nmp.set_min_ti_max_ti();
-
-	// set all filled
-	
-	nxt_nmp.set_all_filled_by_forced();
-	nxt_nmp.map_forced_set_all_note2_n_tag2();
-	
-	//BRAIN_CK(brn.br_qu_tot_note2 == 0); // full_prep
-	
-	nxt_nmp.set_propag(); // full_nmp
-	nxt_nmp.set_all_filled_by_propag(); // full_nmp
-	nxt_nmp.map_propag_set_all_note3_n_tag3(); // full_nmp
-	
-	BRAIN_CK(nxt_nmp.map_ck_all_quas());
-	//BRAIN_CK(brn.br_qu_tot_note2 == 0); // full_prep
-
-	//BRAIN_CK(nxt_nmp.na_propag.is_empty());
-	//BRAIN_CK(nxt_nmp.na_all_filled_by_propag.is_empty());
-	
-	// set covs
-	nxt_nmp.map_fill_cov_by_forced(de_forced_not_sel_neus);
-	nxt_nmp.map_fill_cov_by_propag(de_propag_not_sel_neus);
-	
-	return &nxt_nmp;
-}
-
 bool
 analyser::found_learned(){
 	//bool fl = found_learned_forced(); 
@@ -625,6 +519,15 @@ brain::ck_cov_flags(){
 bool 
 neuromap::map_lv_already_has_setup(){
 	return map_get_data_level().has_setup_neuromap();
+}
+
+neuromap*
+analyser::update_neuromap(neuromap* sub_nmp){
+	analyser& anlsr = *this;
+	brain& brn = get_de_brain();
+	neuromap& nxt_nmp = brn.locate_neuromap();
+	nxt_nmp.map_update_with(anlsr, sub_nmp);
+	return &nxt_nmp;
 }
 
 neuromap*

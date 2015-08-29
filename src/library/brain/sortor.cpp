@@ -693,7 +693,10 @@ sort_glb::sort_all_from(row<sortee*>& tees, sort_id_t curr_id,
 		SORTER_CK(pt_tee != NULL_PT);
 		sortee& the_tee = *pt_tee;
 
-		SORTER_CK(! the_tee.is_alone());
+		SORTER_CK_PRT(! the_tee.is_alone(),
+			os << "\n_____________\nABORT_DATA\n";
+			os << " the_tee=" << &the_tee << "\n";
+		);
 
 		the_tee.sort_from(srg, curr_id); 
 
@@ -871,6 +874,11 @@ sorset::step_mutual_stabilize_rec(sort_glb& srg1, sort_glb& srg2)
 
 		if(oper == sm_with_neus){
 			row<sortee*>& all_mates = srt.so_related->so_mates;
+			/*DBG_PRT_WITH(108, srg1, 
+				os << "sm_with_neus.\n";
+				os << " srt=" << &srt << "\n";
+				os << " all_mates=" << all_mates << "\n";
+			);*/
 			srg2.sort_all_from(all_mates, curr_stab_consec, false, 0, true);
 		}
 
@@ -1419,24 +1427,13 @@ sort_glb::print_sort_glb(bj_ostream& os, bool from_pt){
 		return os;
 	}
 
+	//stab_mutual_walk();
+	
 	os << "SORTEES=\n";
 	os << sg_step_sortees << "\n";
 	//os << "SORSETS=\n";
 	//os << sg_step_sorsets << "\n"
 	
-	/*
-	sg_prt_srts.clear();
-	if(has_head()){
-		DBG(sg_prt_srts.set_cap(sg_dbg_num_items));
-
-		sorset& hd = get_head_ss();
-		hd.walk_to_row(sg_prt_srts, false);
-
-		os << sg_prt_srts << bj_eol;
-	} else {
-		os << "EMPTY SORTSETS in sort_glb" << bj_eol;
-	}
-	*/
 	os.flush();
 	return os;
 }
