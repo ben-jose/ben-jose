@@ -149,6 +149,7 @@ ch_string	nam_subset_resp(cmp_is_sub rr);
 void		string_replace_char(ch_string& src_str, char orig, char repl);
 
 bool		path_is_dead_lock(ch_string the_pth);
+bool		path_is_diff_file(ch_string the_pth);
 
 bool 		dims_path_exists(ch_string base_pth, const dima_dims& dims);
 
@@ -420,6 +421,7 @@ public:
 
 	row<char>		cf_chars;
 	row<char>		cf_comment_chars;
+	long			cf_num_cls_in_chars;
 
 	ch_string		cf_phase_str;
 
@@ -473,6 +475,7 @@ public:
 
 		cf_chars.clear(free_mem, free_mem);
 		cf_comment_chars.clear(free_mem, free_mem);
+		cf_num_cls_in_chars = -1;
 
 		cf_phase_str = "";
 
@@ -593,7 +596,7 @@ public:
 	void	update_parent_variants(skeleton_glb& skg, ch_string sv_dir);
 
 	void	add_comment_chars_to(skeleton_glb& skg, row<char>& cnn, ch_string sv_ref_pth);
-	void	add_clauses_as_chars_to(row<canon_clause*>& all_ccl, row<char>& cnn);
+	void	update_chars_to_write();
 
 	void	load_lits(skeleton_glb& skg, row_long_t& all_lits, long& tot_lits, 
 					  long& tot_twolits);

@@ -138,13 +138,20 @@ canon_sha(row<char>& cnn, ch_string& sha_txt, ch_string& minisha_txt){
 }
 
 bool
+path_is_diff_file(ch_string the_pth){
+	bool is_df = (path_get_name(the_pth) == SKG_DIFF_NAME);
+	return is_df;
+}
+
+bool
 canon_save(skeleton_glb& skg, ch_string& the_pth, row<char>& cnn, bool write_once){
 	// this function should never be modified because the 
 	// whole skeleton is based on shas of cnn
 
 	SKELETON_CK(not_skl_path(the_pth));
 	SKELETON_CK(! cnn.is_empty());
-	SKELETON_CK((((long)cnn.last()) != 0));
+	SKELETON_CK(((long)cnn.last()) != 0); 
+	//SKELETON_CK(! cnn.is_empty() || path_is_diff_file(the_pth)); 
 	
 	bool ok = write_file(the_pth, cnn, write_once);
 	return ok;
@@ -157,12 +164,14 @@ canon_load(skeleton_glb& skg, ch_string& the_pth, row<char>& cnn){
 	try{
 		read_file(the_pth, cnn);
 		
-		SKELETON_CK((((long)cnn.last()) != 0));
+		SKELETON_CK(! cnn.is_empty());
+		SKELETON_CK(((long)cnn.last()) != 0);
 		
 		load_ok = true;
 	} catch (const top_exception& ex1){
 		load_ok = false;
 	}
+	SKELETON_CK(load_ok);
 	return load_ok;
 }
 
@@ -891,12 +900,19 @@ canon_cnf::add_comment_chars_to(skeleton_glb& skg, row<char>& cnn, ch_string sv_
 }
 
 void
-canon_cnf::add_clauses_as_chars_to(row<canon_clause*>& all_ccl, row<char>& cnn){
-	cnn.clear();
-
-	if(all_ccl.is_empty()){
+canon_cnf::update_chars_to_write(){
+	SKELETON_CK(cf_dims.dd_tot_ccls == cf_clauses.size());
+	
+	row<canon_clause*>& all_ccl = cf_clauses;
+	if(all_ccl.size() == cf_num_cls_in_chars){
 		return;
 	}
+	
+	row<char>& cnn = cf_chars;
+	cnn.clear();
+	/*if(all_ccl.is_empty()){
+		return;
+	}*/
 
 	ch_string cn_hd_str = SKG_CANON_HEADER_STR;
 
@@ -917,7 +933,9 @@ canon_cnf::add_clauses_as_chars_to(row<canon_clause*>& all_ccl, row<char>& cnn){
 		DBG_PRT(85, ccl1.print_canon_clause(os));
 		ccl1.add_chars_to(cnn);
 	}
+	cf_num_cls_in_chars = all_ccl.size();
 	//cnn.push(0);
+	SKELETON_CK(! cnn.is_empty());
 }
 
 void
@@ -1050,12 +1068,9 @@ bj_ostream&
 canon_cnf::print_canon_cnf(bj_ostream& os, bool from_pt){
 	MARK_USED(from_pt);
 
-	row<char>& cnn = cf_chars;
-	if(cnn.is_empty()){
-		SKELETON_CK(cf_dims.dd_tot_ccls == cf_clauses.size());
-		add_clauses_as_chars_to(cf_clauses, cnn);
-	}
-	canon_print(os, cnn);
+	//row<char>& cnn = cf_chars;
+	update_chars_to_write();
+	canon_print(os, cf_chars);
 
 	os.flush();
 	return os;
@@ -1066,17 +1081,14 @@ canon_cnf::calc_sha_in(ch_string& sha_str, ch_string& minisha_str){
 	SKELETON_CK(sha_str.empty());
 	SKELETON_CK(minisha_str.empty());
 
-	row<char>& cnn = cf_chars;
-	if(cnn.is_empty()){
-		SKELETON_CK(cf_dims.dd_tot_ccls == cf_clauses.size());
-		add_clauses_as_chars_to(cf_clauses, cnn);
-	}
+	//row<char>& cnn = cf_chars;
+	update_chars_to_write();
 
-	canon_sha(cnn, sha_str, minisha_str);
+	canon_sha(cf_chars, sha_str, minisha_str);
 
 	DBG_PRT(94, os << "calc_sha in cnf=" << (void*)this << bj_eol
 		<< ">>>>>>>>" << bj_eol;
-		canon_print(os, cnn);
+		canon_print(os, cf_chars);
 		os << ">>>>>>>>" << bj_eol;
 		os << "SHA='" << sha_str << "'" << bj_eol;
 		os << "MINISHA='" << minisha_str << "'" << bj_eol;
@@ -1205,7 +1217,10 @@ canon_cnf::load_from(skeleton_glb& skg, ch_string& f_nam){
 
 	if(! load_ok){
 		DBG_PRT(79, os << "1. LOAD CNN FAILED f_nam=" << f_nam);
-		SKELETON_CK(false);
+		SKELETON_CK_PRT(false, os << "\n_____________\nABORT_DATA\n";
+			os << "f_nam=" << f_nam << "\n";
+			os << "lits_sz=" << all_lits.size() << "\n";
+		);
 		return false;
 	}
 
@@ -1906,11 +1921,7 @@ canon_cnf::prepare_cnf(skeleton_glb& skg, ch_string sv_pth)
 	SKELETON_CK(skg.kg_running_path != "");
 	SKELETON_CK(skg.kg_root_path != "");
 
-	if(cf_chars.is_empty()){
-		SKELETON_CK(cf_dims.dd_tot_ccls == cf_clauses.size());
-		add_clauses_as_chars_to(cf_clauses, cf_chars);
-	}
-	SKELETON_CK(! cf_chars.is_empty());
+	update_chars_to_write();
 
 	bool has_phases = has_phase_path();
 

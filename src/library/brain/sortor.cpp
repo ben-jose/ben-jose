@@ -1123,8 +1123,8 @@ sort_glb::stab_mutual_end(sort_glb& srg2, bool unique_ccls){
 	
 	SORTER_CK(srg1.sg_step_sorsets.size() == 1);
 	
-	//srg1.sg_one_ccl_per_ss = unique_ccls;
-	srg1.sg_one_ccl_per_ss = true;
+	srg1.sg_one_ccl_per_ss = unique_ccls;
+	//srg1.sg_one_ccl_per_ss = false;
 	srg1.step_mutual_stabilize(srg2, sm_get_ccls);
 
 	SORTER_CK(srg1.sg_curr_stab_consec >= srg1.sg_dbg_last_id);
@@ -1479,10 +1479,8 @@ sortee::is_next_choice(sort_glb& srg1){
 	if(srg1.sg_step_next_choice == NULL_PT){
 		return true;
 	}
-	comparison c1 = cmp_sortees(srg1.sg_step_next_choice, this);
-	if(c1 > 0){
-		return true;
-	}
+	//comparison c1 = cmp_sortees(srg1.sg_step_next_choice, this);
+	//if(c1 > 0){ return true; }
 	return false;
 }
 

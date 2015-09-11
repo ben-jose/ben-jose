@@ -1423,11 +1423,12 @@ neuromap::map_oper(mem_op_t mm){
 
 			tmp_tauto_cnf.save_cnf(skg, sv_pth1);
 
-			if(tmp_diff_cnf.is_empty()){
+			/*if(tmp_diff_cnf.is_empty()){
 				oper_ok = true;
 			} else {
 				oper_ok = tmp_diff_cnf.save_cnf(skg, sv_pth2);
-			}
+			}*/
+			oper_ok = tmp_diff_cnf.save_cnf(skg, sv_pth2);
 			
 			tmp_guide_cnf.save_cnf(skg, sv_pth3);
 
@@ -1599,8 +1600,8 @@ neuromap::map_prepare_mem_oper(mem_op_t mm){
 	dbg_shas.push(gui_cnf.cf_sha_str + "\n");
 
 	// FIND_GUIDE
-	if(mm == mo_find){
-	//if(has_submap() && (mm == mo_find)){
+	//if(mm == mo_find){
+	if(has_submap() && (mm == mo_find)){
 		instance_info& iinfo = brn.get_my_inst();
 		
 		ch_string find_ref = nxt_diff_phdat.pd_ref1_nam;
