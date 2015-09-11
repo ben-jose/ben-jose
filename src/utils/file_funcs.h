@@ -146,6 +146,9 @@ path_delete(ch_string full_pth, ch_string up_to);
 ch_string
 path_get_directory(ch_string the_pth, bool add_last_dir_sep);
 
+ch_string
+path_get_name(ch_string the_pth);
+
 bool
 path_create_link(ch_string old_pth, ch_string new_pth);
 

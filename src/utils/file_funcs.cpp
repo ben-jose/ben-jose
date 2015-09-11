@@ -768,6 +768,17 @@ path_get_directory(ch_string the_pth, bool add_last_dir_sep){
 	return the_dir;
 }
 
+ch_string
+path_get_name(ch_string the_pth){
+	long eos = (long)ch_string::npos;
+	long pos = (long)the_pth.rfind('/');
+	if(pos == eos){
+		return the_pth;
+	}
+	ch_string the_nm = the_pth.substr(pos + 1);
+	return the_nm;
+}
+
 void
 path_delete(ch_string full_pth, ch_string up_to){
 	//SKELETON_CK(not_skl_path(full_pth));
