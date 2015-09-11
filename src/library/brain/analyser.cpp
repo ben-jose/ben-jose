@@ -105,9 +105,9 @@ analyser::init_analyser(brain* brn){
 	de_all_confl.clear(true, true);
 	de_max_ti = INVALID_TIER;
 	
-	de_trail_propag_not_sel_neus.clear_all_neurons();
 	de_forced_not_sel_neus.clear_all_neurons();
 	de_propag_not_sel_neus.clear_all_neurons();
+	//de_trail_propag_not_sel_neus.clear_all_neurons();
 
 	de_tmp_neuromap = NULL_PT;
 	
@@ -388,9 +388,9 @@ analyser::init_calc_nmp(long min_lv){
 	BRAIN_CK(get_de_brain().br_ne_tot_tag1 == 0);
 	BRAIN_CK(min_lv < de_ref.get_curr_qlevel());
 	
-	de_trail_propag_not_sel_neus.clear_all_neurons();
 	de_forced_not_sel_neus.clear_all_neurons();
 	de_propag_not_sel_neus.clear_all_neurons();
+	//de_trail_propag_not_sel_neus.clear_all_neurons();
 
 	de_tmp_neuromap = NULL_PT;
 }
@@ -511,6 +511,7 @@ brain::ck_cov_flags(){
 	BRAIN_CK(br_ne_tot_tag2 == 0);
 	BRAIN_CK(br_qu_tot_note3 == 0);
 	BRAIN_CK(br_ne_tot_tag3 == 0);
+	BRAIN_CK(br_qu_tot_note4 == 0);
 	BRAIN_CK(br_ne_tot_tag4 == 0);
 #endif
 	return true;
@@ -534,7 +535,6 @@ neuromap*
 analyser::calc_neuromap(long min_lv, neuromap* prev_nmp, bool with_lrnd, bool in_setup)
 {
 	BRAIN_DBG(brain& brn = get_de_brain());
-	//BRAIN_CK(brn.ck_cov_flags());
 	
 	qlayers_ref& qlr = de_ref;
 	
@@ -625,7 +625,6 @@ analyser::calc_neuromap(long min_lv, neuromap* prev_nmp, bool with_lrnd, bool in
 	);
 	BRAIN_CK(brn.br_tot_qu_marks == 0);
 	BRAIN_CK(brn.br_tot_ne_spots == 0);
-	//BRAIN_CK(brn.ck_cov_flags());
 
 	DBG_PRT(38, os << "CLC_NMP{" 
 			<< " num_loop=" << num_loop
@@ -1175,6 +1174,7 @@ neuromap::map_reset_all_notes_and_tags(){
 	
 	map_forced_reset_all_note2_n_tag2();
 	map_propag_reset_all_note3_n_tag3();
+	//map_trail_propag_reset_all_note4_n_tag4();
 }
 
 void

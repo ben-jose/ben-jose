@@ -125,6 +125,8 @@ public:
 //=================================================================
 // sortee
 
+comparison	cmp_sortees(sortee* const & srt1, sortee* const & srt2);
+	
 enum tee_id_t {
 	tid_none,
 	tid_wlk_consec,
@@ -143,6 +145,7 @@ public:
 	}
 
 	void*		so_me;
+	long*		so_cmp_val;
 	sorset*		so_vessel;
 	long		so_sorset_consec;
 	long		so_walk_consec;
@@ -169,6 +172,7 @@ public:
 
 	void		init_sortee(bool free_mem = false){
 		so_me = NULL_PT;
+		so_cmp_val = NULL_PT;
 		so_vessel = NULL_PT;
 		so_sorset_consec = INVALID_NATURAL;
 		so_walk_consec = INVALID_NATURAL;
@@ -253,6 +257,8 @@ public:
 		so_qua_id = 0;
 	}
 	
+	bool	is_next_choice(sort_glb& srg1);
+	
 	bj_ostream&	print_sortee(bj_ostream& os, bool from_pt = false);
 };
 
@@ -281,8 +287,9 @@ srt_row_as(row<sortee*>& rr1, row<obj_t1*>& rr2){
 template<class obj_t1>
 bool
 srt_row_as_colors(row<sortee*>& rr1, row<obj_t1*>& rr2, row<long>& cols, 
-				tee_id_t consec_kk = tid_tee_consec)
+				tee_id_t consec_kk = tid_tee_consec, bool unique_ccls = false)
 {
+	sorset* last_ss = NULL_PT;
 	long last_item_id = INVALID_NATURAL;
 	bool all_consec = true;
 	rr2.clear();
@@ -291,6 +298,8 @@ srt_row_as_colors(row<sortee*>& rr1, row<obj_t1*>& rr2, row<long>& cols,
 	cols.set_cap(rr1.size());
 	for(long ii = 0; ii < rr1.size(); ii++){
 		sortee& srt = *(rr1[ii]);
+		SORTER_CK(srt.has_vessel());
+		
 		long the_consec = srt.so_tee_consec;
 		if(consec_kk == tid_wlk_consec){
 			the_consec = srt.so_wlk_consec;
@@ -298,9 +307,15 @@ srt_row_as_colors(row<sortee*>& rr1, row<obj_t1*>& rr2, row<long>& cols,
 		if(consec_kk == tid_qua_id){
 			the_consec = srt.so_qua_id;
 		}
+		SORTER_CK(the_consec != 0);
+		
+		if(unique_ccls && (last_ss != NULL_PT) && (srt.so_vessel == last_ss)){
+			continue;
+		}
 
 		all_consec = all_consec && (last_item_id != the_consec);
 		last_item_id = the_consec;
+		last_ss = srt.so_vessel;
 
 		cols.push(last_item_id);
 
@@ -639,6 +654,7 @@ public:
 	row<sortee*>	sg_step_sortees;
 	row<sorset*>	sg_step_sorsets;
 	sorset*		sg_step_first_multiple;
+	sortee*		sg_step_next_choice;
 
 	row<sorset*>	sg_step_neg_sorsets;
 	row<sorset*>	sg_step_pos_sorsets;
@@ -735,6 +751,7 @@ public:
 		sg_step_sortees.clear();
 		sg_step_sorsets.clear();
 		sg_step_first_multiple = NULL_PT;
+		sg_step_next_choice = NULL_PT;
 
 		sg_step_mutual_op = sm_walk;
 		sg_step_mutual_clauses.clear();
@@ -850,7 +867,7 @@ public:
 	void		stab_mutual(sort_glb& mates_srg);
 	void		stab_mutual_unique(sort_glb& mates_srg);
 	void		stab_mutual_choose_one(sort_glb& srg2);
-	void		stab_mutual_end(sort_glb& mates_srg);
+	void		stab_mutual_end(sort_glb& mates_srg, bool unique_ccls);
 	void		stab_mutual_walk();
 	
 	canon_cnf&	get_final_cnf(skeleton_glb& skg, ch_string comment, bool sorted_cnf);

@@ -234,7 +234,8 @@ void	elim_until_dominated(brain& brn, quanton& qua);
 long	find_max_level(row_quanton_t& tmp_mots);
 long	find_max_tier(row_quanton_t& tmp_mots);
 
-void	split_tees(sort_glb& srg, row<sortee*>& sorted_tees, row<sortee*>& sub_tees, 
+void	split_tees(brain& brn, sort_glb& srg, 
+			row<sortee*>& sorted_tees, row<sortee*>& sub_tees, 
 			row<canon_clause*>& ccls_in, row<canon_clause*>& ccls_not_in);
 
 
@@ -725,6 +726,7 @@ class quanton {
 
 		qu_tee.so_dbg_me_class = 1;
 		qu_tee.so_me = this;
+		qu_tee.so_cmp_val = &qu_tier;
 		qu_tee.so_related = &qu_reltee;
 
 		qu_tee.so_dbg_extrn_id = qu_id;
@@ -964,9 +966,12 @@ class coloring {
 
 	void	dbg_set_brain_coloring();
 	
-	void	save_colors_from(sort_glb& neus_srg, sort_glb& quas_srg, tee_id_t consec_kk);
+	void	save_colors_from(sort_glb& neus_srg, sort_glb& quas_srg, tee_id_t consec_kk, 
+								bool unique_ccls = true);
+	
 	void	load_colors_into(sort_glb& neus_srg, sort_glb& quas_srg, 
 				dbg_call_id dbg_id, neuromap* nmp = NULL_PT, bool calc_phi_id = false);
+	
 	void	add_coloring(coloring& clr);
 
 	void	move_co_to(coloring& col2);
@@ -1855,7 +1860,7 @@ class neuromap {
 	long			na_max_ti;
 	
 	row<prop_signal>	na_trail_propag; // all trail propag in this nmp section
-	row_neuron_t		na_cov_by_trail_propag_quas;
+	//row_neuron_t		na_cov_by_trail_propag_quas;
 	
 	row_neuron_t		na_all_filled_by_forced;
 	row_neuron_t		na_all_filled_by_propag;
@@ -1932,7 +1937,7 @@ class neuromap {
 		na_all_filled_by_propag.clear();
 		
 		na_trail_propag.clear(true, true);
-		na_cov_by_trail_propag_quas.clear();
+		//na_cov_by_trail_propag_quas.clear();
 		
 		na_forced.clear(true, true);
 		na_propag.clear(true, true);
@@ -2038,22 +2043,25 @@ class neuromap {
 	
 	neuromap&	map_get_last_submap();
 
+	//void	map_get_all_trail_propag_ps(row<prop_signal>& all_ps, bool with_clear = true);
 	void	map_get_all_forced_ps(row<prop_signal>& all_ps, bool with_clear = true);
-	void	map_get_all_trail_propag_ps(row<prop_signal>& all_ps, bool with_clear = true);
-	neuromap&	map_get_all_propag_ps(row<prop_signal>& all_ps, bool with_clear = true);
+	void	map_get_all_propag_ps(row<prop_signal>& all_ps, bool with_clear,
+								bool skip_tail);
 	void	map_get_all_ps(row<prop_signal>& all_ps);
 	//bool	map_get_all_non_forced_ps(row<prop_signal>& all_ps);
 
-	void	map_get_all_quas(row_quanton_t& all_quas);
 	void	map_get_all_confl_neus(row_neuron_t& all_neus);
 	//void	map_get_all_forced_neus(row_neuron_t& all_neus, bool with_clear = true);
 	
-	void	map_get_all_cov_by_trail_propag_neus(row_neuron_t& all_neus, bool with_clear);
+	//void	map_get_all_cov_by_trail_propag_neus(row_neuron_t& all_neus, bool with_clear);
 	
-	void	map_get_all_subcov_neus(row_neuron_t& all_neus, bool with_clear);
-	void	map_get_all_cov_neus(row_neuron_t& all_neus, bool with_clear);
+	void	map_get_all_subcov_neus(row_neuron_t& all_neus, bool with_clear, bool skip_tail);
+	void	map_get_all_cov_neus(row_neuron_t& all_neus, bool with_clear, bool skip_tail);
 	
+	void	map_get_all_quas(row_quanton_t& all_quas);
+	//void	map_get_all_quas_2(row_quanton_t& all_quas);
 	void	map_get_all_neus(row_neuron_t& all_neus);
+	//void	map_get_all_neus_2(row_neuron_t& all_neus);
 	
 	bool 	map_ck_all_upper_quas(row_quanton_t& all_upper_quas);
 	void 	map_get_all_upper_quas(row_quanton_t& all_upper_quas);
@@ -2110,7 +2118,7 @@ class neuromap {
 	static
 	bool	set_all_filled_by(brain& brn, row_quanton_t& nmp_quas, row_neuron_t& all_filled);
 	
-	bool	set_all_filled_by_trail_propag();
+	//bool	set_all_filled_by_trail_propag();
 	bool	set_all_filled_by_forced();
 	bool	set_all_filled_by_propag();
 	
@@ -2155,11 +2163,16 @@ class neuromap {
 	
 	static
 	void 	map_get_initial_ps_coloring(brain& brn, row<prop_signal>& dtrace, 
-										coloring& clr, bool ck_ord);
+										coloring& clr);
 	
 	void	map_get_initial_guide_coloring(coloring& clr);
 	void 	map_get_initial_compl_coloring(coloring& prv_clr, coloring& all_quas_clr);
 	void 	map_get_initial_tauto_coloring(coloring& prv_clr, coloring& tauto_clr);
+	
+	void	map_get_initial_guide_coloring_2(coloring& clr);
+	void 	map_get_initial_compl_coloring_2(coloring& prv_clr, coloring& all_quas_clr);
+	void 	map_get_initial_tauto_coloring_2(coloring& prv_clr, coloring& tauto_clr);
+	
 	void 	map_get_simple_coloring(coloring& clr);
 
 	bool 	dbg_has_simple_coloring_quas(coloring& clr);
@@ -2184,20 +2197,22 @@ class neuromap {
 								 neuromap* dbg_nmp
 						);
 	
-	void	map_fill_cov_by_trail_propag(neurolayers& not_sel_neus);
 	void	map_fill_cov_by_forced(neurolayers& not_sel_neus);
 	void	map_fill_cov_by_propag(neurolayers& not_sel_neus);
+	//void	map_fill_cov_by_trail_propag(neurolayers& not_sel_neus);
 	
+	void	map_init_with(analyser& anlsr, neuromap* sub_nmp);
 	void	map_update_with(analyser& anlsr, neuromap* sub_nmp);
+	void	map_update_with_2(analyser& anlsr, neuromap* sub_nmp);
 	
 	//bool	is_last_forced(quanton& qua);
 	bool	has_qua_tier(quanton& qua);
 	
 	void	map_reset_all_notes_and_tags();
 
-	DECLARE_NA_FLAG_ALL_FUNCS(trail_propag, 2)
 	DECLARE_NA_FLAG_ALL_FUNCS(forced, 2)
 	DECLARE_NA_FLAG_ALL_FUNCS(propag, 3)
+	//DECLARE_NA_FLAG_ALL_FUNCS(trail_propag, 4)
 
 	
 	bj_ostream&	print_neuromap(bj_ostream& os, bool from_pt = false);
@@ -2823,9 +2838,9 @@ class analyser {
 	prop_signal 	de_next_bk_psig;
 	long			de_max_ti;
 
-	neurolayers 	de_trail_propag_not_sel_neus;
 	neurolayers 	de_forced_not_sel_neus;
 	neurolayers 	de_propag_not_sel_neus;
+	//neurolayers 	de_trail_propag_not_sel_neus;
 	
 	neuromap*		de_tmp_neuromap;
 	
@@ -3197,6 +3212,8 @@ public:
 	row_quanton_t 	br_tmp_biqus_lv3;
 	row_quanton_t 	br_tmp_cicle_chos;
 	row_quanton_t	br_tmp_all_impl_cho;
+	row_quanton_t	br_tmp_all_nmp_quas_1;
+	row_quanton_t	br_tmp_all_nmp_quas_2;
 	
 	row_neuron_t 	br_tmp_ck_neus;
 	row_neuron_t 	br_tmp_ne_activate;
@@ -3207,6 +3224,8 @@ public:
 	row_neuron_t 	br_tmp_nmp_neus_for_upper_qu;
 	row_neuron_t 	br_tmp_guide_confls;
 	row_neuron_t 	br_tmp_all_cfl;
+	row_neuron_t	br_tmp_all_nmp_neus_1;
+	row_neuron_t	br_tmp_all_nmp_neus_2;
 	
 	row_quanton_t 	br_tmp_rever_quas;
 

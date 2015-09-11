@@ -143,7 +143,7 @@ canon_save(skeleton_glb& skg, ch_string& the_pth, row<char>& cnn, bool write_onc
 	// whole skeleton is based on shas of cnn
 
 	SKELETON_CK(not_skl_path(the_pth));
-	
+	SKELETON_CK(! cnn.is_empty());
 	SKELETON_CK((((long)cnn.last()) != 0));
 	
 	bool ok = write_file(the_pth, cnn, write_once);
@@ -1910,6 +1910,7 @@ canon_cnf::prepare_cnf(skeleton_glb& skg, ch_string sv_pth)
 		SKELETON_CK(cf_dims.dd_tot_ccls == cf_clauses.size());
 		add_clauses_as_chars_to(cf_clauses, cf_chars);
 	}
+	SKELETON_CK(! cf_chars.is_empty());
 
 	bool has_phases = has_phase_path();
 

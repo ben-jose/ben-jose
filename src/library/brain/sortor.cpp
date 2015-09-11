@@ -758,6 +758,28 @@ srs_row_as_clauses(sort_glb& srg, row<sorset*>& rr1, row<canon_clause*>& rr2){
 	return all_consec;
 }
 
+comparison
+cmp_sortees(sortee* const & srt1, sortee* const & srt2){
+	bool s1_ok = (srt1 != NULL_PT);
+	bool s2_ok = (srt2 != NULL_PT);
+	SORTER_CK(s1_ok == s2_ok);
+	if(! s1_ok){ return 0; }
+	SORTER_CK(s1_ok);
+	SORTER_CK(s2_ok);
+	
+	long* v1 = srt1->so_cmp_val;
+	long* v2 = srt2->so_cmp_val;
+	bool v1_ok = (v1 != NULL_PT);
+	bool v2_ok = (v2 != NULL_PT);
+	SORTER_CK(v1_ok == v2_ok);
+	if(! v1_ok){ return 0; }
+	SORTER_CK(v1_ok);
+	SORTER_CK(v2_ok);
+	
+	comparison c2 = cmp_long(*v1, *v2);
+	return c2;
+}
+
 // mutual stab
 
 void
@@ -858,10 +880,14 @@ sorset::step_mutual_stabilize_rec(sort_glb& srg1, sort_glb& srg2)
 
 		if(set_tee_consecs){
 			sorted_tees.push(&srt);
+			if(srt.is_next_choice(srg1)){
+				srg1.sg_step_next_choice = &srt;
+			}
 		}
 
 		canon_clause& tee_ccl = srt.so_ccl;
 		if(oper == sm_get_ccls){
+			//SORTER_CK(! one_ccl);
 			// one ccl by sorset
 			if(one_ccl){ if(rgt == fst){ all_ccl.push(&tee_ccl); } }
 			else { all_ccl.push(&tee_ccl); }
@@ -932,6 +958,7 @@ sort_glb::step_mutual_stabilize(sort_glb& srg2, step_mutual_op_t op){
 	sg_step_all_consec = true;
 	sg_step_sortees.clear();
 	sg_step_first_multiple = NULL_PT;
+	sg_step_next_choice = NULL_PT;
 	sg_step_neg_sorsets.clear();
 	sg_step_pos_sorsets.clear();
 
@@ -1076,14 +1103,14 @@ sort_glb::stab_mutual(sort_glb& srg2){
 	SORTER_CK(! srg1.sg_step_has_diff);
 	SORTER_CK(! srg2.sg_step_has_diff);
 	
-	stab_mutual_end(srg2);
+	stab_mutual_end(srg2, true);
 	
 	SORTER_CK(srg1.sg_step_sortees.size() == srg1.sg_dbg_fst_num_items);
 	SORTER_CK(srg2.sg_step_sortees.size() == srg2.sg_dbg_fst_num_items);
 }
 
 void
-sort_glb::stab_mutual_end(sort_glb& srg2){
+sort_glb::stab_mutual_end(sort_glb& srg2, bool unique_ccls){
 	SORTER_CK(&srg2 != this);
 	sort_glb& srg1 = *this;
 
@@ -1095,6 +1122,9 @@ sort_glb::stab_mutual_end(sort_glb& srg2){
 	srg2.step_quas(srg1);
 	
 	SORTER_CK(srg1.sg_step_sorsets.size() == 1);
+	
+	//srg1.sg_one_ccl_per_ss = unique_ccls;
+	srg1.sg_one_ccl_per_ss = true;
 	srg1.step_mutual_stabilize(srg2, sm_get_ccls);
 
 	SORTER_CK(srg1.sg_curr_stab_consec >= srg1.sg_dbg_last_id);
@@ -1150,17 +1180,20 @@ sort_glb::stab_mutual_choose_one(sort_glb& srg2){
 	SORTER_CK(srg1.has_head());
 
 	SORTER_CK(sg_step_first_multiple != NULL_PT);
+	SORTER_CK(sg_step_next_choice != NULL_PT);
+	SORTER_CK(sg_step_next_choice->so_vessel == sg_step_first_multiple);
 
 	sorset& ss_one = *sg_step_first_multiple;
 
-	//SORTER_CK(! ss_one.has_subsets());
 	SORTER_CK(ss_one.is_multitem());
 
 	sort_id_t& stab_consec = srg1.sg_curr_stab_consec;
 
 	stab_consec++;
 
-	sortee& to_sort = ss_one.first_item();
+	//sortee& to_sort = ss_one.first_item();
+	sortee& to_sort = *sg_step_next_choice;
+	SORTER_CK(to_sort.so_cmp_val != NULL_PT);
 
 	DBG_SORTOR_PRT(57, os << "choose one=" << to_sort);
 
@@ -1244,7 +1277,7 @@ sort_glb::ck_stab_inited(){
 	SORTER_CK(&(get_head_ss()) == sg_step_sorsets.first());
 	SORTER_CK(! sg_step_sortees.is_empty() || get_head_ss().is_ss_virgin());
 	SORTER_CK(sg_curr_stab_consec == 1);
-	SORTER_CK(! sg_one_ccl_per_ss);
+	//SORTER_CK(! sg_one_ccl_per_ss);
 	SORTER_CK(sg_dbg_num_saved_consec == 0);
 #endif
 	return true;
@@ -1252,7 +1285,7 @@ sort_glb::ck_stab_inited(){
 
 void
 sort_glb::stab_mutual_init(){
-	sg_one_ccl_per_ss = false;
+	//sg_one_ccl_per_ss = false;
 
 	stab_release_all_sorsets();
 	sorset& hd_nsr = init_head_ss();
@@ -1436,5 +1469,20 @@ sort_glb::print_sort_glb(bj_ostream& os, bool from_pt){
 	
 	os.flush();
 	return os;
+}
+
+bool
+sortee::is_next_choice(sort_glb& srg1){
+	if(so_vessel != srg1.sg_step_first_multiple){
+		return false;
+	}
+	if(srg1.sg_step_next_choice == NULL_PT){
+		return true;
+	}
+	comparison c1 = cmp_sortees(srg1.sg_step_next_choice, this);
+	if(c1 > 0){
+		return true;
+	}
+	return false;
 }
 

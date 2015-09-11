@@ -536,6 +536,12 @@ public:
 	}
 
 	canon_clause&	add_clause(skeleton_glb& skg);
+	
+	bool	is_empty(){
+		SKELETON_CK(cf_dims.dd_tot_ccls == cf_clauses.size());
+		bool is_e = cf_clauses.is_empty();
+		return is_e;
+	}
 
 	ch_string	get_id_str();
 	void		get_extreme_lits(row<long>& lits);
@@ -543,8 +549,6 @@ public:
 	ch_string	get_num_variants_file_name(skeleton_glb& skg);
 
 	void	release_all_clauses(skeleton_glb& skg, bool free_mem = false);
-
-	// ------------ coding
 
 	bool	has_phase_path(){
 		return cf_phdat.has_ref();
