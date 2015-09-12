@@ -315,6 +315,8 @@ public:
 	
 	bj_ostr_stream	ld_err_msg;
 
+	bool			ld_allow_empty_cnfs;
+	
 	bool			ld_as_3cnf;
 
 	long			ld_max_in_ccl_sz;
@@ -413,7 +415,7 @@ public:
 	void	finish_parse(row<long>& inst_ccls);
 	void	parse_content(row<long>& inst_ccls);
 	
-	void	parse_file(ch_string& f_nam, row<long>& inst_ccls);
+	void	parse_file(ch_string& f_nam, row<long>& inst_ccls, bool allow_empty = false);
 	
 	long	get_cursor_pos();
 	

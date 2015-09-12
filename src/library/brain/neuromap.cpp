@@ -2800,7 +2800,7 @@ neuromap::map_get_all_neus_2(row_neuron_t& all_neus){
 */
 
 void
-neuromap::map_get_initial_guide_coloring(coloring& clr){
+neuromap::map_get_initial_guide_coloring_2(coloring& clr){
 	// old func
 	BRAIN_CK(&na_guide_col != &clr);
 
@@ -2809,7 +2809,7 @@ neuromap::map_get_initial_guide_coloring(coloring& clr){
 }
 
 void
-neuromap::map_get_initial_compl_coloring(coloring& prv_clr, coloring& compl_clr)
+neuromap::map_get_initial_compl_coloring_2(coloring& prv_clr, coloring& compl_clr)
 {
 	// old func
 	brain& brn = get_brn();
@@ -2829,7 +2829,7 @@ neuromap::map_get_initial_compl_coloring(coloring& prv_clr, coloring& compl_clr)
 }
 
 void
-neuromap::map_get_initial_tauto_coloring(coloring& prv_clr, coloring& tauto_clr)
+neuromap::map_get_initial_tauto_coloring_2(coloring& prv_clr, coloring& tauto_clr)
 {
 	// old func
 	brain& brn = get_brn();
@@ -2853,7 +2853,7 @@ neuromap::map_get_initial_tauto_coloring(coloring& prv_clr, coloring& tauto_clr)
 }
 
 void
-neuromap::map_get_initial_guide_coloring_2(coloring& clr){
+neuromap::map_get_initial_guide_coloring(coloring& clr){
 	BRAIN_CK(&na_guide_col != &clr);
 
 	brain& brn = get_brn();
@@ -2866,7 +2866,7 @@ neuromap::map_get_initial_guide_coloring_2(coloring& clr){
 }
 
 void
-neuromap::map_get_initial_compl_coloring_2(coloring& prv_clr, coloring& compl_clr)
+neuromap::map_get_initial_compl_coloring(coloring& prv_clr, coloring& compl_clr)
 {
 	brain& brn = get_brn();
 	BRAIN_CK(&prv_clr != &compl_clr);
@@ -2890,7 +2890,7 @@ neuromap::map_get_initial_compl_coloring_2(coloring& prv_clr, coloring& compl_cl
 }
 
 void
-neuromap::map_get_initial_tauto_coloring_2(coloring& prv_clr, coloring& tauto_clr)
+neuromap::map_get_initial_tauto_coloring(coloring& prv_clr, coloring& tauto_clr)
 {
 	brain& brn = get_brn();
 	BRAIN_CK(&prv_clr != &tauto_clr);

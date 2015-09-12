@@ -1207,10 +1207,12 @@ canon_cnf::load_from(skeleton_glb& skg, ch_string& f_nam){
 	release_and_init(skg);
 	all_lits.clear();
 
+	bool is_diff = path_is_diff_file(f_nam);
+	
 	bool load_ok = true;
 	dimacs_loader	the_loader(get_dbg_brn());
 	try{
-		the_loader.parse_file(f_nam, all_lits);
+		the_loader.parse_file(f_nam, all_lits, is_diff);
 	} catch (const top_exception& ex1){
 		load_ok = false;
 	}
@@ -1254,7 +1256,7 @@ canon_cnf::load_from(skeleton_glb& skg, ch_string& f_nam){
 		return false;
 	}
 
-	if(cf_dims.dd_tot_lits <= 0){
+	if(! is_diff && (cf_dims.dd_tot_lits <= 0)){
 		DBG_PRT(79, os << "5. LOAD CNN FAILED f_nam=" << f_nam);
 		SKELETON_CK(false);
 		return false;

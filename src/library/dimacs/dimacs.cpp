@@ -336,6 +336,8 @@ dimacs_loader::init_dimacs_loader(brain* the_brn){
 
 	ld_file_name = "";
 
+	ld_allow_empty_cnfs = false;
+	
 	ld_as_3cnf = false;
 
 	init_parse();
@@ -398,6 +400,10 @@ dimacs_loader::parse_header(){
 			throw dimacs_exception(dix_bad_format, *pt_in, ld_num_line, get_cursor_pos());
 			break;
 		}
+	}
+	
+	if(ld_allow_empty_cnfs){
+		return;
 	}
 
 	if(num_var == 0){
@@ -506,7 +512,8 @@ dimacs_loader::parse_content(row<long>& inst_ccls){
 }
 
 void
-dimacs_loader::parse_file(ch_string& f_nam, row<long>& inst_ccls){
+dimacs_loader::parse_file(ch_string& f_nam, row<long>& inst_ccls, bool allow_empty){
+	ld_allow_empty_cnfs = allow_empty;
 	load_file(f_nam);
 	parse_content(inst_ccls);
 }
