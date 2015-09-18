@@ -82,6 +82,8 @@ Declarations of classes and that implement the neural network.
 #define MIN_NUM_BLKS 100
 #define MIN_NUM_MAPS 100
 
+#define MIN_TRAINABLE_NUM_SUB 2
+
 enum action_t {
 	ac_invalid = -100,
 	ac_recoil = -1,
@@ -1858,6 +1860,7 @@ class neuromap {
 	long			na_release_idx;
 	long			na_min_ti;
 	long			na_max_ti;
+	long			na_num_submap;
 	
 	row<prop_signal>	na_trail_propag; // all trail propag in this nmp section
 	//row_neuron_t		na_cov_by_trail_propag_quas;
@@ -1880,7 +1883,6 @@ class neuromap {
 	row_neuron_t	na_all_neus_in_vnt_found;
 	
 	BRAIN_DBG(
-		long				na_dbg_num_submap;
 		long				na_dbg_nxt_lv;
 		long				na_dbg_ac_lv;
 		long				na_dbg_st_lv;
@@ -1932,6 +1934,7 @@ class neuromap {
 		
 		na_min_ti = INVALID_TIER;
 		na_max_ti = INVALID_TIER;
+		na_num_submap = 1;
 		
 		na_all_filled_by_forced.clear();
 		na_all_filled_by_propag.clear();
@@ -1954,7 +1957,6 @@ class neuromap {
 		na_all_neus_in_vnt_found.clear();
 		
 		DBG(
-			na_dbg_num_submap = 1;
 			na_dbg_nxt_lv = INVALID_LEVEL;
 			na_dbg_ac_lv = INVALID_LEVEL;
 			na_dbg_st_lv = INVALID_LEVEL;
@@ -2125,7 +2127,8 @@ class neuromap {
 	void	set_propag();
 	
 	bool	has_submap(){
-		return (na_submap != NULL_PT);
+		bool h_s = (na_submap != NULL_PT);
+		return h_s;
 	}
 	
 	long	get_min_ti(){
@@ -2880,18 +2883,8 @@ class analyser {
 		return qua;
 	}
 	
+	bool		in_trainable_lv();
 	bool		found_learned();
-	quanton&	first_learned();
-	
-	bool		found_learned_forced(){
-		bool fl = (! de_all_learned_forced.is_empty());
-		return fl;
-	}
-	
-	bool		found_learned_propag(){
-		bool fl = (! de_all_learned_propag.is_empty());
-		return fl;
-	}
 	
 	bool	is_end_of_dct(){
 		long num_ly_notes = de_nkpr.dk_num_noted_in_layer;
@@ -2950,8 +2943,7 @@ class analyser {
 
 	neuromap*	update_neuromap(neuromap* prev_nmp);
 	void 		init_calc_nmp(long min_lv);
-	neuromap*	calc_neuromap(long min_lv, neuromap* prev_nmp, bool with_lrnd, 
-							  bool in_setup);
+	neuromap*	calc_neuromap(long min_lv, neuromap* prev_nmp, bool in_setup);
 	void 		end_analysis();
 	
 	//neuromap*	cut_neuromap(neuromap* nmp, neuromap* nxt_nmp);

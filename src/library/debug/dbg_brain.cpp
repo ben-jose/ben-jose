@@ -491,7 +491,7 @@ neuromap::print_subnmp(bj_ostream& os, bool only_pts){
 	os << " subnmp=" << (void*)na_submap;
 	//os << " mat=" << na_mates;
 	//os << " rel_idx=" << na_release_idx;
-	os << " #lv=" << na_dbg_num_submap;
+	os << " #lv=" << na_num_submap;
 	
 	os << "\n ---------------------------";
 	os << "\n na_trail_propag=\n";
@@ -553,7 +553,7 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 		os << ".u" << na_dbg_update_tk;
 		os << "(" << (void*)this << ")";
 		os << " o_cho=" << na_orig_cho;
-		os << " #sub=" << na_dbg_num_submap;
+		os << " #sub=" << na_num_submap;
 		os << " sub1=(" << (void*)na_submap << ")";
 		os << " o_lv=" << na_orig_lv;
 		os << " n_lv=" << na_dbg_nxt_lv;

@@ -557,7 +557,9 @@ neuromap::map_dbg_html_data_str(ch_string msg){
 	ss_msg << HTMi_h1 << "BRN_recoil=" << brn.recoil() << HTMe_h1 << "\n";
 	ss_msg << HTMi_h2 << msg << HTMe_h2 << "\n";
 	ss_msg << "nmp=" << this << HTM_br << "\n";
-	ss_msg << "#sub=" << na_dbg_num_submap << HTM_br << "\n";
+	ss_msg << "#sub=" << na_num_submap;
+	ss_msg << " has_sub=" << has_submap();
+	ss_msg << HTM_br << "\n";
 	ss_msg << "all_sub=[";
 	print_all_subnmp(ss_msg, true);
 	ss_msg << "]";
