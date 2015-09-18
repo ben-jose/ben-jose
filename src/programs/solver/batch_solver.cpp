@@ -18,9 +18,14 @@ along with ben-jose.  If not, see <http://www.gnu.org/licenses/>.
 
 ------------------------------------------------------------
 
-Copyright (C) 2011, 2014. QUIROGA BELTRAN, Jose Luis.
+Copyright (C) 2011, 2014-2015. QUIROGA BELTRAN, Jose Luis.
 Id (cedula): 79523732 de Bogota - Colombia.
 email: joseluisquirogabeltran@gmail.com
+
+ben-jose is free software thanks to The Glory of Our Lord 
+	Yashua Melej Hamashiaj.
+Our Resurrected and Living, both in Body and Spirit, 
+	Prince of Peace.
 
 ------------------------------------------------------------
 
@@ -132,11 +137,6 @@ batch_solver::init_batch_solver(){
 
 	dbg_skip_print_info = false;
 
-	DBG(
-		dbg_ops.W = 1;
-		dbg_ops.F = 0;
-	)
-	
 	reset_err_msg();
 
 	error_cod = -1;
@@ -264,8 +264,6 @@ batch_solver::print_final_totals(bj_ostream& os){
 
 void			
 batch_solver::print_batch_consec(){
-	//DBG_COMMAND(34, return);
-
 	double perc = 0.0;
 	if(batch_num_files > 0){
 		perc = (batch_consec * 100.0) / batch_num_files;
@@ -690,18 +688,6 @@ batch_solver::get_args(int argc, char** argv)
 		} else if(the_arg == "-rr"){
 			DBG(as_release = true);
 			NOT_DBG(os << "running RELEASE exe. ignoring debug op '-rr'" << bj_eol;)
-		} else if(the_arg == "-w"){
-			DBG(dbg_ops.W = 0;)
-			NOT_DBG(os << "running RELEASE exe. ignoring debug op '-w'" << bj_eol;)
-		} else if(the_arg == "+w"){
-			DBG(dbg_ops.W = 1;)
-			NOT_DBG(os << "running RELEASE exe. ignoring debug op '+w'" << bj_eol;)
-		} else if(the_arg == "-f"){
-			DBG(dbg_ops.F = 0;)
-			NOT_DBG(os << "running RELEASE exe. ignoring debug op '-f'" << bj_eol;)
-		} else if(the_arg == "+f"){
-			DBG(dbg_ops.F = 1;)
-			NOT_DBG(os << "running RELEASE exe. ignoring debug op '+f'" << bj_eol;)
 		} else if((the_arg == "-root") && ((ii + 1) < argc)){
 			int kk_idx = ii + 1;
 			ii++;
@@ -727,8 +713,6 @@ batch_solver::get_args(int argc, char** argv)
 	
 	if(as_release){
 		DBG(
-			dbg_ops.W = 1;
-			dbg_ops.F = 1;
 			if(bc_slvr_path.empty()){
 				bc_slvr_path = path_to_absolute_path(".");
 			}
@@ -784,14 +768,6 @@ int	solver_main(int argc, char** argv){
 		const char* pth = top_dat.bc_slvr_path.c_str();
 		top_dat.bc_solver = bj_solver_create(pth);
 
-		DBG(
-			bj_dbg_t* pt_dbg_ops = bj_debug(top_dat.bc_solver);
-			if(pt_dbg_ops != NULL){
-				bj_dbg_t& d_ops = *pt_dbg_ops;
-				d_ops = top_dat.dbg_ops;
-				top_dat.prt_dbg_ops();
-			}
-		)
 		PRT_OUT_1( os << ".STARTING AT " << run_time() << bj_eol);
 
 		MEM_CTRL(
@@ -818,7 +794,6 @@ int	solver_main(int argc, char** argv){
 			top_dat.print_totals(os);
 			top_dat.print_final_totals(os);
 			os << "ROOT_DIR=" << top_dat.bc_slvr_path << bj_eol;
-			DBG(top_dat.prt_dbg_ops();)
 		);
 	}
 	

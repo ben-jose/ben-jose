@@ -18,9 +18,14 @@ along with ben-jose.  If not, see <http://www.gnu.org/licenses/>.
 
 ------------------------------------------------------------
 
-Copyright (C) 2011, 2014. QUIROGA BELTRAN, Jose Luis.
+Copyright (C) 2011, 2014-2015. QUIROGA BELTRAN, Jose Luis.
 Id (cedula): 79523732 de Bogota - Colombia.
 email: joseluisquirogabeltran@gmail.com
+
+ben-jose is free software thanks to The Glory of Our Lord 
+	Yashua Melej Hamashiaj.
+Our Resurrected and Living, both in Body and Spirit, 
+	Prince of Peace.
 
 ------------------------------------------------------------
 
@@ -33,11 +38,47 @@ the solver wrapper.
 #ifndef SOLVER_H
 #define SOLVER_H
 
+#include "dbg_config.h"
 #include "instance_info.h"
 #include "skeleton.h"
 #include "ben_jose.h"
 
 #define SOLVER_CK(prm) 	DBG_BJ_LIB_CK(prm)
+
+class brain;
+
+DBG(
+	class dbg_inst_info;
+	class dbg_slvr_info;
+)
+
+//=================================================================
+// dbg_slvr_info
+
+#ifdef FULL_DEBUG
+
+class dbg_slvr_info {
+public:
+	long	dbg_max_lv;
+	long	dbg_max_wrt_num_subnmp;
+	long	dbg_max_fnd_num_subnmp;
+	
+	ch_string	dbg_html_out_path;
+	
+	dbg_slvr_info(){
+		init_dbg_slvr_info();
+	}
+
+	void	init_dbg_slvr_info(){
+		dbg_max_lv = 0;
+		dbg_max_wrt_num_subnmp = 0;
+		dbg_max_fnd_num_subnmp = 0;
+		
+		dbg_html_out_path = ".";
+	}
+};
+
+#endif
 
 //=================================================================
 // solver
@@ -53,9 +94,11 @@ private:
 	}
 	
 public:
+	brain*			slv_dbg_brn;
+	debug_info		slv_dbg_conf_info;
 	instance_info	slv_inst;
 	skeleton_glb	slv_skl;
-	DBG(bj_dbg_t		slv_dbg;)
+	DBG(dbg_slvr_info 	slv_dbg2;)
 	
 	solver(){
 		init_solver();
@@ -64,15 +107,10 @@ public:
 	~solver(){
 	}
 	
-	void	init_solver(){
-		DBG(init_debug();)
-	}
+	void	init_solver();
 	
 	DBG(
-		void	init_debug(){
-			slv_dbg.W = 1;
-			slv_dbg.F = 0;
-		}
+		void	update_dbg2(dbg_inst_info& ist_info);
 	);
 	
 	static

@@ -18,9 +18,14 @@ along with ben-jose.  If not, see <http://www.gnu.org/licenses/>.
 
 ------------------------------------------------------------
 
-Copyright (C) 2011, 2014. QUIROGA BELTRAN, Jose Luis.
+Copyright (C) 2011, 2014-2015. QUIROGA BELTRAN, Jose Luis.
 Id (cedula): 79523732 de Bogota - Colombia.
 email: joseluisquirogabeltran@gmail.com
+
+ben-jose is free software thanks to The Glory of Our Lord 
+	Yashua Melej Hamashiaj.
+Our Resurrected and Living, both in Body and Spirit, 
+	Prince of Peace.
 
 ------------------------------------------------------------
 
@@ -38,6 +43,7 @@ Declaration of functions to read and parse dimacs files.
 #include "tools.h"
 #include "top_exception.h"
 
+class solver;
 class brain;
 class dima_dims;
 
@@ -46,8 +52,6 @@ class dima_dims;
 #define DIMACS_H_CK(prm) 	DBG_CK(prm)
 
 #define MAX_DIMACS_HEADER_SZ 4096
-
-extern const ch_string	k_dimacs_header_str;
 
 //=================================================================
 // print funtion declarations
@@ -311,6 +315,8 @@ public:
 	
 	bj_ostr_stream	ld_err_msg;
 
+	bool			ld_allow_empty_cnfs;
+	
 	bool			ld_as_3cnf;
 
 	long			ld_max_in_ccl_sz;
@@ -364,6 +370,8 @@ public:
 		return the_brn;
 	}
 
+	solver*	get_dbg_slv();
+	
 	void	set_dbg_brn(brain* the_brn){
 		DBG(ld_pt_brn = the_brn);
 	}
@@ -407,9 +415,11 @@ public:
 	void	finish_parse(row<long>& inst_ccls);
 	void	parse_content(row<long>& inst_ccls);
 	
-	void	parse_file(ch_string& f_nam, row<long>& inst_ccls);
+	void	parse_file(ch_string& f_nam, row<long>& inst_ccls, bool allow_empty = false);
 	
 	long	get_cursor_pos();
+	
+	ch_string 	calc_content_sha();
 };
 
 //=================================================================

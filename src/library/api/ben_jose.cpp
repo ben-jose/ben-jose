@@ -18,9 +18,14 @@ along with ben-jose.  If not, see <http://www.gnu.org/licenses/>.
 
 ------------------------------------------------------------
 
-Copyright (C) 2011, 2014. QUIROGA BELTRAN, Jose Luis.
+Copyright (C) 2011, 2014-2015. QUIROGA BELTRAN, Jose Luis.
 Id (cedula): 79523732 de Bogota - Colombia.
 email: joseluisquirogabeltran@gmail.com
+
+ben-jose is free software thanks to The Glory of Our Lord 
+	Yashua Melej Hamashiaj.
+Our Resurrected and Living, both in Body and Spirit, 
+	Prince of Peace.
 
 ------------------------------------------------------------
 
@@ -35,6 +40,7 @@ ben_jose interface impl.
 #include "ben_jose.h"
 #include "brain.h"
 #include "solver.h"
+#include "file_funcs.h"
 #include "dbg_prt.h"
 
 void 		bj_init_output(bj_output_t* the_out){
@@ -50,6 +56,9 @@ bj_solver_t bj_solver_create(const char* bjs_dir_path){
 	}
 	ch_string root_pth = bjs_dir_path;
 	bool is_no_pth = (root_pth.empty() || (root_pth == ""));
+	DBG(
+		ch_string rn_pth = path_get_running_path();
+	);
 	NOT_DBG(if(is_no_pth){ return NULL; })
 	
 	solver* nw_slv = solver::create_solver();
@@ -64,17 +73,11 @@ bj_solver_t bj_solver_create(const char* bjs_dir_path){
 	
 	bj_solver_t bjs = (bj_solver_t)nw_slv;
 
-	WF_DBG(bj_out << "NOT FIND (JUST AS DEFAULT_DBG)" << bj_eol);
-	DBG_CHECK_SAVED(
-		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-	);
-	BRAIN_CK((bj_out << "doing CKs (plain CKs)" << bj_eol) && true);
-	BRAIN_CK_0((bj_out << "doing CK_0s" << bj_eol) && true);
-	BRAIN_CK_1((bj_out << "doing CK_1s" << bj_eol) && true);
-	BRAIN_CK_2((bj_out << "doing CK_2s" << bj_eol) && true);
+	BRAIN_CK((bj_out << "doing CKs (plain BRN_CKs)" << bj_eol) && true);
+	BRAIN_CK_0((bj_out << "doing BRN_CK_0s" << bj_eol) && true);
+	BRAIN_CK_1((bj_out << "doing BRN_CK_1s" << bj_eol) && true);
+	BRAIN_CK_2((bj_out << "doing BRN_CK_2s" << bj_eol) && true);
+	DBG_PRT_SLV(nw_slv, bj_dbg, 3, true, os << "CAREFUL RUNNING VERIF ON WRITE !!!!!");
 	return bjs;
 }
 
@@ -83,19 +86,23 @@ void 		bj_solver_release(bj_solver_t bjs){
 		return;
 	}
 	solver* the_slvr = (solver*)bjs;
+	if(the_slvr != NULL_PT){
+		BRAIN_CK(
+			(bj_out << "BATCH_DBG=\n" << "MAX_lv=" << the_slvr->slv_dbg2.dbg_max_lv
+			<< " MAX_wrt_num_subnmp=" << the_slvr->slv_dbg2.dbg_max_wrt_num_subnmp
+			<< " MAX_fnd_num_subnmp=" << the_slvr->slv_dbg2.dbg_max_fnd_num_subnmp
+			<< bj_eol) && 
+			true
+		);
+	}
+	
 	solver::release_solver(the_slvr);
 	
-	BRAIN_CK((bj_out << "doing CKs (plain CKs)" << bj_eol) && true);
-	BRAIN_CK_0((bj_out << "doing CK_0s" << bj_eol) && true);
-	BRAIN_CK_1((bj_out << "doing CK_1s" << bj_eol) && true);
-	BRAIN_CK_2((bj_out << "doing CK_2s" << bj_eol) && true);
-	DBG_CHECK_SAVED(
-		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-		bj_out << "CAREFUL RUNNING SATEX !!!!!" << bj_eol;
-	);
-	WF_DBG(bj_out << bj_eol << "NOT FIND (JUST AS DEFAULT_DBG)" << bj_eol);
+	BRAIN_CK((bj_out << "doing CKs (plain BRN_CKs)" << bj_eol) && true);
+	BRAIN_CK_0((bj_out << "doing BRN_CK_0s" << bj_eol) && true);
+	BRAIN_CK_1((bj_out << "doing BRN_CK_1s" << bj_eol) && true);
+	BRAIN_CK_2((bj_out << "doing BRN_CK_2s" << bj_eol) && true);
+	DBG_PRT_SLV(the_slvr, bj_dbg, 3, true, os << "CAREFUL RUNNING VERIF ON WRITE !!!!!");
 }
 
 const char* bj_get_path(bj_solver_t bjs){
@@ -124,7 +131,7 @@ bj_satisf_val_t 	bj_solve_file(bj_solver_t bjs, const char* f_path){
 	//DBG(bj_out << bj_eol << "SOLVING_INSTANCE=" << inst.ist_id << bj_eol );
 	
 	brain the_brain(the_slvr);
-	bj_satisf_val_t res = the_brain.solve_instance();
+	bj_satisf_val_t res = the_brain.solve_instance(true /* load_it */);
 	
 	return res;
 }
@@ -194,15 +201,5 @@ void		bj_print_paths(bj_solver_t bjs){
 	if(bjs == NULL){ return; }
 	solver& the_slvr = *((solver*)bjs);
 	the_slvr.slv_skl.print_paths(bj_out);
-}
-
-bj_dbg_t*	bj_debug(bj_solver_t bjs){
-	bj_dbg_t* dd = NULL;
-	DBG(
-		if(bjs == NULL){ return NULL; }
-		solver& the_slvr = *((solver*)bjs);
-		dd = &(the_slvr.slv_dbg);
-	)
-	return dd;
 }
 

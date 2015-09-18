@@ -1,0 +1,55 @@
+the_cnf_001 = {
+	 nodes: [
+		 { data: { id: 'd1'}, position:{x:0, y:0}, classes:'dipole' }
+		 ,{ data: { id: 'd2'}, position:{x:50, y:0}, classes:'dipole' }
+		 ,{ data: { id: 'd3'}, position:{x:100, y:0}, classes:'dipole lrn' }
+		 ,{ data: { id: 'd4'}, position:{x:150, y:0}, classes:'dipole' }
+		 ,{ data: { id: 'd5', lbl: 'HOLA'}, position:{x:200, y:0}, classes:'dipole' }
+		 ,{ data: { id: 'd6'}, position:{x:250, y:0}, classes:'dipole cho' }
+
+		 ,{ data: { id: 'n0'}, position:{x:25, y:-40}, classes:'neuron' }
+		 ,{ data: { id: 'n1'}, position:{x:50, y:-40}, classes:'neuron' }
+		 ,{ data: { id: 'n2'}, position:{x:75, y:-40}, classes:'neuron' }
+
+		 ,{ data: { id: 'n3'}, position:{x:175, y:-40}, classes:'neuron' }
+		 ,{ data: { id: 'n4'}, position:{x:200, y:-40}, classes:'neuron' }
+		 ,{ data: { id: 'n5'}, position:{x:225, y:-40}, classes:'neuron' }
+
+		 ,{ data: { id: 'n6'}, position:{x:25, y:80}, classes:'neuron' }
+		 ,{ data: { id: 'n7'}, position:{x:125, y:80}, classes:'neuron' }
+		 ,{ data: { id: 'n8'}, position:{x:225, y:80}, classes:'neuron' }
+
+	 ],
+	 edges: [
+		 { data: { id: 'q0', source: 'n0', target: 'd1'}, classes: 'in_neg' }
+		 ,{ data: { id: 'q1', source: 'n0', target: 'd2'}, classes: 'in_neg' }
+		 ,{ data: { id: 'q2', source: 'n1', target: 'd1'}, classes: 'in_neg' }
+		 ,{ data: { id: 'q3', source: 'n1', target: 'd3'}, classes: 'in_neg' }
+		 ,{ data: { id: 'q4', source: 'n2', target: 'd2'}, classes: 'in_neg' }
+		 ,{ data: { id: 'q5', source: 'n2', target: 'd3'}, classes: 'in_neg' }
+
+		 ,{ data: { id: 'q6', source: 'n3', target: 'd4'}, classes: 'in_neg' }
+		 ,{ data: { id: 'q7', source: 'n3', target: 'd5'}, classes: 'in_neg' }
+		 ,{ data: { id: 'q8', source: 'n4', target: 'd4'}, classes: 'in_neg' }
+		 ,{ data: { id: 'q9', source: 'n4', target: 'd6'}, classes: 'in_neg' }
+		 ,{ data: { id: 'q10', source: 'n5', target: 'd5'}, classes: 'in_neg' }
+		 ,{ data: { id: 'q11', source: 'n5', target: 'd6'}, classes: 'in_neg' }
+
+
+
+		 ,{ data: { id: 'q12', source: 'n6', target: 'd1'}, classes: 'in_pos' }
+		 ,{ data: { id: 'q13', source: 'n6', target: 'd4'}, classes: 'in_pos' }
+		 ,{ data: { id: 'q14', source: 'n7', target: 'd2'}, classes: 'in_pos' }
+		 ,{ data: { id: 'q15', source: 'n7', target: 'd5'}, classes: 'in_pos' }
+		 ,{ data: { id: 'q16', source: 'n8', target: 'd3'}, classes: 'in_pos' }
+		 ,{ data: { id: 'q17', source: 'n8', target: 'd6'}, classes: 'in_pos' }
+	 ]
+};
+
+all_to_play_cnf_001 = [
+	'd1',
+	'd3'
+];
+
+the_text_cnf_001 = '<h2>Titulo dos</h2><h3>Titulo tres</h3><p>Un parrafito</p>';
+

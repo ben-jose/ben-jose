@@ -18,9 +18,14 @@ along with ben-jose.  If not, see <http://www.gnu.org/licenses/>.
 
 ------------------------------------------------------------
 
-Copyright (C) 2011, 2014. QUIROGA BELTRAN, Jose Luis.
+Copyright (C) 2011, 2014-2015. QUIROGA BELTRAN, Jose Luis.
 Id (cedula): 79523732 de Bogota - Colombia.
 email: joseluisquirogabeltran@gmail.com
+
+ben-jose is free software thanks to The Glory of Our Lord 
+	Yashua Melej Hamashiaj.
+Our Resurrected and Living, both in Body and Spirit, 
+	Prince of Peace.
 
 ------------------------------------------------------------
 
@@ -72,11 +77,6 @@ typedef enum {
 	bje_dimacs_bad_literal,
 	bje_dimacs_clause_too_long
 } bj_error_t;
-
-typedef struct {
-	int W;
-	int F;
-} bj_dbg_t;
 
 typedef struct {
 	bj_satisf_val_t 	bjo_result;
@@ -137,7 +137,6 @@ void			bj_restart(bj_solver_t bjs);
 int 		bj_update(bj_solver_t dest, bj_solver_t src);
 
 void		bj_print_paths(bj_solver_t bjs);
-bj_dbg_t*	bj_debug(bj_solver_t bjs);
 
 #ifdef __cplusplus
 }

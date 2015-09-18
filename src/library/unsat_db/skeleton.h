@@ -18,9 +18,14 @@ along with ben-jose.  If not, see <http://www.gnu.org/licenses/>.
 
 ------------------------------------------------------------
 
-Copyright (C) 2011, 2014. QUIROGA BELTRAN, Jose Luis.
+Copyright (C) 2011, 2014-2015. QUIROGA BELTRAN, Jose Luis.
 Id (cedula): 79523732 de Bogota - Colombia.
 email: joseluisquirogabeltran@gmail.com
+
+ben-jose is free software thanks to The Glory of Our Lord 
+	Yashua Melej Hamashiaj.
+Our Resurrected and Living, both in Body and Spirit, 
+	Prince of Peace.
 
 ------------------------------------------------------------
 
@@ -34,14 +39,14 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 #ifndef SKELETON_H
 #define SKELETON_H
 
-#include <set>
-
 #include "bj_stream.h"
 #include "tools.h"
+#include "file_funcs.h"
 #include "dimacs.h"
 #include "sha2.h"
 #include "print_macros.h"
 #include "dbg_prt.h"
+#include "str_set.h"
 
 enum charge_t {
 	cg_negative = -1,
@@ -51,11 +56,14 @@ enum charge_t {
 
 class instance_info;
 
+class solver;
 class brain;
 class canon_clause;
 class variant;
 class canon_cnf;
 class skeleton_glb;
+class ref_strs;
+
 
 #define SKELETON_DBG(prm) DBG(prm)
 #define SKELETON_CK(prm) 	DBG_BJ_LIB_CK(prm)
@@ -68,65 +76,26 @@ class skeleton_glb;
 #define SKG_NUM_DIGITS_IN_DIRNAM_OF_NUMBER_PATH 1
 #define SKG_MAX_SAMPLE_NUM_LITS 1000
 #define SKG_MAX_SAMPLE_NUM_CCLS 10
+
+#ifdef FULL_DEBUG
 #define SKG_MAX_NUM_VARIANT 10
+#else
+#define SKG_MAX_NUM_VARIANT 10
+#endif
 
 #define SKG_LOCK_SEP_STR "%"
 #define SKG_LOCK_SEP '%'
 #define SKG_VARIANT_DIR "vv/"
 
 #define SKG_CANON_PATH_ENDING "oo"
+
 #define SKG_CANON_HEADER_STR \
-		"c (C) 2011. QUIROGA BELTRAN, Jose Luis. Bogota - Colombia.\n" \
-		"c Date of birth: December 28 of 1970.\n" \
-		"c Place of birth: Bogota - Colombia - Southamerica.\n" \
-		"c Id (cedula): 79523732 de Bogota.\n" \
+		"c Yashua Melej Hamashiaj. \n" \
+		"c ben-jose dimacs unsat cnf generated file.\n" \
+		"c Any modification will make it useless for ben-jose. \n" \
 
 //--end_of_def
 
-#define SKG_CANON_KRY_STR  "Jesus dijo: Yo Soy El Camino, La Verdad y La Vida."
-
-
-//=================================================================
-// strset
-
-typedef std::set<ch_string> 	string_set_t;
-//typedef mem_redblack<ch_string>						string_set_t;
-
-
-inline
-void strset_clear(string_set_t ss){
-	//ss.clear_redblack();
-	ss.clear();
-}
-
-inline
-bool strset_is_empty(string_set_t ss){
-	//bool ee = ss.is_empty();
-	bool ee = ss.empty();
-	return ee;
-}
-
-inline
-long strset_size(string_set_t ss){
-	//long nn = ss.size();
-	long nn = ss.size();
-	return nn;
-}
-
-inline
-bool strset_find_path(string_set_t ss, ch_string pth){
-	//bool ff = ss.search(pth);
-	bool ff = (ss.find(pth) != ss.end());
-	return ff;
-}
-
-inline
-void strset_add_path(string_set_t ss, ch_string pth){
-	if(pth.empty()){ return; }
-	if(pth == ""){ return; }
-	//ss.push(pth);
-	ss.insert(pth);
-}
 
 //=================================================================
 // skeleton defines
@@ -144,6 +113,8 @@ void strset_add_path(string_set_t ss, ch_string pth){
 #define SKG_DEAD_DIR		"/SKELETON/ERR/DEAD"
 #define SKG_BROKEN_DIR		"/SKELETON/ERR/BROKEN"
 
+#define SKG_REF_SUF 		".ref"
+
 #define SKG_CANON_NAME		"canon.skl"
 #define SKG_DIFF_NAME		"diff.skl"
 #define SKG_GUIDE_NAME		"guide.skl"
@@ -156,21 +127,21 @@ void strset_add_path(string_set_t ss, ch_string pth){
 
 #define SKG_VERIFY_NAME		"/SKELETON/verify.skl"
 
+#define SKG_DBG_COLLI_DIFF	"/dbg_colli_diff.skl"
+#define SKG_DBG_COLLI_NEW	"/dbg_colli_new.skl"
+
 //=================================================================
 // funtion declarations
-
-ch_string
-print_hex_as_txt(row<uchar_t>& sha_rr);
-
-ch_string
-sha_txt_of_arr(uchar_t* to_sha, long to_sha_sz);
 
 DECLARE_PRINT_FUNCS(canon_clause)
 DECLARE_PRINT_FUNCS(variant)
 DECLARE_PRINT_FUNCS(canon_cnf)
+DECLARE_PRINT_FUNCS(ref_strs)
 
 //=================================================================
 // path funcs
+
+bool		print_str_long_map(bj_ostream& os, string_long_map_t& pmp);
 
 bool		not_skl_path(ch_string pth);
 
@@ -178,12 +149,7 @@ ch_string	nam_subset_resp(cmp_is_sub rr);
 void		string_replace_char(ch_string& src_str, char orig, char repl);
 
 bool		path_is_dead_lock(ch_string the_pth);
-void		path_delete(ch_string full_pth, ch_string up_to);
-bool		path_create(ch_string n_pth);
-
-ch_string	path_get_directory(ch_string the_pth);
-bool		path_begins_with(ch_string the_pth, ch_string the_beg);
-bool		path_ends_with(ch_string& the_str, ch_string& the_suf);
+bool		path_is_diff_file(ch_string the_pth);
 
 bool 		dims_path_exists(ch_string base_pth, const dima_dims& dims);
 
@@ -194,15 +160,16 @@ ch_string	cnf_dims_to_path(const dima_dims& dims);
 
 void		delete_sha_skeleton(ch_string& sha_pth);
 
-bool		canon_save(ch_string& the_pth, row<char>& cnn, bool write_once = true);
-bool		canon_load(ch_string& the_pth, row<char>& cnn);
-bool		canon_equal(ch_string& the_pth, row<char>& cnn);
+bool		canon_save(skeleton_glb& skg, ch_string& the_pth, row<char>& cnn, 
+					   bool write_once = true);
+bool		canon_load(skeleton_glb& skg, ch_string& the_pth, row<char>& cnn);
+bool		canon_equal(skeleton_glb& skg, ch_string& the_pth, row<char>& cnn);
 
 ch_string	canon_hash_path(const dima_dims& dims, ch_string sha_str);
 //ch_string	canon_lock_name(const dima_dims& dims, ch_string sha_str);
 
 void		canon_print(bj_ostream& os, row<char>& cnn);
-void		canon_sha(row<char>& cnn, ch_string& sha_txt);
+void		canon_sha(row<char>& cnn, ch_string& sha_txt, ch_string& minisha_txt);
 
 ch_string	canon_header(ch_string& hd_str, long ccls, long vars);
 void		canon_long_append(row<char>& cnn, long nn);
@@ -245,7 +212,7 @@ public:
 		bool h1 = (pd_ref1_nam != "");
 		bool h2 = (pd_ref2_nam != "");
 		bool has_r = (h1 || h2);
-		TOOLS_CK(! has_r || (h1 && h2));
+		SKELETON_CK(! has_r || (h1 && h2));
 		return has_r;
 	}
 
@@ -294,6 +261,8 @@ public:
 		return the_brn;
 	}
 
+	solver*	get_dbg_slv();
+	
 	void	set_dbg_brn(brain* pt_brn){
 		SKELETON_DBG(cc_pt_brn = pt_brn);
 	}
@@ -317,40 +286,40 @@ public:
 	template<class obj_t1>
 	obj_t1&
 	me_as(){
-		DIMACS_H_CK(cc_me != NULL_PT);
+		SKELETON_CK(cc_me != NULL_PT);
 		obj_t1& obj = *((obj_t1*)(cc_me));
-		DIMACS_H_CK(obj.get_cls_name() == obj_t1::CL_NAME);
+		SKELETON_CK(obj.get_cls_name() == obj_t1::CL_NAME);
 		return obj;
 	}
 
 	long	cc_size(){
-		DIMACS_H_CK(! cc_in_free);
+		SKELETON_CK(! cc_in_free);
 		return size();
 	}
 
 	long	cc_last_idx(){
-		DIMACS_H_CK(! cc_in_free);
+		SKELETON_CK(! cc_in_free);
 		return last_idx();
 	}
 
 	void	cc_push(long the_lit){
-		DIMACS_H_CK(! cc_in_free);
+		SKELETON_CK(! cc_in_free);
 		push(the_lit);
 	}
 
 	void	cc_mix_sort(cmp_func_t cmp_fn){
-		DIMACS_H_CK(! cc_in_free);
+		SKELETON_CK(! cc_in_free);
 		mix_sort(cmp_fn);
 	}
 
 	bool	cc_is_sorted(cmp_func_t cmp_fn){
-		DIMACS_H_CK(! cc_in_free);
+		SKELETON_CK(! cc_in_free);
 		return is_sorted(cmp_fn);
 	}
 
 	long	cc_pos(long the_idx){
-		DIMACS_H_CK(! cc_in_free);
-		DIMACS_H_CK(is_valid_idx(the_idx));
+		SKELETON_CK(! cc_in_free);
+		SKELETON_CK(is_valid_idx(the_idx));
 		return pos(the_idx);
 	}
 
@@ -388,7 +357,7 @@ ccl_row_as(row<canon_clause*>& rr1, row<obj_t1*>& rr2, bool only_spotted = false
 	rr2.clear();
 	rr2.set_cap(rr1.size());
 	for(long ii = 0; ii < rr1.size(); ii++){
-		DIMACS_H_CK(rr1[ii] != NULL_PT);		
+		SKELETON_CK(rr1[ii] != NULL_PT);		
 		canon_clause& the_ccl = *(rr1[ii]);
 
 		bool add_it = true;
@@ -447,9 +416,12 @@ public:
 	row<canon_clause*>	cf_clauses;
 
 	ch_string		cf_sha_str;
+	ch_string		cf_minisha_str;
+	ch_string		cf_diff_minisha_str;
 
 	row<char>		cf_chars;
 	row<char>		cf_comment_chars;
+	long			cf_num_cls_in_chars;
 
 	ch_string		cf_phase_str;
 
@@ -461,7 +433,13 @@ public:
 	row_str_t		cf_dbg_shas;
 	
 	instance_info* 	cf_inst_inf;
+	
+	ch_string 		cf_tmp_sv_dir;
+	ch_string 		cf_tmp_pth1;
+	ch_string 		cf_tmp_pth2;
 
+	SKELETON_DBG(void* cf_dbg_orig_nmp);
+		
 	canon_cnf(){
 		init_canon_cnf();
 	}
@@ -475,6 +453,8 @@ public:
 		return the_brn;
 	}
 
+	solver*	get_dbg_slv();
+	
 	void	set_dbg_brn(brain* pt_brn){
 		SKELETON_DBG(cf_pt_brn = pt_brn);
 	}
@@ -487,12 +467,15 @@ public:
 		cf_dims.init_dima_dims(INVALID_NATURAL);
 		cf_dims.dd_tot_twolits = 0;
 
-		DIMACS_H_CK(cf_clauses.is_empty());
+		SKELETON_CK(cf_clauses.is_empty());
 
 		cf_sha_str = "";
+		cf_minisha_str = "";
+		cf_diff_minisha_str = "";
 
 		cf_chars.clear(free_mem, free_mem);
 		cf_comment_chars.clear(free_mem, free_mem);
+		cf_num_cls_in_chars = -1;
 
 		cf_phase_str = "";
 
@@ -504,6 +487,14 @@ public:
 		cf_dbg_shas.clear(free_mem, free_mem);
 		
 		cf_inst_inf = NULL_PT;
+
+		cf_tmp_sv_dir = "";
+		cf_tmp_pth1 = "";
+		cf_tmp_pth2 = "";
+		
+		SKELETON_DBG(cf_dbg_orig_nmp = NULL_PT);
+		
+		SKELETON_CK(cf_unique_path.size() == 0);
 	}
 
 	void	init_with(skeleton_glb& skg, row<canon_clause*>& all_ccls, 
@@ -514,35 +505,46 @@ public:
 
 	void	release_and_init(skeleton_glb& skg, bool free_mem = false){
 		release_all_clauses(skg, free_mem);
+		brain* old_dbg_brn = get_dbg_brn();
 		init_canon_cnf(free_mem);
+		set_dbg_brn(old_dbg_brn);
 	}
 
 	void	clear_all_spots();
 
 	bool	ck_full_dir(ch_string sv_dir){
-		DIMACS_H_CK(! sv_dir.empty());
-		DIMACS_H_CK(*(sv_dir.begin()) == '/');
-		DIMACS_H_CK(*(sv_dir.rbegin()) == '/');
+		SKELETON_CK(! sv_dir.empty());
+		SKELETON_CK(*(sv_dir.begin()) == '/');
+		SKELETON_CK(*(sv_dir.rbegin()) == '/');
 		return true;
 	}
 
 	bool	ck_all_can_release(row<canon_clause*>& rr, bool can_val){
 		for(long aa = 0; aa < rr.size(); aa++){
-			DIMACS_H_CK(rr[aa] != NULL_PT);
+			SKELETON_CK(rr[aa] != NULL_PT);
 			canon_clause& ccl = *(rr[aa]);
 			MARK_USED(ccl);
-			DIMACS_H_CK(ccl.cc_can_release == can_val);
+			SKELETON_CK(ccl.cc_can_release == can_val);
 		}
 		return true;
 	}
 
 	void	clear_cnf(){
-		DIMACS_H_CK(ck_all_can_release(cf_clauses, false));
+		SKELETON_CK(ck_all_can_release(cf_clauses, false));
 		cf_clauses.clear();
+		
+		brain* old_dbg_brn = get_dbg_brn();
 		init_canon_cnf(false);
+		set_dbg_brn(old_dbg_brn);
 	}
 
 	canon_clause&	add_clause(skeleton_glb& skg);
+	
+	bool	is_empty(){
+		SKELETON_CK(cf_dims.dd_tot_ccls == cf_clauses.size());
+		bool is_e = cf_clauses.is_empty();
+		return is_e;
+	}
 
 	ch_string	get_id_str();
 	void		get_extreme_lits(row<long>& lits);
@@ -551,14 +553,12 @@ public:
 
 	void	release_all_clauses(skeleton_glb& skg, bool free_mem = false);
 
-	// ------------ coding
-
 	bool	has_phase_path(){
 		return cf_phdat.has_ref();
 	}
 
 	ch_string	get_all_variant_dir_name();
-	ch_string	get_variant_dir_name(long num_vnt);
+	ch_string	get_variant_ref_fname(long num_vnt);
 	ch_string	get_variant_path(skeleton_glb& skg, long num_vnt, bool skip_report = false);
 
 	bool	i_am_sub_of(canon_cnf& the_cnf, bool& are_eq);
@@ -573,45 +573,45 @@ public:
 	long	first_vnt_i_super_of(skeleton_glb& skg, instance_info* iinfo = NULL);
 	bool	ck_vnts(skeleton_glb& skg);
 
-	ch_string	get_cnf_path(){
-		ch_string cnf_pth = SKG_CNF_DIR + cf_unique_path;
-		return cnf_pth;
-	}
+	ch_string	get_cnf_path();
 
 	ch_string	get_ref_path(){
+		SKELETON_CK(cf_unique_path.size() > 0);
 		ch_string ref_pth = SKG_REF_DIR + cf_unique_path;
 		return ref_pth;
 	}
 
 	ch_string	get_lck_path(){
+		SKELETON_CK(cf_unique_path.size() > 0);
 		ch_string ref_pth = SKG_LCK_DIR + cf_unique_path;
 		return ref_pth;
 	}
 	
 	bool	is_new(skeleton_glb& skg);
+	
+	ch_string prepare_cnf(skeleton_glb& skg, ch_string sv_pth);
 
 	bool	save_canon_cnf(ch_string& the_pth, row<char>& cnn, bool write_once = true);
 	bool	save_cnf(skeleton_glb& skg, ch_string pth);
 	void	update_parent_variants(skeleton_glb& skg, ch_string sv_dir);
 
 	void	add_comment_chars_to(skeleton_glb& skg, row<char>& cnn, ch_string sv_ref_pth);
-	void	add_clauses_as_chars_to(row<canon_clause*>& all_ccl, row<char>& cnn);
+	void	update_chars_to_write();
 
 	void	load_lits(skeleton_glb& skg, row_long_t& all_lits, long& tot_lits, 
 					  long& tot_twolits);
-	void	calc_sha_in(ch_string& sha_str);
+	void	calc_sha_in(ch_string& sha_str, ch_string& minisha_str);
 
 	long	purge_clauses(skeleton_glb& skg);
 	bool	ck_all_sup_leaf(row_str_t& all_pth);
 
 	void	calc_sha(){
-		calc_sha_in(cf_sha_str);
+		calc_sha_in(cf_sha_str, cf_minisha_str);
 	}
 
 	void	init_skl_paths(skeleton_glb& skg);
 
-	void		fill_with(skeleton_glb& skg, row<long>& all_lits, long num_cla, long num_var);
-	ch_string	calc_loader_sha_str(dimacs_loader& the_loader);
+	//void		fill_with(skeleton_glb& skg, row<long>& all_lits, long num_cla, long num_var);
 	bool		load_from(skeleton_glb& skg, ch_string& f_nam);
 	
 	bool 	has_instance_info(){
@@ -636,6 +636,7 @@ public:
 		os << "cf_tot_lits=" << cf_tot_lits << bj_eol;
 		*/
 		os << "cf_sha_str=" << cf_sha_str << bj_eol;
+		os << "cf_minisha_str=" << cf_minisha_str << bj_eol;
 		os << "cf_num_purged=" << cf_num_purged << bj_eol;
 		return os;
 	}
@@ -651,14 +652,16 @@ public:
 	k_row<canon_clause>	kg_clauses;
 	row<canon_clause*>	kg_free_clauses;
 
-	bool			kg_only_save;
-	bool			kg_verifying;
-	bool			kg_local_verifying;
+	bool			kg_dbg_only_save;
+	bool			kg_dbg_verifying;
+	bool			kg_dbg_local_verifying;
 
-	bool			kg_save_canon;
+	bool			kg_dbg_save_canon;
 	bool			kg_keep_skeleton;
 	bool			kg_find_cnn_pth;
 
+	SKELETON_DBG(string_long_map_t 	kg_dbg_all_wrt_paths);
+	
 	string_set_t	kg_cnf_new_paths;
 	string_set_t	kg_cnf_paths_found;
 
@@ -698,6 +701,8 @@ public:
 		return the_brn;
 	}
 
+	solver*	get_dbg_slv();
+	
 	void	set_dbg_brn(brain* pt_brn){
 		SKELETON_DBG(
 			kg_pt_brn = pt_brn;
@@ -706,15 +711,15 @@ public:
 	}
 				
 	ch_string	as_full_path(ch_string sklroute){
-		DIMACS_H_CK(kg_root_path != "");
-		DIMACS_H_CK(path_begins_with(sklroute, SKG_SKELETON_DIR));
+		SKELETON_CK(kg_root_path != "");
+		SKELETON_CK(path_begins_with(sklroute, SKG_SKELETON_DIR));
 		return kg_root_path + sklroute;
 	}
 
 	void	start_local();
 	void	clear_all();
 
-	bool 	in_verif(){ return (kg_verifying || kg_local_verifying); }
+	bool 	in_dbg_verif(){ return (kg_dbg_verifying || kg_dbg_local_verifying); }
 
 	canon_clause&	get_new_clause();
 	void	release_clause(canon_clause& ccl, bool free_mem);

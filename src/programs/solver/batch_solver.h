@@ -18,9 +18,14 @@ along with ben-jose.  If not, see <http://www.gnu.org/licenses/>.
 
 ------------------------------------------------------------
 
-Copyright (C) 2011, 2014. QUIROGA BELTRAN, Jose Luis.
+Copyright (C) 2011, 2014-2015. QUIROGA BELTRAN, Jose Luis.
 Id (cedula): 79523732 de Bogota - Colombia.
 email: joseluisquirogabeltran@gmail.com
+
+ben-jose is free software thanks to The Glory of Our Lord 
+	Yashua Melej Hamashiaj.
+Our Resurrected and Living, both in Body and Spirit, 
+	Prince of Peace.
 
 ------------------------------------------------------------
 
@@ -163,8 +168,6 @@ public:
 
 	bool			dbg_skip_print_info;
 	
-	DBG(bj_dbg_t	dbg_ops;)
-	
 	bj_ostr_stream	error_stm;
 	long			error_cod;
 
@@ -279,14 +282,6 @@ public:
 	void	do_all_instances();
 	void	do_cnf_file();
 	
-	DBG(
-		void 	prt_dbg_ops(){
-			bj_out << "DBG_OPS=";
-			if(dbg_ops.W > 0){ bj_out << "W"; }
-			if(dbg_ops.F > 0){ bj_out << "F"; }
-			bj_out << bj_eol;
-		}
-	)
 };
 
 //=================================================================

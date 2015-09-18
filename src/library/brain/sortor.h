@@ -19,9 +19,14 @@ along with ben-jose.  If not, see <http://www.gnu.org/licenses/>.
 
 ------------------------------------------------------------
 
-Copyright (C) 2011, 2014. QUIROGA BELTRAN, Jose Luis.
+Copyright (C) 2011, 2014-2015. QUIROGA BELTRAN, Jose Luis.
 Id (cedula): 79523732 de Bogota - Colombia.
 email: joseluisquirogabeltran@gmail.com
+
+ben-jose is free software thanks to The Glory of Our Lord 
+	Yashua Melej Hamashiaj.
+Our Resurrected and Living, both in Body and Spirit, 
+	Prince of Peace.
 
 ------------------------------------------------------------
 
@@ -56,6 +61,7 @@ classes to implement a sortor.
 #define FINAL_COMMENT	"final\n"
 #define MUTUAL_COMMENT	"mutual_stab\n"
 
+class solver;
 class brain;
 class skeleton_glb;
 
@@ -119,6 +125,15 @@ public:
 //=================================================================
 // sortee
 
+comparison	cmp_sortees(sortee* const & srt1, sortee* const & srt2);
+	
+enum tee_id_t {
+	tid_none,
+	tid_wlk_consec,
+	tid_tee_consec,
+	tid_qua_id
+};
+
 class sortee : public binder {
 public:
 	static
@@ -130,6 +145,7 @@ public:
 	}
 
 	void*		so_me;
+	long*		so_cmp_val;
 	sorset*		so_vessel;
 	long		so_sorset_consec;
 	long		so_walk_consec;
@@ -139,10 +155,11 @@ public:
 	char		so_dbg_me_class;
 	long		so_dbg_extrn_id;
 
-	long		so_saved_tee_consec;
+	//long		so_saved_tee_consec;
+	long		so_wlk_consec;
 	long		so_tee_consec;
+	
 	canon_clause	so_ccl;
-
 	long		so_qua_id;
 
 	sortee(){
@@ -155,6 +172,7 @@ public:
 
 	void		init_sortee(bool free_mem = false){
 		so_me = NULL_PT;
+		so_cmp_val = NULL_PT;
 		so_vessel = NULL_PT;
 		so_sorset_consec = INVALID_NATURAL;
 		so_walk_consec = INVALID_NATURAL;
@@ -164,7 +182,8 @@ public:
 		so_dbg_me_class = 0;
 		so_dbg_extrn_id = 0;
 
-		so_saved_tee_consec = INVALID_NATURAL;
+		//so_saved_tee_consec = INVALID_NATURAL;
+		so_wlk_consec = INVALID_NATURAL;
 		so_tee_consec = INVALID_NATURAL;
 		so_ccl.cc_clear(free_mem);
 
@@ -192,10 +211,10 @@ public:
 
 	void		unsort_me(sort_glb& srg);
 	void		sort_me_to(sort_glb& srg, sorset& nsr);
-	void		sort_from(sort_glb& srg, sort_id_t curr_nid,	void* id_src = NULL_PT);
+	void		sort_from(sort_glb& srg, sort_id_t curr_nid, void* id_src = NULL_PT);
 
-	void		save_consec(sort_glb& srg);
-	long		recover_consec(sort_glb& srg);
+	//void		save_consec(sort_glb& srg);
+	//long		recover_consec(sort_glb& srg);
 
 	long 		get_ccl_id(sort_glb& srg);
 	void		close_ccl(sort_glb& srg);
@@ -226,6 +245,7 @@ public:
 	void		reset_sort_info(){
 		SORTER_CK(is_unsorted());
 		
+		so_wlk_consec = 0;
 		so_tee_consec = 0;
 		if(so_related != NULL_PT){
 			sortrel& quar = *so_related;
@@ -234,7 +254,10 @@ public:
 		}
 
 		so_ccl.cc_clear(false);
+		so_qua_id = 0;
 	}
+	
+	bool	is_next_choice(sort_glb& srg1);
 	
 	bj_ostream&	print_sortee(bj_ostream& os, bool from_pt = false);
 };
@@ -263,7 +286,10 @@ srt_row_as(row<sortee*>& rr1, row<obj_t1*>& rr2){
 
 template<class obj_t1>
 bool
-srt_row_as_colors(row<sortee*>& rr1, row<obj_t1*>& rr2, row<long>& cols){
+srt_row_as_colors(row<sortee*>& rr1, row<obj_t1*>& rr2, row<long>& cols, 
+				tee_id_t consec_kk = tid_tee_consec, bool unique_ccls = false)
+{
+	sorset* last_ss = NULL_PT;
 	long last_item_id = INVALID_NATURAL;
 	bool all_consec = true;
 	rr2.clear();
@@ -272,9 +298,24 @@ srt_row_as_colors(row<sortee*>& rr1, row<obj_t1*>& rr2, row<long>& cols){
 	cols.set_cap(rr1.size());
 	for(long ii = 0; ii < rr1.size(); ii++){
 		sortee& srt = *(rr1[ii]);
+		SORTER_CK(srt.has_vessel());
+		
+		long the_consec = srt.so_tee_consec;
+		if(consec_kk == tid_wlk_consec){
+			the_consec = srt.so_wlk_consec;
+		}
+		if(consec_kk == tid_qua_id){
+			the_consec = srt.so_qua_id;
+		}
+		SORTER_CK(the_consec != 0);
+		
+		if(unique_ccls && (last_ss != NULL_PT) && (srt.so_vessel == last_ss)){
+			continue;
+		}
 
-		all_consec = all_consec && (last_item_id != srt.so_tee_consec);
-		last_item_id = srt.so_tee_consec;
+		all_consec = all_consec && (last_item_id != the_consec);
+		last_item_id = the_consec;
+		last_ss = srt.so_vessel;
 
 		cols.push(last_item_id);
 
@@ -284,6 +325,7 @@ srt_row_as_colors(row<sortee*>& rr1, row<obj_t1*>& rr2, row<long>& cols){
 	return all_consec;
 }
 
+/*
 inline
 bool
 srt_row_as_clauses(row<sortee*>& rr1, row<canon_clause*>& rr2){
@@ -301,6 +343,7 @@ srt_row_as_clauses(row<sortee*>& rr1, row<canon_clause*>& rr2){
 	}
 	return all_consec;
 }
+*/
 
 template<class obj_t1>
 void
@@ -504,7 +547,7 @@ public:
 	void		walk_release(sort_glb& srg);
 	void		walk_reset_values(sort_glb& srg, grip& flat_ss);
 
-	bool		walk_to_row(row<sortee*>& sorted, bool set_consecs){
+	/*bool		walk_to_row(row<sortee*>& sorted, bool set_consecs){
 		long consec = 0;
 		bool has_diff = false;
 		sorted.clear();
@@ -515,6 +558,7 @@ public:
 
 	void		walk_to_row_rec(bool set_consecs, long& consec,
 				row<sortee*>& sorted, bool& has_diff);
+	*/
 
 	void		walk_to_srs_row(row<sorset*>& sorted){
 		long consec = 0;
@@ -610,6 +654,7 @@ public:
 	row<sortee*>	sg_step_sortees;
 	row<sorset*>	sg_step_sorsets;
 	sorset*		sg_step_first_multiple;
+	sortee*		sg_step_next_choice;
 
 	row<sorset*>	sg_step_neg_sorsets;
 	row<sorset*>	sg_step_pos_sorsets;
@@ -668,6 +713,8 @@ public:
 		return the_brn;
 	}
 
+	solver*	get_dbg_slv();
+
 	void	set_dbg_brn(brain* the_brn){
 		DBG(
 			sg_pt_brn = the_brn;
@@ -704,6 +751,7 @@ public:
 		sg_step_sortees.clear();
 		sg_step_sorsets.clear();
 		sg_step_first_multiple = NULL_PT;
+		sg_step_next_choice = NULL_PT;
 
 		sg_step_mutual_op = sm_walk;
 		sg_step_mutual_clauses.clear();
@@ -813,12 +861,16 @@ public:
 
 	void		stabilize();
 
+	bool 		ck_stab_inited();
+	
 	void		stab_mutual_init();
 	void		stab_mutual(sort_glb& mates_srg);
 	void		stab_mutual_unique(sort_glb& mates_srg);
-	canon_cnf&	stab_mutual_get_cnf(skeleton_glb& skg, ch_string comment, bool sorted_cnf);
 	void		stab_mutual_choose_one(sort_glb& srg2);
-	void		stab_mutual_end(sort_glb& mates_srg);
+	void		stab_mutual_end(sort_glb& mates_srg, bool unique_ccls);
+	void		stab_mutual_walk();
+	
+	canon_cnf&	get_final_cnf(skeleton_glb& skg, ch_string comment, bool sorted_cnf);
 
 	bool		base_path_exists(skeleton_glb& skg);
 
@@ -830,6 +882,13 @@ public:
 	void		clear_consecs();
 
 	bool		sort_to_tmp_srts(bool set_consecs = false){
+		sg_tmp_srts.clear();
+		stab_mutual_walk();
+		sg_step_sortees.copy_to(sg_tmp_srts);
+		return sg_step_has_diff;
+	}
+	
+	/*bool		sort_to_tmp_srts(bool set_consecs = false){
 		bool has_diff = false;
 		sg_tmp_srts.clear();
 		if(has_head()){
@@ -839,7 +898,7 @@ public:
 			has_diff = hd.walk_to_row(sg_tmp_srts, set_consecs);
 		}
 		return has_diff;
-	}
+	}*/
 
 	void		sort_to_tmp_srss(){
 		sg_tmp_srss.clear();
@@ -893,6 +952,7 @@ sortee::get_vessel(){
 	return *so_vessel;
 }
 
+/*
 inline
 void
 sortee::save_consec(sort_glb& srg){
@@ -910,7 +970,7 @@ sortee::recover_consec(sort_glb& srg){
 	long consec = so_saved_tee_consec;
 	so_saved_tee_consec = INVALID_NATURAL;
 	return consec;
-}
+}*/
 
 inline
 void

@@ -14,6 +14,6 @@ SOURCES := $(SRC_BASE_DIR)/programs/tests/c_test.c
 
 SRC_CFLAGS := -Wall -std=c99
 
-SRC_INCDIRS := $(SRC_BASE_DIR)/library/interface
+SRC_INCDIRS := $(SRC_BASE_DIR)/library/api
 
 

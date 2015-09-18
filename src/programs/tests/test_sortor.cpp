@@ -18,9 +18,14 @@ along with ben-jose.  If not, see <http://www.gnu.org/licenses/>.
 
 ------------------------------------------------------------
 
-Copyright (C) 2011, 2014. QUIROGA BELTRAN, Jose Luis.
+Copyright (C) 2011, 2014-2015. QUIROGA BELTRAN, Jose Luis.
 Id (cedula): 79523732 de Bogota - Colombia.
 email: joseluisquirogabeltran@gmail.com
+
+ben-jose is free software thanks to The Glory of Our Lord 
+	Yashua Melej Hamashiaj.
+Our Resurrected and Living, both in Body and Spirit, 
+	Prince of Peace.
 
 ------------------------------------------------------------
 
@@ -187,9 +192,11 @@ bool	test_nw_srt_from(long test_consec, long start_rnd, avg_stat& spd_avg,
 {
 	std::ostream& os = std::cout;
 	os << "TEST " << test_consec << "(seed=" << start_rnd << ")";
+	os.flush();
 
 	sort_glb glb1;
-	glb1.init_head_ss();
+	//glb1.init_head_ss();
+	glb1.stab_mutual_init();
 
 	//os << "START_RND=" << start_rnd << std::endl;
 
@@ -215,14 +222,23 @@ bool	test_nw_srt_from(long test_consec, long start_rnd, avg_stat& spd_avg,
 	bool stop_all = false;
 
 	std::stringstream ss_tmp;
-
+	
 	long num_lvs = rnd_gen.gen_rand_int32_ie(1, 10);
 	for(long bb = 1; ((bb < num_lvs) && ! stop_all); bb++){
+		glb1.sg_curr_stab_consec++;
+		
+		DBG_CK(glb1.sg_curr_stab_consec >= bb);
+		DBG_CK(glb1.sg_curr_stab_consec >= glb1.sg_dbg_last_id);
+		
 		std::string bb_ss = long_to_str(bb);
 		long num_reps_lv = rnd_gen.gen_rand_int32_ie(1, 10);
 		for(long dd = 0; ((dd < num_reps_lv) && ! stop_all); dd++){
+			DBG_CK(glb1.sg_curr_stab_consec >= glb1.sg_dbg_last_id);
+			
 			long num_elem_rep = rnd_gen.gen_rand_int32_ie(1, num_elem);
 			for(long cc = 0; ((cc < num_elem_rep) && ! stop_all); cc++){
+				DBG_CK(glb1.sg_curr_stab_consec >= glb1.sg_dbg_last_id);
+				
 				bool all_csecs = false;
 				long elem_idx = rnd_gen.gen_rand_int32_ie(1, num_elem);
 				SORTER_CK(all_elem.is_valid_idx(elem_idx));
@@ -255,7 +271,10 @@ bool	test_nw_srt_from(long test_consec, long start_rnd, avg_stat& spd_avg,
 					the_op.op_elem = &ele;
 					the_op.op_id = bb;
 				} else {
+					DBG_CK(glb1.sg_curr_stab_consec >= bb);
+					DBG_CK(glb1.sg_curr_stab_consec >= glb1.sg_dbg_last_id);
 					ele.es_srt_bdr.sort_from(glb1, bb);
+					DBG_CK(glb1.sg_curr_stab_consec >= glb1.sg_dbg_last_id);
 				}
 
 				ele.es_id += "b" + bb_ss;
@@ -285,6 +304,9 @@ bool	test_nw_srt_from(long test_consec, long start_rnd, avg_stat& spd_avg,
 			}
 		}
 	}
+	os << "::";
+	os.flush();
+	//DBG_CK(glb1.sg_curr_stab_consec >= glb1.sg_dbg_last_id);
 
 	long num_srt_from = 0;
 	double run_speed = 0;
@@ -306,6 +328,7 @@ bool	test_nw_srt_from(long test_consec, long start_rnd, avg_stat& spd_avg,
 			spd_avg.add_val(run_speed);
 		}
 	}
+	//DBG_CK(glb1.sg_curr_stab_consec >= glb1.sg_dbg_last_id);
 
 	if(! stop_all){
 		row<elem_sor*> s_rr;
@@ -350,8 +373,9 @@ bool	test_nw_srt_from(long test_consec, long start_rnd, avg_stat& spd_avg,
 
 		//os << std::endl;
 
-		glb1.release_all();
-		glb1.init_head_ss();
+		//glb1.release_all();
+		//glb1.init_head_ss();
+		glb1.stab_mutual_init();
 	}
 	//os << "START_RND=" << start_rnd << std::endl;
 	

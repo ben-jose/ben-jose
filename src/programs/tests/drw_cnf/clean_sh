@@ -1,0 +1,4 @@
+
+
+find . -name "*~" -type f | xargs rm
+

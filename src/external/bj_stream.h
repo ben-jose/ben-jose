@@ -18,9 +18,14 @@ along with ben-jose.  If not, see <http://www.gnu.org/licenses/>.
 
 ------------------------------------------------------------
 
-Copyright (C) 2011, 2014. QUIROGA BELTRAN, Jose Luis.
+Copyright (C) 2011, 2014-2015. QUIROGA BELTRAN, Jose Luis.
 Id (cedula): 79523732 de Bogota - Colombia.
 email: joseluisquirogabeltran@gmail.com
+
+ben-jose is free software thanks to The Glory of Our Lord 
+	Yashua Melej Hamashiaj.
+Our Resurrected and Living, both in Body and Spirit, 
+	Prince of Peace.
 
 ------------------------------------------------------------
 
@@ -36,6 +41,7 @@ Wrapper for ostream class.
 
 #include <iostream>
 #include <sstream>
+#include <fstream>	// used for bj_ofstream
 
 #define DO_GETCHAR()			getchar()
 
@@ -51,6 +57,8 @@ Wrapper for ostream class.
 typedef std::ostream bj_ostream;
 
 typedef std::ostringstream bj_ostr_stream;
+
+typedef std::ofstream bj_ofstream;
 
 #endif // BJ_STREAM_H
 

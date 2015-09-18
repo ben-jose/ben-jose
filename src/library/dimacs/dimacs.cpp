@@ -18,9 +18,14 @@ along with ben-jose.  If not, see <http://www.gnu.org/licenses/>.
 
 ------------------------------------------------------------
 
-Copyright (C) 2011, 2014. QUIROGA BELTRAN, Jose Luis.
+Copyright (C) 2011, 2014-2015. QUIROGA BELTRAN, Jose Luis.
 Id (cedula): 79523732 de Bogota - Colombia.
 email: joseluisquirogabeltran@gmail.com
+
+ben-jose is free software thanks to The Glory of Our Lord 
+	Yashua Melej Hamashiaj.
+Our Resurrected and Living, both in Body and Spirit, 
+	Prince of Peace.
 
 ------------------------------------------------------------
 
@@ -34,20 +39,14 @@ Functions to read and parse dimacs files.
 #include "dimacs.h"
 #include "parse_funcs.h"
 #include "file_funcs.h"
+#include "util_funcs.h"
+#include "brain.h"
 #include "dbg_config.h"
 #include "dbg_prt.h"
 
 #define DIMACS_CK(prm) 	DBG_CK(prm)
 
-// '\0'
-
-
-const ch_string k_dimacs_header_str =
-		"c (C) 2014. QUIROGA BELTRAN, Jose Luis. Bogota - Colombia.\n"
-		"c Date of birth: December 28 of 1970.\n"
-		"c Place of birth: Bogota - Colombia - Southamerica.\n"
-		"c Id (cedula): 79523732 de Bogota.\n";
-
+DEFINE_GET_DBG_SLV(dimacs_loader)
 
 bj_ostr_stream& 
 dimacs_loader::dimacs_err_msg(long num_line, char ch_err, ch_string msg){
@@ -266,7 +265,7 @@ void
 dimacs_loader::calc_f_lit_equal_or(long d_lit, row<long>& or_lits,
 			row_row_long_t& rr_lits)
 {
-	DBG_PRT(41, os << "EQ_OR. d_lit=" << d_lit << " or_lits=" << or_lits);
+	DBG_PRT(10, os << "EQ_OR. d_lit=" << d_lit << " or_lits=" << or_lits);
 
 	DIMACS_CK(d_lit > 0);
 	DIMACS_CK(! or_lits.is_empty());
@@ -276,7 +275,7 @@ dimacs_loader::calc_f_lit_equal_or(long d_lit, row<long>& or_lits,
 	or_lits.copy_to(f1);
 	f1.push(-d_lit);
 
-	DBG_PRT(41, os << "EQ_OR. ccl=" << f1);
+	DBG_PRT(10, os << "EQ_OR. ccl=" << f1);
 
 	long ii = 0;
 	for(ii = 0; ii < or_lits.size(); ii++){
@@ -286,7 +285,7 @@ dimacs_loader::calc_f_lit_equal_or(long d_lit, row<long>& or_lits,
 		f2.push(-o_lit);
 		f2.push(d_lit);
 
-		DBG_PRT(41, os << "EQ_OR. ccl(" << ii << ")=" << f2);
+		DBG_PRT(10, os << "EQ_OR. ccl(" << ii << ")=" << f2);
 	}
 
 	or_lits.clear();
@@ -337,6 +336,8 @@ dimacs_loader::init_dimacs_loader(brain* the_brn){
 
 	ld_file_name = "";
 
+	ld_allow_empty_cnfs = false;
+	
 	ld_as_3cnf = false;
 
 	init_parse();
@@ -357,8 +358,9 @@ dimacs_loader::load_file(ch_string& f_nam){
 	ld_file_name = f_nam;
 	// loads the full file into ld_content
 	read_file(ld_file_name, ld_content);
+	ld_content.push(END_OF_SEC); // it already has room for it
 
-	DBG_PRT(11, os << " ld_content=" << ld_content.print_row_data(os, true, ""));
+	DBG_PRT(9, os << " ld_content=" << ld_content.print_row_data(os, true, ""));
 }
 
 long
@@ -398,6 +400,10 @@ dimacs_loader::parse_header(){
 			throw dimacs_exception(dix_bad_format, *pt_in, ld_num_line, get_cursor_pos());
 			break;
 		}
+	}
+	
+	if(ld_allow_empty_cnfs){
+		return;
 	}
 
 	if(num_var == 0){
@@ -464,7 +470,7 @@ dimacs_loader::parse_all_ccls(row<long>& inst_ccls)
 {
 	parse_header();
 
-	DBG_PRT(11, os << "ld_cursor=" << ld_cursor);
+	DBG_PRT(9, os << "ld_cursor=" << ld_cursor);
 
 	DIMACS_CK(ld_nud_added_ccls == 0);
 	DIMACS_CK(ld_nud_added_vars == 0);
@@ -506,7 +512,8 @@ dimacs_loader::parse_content(row<long>& inst_ccls){
 }
 
 void
-dimacs_loader::parse_file(ch_string& f_nam, row<long>& inst_ccls){
+dimacs_loader::parse_file(ch_string& f_nam, row<long>& inst_ccls, bool allow_empty){
+	ld_allow_empty_cnfs = allow_empty;
 	load_file(f_nam);
 	parse_content(inst_ccls);
 }
@@ -523,7 +530,7 @@ void
 dimacs_loader::calc_f_lit_equal_and(long d_lit, row<long>& and_lits,
 			row_row_long_t& rr_lits)
 {
-	DBG_PRT(42, os << "EQ_AND. d_lit=" << d_lit << " and_lits=" << and_lits);
+	DBG_PRT(11, os << "EQ_AND. d_lit=" << d_lit << " and_lits=" << and_lits);
 
 	DIMACS_CK(! and_lits.is_empty());
 	row<long>& f1 = rr_lits.inc_sz();
@@ -532,7 +539,7 @@ dimacs_loader::calc_f_lit_equal_and(long d_lit, row<long>& and_lits,
 	lits_opps(f1);
 	f1.push(d_lit);
 
-	DBG_PRT(42, os << "EQ_AND. ccl=" << f1);
+	DBG_PRT(11, os << "EQ_AND. ccl=" << f1);
 
 	long ii = 0;
 	for(ii = 0; ii < and_lits.size(); ii++){
@@ -542,9 +549,30 @@ dimacs_loader::calc_f_lit_equal_and(long d_lit, row<long>& and_lits,
 		f2.push(a_lit);
 		f2.push(-d_lit);
 
-		DBG_PRT(42, os << "EQ_AND. ccl(" << ii << ")=" << f2);
+		DBG_PRT(11, os << "EQ_AND. ccl(" << ii << ")=" << f2);
 	}
 
 	and_lits.clear();
+}
+
+ch_string
+dimacs_loader::calc_content_sha(){
+	// ld_content has a final END_OF_SEC artifitially added
+	uchar_t* arr_to_sha = (uchar_t*)(ld_content.get_c_array());
+	long arr_to_sha_sz = ld_content.get_c_array_sz() - 1;  
+	
+	ch_string the_sha = sha_txt_of_arr(arr_to_sha, arr_to_sha_sz);
+
+	DBG_PRT(94, os << "calc_loader_sha str " << bj_eol << ld_file_name << bj_eol;
+		os << " CONTENT=" << bj_eol;
+		os << ">>>>>>" << bj_eol;
+		os << arr_to_sha;
+		os << "<<<<<<" << bj_eol;
+		os << "SZ_to_SHA=" << arr_to_sha_sz << bj_eol;
+		os << "SHA=" << the_sha << bj_eol;
+		os << "sizeof(std::istream::char_type)=" << sizeof(std::istream::char_type);
+	);
+
+	return the_sha;
 }
 

@@ -18,30 +18,27 @@ along with ben-jose.  If not, see <http://www.gnu.org/licenses/>.
 
 ------------------------------------------------------------
 
-Copyright (C) 2011, 2014. QUIROGA BELTRAN, Jose Luis.
+Copyright (C) 2011, 2014-2015. QUIROGA BELTRAN, Jose Luis.
 Id (cedula): 79523732 de Bogota - Colombia.
 email: joseluisquirogabeltran@gmail.com
 
+ben-jose is free software thanks to The Glory of Our Lord 
+	Yashua Melej Hamashiaj.
+Our Resurrected and Living, both in Body and Spirit, 
+	Prince of Peace.
+
 ------------------------------------------------------------
 
-dbg_ic.h
+phi_test.h
 
-funcs to dbg_ic.
+phi_test func and classes decl.
 
 --------------------------------------------------------------*/
 
-#ifndef DBG_IC_H
-#define DBG_IC_H
-
-#include "bj_stream.h"
-
-class brain;
-class quanton;
-
-void	dbg_reset_ic_files(brain& brn);
-void	dbg_ic_print(brain& brn, row<quanton*>& the_trail);
+#ifndef PHI_DBG_H
+#define PHI_DBG_H
 
 
-#endif		// DBG_IC_H
+#endif		// PHI_DBG_H
 
 

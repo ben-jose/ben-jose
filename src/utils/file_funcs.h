@@ -18,9 +18,14 @@ along with ben-jose.  If not, see <http://www.gnu.org/licenses/>.
 
 ------------------------------------------------------------
 
-Copyright (C) 2011, 2014. QUIROGA BELTRAN, Jose Luis.
+Copyright (C) 2011, 2014-2015. QUIROGA BELTRAN, Jose Luis.
 Id (cedula): 79523732 de Bogota - Colombia.
 email: joseluisquirogabeltran@gmail.com
+
+ben-jose is free software thanks to The Glory of Our Lord 
+	Yashua Melej Hamashiaj.
+Our Resurrected and Living, both in Body and Spirit, 
+	Prince of Peace.
 
 ------------------------------------------------------------
 
@@ -125,6 +130,27 @@ path_get_running_path();
 
 ch_string
 path_to_absolute_path(ch_string pth);
+
+bool
+path_create(ch_string n_pth);
+
+bool
+path_begins_with(ch_string the_pth, ch_string the_beg);
+
+bool
+path_ends_with(ch_string& the_str, ch_string& the_suf);
+
+void
+path_delete(ch_string full_pth, ch_string up_to);
+
+ch_string
+path_get_directory(ch_string the_pth, bool add_last_dir_sep);
+
+ch_string
+path_get_name(ch_string the_pth);
+
+bool
+path_create_link(ch_string old_pth, ch_string new_pth);
 
 #endif		// FILE_FUNCS_H
 
