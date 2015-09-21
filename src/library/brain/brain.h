@@ -1868,7 +1868,7 @@ class neuromap {
 	row_neuron_t		na_all_filled_by_forced;
 	row_neuron_t		na_all_filled_by_propag;
 
-	row<prop_signal>	na_forced; // deduction with all confl visit these.
+	//row<prop_signal>	na_forced; // deduction with all confl visit these.
 	row<prop_signal>	na_propag; // psigs from na_all_propag NOT in all_forced
 
 	row_neuron_t		na_cov_by_forced_quas; 
@@ -1942,7 +1942,7 @@ class neuromap {
 		na_trail_propag.clear(true, true);
 		//na_cov_by_trail_propag_quas.clear();
 		
-		na_forced.clear(true, true);
+		//na_forced.clear(true, true);
 		na_propag.clear(true, true);
 		
 		na_cov_by_forced_quas.clear();
@@ -2070,6 +2070,7 @@ class neuromap {
 
 	void	map_make_all_dominated();
 	
+	void	map_make_monos_dominated();
 	void	map_make_nxt_monos_dominated();
 	void	map_make_dominated();
 	
@@ -2213,7 +2214,7 @@ class neuromap {
 	
 	void	map_reset_all_notes_and_tags();
 
-	DECLARE_NA_FLAG_ALL_FUNCS(forced, 2)
+	//DECLARE_NA_FLAG_ALL_FUNCS(forced, 2)
 	DECLARE_NA_FLAG_ALL_FUNCS(propag, 3)
 	//DECLARE_NA_FLAG_ALL_FUNCS(trail_propag, 4)
 
@@ -2287,6 +2288,10 @@ class neurolayers {
 			nmm += lv_neus.size();
 		}
 		return nmm;
+	}
+	
+	bool	is_empty(){
+		return (get_tot_neurons() == 0);
 	}
 	
 	void	clear_all_neurons(){
@@ -2822,8 +2827,8 @@ class qlayers_ref {
 // analyser
 
 class analyser {
-	static
-	neuromap* 		NULL_NEUROMAP;
+	//static
+	//neuromap* 		NULL_NEUROMAP;
 	
 	public:
 
@@ -2873,7 +2878,7 @@ class analyser {
 	solver*	get_dbg_slv();
 	
 	brain&		get_de_brain();
-	qulayers& 	get_orig_trail();
+	//qulayers& 	get_orig_trail();
 	
 	quanton*	last_qu_noted(){
 		if(de_all_noted.is_empty()){
@@ -2895,7 +2900,7 @@ class analyser {
 	bool	ck_end_of_lrn_nmp();
 	
 	void	fill_dct(deduction& dct);
-	void	make_noted_dominated_and_deduced(row<neuromap*>& to_wrt);
+	void	make_all_noted_dominated(row<neuromap*>& to_wrt, dbg_call_id dbg_id);
 	
 	bool		ck_deduc_init(long deduc_lv, bool full_ck);
 	
@@ -2933,9 +2938,9 @@ class analyser {
 	void		set_nxt_propag(quanton* nxt_qua);
 	void		set_nxt_noted(quanton* nxt_qua);
 	
-	bool		is_null_neuromap(neuromap*& nmp){
+	/*bool		is_null_neuromap(neuromap*& nmp){
 		return (&nmp == &NULL_NEUROMAP);
-	}
+	}*/
 	
 	bool		find_next_source(bool only_origs = false, bool stop_at_nmp_ends = false);
 	bool		find_next_noted(bool stop_at_nmp_ends = false);
@@ -4099,11 +4104,11 @@ qulayers::get_ql_brain(){
 	return *ql_brain;	
 }
 
-inline
+/*inline
 qulayers& 
 analyser::get_orig_trail(){
 	return get_de_brain().br_charge_trail;
-}
+}*/
 
 inline
 comparison	cmp_long_id(quanton* const & qua1, quanton* const & qua2){

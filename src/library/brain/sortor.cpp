@@ -900,11 +900,6 @@ sorset::step_mutual_stabilize_rec(sort_glb& srg1, sort_glb& srg2)
 
 		if(oper == sm_with_neus){
 			row<sortee*>& all_mates = srt.so_related->so_mates;
-			/*DBG_PRT_WITH(108, srg1, 
-				os << "sm_with_neus.\n";
-				os << " srt=" << &srt << "\n";
-				os << " all_mates=" << all_mates << "\n";
-			);*/
 			srg2.sort_all_from(all_mates, curr_stab_consec, false, 0, true);
 		}
 

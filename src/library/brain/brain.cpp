@@ -728,18 +728,12 @@ brain::brn_tunnel_signals(bool only_in_dom, row_quanton_t& all_impl_cho){
 
 	quanton* cho = curr_cho();
 
-	BRAIN_DBG(quanton* l_trl = br_charge_trail.last_quanton());
-	DBG_PRT(102, os << "Starting tunnel" << " trail_last=" << l_trl << "\n";
-		print_trail(os);
-	);
+	//BRAIN_DBG(quanton* l_trl = br_charge_trail.last_quanton());
 	
 	while(has_psignals()){
 		quanton* qua = receive_psignal(only_in_dom);
 		if(qua == NULL_PT){
 			BRAIN_CK((curr_cho() == NULL_PT) || curr_cho()->has_charge());
-			DBG_PRT(102, os << "\n\n null receive" << " lv=" << level() << " ti=" << tier();
-				os << " trail_last=" << l_trl << "\n\n";
-			);
 			continue;
 		}
 
@@ -1525,8 +1519,6 @@ brain::retract_to(long tg_lv, bool full_reco)
 	}
 	inc_recoil();
 	
-	DBG_PRT(103, os << "inc_recoil \n" << STACK_STR);
-	
 	BRAIN_CK((tg_lv == INVALID_LEVEL) || (level() == tg_lv));
 	BRAIN_CK(full_reco || (tg_lv == INVALID_LEVEL) || (trail_level() == tg_lv));
 	BRAIN_CK(! full_reco || (tg_lv == INVALID_LEVEL) || ((trail_level() + 1) == tg_lv));
@@ -1553,8 +1545,6 @@ brain::receive_psignal(bool only_in_dom){
 	DBG_COMMAND(21, getchar());
 	
 	if(! qua.has_charge() && opp.is_note0()){
-		//DBG_PRT(102, os << " CICLE qua skiped" << &qua);
-		//BRAIN_CK(false);
 		return NULL_PT;
 	}
 	/*
@@ -1634,7 +1624,6 @@ brain::receive_psignal(bool only_in_dom){
 	DBG_PRT(21, os << "init sgnl" << sgnl);
 	sgnl.init_prop_signal();
 
-	//DBG_PRT_COND(102, (pt_qua == NULL_PT), os << " CHARGED qua skiped " << &qua);
 	return pt_qua;
 }
 
@@ -2642,11 +2631,6 @@ brain::choose_mono(){
 	}
 	//BRAIN_CK(ck_prev_monos());
 	if(qua == NULL_PT){
-		DBG_PRT(103, os << "null cho_mono \n";
-			os << " br_last_monocho_idx=" << br_last_monocho_idx << "\n";
-			os << " br_monos_sz=" << br_monos.size() << "\n";
-			os << " br_monos=" << br_monos << "\n";
-		);
 		return NULL_PT;
 	}
 	BRAIN_CK(ck_prev_monos());
@@ -3051,18 +3035,8 @@ brain::send_next_mono(){
 	update_monos();
 	quanton* qua = choose_mono();
 	if(qua == NULL_PT){
-		DBG_PRT(102, os << "send_mono. null choose_mono \n";
-			os << " br_last_monocho_idx=" << br_last_monocho_idx << "\n";
-			os << " br_monos_sz=" << br_monos.size() << "\n";
-			os << " br_monos=" << br_monos << "\n";
-			os << " curr_cho=" << curr_cho() << "\n";
-			os << " trail_last=" << &(trail_last()) << "\n";
-			os << STACK_STR << "\n\n"
-		);
 		return;
 	}
-	DBG_PRT(102, os << "send_mono. br_monos_sz=" << br_monos.size() 
-		<< " br_monos=" << br_monos << "\n NEXT mono=" << qua);
 	
 	BRAIN_CK(qua->is_opp_mono());
 	send_psignal(*qua, NULL, tier());

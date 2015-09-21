@@ -498,8 +498,8 @@ neuromap::print_subnmp(bj_ostream& os, bool only_pts){
 	na_trail_propag.print_row_data(os, true, "\n");
 	
 	os << "\n all_ps=\n";
-	os << "\n\t na_forced=\n";
-	na_forced.print_row_data(os, true, "\n");
+	//os << "\n\t na_forced=\n";
+	//na_forced.print_row_data(os, true, "\n");
 	os << "\n\t na_propag=\n";
 	na_propag.print_row_data(os, true, "\n");
 
@@ -548,7 +548,8 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 		map_get_all_ps(all_ps);
 		
 		os << "na{";
-		if(na_is_head){ os << "H"; }
+		if(na_is_head){ os << "H."; }
+		if(! has_submap()){ os << "T."; }
 		os << "i" << na_index;
 		os << ".u" << na_dbg_update_tk;
 		os << "(" << (void*)this << ")";
@@ -565,6 +566,14 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 			os << " o_lv_has_ST";
 		}
 
+		os << "\n all_sub=[";
+		print_all_subnmp(os, true);
+		os << "]\n";
+		
+		row_quanton_t all_f_qu;
+		map_get_all_quas(all_f_qu);
+		os << "\n nmp_quas=" << all_f_qu << "\n";
+		
 		/*
 		row_neuron_t& all_ne = brn.br_tmp_prt_neus;
 		MARK_USED(all_ne);
@@ -1405,7 +1414,11 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 	}
 
 	if(from_pt){
-		os << qu_id; 
+		if(! h_src && h_chg){ os << "L"; }
+		os << "(" << qu_id; 
+		os << ".t" << qti;
+		if(is_mn){ os << ".M." << qu_lv_mono; }
+		if(is_opp_mn){ os << ".m." << opp.qu_lv_mono; }
 		os.flush();
 		return os;
 	}
