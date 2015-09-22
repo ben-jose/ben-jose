@@ -123,7 +123,6 @@ brain::ck_trail(){
 	br_charge_trail.get_all_ordered_quantons(the_trl);
 
 	long num_null_src = 0;
-	BRAIN_CK(br_tot_qu_dots == 0);
 	quanton* last_choice = NULL_PT;
 	quanton* prev_qua = NULL_PT;
 	MARK_USED(prev_qua);
@@ -298,20 +297,27 @@ dbg_find_not_in_rr1(brain& brn, row_neuron_t& rr1, row_neuron_t& rr2,
 #ifdef FULL_DEBUG
 	not_in_rr1.clear();
 
-	BRAIN_CK(brn.br_tot_ne_spots == 0);
-	set_spots_of(brn, rr1);
+	BRAIN_CK(brn.br_ne_tot_tag0 == 0);
+	set_all_tag0(brn, rr1);
+	//BRAIN_CK(brn.br_tot_ne_spots == 0);
+	//set_spots_of(brn, rr1);
 
 	for(long aa = 0; aa < rr2.size(); aa++){
 		BRAIN_CK(rr2[aa] != NULL_PT);
 		neuron& neu = *(rr2[aa]);
 
-		if(! neu.ne_spot){
+		/*if(! neu.ne_spot){
+			not_in_rr1.push(&neu);
+		} */
+		if(! neu.has_tag0()){
 			not_in_rr1.push(&neu);
 		} 
 	}
 
-	reset_spots_of(brn, rr1);
-	BRAIN_CK(brn.br_tot_ne_spots == 0);
+	//reset_spots_of(brn, rr1);
+	//BRAIN_CK(brn.br_tot_ne_spots == 0);
+	reset_all_tag0(brn, rr1);
+	BRAIN_CK(brn.br_ne_tot_tag0 == 0);
 #endif
 }
 
@@ -358,11 +364,11 @@ brain::dbg_check_sat_assig(){
 	row_neuron_t& neus = br_tmp_ck_sat_neus;
 	fill_with_origs(neus);
 
-	if(! brn_dbg_compute_binary(neus)){
+	if(! dbg_br_compute_binary(neus)){
 		abort_func(1, "FATAL ERROR 001. Wrong is_sat answer !");
 	}
 
-	if(! brn_dbg_compute_dots_of(neus, the_assig)){
+	if(! dbg_br_compute_ck_sat_of(neus, the_assig)){
 		abort_func(1, "FATAL ERROR 002. Wrong is_sat answer !");
 	}
 
@@ -373,7 +379,7 @@ brain::dbg_check_sat_assig(){
 }
 
 bool
-brain::brn_dbg_compute_binary(row_neuron_t& neus){
+brain::dbg_br_compute_binary(row_neuron_t& neus){
 #ifdef FULL_DEBUG
 	long ii;
 	for(ii = 0; ii < neus.size(); ii++){
@@ -394,7 +400,20 @@ brain::brn_dbg_compute_binary(row_neuron_t& neus){
 
 //for IS_SAT_CK
 bool
-brain::brn_dbg_compute_dots(row_neuron_t& neus){
+neuron::dbg_ne_compute_ck_sat(){
+#ifdef FULL_DEBUG
+	for(long ii = 0; ii < fib_sz(); ii++){
+		bool is_n6 = ne_fibres[ii]->is_note6();
+		if(is_n6){
+			return true;
+		}
+	}
+#endif
+	return false;
+}
+	
+bool
+brain::dbg_br_compute_ck_sat(row_neuron_t& neus){
 #ifdef FULL_DEBUG
 	long ii;
 	for(ii = 0; ii < neus.size(); ii++){
@@ -404,7 +423,7 @@ brain::brn_dbg_compute_dots(row_neuron_t& neus){
 		if(! neu.ne_original){
 			continue;
 		}
-		if(!(neu.neu_compute_dots())){
+		if(!(neu.dbg_ne_compute_ck_sat())){
 			return false;
 		}
 	}
@@ -414,24 +433,28 @@ brain::brn_dbg_compute_dots(row_neuron_t& neus){
 
 //for IS_SAT_CK
 bool
-brain::brn_dbg_compute_dots_of(row_neuron_t& neus, row_quanton_t& assig){
+brain::dbg_br_compute_ck_sat_of(row_neuron_t& neus, row_quanton_t& assig){
 	bool resp = true;
 #ifdef FULL_DEBUG
 	brain& brn = *this;
-	BRAIN_CK(br_tot_qu_dots == 0);
-	set_dots_of(brn, assig);
+	BRAIN_CK(br_qu_tot_note6 == 0);
+	set_all_binote6(brn, assig);
 
+	bool all_ok = true;
 	long ii = 0;
 	while((ii < assig.size()) && (assig[ii]->qlevel() == ROOT_LEVEL)){
-		if(assig[ii]->qu_dot != cg_positive){
-			return false;
+		bool is_n6 = assig[ii]->is_note6();
+		if(! is_n6){
+			all_ok = false;
+			break;
 		}
 		ii++;
 	}
 
-	resp = brn_dbg_compute_dots(neus);
-	reset_dots_of(brn, assig);
-	BRAIN_CK(br_tot_qu_dots == 0);
+	resp = all_ok && dbg_br_compute_ck_sat(neus);
+	reset_all_its_note6(brn, assig);
+	BRAIN_CK(br_qu_tot_note6 == 0);
+	
 #endif
 	return resp;
 }
@@ -1364,11 +1387,6 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 
 	bool is_nega = is_neg();
 	bool is_posi = is_pos();
-	bool with_dot = has_dot();
-	MARK_USED(with_dot);
-	bool with_mark = has_mark();
-	MARK_USED(with_mark);
-	//bool has_src = has_source();
 	bool dominated = false;
 	MARK_USED(dominated);
 	neuron* neu = ps_src;
@@ -1470,8 +1488,6 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 			if(is_opp_mn){ os << ".m." << opp.qu_lv_mono; }
 		}
 		/*
-		if(with_dot){ os << ".d"; }
-		if(with_mark){ os << ".m"; }
 		if(! qu_tee.is_unsorted()){ os << ".q" << qu_tee.so_qua_id; }
 		if(n1){ os << ".n1"; }
 		*/
@@ -1490,7 +1506,6 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 	os << "chtk{" << qu_charge_tk << "} ";
 	os << "sp_" << dbg_trinary_to_str(qu_spin) << " ";
 	os << "st_" << qu_choice_idx << " ";
-	os << "d_" << dbg_trinary_to_str(qu_dot) << "\n";
 	os << "ps_src ";
 		os << neu;
 	os << "current_src ";
@@ -1584,18 +1599,23 @@ neuromap::map_ck_contained_in(coloring& colr, dbg_call_id dbg_id){
 	row_neuron_t& m_neus = brn.br_tmp_all_neus;
 	map_get_all_neus(m_neus);
 	
-	BRAIN_CK(brn.br_tot_ne_spots == 0);
-	set_spots_of(brn, m_neus);
+	BRAIN_CK(brn.br_ne_tot_tag0 == 0);
+	set_all_tag0(brn, m_neus);
+	//BRAIN_CK(brn.br_tot_ne_spots == 0);
+	//set_spots_of(brn, m_neus);
 	
 	row_neuron_t& all_neus = colr.co_neus;
 	for(long ii = 0; ii < all_neus.size(); ii++){
 		BRAIN_CK(all_neus[ii] != NULL_PT);
 		neuron& neu = *(all_neus[ii]);
-		BRAIN_CK_PRT(neu.ne_spot, os << "_______\n neu=" << &neu);
+		//BRAIN_CK_PRT(neu.ne_spot, os << "_______\n neu=" << &neu);
+		BRAIN_CK_PRT(neu.has_tag0(), os << "_______\n neu=" << &neu);
 	}
 
-	reset_spots_of(brn, m_neus);
-	BRAIN_CK(brn.br_tot_ne_spots == 0);
+	//reset_spots_of(brn, m_neus);
+	//BRAIN_CK(brn.br_tot_ne_spots == 0);
+	reset_all_tag0(brn, m_neus);
+	BRAIN_CK(brn.br_ne_tot_tag0 == 0);
 #endif
 	return true;
 }

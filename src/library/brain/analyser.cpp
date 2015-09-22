@@ -47,6 +47,7 @@ analyser class methos and funcs.
 //============================================================
 // aux funcs
 
+/*
 long	set_spots_of(brain& brn, row_neuron_t& neus){
 	long num_neu = 0;
 	for(long ii = 0; ii < neus.size(); ii++){
@@ -69,7 +70,7 @@ long	reset_spots_of(brain& brn, row_neuron_t& neus){
 		}
 	}
 	return num_neu;
-}
+}*/
 
 void
 brain::deactivate_last_map(){
@@ -563,8 +564,8 @@ analyser::calc_neuromap(long min_lv, neuromap* prev_nmp, bool in_setup)
 	
 	neuromap* out_nmp = prev_nmp;
 	
-	BRAIN_CK(brn.br_tot_qu_marks == 0);
-	BRAIN_CK(brn.br_tot_ne_spots == 0);
+	//BRAIN_CK(brn.br_tot_qu_marks == 0);
+	//BRAIN_CK(brn.br_tot_ne_spots == 0);
 	
 	BRAIN_CK(brn.br_data_levels.is_valid_idx(min_lv));
 	if(out_nmp == NULL_PT){
@@ -647,8 +648,8 @@ analyser::calc_neuromap(long min_lv, neuromap* prev_nmp, bool in_setup)
 			//BRAIN_CK(out_nmp->dbg_ck_all_confl_tag1());
 		}
 	);
-	BRAIN_CK(brn.br_tot_qu_marks == 0);
-	BRAIN_CK(brn.br_tot_ne_spots == 0);
+	//BRAIN_CK(brn.br_tot_qu_marks == 0);
+	//BRAIN_CK(brn.br_tot_ne_spots == 0);
 
 	DBG_PRT(38, os << "CLC_NMP{" 
 			<< " num_loop=" << num_loop

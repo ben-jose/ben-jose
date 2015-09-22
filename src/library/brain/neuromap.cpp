@@ -990,65 +990,6 @@ coloring::copy_co_to(coloring& col2){
 }
 
 bool
-can_append_qua(quanton& qua){
-	bool is_cov = qua.has_note2() || qua.has_note3();
-	if(is_cov){
-		return false;
-	}
-	return true;
-}
-
-
-bool
-neuron::in_neuromap(brain& brn, long min_tier, long max_tier, long& upper_pos_ti)
-{
-	bool is_fll = true;
-	upper_pos_ti = INVALID_TIER;
-
-	DBG(long dbg_num_after = 0);
-	for(long ii = 0; ii < fib_sz(); ii++){
-		BRAIN_CK(ne_fibres[ii] != NULL_PT);
-		
-		// qua was charged in last propagate.
-		quanton& qua = *(ne_fibres[ii]);
-		long qti = qua.qu_tier;
-		BRAIN_CK(qti != INVALID_TIER);
-
-		bool is_cov = ! can_append_qua(qua);
-		bool is_part = (qti >= min_tier);
-		bool is_upper = (qti < min_tier);
-		DBG(if(is_cov && is_part){ dbg_num_after++; }); 
-
-		if(! is_cov && is_part){ 
-			// qua is not in neumap (! has_mark) so candidate subset is not in neumap
-			is_fll = false;
-			break;
-		}
-
-		if(qua.is_pos() && is_upper){
-			// neu is sat in upper level so candidate subset is not in neumap
-			if(upper_pos_ti == INVALID_TIER){
-				upper_pos_ti = qti;
-			}
-			if(qti < upper_pos_ti){
-				upper_pos_ti = qti;
-			}
-		}
-	}
-	
-	BRAIN_CK_PRT((! is_fll || (upper_pos_ti != INVALID_TIER) || (dbg_num_after >= 2)), 
-			brn.print_trail(os);
-			os << " min_ti=" << min_tier;
-			os << " max_ti=" << max_tier;
-			os << " pos_ti=" << upper_pos_ti;
-			os << " #aft=" << dbg_num_after;
-			os << " is_fll=" << is_fll;
-			os << this;
-	);
-	return is_fll;
-}
-
-bool
 can_append_neu(neuron& neu){
 	bool neu_presel = neu.has_tag2() || neu.has_tag3() || neu.has_tag4();
 	if(neu_presel){ // do not add presel ones to sel_neus
@@ -2543,6 +2484,65 @@ split_tees(brain& brn, sort_glb& srg, row<sortee*>& sorted_tees, row<sortee*>& s
 	}
 
 	BRAIN_CK(srg.sg_tot_ss_marks == 0);
+}
+
+bool
+can_append_qua(quanton& qua){
+	bool is_cov = qua.has_note2() || qua.has_note3();
+	if(is_cov){
+		return false;
+	}
+	return true;
+}
+
+
+bool
+neuron::in_neuromap(brain& brn, long min_tier, long max_tier, long& upper_pos_ti)
+{
+	bool is_fll = true;
+	upper_pos_ti = INVALID_TIER;
+
+	DBG(long dbg_num_after = 0);
+	for(long ii = 0; ii < fib_sz(); ii++){
+		BRAIN_CK(ne_fibres[ii] != NULL_PT);
+		
+		// qua was charged in last propagate.
+		quanton& qua = *(ne_fibres[ii]);
+		long qti = qua.qu_tier;
+		BRAIN_CK(qti != INVALID_TIER);
+
+		bool is_cov = ! can_append_qua(qua);
+		bool is_part = (qti >= min_tier);
+		bool is_upper = (qti < min_tier);
+		DBG(if(is_cov && is_part){ dbg_num_after++; }); 
+
+		if(! is_cov && is_part){ 
+			// qua is not in neumap (! has_mark) so candidate subset is not in neumap
+			is_fll = false;
+			break;
+		}
+
+		if(qua.is_pos() && is_upper){
+			// neu is sat in upper level so candidate subset is not in neumap
+			if(upper_pos_ti == INVALID_TIER){
+				upper_pos_ti = qti;
+			}
+			if(qti < upper_pos_ti){
+				upper_pos_ti = qti;
+			}
+		}
+	}
+	
+	BRAIN_CK_PRT((! is_fll || (upper_pos_ti != INVALID_TIER) || (dbg_num_after >= 2)), 
+			brn.print_trail(os);
+			os << " min_ti=" << min_tier;
+			os << " max_ti=" << max_tier;
+			os << " pos_ti=" << upper_pos_ti;
+			os << " #aft=" << dbg_num_after;
+			os << " is_fll=" << is_fll;
+			os << this;
+	);
+	return is_fll;
 }
 
 

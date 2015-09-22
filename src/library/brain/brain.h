@@ -218,15 +218,9 @@ void	dbg_prepare_used_dbg_ccl(row_quanton_t& rr_qua, canon_clause& dbg_ccl);
 void	dbg_print_ccls_neus(bj_ostream& os, row<canon_clause*>& dbg_ccls);
 bool	dbg_run_satex_on(brain& brn, ch_string f_nam, neuromap* dbg_nmp);
 
-long	set_spots_of(brain& brn, row_neuron_t& neus);
-long	reset_spots_of(brain& brn, row_neuron_t& neus);
-
 charge_t 	negate_trinary(charge_t val);
 
 bool	has_neu(row_neuron_t& rr_neus, neuron* neu);
-
-long	set_dots_of(brain& brn, row_quanton_t& quans);
-long	reset_dots_of(brain& brn, row_quanton_t& quans);
 
 void	get_quas_of(brain& brn, row_neuron_t& all_neus, row_quanton_t& all_quas);
 
@@ -593,9 +587,6 @@ class quanton {
 	t_1byte			qu_flags;
 
 	bool			qu_has_been_cho;
-	charge_t		qu_dot;		// symetric. during learning and neuron creation
-	charge_t		qu_mark;	// symetric. during learning and neuron creation
-	long			qu_mark_idx;	// in dotted_trace idx when marking
 
 	charge_t		qu_charge;	// symetric. current charge
 	ticket			qu_charge_tk;	// symetric. 
@@ -700,9 +691,6 @@ class quanton {
 		qu_flags = 0;
 
 		qu_has_been_cho = false;
-		qu_dot = cg_neutral;
-		qu_mark = cg_neutral;	
-		qu_mark_idx = INVALID_IDX;
 
 		qu_charge = cg_neutral;
 		qu_charge_tk.init_ticket();
@@ -775,32 +763,6 @@ class quanton {
 
 	bool	ck_all_tunnels();
 	void	tunnel_swapop(long idx_pop);
-
-	// dots
-
-	bool	has_dot(){
-		return (qu_dot != cg_neutral);	
-	}
-
-	void	set_dot(brain& brn);
-	void	reset_dot(brain& brn);
-
-	// marks
-
-	bool	has_mark(){	
-		return (qu_mark != cg_neutral);	
-	}
-
-	bool	has_pos_mark(){	
-		return (qu_mark == cg_positive);	
-	}
-
-	bool	has_neg_mark(){	
-		return (qu_mark == cg_negative);	
-	}
-
-	void	set_mark(brain& brn);
-	void	reset_mark(brain& brn);
 
 	long		qlevel(){ return qu_charge_tk.tk_level; }
 	leveldat*	qlv_dat(brain& brn);
@@ -1199,7 +1161,7 @@ class neuron {
 
 	long			ne_num_remote_tees;
 
-	bool			ne_spot;
+	//bool			ne_spot;
 
 	long			ne_tmp_col;
 
@@ -1268,7 +1230,7 @@ class neuron {
 
 		ne_num_remote_tees = 0;
 	
-		ne_spot = false;
+		//ne_spot = false;
 
 		ne_tmp_col = INVALID_COLOR;
 		
@@ -1309,11 +1271,11 @@ class neuron {
 	}
 
 
-	void	set_spot(brain& brn);
+	/*void	set_spot(brain& brn);
 	void	reset_spot(brain& brn);
 	bool	has_spot(){
 		return ne_spot;
-	}
+	}*/
 
 	DECLARE_NE_FLAG_FUNCS(ne_flags, tag0);
 	DECLARE_NE_FLAG_FUNCS(ne_flags, tag1);
@@ -1418,19 +1380,11 @@ class neuron {
 		return ! is_ne_alert();
 	}
 
-	bool	all_marked_after_idx(brain& brn, long trl_idx);
+	//bool	all_marked_after_idx(brain& brn, long trl_idx);
 	bool	in_neuromap(brain& brn, long min_tier, long max_tier, long& upper_pos_ti);
 
 	//for IS_SAT_CK
-	bool	neu_compute_dots(){
-		for(long ii = 0; ii < fib_sz(); ii++){
-			charge_t chg = ne_fibres[ii]->qu_dot;
-			if(chg == cg_positive){
-				return true;
-			}
-		}
-		return false;
-	}
+	bool	dbg_ne_compute_ck_sat();
 
 	bool	in_ne_dominated(brain& brn);
 	void	make_ne_dominated(brain& brn);
@@ -3287,9 +3241,6 @@ public:
 
 	long			br_tot_cy_sigs;
 	long			br_tot_cy_nmps;
-	long			br_tot_qu_dots;
-	long			br_tot_qu_marks;
-	long			br_tot_ne_spots;
 
 	row_neuron_t	br_tmp_found_neus;
 	row_neuron_t	br_tmp_selected;
@@ -3840,9 +3791,9 @@ public:
 
 	bj_ostream& 	print_all_quantons(bj_ostream& os, long ln_sz, ch_string ln_fd);
 
-	bool	brn_dbg_compute_binary(row_neuron_t& neus);
-	bool	brn_dbg_compute_dots(row_neuron_t& neus);
-	bool	brn_dbg_compute_dots_of(row_neuron_t& neus, row_quanton_t& assig);
+	bool	dbg_br_compute_binary(row_neuron_t& neus);
+	bool	dbg_br_compute_ck_sat(row_neuron_t& neus);
+	bool	dbg_br_compute_ck_sat_of(row_neuron_t& neus, row_quanton_t& assig);
 
 	void		read_cnf(dimacs_loader& ldr);
 	void		parse_cnf(dimacs_loader& ldr, row<long>& all_ccls);
@@ -3947,53 +3898,6 @@ quanton::get_source(){
 }
 
 inline
-void
-quanton::set_dot(brain& brn){
-	BRAIN_CK(qu_dot == cg_neutral);
-	BRAIN_CK(qu_inverse->qu_dot == cg_neutral);
-	qu_dot = cg_positive;
-	qu_inverse->qu_dot = cg_negative;
-	brn.br_tot_qu_dots++;
-}
-
-inline
-void
-quanton::reset_dot(brain& brn){
-	BRAIN_CK(qu_dot != cg_neutral);
-	BRAIN_CK(qu_inverse->qu_dot != cg_neutral);
-	qu_dot = cg_neutral;
-	qu_inverse->qu_dot = cg_neutral;
-	brn.br_tot_qu_dots--;
-}
-
-inline
-void
-quanton::set_mark(brain& brn){
-	BRAIN_CK(qu_inverse != NULL_PT);
-	BRAIN_CK_PRT((qu_mark == cg_neutral), os << "_____" << bj_eol << this 
-			<< " mrk=" << qu_mark);
-	BRAIN_CK(qu_inverse->qu_mark == cg_neutral);
-	BRAIN_REL_CK(! has_mark());
-	
-	qu_mark = cg_positive;
-	qu_inverse->qu_mark = cg_negative;
-	brn.br_tot_qu_marks++;
-}
-
-inline
-void
-quanton::reset_mark(brain& brn){
-	BRAIN_CK(qu_inverse != NULL_PT);
-	BRAIN_CK(qu_mark != cg_neutral);
-	BRAIN_CK(qu_inverse->qu_mark != cg_neutral);
-	BRAIN_REL_CK(has_mark());
-
-	qu_mark = cg_neutral;
-	qu_inverse->qu_mark = cg_neutral;
-	brn.br_tot_qu_marks--;
-}
-
-inline
 bool
 quanton::is_qu_end_of_nmp(brain& brn){
 	if(qu_source == NULL_PT){
@@ -4005,22 +3909,6 @@ quanton::is_qu_end_of_nmp(brain& brn){
 		return true;
 	}
 	return false;
-}
-
-inline
-void
-neuron::set_spot(brain& brn){
-	BRAIN_CK(! ne_spot);
-	ne_spot = true;
-	brn.br_tot_ne_spots++;
-}
-
-inline
-void
-neuron::reset_spot(brain& brn){
-	BRAIN_CK(ne_spot);
-	ne_spot = false;
-	brn.br_tot_ne_spots--;
 }
 
 inline

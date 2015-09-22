@@ -140,36 +140,6 @@ has_neu(row_neuron_t& rr_neus, neuron* neu){
 }
 
 //============================================================
-// check SAT result
-
-long	set_dots_of(brain& brn, row_quanton_t& quans){
-	long num_qua = 0;
-	for(long ii = 0; ii < quans.size(); ii++){
-		quanton* qua = quans[ii];
-		BRAIN_CK(qua != &(brn.br_top_block));
-		BRAIN_CK_0(! qua->has_dot());
-		if(! qua->has_dot()){
-			qua->set_dot(brn);
-			num_qua++;
-		}
-	}
-	return num_qua;
-}
-
-long	reset_dots_of(brain& brn, row_quanton_t& quans){
-	long resetted = 0;
-	for(long ii = 0; ii < quans.size(); ii++){
-		quanton* qua = quans[ii];
-		BRAIN_CK(qua != &(brn.br_top_block));
-		if(qua->has_dot()){
-			qua->reset_dot(brn);
-			resetted++;
-		}
-	}
-	return resetted;
-}
-
-//============================================================
 // neuron methods
 
 quanton*
@@ -524,9 +494,6 @@ brain::init_brain(solver& ss){
 
 	br_tot_cy_sigs = 0;
 	br_tot_cy_nmps = 0;
-	br_tot_qu_dots = 0;
-	br_tot_qu_marks = 0;
-	br_tot_ne_spots = 0;
 
 	br_num_active_neurons = 0;
 	br_num_active_alert_rels = 0;
@@ -605,8 +572,6 @@ brain::release_brain(){
 	get_skeleton().clear_all();
 
 	br_top_block.init_quanton(this, cg_neutral, INVALID_IDX, NULL);
-
-	BRAIN_CK(br_tot_qu_dots == 0);
 
 	BRAIN_CK(br_dbg.dbg_tot_nmps == 0);
 	BRAIN_CK(br_num_active_neuromaps == 0);
@@ -895,9 +860,6 @@ brain::init_loading(long num_qua, long num_neu){
 
 	BRAIN_CK(br_tot_cy_sigs == 0);
 	BRAIN_CK(br_tot_cy_nmps == 0);
-	BRAIN_CK(br_tot_qu_dots == 0);
-	BRAIN_CK(br_tot_qu_marks == 0);
-	BRAIN_CK(br_tot_ne_spots == 0);
 
 	init_all_tots();
 
