@@ -494,24 +494,13 @@ neuromap::print_subnmp(bj_ostream& os, bool only_pts){
 	os << " #lv=" << na_num_submap;
 	
 	os << "\n ---------------------------";
-	os << "\n na_trail_propag=\n";
-	na_trail_propag.print_row_data(os, true, "\n");
 	
-	os << "\n all_ps=\n";
-	//os << "\n\t na_forced=\n";
-	//na_forced.print_row_data(os, true, "\n");
 	os << "\n\t na_propag=\n";
 	na_propag.print_row_data(os, true, "\n");
 
-	os << "\n all_filled=\n";
-	os << "\n\t na_all_filled_by_forced=\n";
-	na_all_filled_by_forced.print_row_data(os, true, "\n");
 	os << "\n\t na_all_filled_by_propag=\n";
 	na_all_filled_by_propag.print_row_data(os, true, "\n");
 
-	os << "\n all_cov=\n";
-	os << "\n\t na_cov_by_forced_quas=\n";
-	na_cov_by_forced_quas.print_row_data(os, true, "\n");
 	os << "\n\t na_cov_by_propag_quas=\n";
 	na_cov_by_propag_quas.print_row_data(os, true, "\n");
 	

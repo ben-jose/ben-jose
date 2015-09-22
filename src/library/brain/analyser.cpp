@@ -102,9 +102,9 @@ analyser::init_analyser(brain* brn){
 		de_ref.init_qlayers_ref(&(brn->br_charge_trail));
 	}
 	de_all_confl.clear(true, true);
-	de_max_ti = INVALID_TIER;
+	//de_max_ti = INVALID_TIER;
 	
-	de_forced_not_sel_neus.clear_all_neurons();
+	//de_forced_not_sel_neus.clear_all_neurons();
 	de_propag_not_sel_neus.clear_all_neurons();
 	//de_trail_propag_not_sel_neus.clear_all_neurons();
 
@@ -225,6 +225,32 @@ analyser::set_nxt_propag(quanton* pt_nxt_qua){
 }
 
 bool
+analyser::find_calc_next_end(){
+	brain& brn = get_de_brain();
+	qlayers_ref& qlr = de_ref;
+	quanton* nxt_qua = qlr.get_curr_quanton();
+	
+	bool in_end = false;
+	while(nxt_qua != NULL_PT){
+		nxt_qua = qlr.get_curr_quanton();
+		if(nxt_qua == NULL_PT){
+			de_next_bk_psig.init_prop_signal();
+			break;
+		}
+		
+		quanton* curr_qu = qlr.dec_curr_quanton();
+		set_nxt_propag(curr_qu);
+		
+		if((curr_qu != NULL_PT) && curr_qu->is_qu_end_of_nmp(brn)){
+			in_end = true;
+			break;
+		}
+	}
+
+	return in_end;
+}
+
+bool
 analyser::find_next_noted(bool stop_at_nmp_ends){
 	brain& brn = get_de_brain();
 	qlayers_ref& qlr = de_ref;
@@ -329,6 +355,16 @@ analyser::ck_deduc_init(long deduc_lv, bool full_ck){
 }
 
 void	
+analyser::calc_init(){
+	qlayers_ref& qlr = de_ref;
+	reset_deduc();
+	BRAIN_CK(ck_deduc_init(INVALID_LEVEL, false));
+	qlr.reset_curr_quanton();
+	set_nxt_propag(qlr.get_curr_quanton());
+	BRAIN_CK(qlr.has_curr_quanton());
+}
+
+void	
 analyser::deduction_init(row_quanton_t& causes, long max_lv){
 	qlayers_ref& qlr = de_ref;
 	notekeeper& nkpr = de_nkpr;
@@ -373,23 +409,21 @@ analyser::get_all_causes(row_quanton_t& all_quas){
 
 void
 analyser::init_calc_nmp(long min_lv){
-	brain& brn = get_de_brain();
-	row_quanton_t& all_quas = brn.br_tmp_all_causes;
+	//brain& brn = get_de_brain();
+	//row_quanton_t& all_quas = brn.br_tmp_all_causes;
 
-	get_all_causes(all_quas);
+	//get_all_causes(all_quas);
 	
-	de_max_ti = find_max_tier(all_quas);
+	//de_max_ti = find_max_tier(all_quas);
 		
-	deduction_init(all_quas); // multi_confl
-	//deduction_init(get_first_causes());
+	calc_init();
+	//deduction_init(all_quas); 
 	
 	BRAIN_CK(de_all_confl.first().get_level() == get_de_brain().level());
 	BRAIN_CK(get_de_brain().br_ne_tot_tag1 == 0);
 	BRAIN_CK(min_lv < de_ref.get_curr_qlevel());
 	
-	de_forced_not_sel_neus.clear_all_neurons();
 	de_propag_not_sel_neus.clear_all_neurons();
-	//de_trail_propag_not_sel_neus.clear_all_neurons();
 
 	de_tmp_neuromap = NULL_PT;
 }
@@ -403,7 +437,7 @@ analyser::deduction_analysis(row_quanton_t& causes, deduction& dct, long max_lv)
 	deduction_init(causes, max_lv);
 	while(! is_end_of_dct()){
 		BRAIN_CK(qlr.has_curr_quanton());
-		find_next_source();
+		find_next_source(false, false);
 	}
 	BRAIN_CK(qlr.has_curr_quanton());
 
@@ -510,6 +544,7 @@ neuromap::map_lv_already_has_setup(){
 
 neuromap*
 analyser::update_neuromap(neuromap* sub_nmp){
+	BRAIN_CK(de_all_noted.is_empty());
 	analyser& anlsr = *this;
 	brain& brn = get_de_brain();
 	neuromap& nxt_nmp = brn.locate_neuromap();
@@ -565,7 +600,8 @@ analyser::calc_neuromap(long min_lv, neuromap* prev_nmp, bool in_setup)
 		BRAIN_DBG(num_loop++);
 		BRAIN_DBG(just_updated = false);
 		
-		bool in_end = find_next_source(true, true);
+		//bool in_end = find_next_source(true, true);
+		bool in_end = find_calc_next_end();
 		if(in_end){
 			BRAIN_DBG(just_updated = true);
 			if(in_setup && found_learned()){
@@ -608,7 +644,7 @@ analyser::calc_neuromap(long min_lv, neuromap* prev_nmp, bool in_setup)
 					os << " out_nmp=" << out_nmp
 			);
 			BRAIN_CK(out_nmp->dbg_ck_all_neus());
-			BRAIN_CK(out_nmp->dbg_ck_all_confl_tag1());
+			//BRAIN_CK(out_nmp->dbg_ck_all_confl_tag1());
 		}
 	);
 	BRAIN_CK(brn.br_tot_qu_marks == 0);

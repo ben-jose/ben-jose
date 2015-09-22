@@ -1795,7 +1795,6 @@ class deduction {
 			return; \
 		} \
 		if(has_submap()){ \
-			BRAIN_CK(na_all_confl.is_empty()); \
 			na_submap->map_##attr##_set_all_note##flag_num##_n_tag##flag_num(); \
 		} \
 		brain& brn = get_brn(); \
@@ -1809,7 +1808,6 @@ class deduction {
 			return; \
 		} \
 		if(has_submap()){ \
-			BRAIN_CK(na_all_confl.is_empty()); \
 			na_submap->map_##attr##_reset_all_note##flag_num##_n_tag##flag_num(); \
 		} \
 		brain& brn = get_brn(); \
@@ -1862,25 +1860,17 @@ class neuromap {
 	long			na_max_ti;
 	long			na_num_submap;
 	
-	row<prop_signal>	na_trail_propag; // all trail propag in this nmp section
-	//row_neuron_t		na_cov_by_trail_propag_quas;
-	
-	row_neuron_t		na_all_filled_by_forced;
-	row_neuron_t		na_all_filled_by_propag;
-
-	//row<prop_signal>	na_forced; // deduction with all confl visit these.
 	row<prop_signal>	na_propag; // psigs from na_all_propag NOT in all_forced
-
-	row_neuron_t		na_cov_by_forced_quas; 
+	row_neuron_t		na_all_filled_by_propag;
 	row_neuron_t		na_cov_by_propag_quas; 
 	
-	row<prop_signal>	na_all_confl;  // only for last submap
+	//row<prop_signal>	na_all_confl;  // only for last submap
 	
 	coloring		na_guide_col;
 	coloring		na_pend_col;
 	
 	bool			na_found_in_skl;
-	row_neuron_t	na_all_neus_in_vnt_found;
+	//row_neuron_t	na_all_neus_in_vnt_found;
 	
 	BRAIN_DBG(
 		long				na_dbg_nxt_lv;
@@ -1936,25 +1926,17 @@ class neuromap {
 		na_max_ti = INVALID_TIER;
 		na_num_submap = 1;
 		
-		na_all_filled_by_forced.clear();
-		na_all_filled_by_propag.clear();
-		
-		na_trail_propag.clear(true, true);
-		//na_cov_by_trail_propag_quas.clear();
-		
-		//na_forced.clear(true, true);
 		na_propag.clear(true, true);
-		
-		na_cov_by_forced_quas.clear();
+		na_all_filled_by_propag.clear();
 		na_cov_by_propag_quas.clear();
 		
-		na_all_confl.clear(true, true);
+		//na_all_confl.clear(true, true);
 		
 		na_guide_col.init_coloring();
 		na_pend_col.init_coloring();
 		
 		na_found_in_skl = false;
-		na_all_neus_in_vnt_found.clear();
+		//na_all_neus_in_vnt_found.clear();
 		
 		DBG(
 			na_dbg_nxt_lv = INVALID_LEVEL;
@@ -1979,7 +1961,6 @@ class neuromap {
 		bool c1 = (na_brn == NULL_PT);
 		bool c2 = (na_is_head == false);
 		bool c3 = (na_active_idx == INVALID_IDX);
-		//bool c4 = (na_has_marks_and_spots == false);
 		bool c4 = (na_orig_lv == INVALID_LEVEL);
 		bool c5 = (na_orig_cho == NULL_PT);
 		bool c6 = (na_submap == NULL_PT);
@@ -2045,25 +2026,18 @@ class neuromap {
 	
 	neuromap&	map_get_last_submap();
 
-	//void	map_get_all_trail_propag_ps(row<prop_signal>& all_ps, bool with_clear = true);
 	void	map_get_all_forced_ps(row<prop_signal>& all_ps, bool with_clear = true);
 	void	map_get_all_propag_ps(row<prop_signal>& all_ps, bool with_clear,
 								bool skip_tail);
 	void	map_get_all_ps(row<prop_signal>& all_ps);
-	//bool	map_get_all_non_forced_ps(row<prop_signal>& all_ps);
 
-	void	map_get_all_confl_neus(row_neuron_t& all_neus);
-	//void	map_get_all_forced_neus(row_neuron_t& all_neus, bool with_clear = true);
-	
-	//void	map_get_all_cov_by_trail_propag_neus(row_neuron_t& all_neus, bool with_clear);
+	//void	map_get_all_confl_neus(row_neuron_t& all_neus);
 	
 	void	map_get_all_subcov_neus(row_neuron_t& all_neus, bool with_clear, bool skip_tail);
 	void	map_get_all_cov_neus(row_neuron_t& all_neus, bool with_clear, bool skip_tail);
 	
 	void	map_get_all_quas(row_quanton_t& all_quas);
-	//void	map_get_all_quas_2(row_quanton_t& all_quas);
 	void	map_get_all_neus(row_neuron_t& all_neus);
-	//void	map_get_all_neus_2(row_neuron_t& all_neus);
 	
 	bool 	map_ck_all_upper_quas(row_quanton_t& all_upper_quas);
 	void 	map_get_all_upper_quas(row_quanton_t& all_upper_quas);
@@ -2079,7 +2053,7 @@ class neuromap {
 	bool	map_ck_orig();
 	bool	map_ck_all_quas();
 	bool	dbg_ck_all_neus();
-	bool	dbg_ck_all_confl_tag1();
+	//bool	dbg_ck_all_confl_tag1();
 	
 	void	map_set_all_qu_curr_dom();
 	void	map_reset_all_qu_curr_dom();
@@ -2119,13 +2093,12 @@ class neuromap {
 	void	set_min_ti_max_ti();
 
 	static
-	bool	set_all_filled_by(brain& brn, row_quanton_t& nmp_quas, row_neuron_t& all_filled);
+	bool	set_all_filled_by(brain& brn, row<prop_signal>& all_ps, 
+							  row_neuron_t& all_filled);
 	
-	//bool	set_all_filled_by_trail_propag();
-	bool	set_all_filled_by_forced();
 	bool	set_all_filled_by_propag();
 	
-	void	set_propag();
+	//void	set_propag();
 	
 	bool	has_submap(){
 		bool h_s = (na_submap != NULL_PT);
@@ -2201,23 +2174,17 @@ class neuromap {
 								 neuromap* dbg_nmp
 						);
 	
-	void	map_fill_cov_by_forced(neurolayers& not_sel_neus);
 	void	map_fill_cov_by_propag(neurolayers& not_sel_neus);
-	//void	map_fill_cov_by_trail_propag(neurolayers& not_sel_neus);
 	
 	void	map_init_with(analyser& anlsr, neuromap* sub_nmp);
 	void	map_update_with(analyser& anlsr, neuromap* sub_nmp);
 	void	map_update_with_2(analyser& anlsr, neuromap* sub_nmp);
 	
-	//bool	is_last_forced(quanton& qua);
 	bool	has_qua_tier(quanton& qua);
 	
 	void	map_reset_all_notes_and_tags();
 
-	//DECLARE_NA_FLAG_ALL_FUNCS(forced, 2)
 	DECLARE_NA_FLAG_ALL_FUNCS(propag, 3)
-	//DECLARE_NA_FLAG_ALL_FUNCS(trail_propag, 4)
-
 	
 	bj_ostream&	print_neuromap(bj_ostream& os, bool from_pt = false);
 	
@@ -2844,9 +2811,9 @@ class analyser {
 
 	row<prop_signal>	de_all_confl;
 	prop_signal 	de_next_bk_psig;
-	long			de_max_ti;
+	//long			de_max_ti;
 
-	neurolayers 	de_forced_not_sel_neus;
+	//neurolayers 	de_forced_not_sel_neus;
 	neurolayers 	de_propag_not_sel_neus;
 	//neurolayers 	de_trail_propag_not_sel_neus;
 	
@@ -2931,6 +2898,7 @@ class analyser {
 	
 	row_quanton_t&	get_all_causes(row_quanton_t& all_quas);
 		
+	void		calc_init();
 	void		deduction_init(row_quanton_t& causes, long max_lv = INVALID_LEVEL);
 	void 		deduction_analysis(row_quanton_t& causes, deduction& dct, 
 								   long max_lv = INVALID_LEVEL);
@@ -2942,7 +2910,8 @@ class analyser {
 		return (&nmp == &NULL_NEUROMAP);
 	}*/
 	
-	bool		find_next_source(bool only_origs = false, bool stop_at_nmp_ends = false);
+	bool		find_calc_next_end();
+	bool		find_next_source(bool only_origs, bool stop_at_nmp_ends);
 	bool		find_next_noted(bool stop_at_nmp_ends = false);
 	void 		set_notes_of(row_quanton_t& causes, bool is_first);
 

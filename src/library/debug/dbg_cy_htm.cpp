@@ -494,7 +494,8 @@ neuromap::map_dbg_set_cy_maps(){
 		qua->qu_dbg_cy_nmp = nxt_nmp;
 		brn.br_tot_cy_nmps++;
 		
-		dbg_set_cy_sigs(brn, nxt_nmp->na_trail_propag);
+		//dbg_set_cy_sigs(brn, nxt_nmp->na_trail_propag);
+		dbg_set_cy_sigs(brn, nxt_nmp->na_propag);
 		
 		nxt_nmp = nxt_nmp->na_submap;
 	}
@@ -518,7 +519,8 @@ neuromap::map_dbg_reset_cy_maps(){
 		qua->qu_dbg_cy_nmp = NULL_PT;
 		brn.br_tot_cy_nmps--;
 		
-		dbg_reset_cy_sigs(brn, nxt_nmp->na_trail_propag);
+		//dbg_reset_cy_sigs(brn, nxt_nmp->na_trail_propag);
+		dbg_reset_cy_sigs(brn, nxt_nmp->na_propag);
 		
 		nxt_nmp = nxt_nmp->na_submap;
 	}
