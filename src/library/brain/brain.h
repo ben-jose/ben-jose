@@ -1173,6 +1173,7 @@ class neuron {
 		ticket			ne_dbg_creation_tk;
 		long			ne_dbg_drw_x_pos;
 		long			ne_dbg_drw_y_pos;
+		long			ne_dbg_last_min_ti;
 	)
 
 	// methods
@@ -1815,7 +1816,7 @@ class neuromap {
 	long			na_num_submap;
 	
 	row<prop_signal>	na_propag; // psigs from na_all_propag NOT in all_forced
-	row_neuron_t		na_all_filled_by_propag;
+	//row_neuron_t		na_all_filled_by_propag;
 	row_neuron_t		na_cov_by_propag_quas; 
 	
 	//row<prop_signal>	na_all_confl;  // only for last submap
@@ -1881,7 +1882,7 @@ class neuromap {
 		na_num_submap = 1;
 		
 		na_propag.clear(true, true);
-		na_all_filled_by_propag.clear();
+		//na_all_filled_by_propag.clear();
 		na_cov_by_propag_quas.clear();
 		
 		//na_all_confl.clear(true, true);
@@ -1978,16 +1979,14 @@ class neuromap {
 	
 	bool	has_stab_guide();
 	
-	neuromap&	map_get_last_submap();
+	//neuromap&	map_get_last_submap();
 
-	void	map_get_all_forced_ps(row<prop_signal>& all_ps, bool with_clear = true);
-	void	map_get_all_propag_ps(row<prop_signal>& all_ps, bool with_clear,
-								bool skip_tail);
-	void	map_get_all_ps(row<prop_signal>& all_ps);
+	//void	map_get_all_forced_ps(row<prop_signal>& all_ps, bool with_clear = true);
+	void	map_get_all_propag_ps(row<prop_signal>& all_ps);
+	//void	map_get_all_ps(row<prop_signal>& all_ps);
 
 	//void	map_get_all_confl_neus(row_neuron_t& all_neus);
 	
-	void	map_get_all_subcov_neus(row_neuron_t& all_neus, bool with_clear, bool skip_tail);
 	void	map_get_all_cov_neus(row_neuron_t& all_neus, bool with_clear, bool skip_tail);
 	
 	void	map_get_all_quas(row_quanton_t& all_quas);
@@ -2049,10 +2048,6 @@ class neuromap {
 	static
 	bool	set_all_filled_by(brain& brn, row<prop_signal>& all_ps, 
 							  row_neuron_t& all_filled);
-	
-	bool	set_all_filled_by_propag();
-	
-	//void	set_propag();
 	
 	bool	has_submap(){
 		bool h_s = (na_submap != NULL_PT);
@@ -2127,8 +2122,6 @@ class neuromap {
 								 neurolayers& not_sel_neus, row_neuron_t& all_cov, 
 								 neuromap* dbg_nmp
 						);
-	
-	void	map_fill_cov_by_propag(neurolayers& not_sel_neus);
 	
 	void	map_init_with(analyser& anlsr, neuromap* sub_nmp);
 	void	map_update_with(analyser& anlsr, neuromap* sub_nmp);
@@ -2215,11 +2208,7 @@ class neurolayers {
 		return (get_tot_neurons() == 0);
 	}
 	
-	void	clear_all_neurons(){
-		nl_neus_by_layer.clear_each();
-		//nl_neus_by_layer.clear();
-		nl_neus_by_layer.clear(true, true);
-	}
+	void	clear_all_neurons();
 	
 	bj_ostream&	print_neurolayers(bj_ostream& os, bool from_pt = false);
 	
@@ -2748,9 +2737,6 @@ class qlayers_ref {
 // analyser
 
 class analyser {
-	//static
-	//neuromap* 		NULL_NEUROMAP;
-	
 	public:
 
 	brain*			de_brain;
@@ -2765,13 +2751,7 @@ class analyser {
 
 	row<prop_signal>	de_all_confl;
 	prop_signal 	de_next_bk_psig;
-	//long			de_max_ti;
-
-	//neurolayers 	de_forced_not_sel_neus;
 	neurolayers 	de_propag_not_sel_neus;
-	//neurolayers 	de_trail_propag_not_sel_neus;
-	
-	neuromap*		de_tmp_neuromap;
 	
 	analyser(){
 		init_analyser();
@@ -2850,7 +2830,7 @@ class analyser {
 		return causes;
 	}
 	
-	row_quanton_t&	get_all_causes(row_quanton_t& all_quas);
+	//row_quanton_t&	get_all_causes(row_quanton_t& all_quas);
 		
 	void		calc_init();
 	void		deduction_init(row_quanton_t& causes, long max_lv = INVALID_LEVEL);
@@ -2865,8 +2845,8 @@ class analyser {
 	}*/
 	
 	bool		find_calc_next_end();
-	bool		find_next_source(bool only_origs, bool stop_at_nmp_ends);
-	bool		find_next_noted(bool stop_at_nmp_ends = false);
+	bool		find_next_source();
+	bool		find_next_noted();
 	void 		set_notes_of(row_quanton_t& causes, bool is_first);
 
 	neuromap*	update_neuromap(neuromap* prev_nmp);
@@ -3080,6 +3060,7 @@ public:
 		long			 	br_dbg_num_phi_grps;
 		row_quanton_t		br_dbg_phi_id_quas;
 		str_str_map_t 		br_dbg_phi_wrt_ids;
+		bool				br_dbg_keeping_learned;
 	)
 	
 	solver* 		br_pt_slvr;
@@ -3146,6 +3127,7 @@ public:
 	row_neuron_t 	br_tmp_all_cfl;
 	row_neuron_t	br_tmp_all_nmp_neus_1;
 	row_neuron_t	br_tmp_all_nmp_neus_2;
+	row_neuron_t	br_tmp_all_filled_by_propag;
 	
 	row_quanton_t 	br_tmp_rever_quas;
 

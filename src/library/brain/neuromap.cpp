@@ -111,25 +111,14 @@ neuromap::map_make_dominated(){
 }
 
 void
-neuromap::map_get_all_propag_ps(row<prop_signal>& all_ps, bool with_clear, bool skip_tail){
+neuromap::map_get_all_propag_ps(row<prop_signal>& all_ps){
 	if(! has_submap()){
-		if(with_clear){
-			all_ps.clear(true, true);
-		}
+		all_ps.clear(true, true);
 	} else {
-		na_submap->map_get_all_propag_ps(all_ps, with_clear, skip_tail);
-	}
-	
-	if(skip_tail && ! has_submap()){
-		return;
+		na_submap->map_get_all_propag_ps(all_ps);
 	}
 	
 	na_propag.append_to(all_ps);
-}
-
-void
-neuromap::map_get_all_ps(row<prop_signal>& all_ps){
-	map_get_all_propag_ps(all_ps, true, false);
 }
 
 void
@@ -138,7 +127,7 @@ neuromap::map_get_all_quas(row_quanton_t& all_quas){
 	
 	brain& brn = get_brn();
 	row<prop_signal>& all_ps = brn.br_tmp_nmp_get_all_ps;
-	map_get_all_ps(all_ps);
+	map_get_all_propag_ps(all_ps);
 	append_all_trace_quas(all_ps, all_quas);
 }
 
@@ -148,38 +137,20 @@ neuromap::map_get_all_neus(row_neuron_t& all_neus){
 	
 	brain& brn = get_brn();	
 	row<prop_signal>& all_ps = brn.br_tmp_nmp_get_all_ps;
-	map_get_all_ps(all_ps);
+	map_get_all_propag_ps(all_ps);
 	append_all_trace_neus(all_ps, all_neus);
 	
 	map_get_all_cov_neus(all_neus, false, false);
 }
 	
-neuromap&
-neuromap::map_get_last_submap(){
-	if(has_submap()){
-		//BRAIN_CK(na_all_confl.is_empty());
-		return na_submap->map_get_last_submap();
-	}
-	return *this;
-}
-
-/*
 void
-neuromap::map_get_all_confl_neus(row_neuron_t& all_neus){
-	neuromap& nmp = map_get_last_submap();
-	
-	all_neus.clear();
-	append_all_trace_neus(nmp.na_all_confl, all_neus);
-}*/
-
-void
-neuromap::map_get_all_subcov_neus(row_neuron_t& all_neus, bool with_clear, bool skip_tail){
+neuromap::map_get_all_cov_neus(row_neuron_t& all_neus, bool with_clear, bool skip_tail){
 	if(! has_submap()){
 		if(with_clear){
 			all_neus.clear();
 		}
 	} else {
-		na_submap->map_get_all_subcov_neus(all_neus, with_clear, skip_tail);
+		na_submap->map_get_all_cov_neus(all_neus, with_clear, skip_tail);
 	}
 	
 	if(skip_tail && ! has_submap()){
@@ -187,11 +158,6 @@ neuromap::map_get_all_subcov_neus(row_neuron_t& all_neus, bool with_clear, bool 
 	}
 	
 	na_cov_by_propag_quas.append_to(all_neus);
-}
-
-void
-neuromap::map_get_all_cov_neus(row_neuron_t& all_neus, bool with_clear, bool skip_tail){
-	map_get_all_subcov_neus(all_neus, with_clear, skip_tail);
 }
 
 quanton*	
@@ -989,21 +955,6 @@ coloring::copy_co_to(coloring& col2){
 	col2.co_all_neu_consec = co_all_neu_consec;
 }
 
-bool
-can_append_neu(neuron& neu){
-	bool neu_presel = neu.has_tag2() || neu.has_tag3() || neu.has_tag4();
-	if(neu_presel){ // do not add presel ones to sel_neus
-		return false;
-	}
-	if(! neu.ne_original){
-		return false;
-	}
-	if(neu.has_tag1()){
-		return false;
-	}
-	return true;
-}
-
 void
 neuromap::map_append_neus_in_nmp_from(brain& brn, row_neuron_t& all_neus, 
 							   row_neuron_t& sel_neus, neurolayers& not_sel_neus, 
@@ -1015,21 +966,18 @@ neuromap::map_append_neus_in_nmp_from(brain& brn, row_neuron_t& all_neus,
 		BRAIN_CK(all_neus[aa] != NULL_PT);
 		neuron& neu = *(all_neus[aa]);
 
-		if(! can_append_neu(neu)){
-			continue;
-		}
-
-		BRAIN_CK(neu.ne_original);
-		
 		long min_pos_ti = INVALID_TIER;
 		bool is_in_nmp = neu.in_neuromap(brn, min_ti, max_ti, min_pos_ti);
-
 		if(is_in_nmp){
+			BRAIN_CK(neu.ne_original);
 			if(min_pos_ti == INVALID_TIER){
 				BRAIN_CK(! neu.has_tag1());
 				sel_neus.push(&neu);
 				neu.set_tag1(brn);
 			} else {
+				// never pushed twice because min_pos_ti is unique and
+				// lims min_ti & max_ti are never repeated
+				// when filling sel_neus during get_all_ordered_neurons
 				row_neuron_t& not_sel_neus_ly = not_sel_neus.get_ne_layer(min_pos_ti);
 				not_sel_neus_ly.push(&neu);
 			}
@@ -1057,6 +1005,7 @@ neurolayers::get_all_ordered_neurons(row_neuron_t& all_neus, long min_ly, long m
 	}
 }
 
+//static func
 bool	
 neuromap::set_all_filled_by(brain& brn, row<prop_signal>& all_ps, row_neuron_t& all_filled){
 	bool hs_lnd = false;
@@ -1077,13 +1026,7 @@ neuromap::set_all_filled_by(brain& brn, row<prop_signal>& all_ps, row_neuron_t& 
 	return hs_lnd;
 }
 
-bool
-neuromap::set_all_filled_by_propag(){
-	brain& brn = get_brn();
-	bool hs_lnd = set_all_filled_by(brn, na_propag, na_all_filled_by_propag);
-	return hs_lnd;
-}
-
+//static func
 void
 neuromap::map_fill_cov(brain& brn, long min_ti, long max_ti, row_neuron_t& all_filled,
 								 neurolayers& not_sel_neus, row_neuron_t& all_cov, 
@@ -1111,18 +1054,6 @@ neuromap::map_fill_cov(brain& brn, long min_ti, long max_ti, row_neuron_t& all_f
 	// finalize
 	
 	sel_neus.move_to(all_cov);
-}
-
-void
-neuromap::map_fill_cov_by_propag(neurolayers& not_sel_neus){ 
-	brain& brn = get_brn();
-	long min_ti = get_min_ti();
-	long max_ti = get_max_ti();
-	
-	map_fill_cov(brn, min_ti, max_ti, na_all_filled_by_propag, 
-				 not_sel_neus, na_cov_by_propag_quas, this);
-	
-	BRAIN_CK(all_neurons_have_tag1(na_cov_by_propag_quas));
 }
 
 // MAP_OPER_CODE
@@ -1760,25 +1691,6 @@ coloring::force_unique_neus(coloring& col2){
 	BRAIN_CK(col2.ck_cols());
 }
 
-/*
-bool
-neuromap::dbg_ck_all_confl_tag1(){
-#ifdef FULL_DEBUG
-	brain& brn = get_brn();
-	
-	row_neuron_t& all_cfl = brn.br_tmp_all_cfl;
-	all_cfl.clear();
-	map_get_all_confl_neus(all_cfl);
-
-	for(long aa = 0; aa < all_cfl.size(); aa++){
-		BRAIN_CK(all_cfl[aa] != NULL_PT);
-		neuron& neu = *(all_cfl[aa]);
-		BRAIN_CK(neu.has_tag1());
-	}
-#endif
-	return true;
-}*/
-
 void
 coloring::set_tmp_colors(bool skip_all_n1){
 	BRAIN_CK(ck_cols());
@@ -2362,20 +2274,6 @@ neuromap::map_init_with(analyser& anlsr, neuromap* sub_nmp){
 }
 
 void
-neuromap::map_update_with(analyser& anlsr, neuromap* sub_nmp){
-	BRAIN_CK(anlsr.de_all_noted.is_empty());
-	
-	map_init_with(anlsr, sub_nmp);
-	
-	set_all_filled_by_propag();
-	map_propag_set_all_note3_n_tag3();
-	
-	BRAIN_CK(map_ck_all_quas());
-
-	map_fill_cov_by_propag(anlsr.de_propag_not_sel_neus);
-}
-
-void
 neuromap::map_get_initial_guide_coloring(coloring& clr){
 	BRAIN_CK(&na_guide_col != &clr);
 
@@ -2488,7 +2386,8 @@ split_tees(brain& brn, sort_glb& srg, row<sortee*>& sorted_tees, row<sortee*>& s
 
 bool
 can_append_qua(quanton& qua){
-	bool is_cov = qua.has_note2() || qua.has_note3();
+	BRAIN_CK(! qua.has_note2());
+	bool is_cov = qua.has_note3();
 	if(is_cov){
 		return false;
 	}
@@ -2499,6 +2398,17 @@ can_append_qua(quanton& qua){
 bool
 neuron::in_neuromap(brain& brn, long min_tier, long max_tier, long& upper_pos_ti)
 {
+	bool is_presel = has_tag3();
+	if(is_presel){ // do not add presel ones to sel_neus
+		return false;
+	}
+	if(! ne_original){
+		return false;
+	}
+	if(has_tag1()){
+		return false;
+	}
+	
 	bool is_fll = true;
 	upper_pos_ti = INVALID_TIER;
 
@@ -2545,4 +2455,28 @@ neuron::in_neuromap(brain& brn, long min_tier, long max_tier, long& upper_pos_ti
 	return is_fll;
 }
 
+void
+neuromap::map_update_with(analyser& anlsr, neuromap* sub_nmp){
+	BRAIN_CK(anlsr.de_all_noted.is_empty());
+	
+	map_init_with(anlsr, sub_nmp);
+	
+	BRAIN_CK(map_ck_all_quas());
+	map_propag_set_all_note3_n_tag3();
+	
+	brain& brn = get_brn();
+	row_neuron_t& all_fll = brn.br_tmp_all_filled_by_propag;
+	
+	all_fll.clear();
+	
+	set_all_filled_by(brn, na_propag, all_fll);
+
+	long min_ti = get_min_ti();
+	long max_ti = get_max_ti();
+	neurolayers& not_sel_neus = anlsr.de_propag_not_sel_neus;
+	
+	map_fill_cov(brn, min_ti, max_ti, all_fll, not_sel_neus, na_cov_by_propag_quas, this);
+	
+	BRAIN_CK(all_neurons_have_tag1(na_cov_by_propag_quas));
+}
 

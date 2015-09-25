@@ -521,9 +521,6 @@ neuromap::print_subnmp(bj_ostream& os, bool only_pts){
 	os << "\n\t na_propag=\n";
 	na_propag.print_row_data(os, true, "\n");
 
-	os << "\n\t na_all_filled_by_propag=\n";
-	na_all_filled_by_propag.print_row_data(os, true, "\n");
-
 	os << "\n\t na_cov_by_propag_quas=\n";
 	na_cov_by_propag_quas.print_row_data(os, true, "\n");
 	
@@ -556,8 +553,7 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 		}
 	
 		row<prop_signal>& all_ps = brn.br_tmp_prt_ps;
-		all_ps.clear(true, true);
-		map_get_all_ps(all_ps);
+		map_get_all_propag_ps(all_ps);
 		
 		os << "na{";
 		if(na_is_head){ os << "H."; }
@@ -1032,6 +1028,7 @@ neuron::dbg_old_set_motives(brain& brn, notekeeper& nke, bool is_first){
 bool
 brain::dbg_ck_deducs(deduction& dct1, deduction& dct2){
 #ifdef FULL_DEBUG
+	//BRAIN_CK(false);
 	long lv1 = dct1.dt_target_level;
 	long lv2 = dct2.dt_target_level;
 
@@ -1421,6 +1418,11 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 	}
 
 	if(from_pt){
+		if(neu != NULL_PT){
+			if(neu->ne_original){ os << "o"; }
+			else { os << "+"; }
+			os << neu->ne_index;
+		}
 		if(! h_src && h_chg){ os << "L"; }
 		os << "(" << qu_id; 
 		os << ".t" << qti;

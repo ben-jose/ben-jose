@@ -201,6 +201,13 @@ neuron::update_fibres(row_quanton_t& synps, bool orig){
 			if(orig){
 				qua->qu_all_neus.push(neu);
 			}
+			BRAIN_DBG(
+				brain* pt_brn = get_dbg_brn();
+				BRAIN_CK(pt_brn != NULL_PT);
+				if(! orig && pt_brn->br_dbg_keeping_learned){
+					qua->qu_all_neus.push(neu);
+				}
+			);
 		}
 		BRAIN_CK_0(num_neg_chgs < fib_sz());
 
@@ -254,7 +261,9 @@ void
 neuron::neu_tunnel_signals(brain& brn, quanton& r_qua){
 	BRAIN_CK(fib_sz() >= 2);
 	BRAIN_CK(! is_ne_virgin());
-	BRAIN_CK(ne_original || (brn.br_dbg.dbg_last_recoil_lv == brn.level()));
+	BRAIN_CK(brn.br_dbg_keeping_learned || ne_original || 
+		(brn.br_dbg.dbg_last_recoil_lv == brn.level())
+	);
 
 	quanton* qua = &r_qua;
 	BRAIN_CK(qua->get_charge() != cg_neutral);
@@ -434,6 +443,7 @@ brain::init_brain(solver& ss){
 		br_dbg_round = 0;
 		br_dbg_num_phi_grps = INVALID_NATURAL;
 		br_dbg_phi_wrt_ids.clear();
+		br_dbg_keeping_learned = false;
 	);
 	br_pt_slvr = &ss;
 	
@@ -1355,9 +1365,12 @@ notekeeper::set_motive_notes(row_quanton_t& rr_qua, long from, long until){
 					dbg_msg = "motive ";
 				}
 			);
-			DBG_PRT(20, os << qua << " num_notes_in_lv " << dk_num_noted_in_layer 
-					<< "lv=" << dk_note_layer << bj_eol
-					<< "motives_by_lv= " << dk_quas_lyrs.dk_quas_by_layer);
+			DBG_PRT(20, os << dbg_msg << " qua=" << &qua
+					<< " #not_lv " << dk_num_noted_in_layer 
+					<< " lv=" << dk_note_layer
+					<< " motives_by_lv=\n";
+					dk_quas_lyrs.dk_quas_by_layer.print_row_data(os, true, "\n");
+			);
 			
 		}
 	}
@@ -1367,6 +1380,7 @@ notekeeper::set_motive_notes(row_quanton_t& rr_qua, long from, long until){
 
 void
 leveldat::release_learned(brain& brn){
+	BRAIN_DBG(if(brn.br_dbg_keeping_learned){ return; });
 	for(long aa = 0; aa < ld_learned.size(); aa++){
 		BRAIN_CK(ld_learned[aa] != NULL_PT);
 		neuron& neu = *(ld_learned[aa]);
@@ -1430,19 +1444,6 @@ brain::dec_level(){
 	leveldat::release_leveldat(pt_lv);
 }
 
-/*
-void
-brain::write_all_lv_retracted(){
-	row<neuromap*>& to_wrt = br_tmp_maps_to_write;
-	leveldat& lv_dat = data_level();
-	
-	BRAIN_CK(to_wrt.is_empty());
-	
-	to_wrt.clear();
-	lv_dat.ld_nmp_setup.append_all_as<neuromap>(to_wrt);
-	write_all_neuromaps(to_wrt);
-}*/
-
 void
 brain::retract_to(long tg_lv, bool full_reco)
 {
@@ -1488,8 +1489,6 @@ brain::retract_to(long tg_lv, bool full_reco)
 
 quanton*
 brain::receive_psignal(bool only_in_dom){
-	//BRAIN_CK(br_qu_tot_note0 == 0);
-	//BRAIN_CK(! found_conflict()); // simple_propag
 	BRAIN_CK(has_psignals());
 	brain& brn = *this;
 	prop_signal& sgnl = pick_psignal();
@@ -1509,26 +1508,6 @@ brain::receive_psignal(bool only_in_dom){
 	if(! qua.has_charge() && opp.is_note0()){
 		return NULL_PT;
 	}
-	/*
-	if(found_conflict()){
-		prop_signal& f_cfl = first_conflict();
-		if(! qua.has_charge() && (sg_tier >= f_cfl.ps_tier)){
-			DBG_PRT(21, os << "\n o_cfl=" << f_cfl << "\n new_ps=" << sgnl);
-			return NULL_PT;
-		}
-	}
-
-	if(only_in_dom && ! qua.in_qu_dominated(brn)){
-		br_delayed_psignals.push(sgnl);
-		DBG_PRT(21, os << " no qu_dom" << qua);
-		return NULL_PT;
-	}
-
-	if(only_in_dom && (neu != NULL_PT) && neu->ne_original && ! neu->in_ne_dominated(brn)){
-		br_delayed_psignals.push(sgnl);
-		DBG_PRT(21, os << " no ne_dom" << neu);
-		return NULL_PT;
-	}*/
 	
 	qua.update_cicle_srcs(brn, neu);
 
@@ -1536,13 +1515,12 @@ brain::receive_psignal(bool only_in_dom){
 		if(qua.is_neg()){
 			BRAIN_REL_CK(neu != NULL_PT);
 			BRAIN_CK(neu != NULL_PT);
-			//BRAIN_CK((neu != NULL_PT) || (level() == ROOT_LEVEL));
-			//long cnfl_ti = sg_tier;
+			BRAIN_CK(brn.br_dbg_keeping_learned || neu->ne_original);
 			
 			long cnfl_ti = tier() + 1;
 			BRAIN_CK(sg_tier <= cnfl_ti);
 			
-			if(! neu->has_tag0()){
+			if(neu->ne_original && ! neu->has_tag0()){
 				neu->set_tag0(brn);
 				prop_signal& nxt_cfl = br_all_conflicts_found.inc_sz();
 				nxt_cfl.init_prop_signal(pt_qua, neu, cnfl_ti);
@@ -1550,10 +1528,7 @@ brain::receive_psignal(bool only_in_dom){
 					os << "\n sg_tier=" << sg_tier << " cnfl_ti=" << cnfl_ti);
 			}
 			
-			//reset_psignals();	// simple_propag
-			//BRAIN_CK(! has_psignals()); // simple_propag
-			BRAIN_CK(found_conflict());
-			//BRAIN_CK(ck_confl_ti());
+			BRAIN_CK(brn.br_dbg_keeping_learned || found_conflict());
 			DBG_PRT_COND(35, (br_all_conflicts_found.size() > 1), 
 					os << "num_confl=" << br_all_conflicts_found.size()
 			);
@@ -1794,10 +1769,10 @@ brain::pulsate(){
 			set_result(bjr_no_satisf);
 			return;
 		}
+		//bool go_on = true;
 		//dbg_old_reverse();
 		bool go_on = deduce_and_reverse();
 		if(! go_on){
-			//BRAIN_CK(false);
 			set_result(bjr_no_satisf);
 			return;
 		}
@@ -2000,6 +1975,7 @@ brain::dbg_init_html(){
 bj_satisf_val_t
 brain::solve_instance(bool load_it){
 
+	DBG_COMMAND(1, br_dbg_keeping_learned = true);
 	BRAIN_DBG(bool init_htm = false);
 	DBG_COMMAND(45, init_htm = true);
 	DBG_COMMAND(150, init_htm = true);
@@ -2087,18 +2063,21 @@ brain::deduce_and_reverse(){
 	BRAIN_DBG(if(level() > br_dbg.dbg_max_lv){ br_dbg.dbg_max_lv = level(); });
 	
 	deduction& dct = br_retract_dct;
+	dct.init_deduction();
 
 	bool in_full_anls = true;
 	DBG_COMMAND(2, in_full_anls = false); // ONLY_DEDUC
 	if(in_full_anls){
 		go_on = analyse(br_all_conflicts_found, dct);
 	} else {
+		br_deducer_anlsr.set_conflicts(br_all_conflicts_found);
+		
 		DBG_PRT(40, os << "bef_ana=" << bj_eol; print_trail(os);
 			os << " num_conf=" << br_all_conflicts_found.size() << " br_lv=" << level()
-			<< " br_ti=" << tier();
+			<< " br_ti=" << tier() << "\n";
+			os << " cnfl=" << br_deducer_anlsr.get_first_conflict().ps_source;
 		);
 		
-		br_deducer_anlsr.set_conflicts(br_all_conflicts_found);
 		br_deducer_anlsr.deduction_analysis(br_deducer_anlsr.get_first_causes(), dct);
 	}
 	
@@ -2108,6 +2087,15 @@ brain::deduce_and_reverse(){
 
 void
 brain::reverse(deduction& dct){
+	BRAIN_DBG(leveldat& tg_lv = get_data_level(dct.dt_target_level));
+	BRAIN_CK_PRT((	(dct.dt_target_level == ROOT_LEVEL) || 
+					((tg_lv.ld_chosen != NULL_PT) && ! tg_lv.is_ld_mono())), 
+		os << " \n_________________\nABORT_DATA\n";
+		dbg_prt_margin(os);
+		os << " tg_lv=" << tg_lv << "\n";
+		print_trail(os);
+	);
+	
 	// retract
 	retract_to(dct.dt_target_level, false);
 	
