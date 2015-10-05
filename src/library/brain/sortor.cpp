@@ -762,6 +762,7 @@ comparison
 cmp_sortees(sortee* const & srt1, sortee* const & srt2){
 	bool s1_ok = (srt1 != NULL_PT);
 	bool s2_ok = (srt2 != NULL_PT);
+	MARK_USED(s2_ok);
 	SORTER_CK(s1_ok == s2_ok);
 	if(! s1_ok){ return 0; }
 	SORTER_CK(s1_ok);
@@ -771,6 +772,7 @@ cmp_sortees(sortee* const & srt1, sortee* const & srt2){
 	long* v2 = srt2->so_cmp_val;
 	bool v1_ok = (v1 != NULL_PT);
 	bool v2_ok = (v2 != NULL_PT);
+	MARK_USED(v2_ok);
 	SORTER_CK(v1_ok == v2_ok);
 	if(! v1_ok){ return 0; }
 	SORTER_CK(v1_ok);
@@ -1179,7 +1181,7 @@ sort_glb::stab_mutual_choose_one(sort_glb& srg2){
 	SORTER_CK(sg_step_next_choice->so_vessel == sg_step_first_multiple);
 
 	sorset& ss_one = *sg_step_first_multiple;
-
+	MARK_USED(ss_one);
 	SORTER_CK(ss_one.is_multitem());
 
 	sort_id_t& stab_consec = srg1.sg_curr_stab_consec;

@@ -59,6 +59,7 @@ dbg_check_lev(solver* slv, long lev){
 
 bj_ostream&
 dbg_get_out_stm(solver* slv){
+#ifdef FULL_DEBUG
 	if(slv == NULL_PT){
 		return bj_dbg;
 	}
@@ -76,6 +77,9 @@ dbg_get_out_stm(solver* slv){
 	}
 	BRAIN_CK(htm_os != NULL_PT);
 	return *(htm_os);
+#else
+	return bj_dbg;
+#endif
 }
 
 void 

@@ -1429,7 +1429,11 @@ int	tests_main_(int argc, char** argv){
 	MARK_USED(argv);
 	bj_ostream& os = bj_out;
 	
-	test_str_set();
+	os << "SIZEO_OF_row_neuron_t=" << sizeof(row_neuron_t) << "\n";
+	os << "SIZEO_OF_row_row_neuron_t=" << sizeof(row_row_neuron_t) << "\n";
+	os << "SIZEO_OF_prop_signal=" << sizeof(prop_signal) << "\n";
+	os << "SIZEO_OF_void_pt=" << sizeof(void*) << "\n";
+	//test_str_set();
 	//test_rf_pt();
 	//test_null_str();
 	//test_realpath(argc, argv);

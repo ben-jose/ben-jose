@@ -171,8 +171,6 @@ neuron::update_fibres(row_quanton_t& synps, bool orig){
 		DBG_PRT(16, os << "update_syns " << ne_fibres);
 
 		BRAIN_DBG(
-			//long qtrl_sz = INVALID_IDX;
-			//long lst_trl_sz = INVALID_IDX;
 			long id0 = INVALID_IDX;
 			long id1 = INVALID_IDX;
 		);
@@ -184,9 +182,6 @@ neuron::update_fibres(row_quanton_t& synps, bool orig){
 				id0 = id1;
 				id1 = qua->abs_id();
 				BRAIN_CK_0(id0 != id1);
-				//qtrl_sz = qua->qu_charge_tk.tk_trail_sz;
-				//BRAIN_CK((lst_trl_sz == INVALID_IDX) || (lst_trl_sz > qtrl_sz));
-				//lst_trl_sz = qtrl_sz;
 			);
 
 			charge_t q_chg = qua->get_charge();
@@ -257,6 +252,21 @@ neuron::neu_swap_edge(brain& brn, long ii){
 	}
 }
 
+long
+neuron::get_min_ti_idx(long fb_idx1, long fb_idx2){
+	BRAIN_CK(ne_fibres.is_valid_idx(fb_idx2));
+	if(fb_idx1 == INVALID_IDX){
+		return fb_idx2;
+	}
+	BRAIN_CK(ne_fibres.is_valid_idx(fb_idx1));
+	long ti1 = ne_fibres[fb_idx1]->qu_tier;
+	long ti2 = ne_fibres[fb_idx2]->qu_tier;
+	if(ti2 < ti1){
+		return fb_idx2;
+	}
+	return fb_idx1;
+}
+
 void
 neuron::neu_tunnel_signals(brain& brn, quanton& r_qua){
 	BRAIN_CK(fib_sz() >= 2);
@@ -280,25 +290,50 @@ neuron::neu_tunnel_signals(brain& brn, quanton& r_qua){
 		BRAIN_CK_2(ne_fibres[0]->ck_all_tunnels());
 		BRAIN_CK_2(ne_fibres[1]->ck_all_tunnels());
 	}
-	BRAIN_CK(! q_neg || (ne_fibres[1] == qua));
-	BRAIN_CK(q_neg || (ne_fibres[0] == qua));
+	BRAIN_DBG(
+		if(q_neg){
+			BRAIN_CK(ne_fibres[1] == qua);
+			BRAIN_CK(fib1().is_neg());
+		} else {
+			BRAIN_CK(ne_fibres[0] == qua);
+			BRAIN_CK(fib0().is_pos());
+		}
+	);
 
 	charge_t chg0 = ne_fibres[0]->get_charge();
 	charge_t chg1 = ne_fibres[1]->get_charge();
+	bool been_forced = (! q_neg && ne_fibres[1]->is_neg());
+	long min_ti_pos_idx = INVALID_IDX;
 
 	if((chg0 != cg_neutral) && (chg1 != cg_neutral)){
-		chg_op2 = cg_neutral;
+		BRAIN_CK(fib0().has_charge());
+		BRAIN_CK(fib1().has_charge());
+		
+		if(! been_forced){
+			chg_op2 = cg_neutral;
+		}
+		if(chg0 == cg_positive){ min_ti_pos_idx = get_min_ti_idx(min_ti_pos_idx, 0); }
+		if(chg1 == cg_positive){ min_ti_pos_idx = get_min_ti_idx(min_ti_pos_idx, 1); }
 	}
+	BRAIN_DBG(
+		if(been_forced){
+			// INVARIANT_1: 
+			// r_qua (fib0) was forced and is been charged now. so:
+			BRAIN_CK(fib0().is_pos());
+			BRAIN_CK(ck_all_neg(&brn, 1));
+		}
+	);
 
 	long old_max = fib_sz() - 1;
 	long max_tier = INVALID_TIER;
 
 	if(q_neg || (chg_op2 == cg_neutral)){
-
+		BRAIN_CK(! been_forced);
 		BRAIN_DBG(
 			long new_max = old_max;
 			long max_lev = ne_fibres[new_max]->qlevel();
-			long qua_lev = qua->qlevel()
+			long qua_lev = qua->qlevel();
+			bool hf_pos = false;
 		);
 
 		long ii = old_max;
@@ -309,35 +344,46 @@ neuron::neu_tunnel_signals(brain& brn, quanton& r_qua){
 
 			bool f_pos = (chg_op2 == cg_neutral) && (fib_chg == cg_positive);
 			if(f_pos){
-				charge_t chag1 = ne_fibres[1]->get_charge();
-				bool neg1 = (chag1 == cg_negative);
-				if(q_neg && neg1){
-					neu_swap_edge(brn, ii);
-				}
-				if(! q_neg){
-					charge_t chag0 = ne_fibres[0]->get_charge();
-					bool pos0 = (chag0 == cg_positive);
-					bool neg0 = (chag0 == cg_negative);
-					if(neg0){ swap_fibres_0(ii); }
-					if(pos0 && neg1){ neu_swap_edge(brn, ii); }
+				BRAIN_CK(fib0().has_charge());
+				BRAIN_CK(fib1().has_charge());
+				BRAIN_CK(q_neg || fib0().is_pos());
+				BRAIN_CK(q_neg || fib1().is_pos()); // BECAUSE INVARIANT_1 !!
+
+				min_ti_pos_idx = get_min_ti_idx(min_ti_pos_idx, ii);
+				
+				if(q_neg){
+					BRAIN_CK(fib1().is_neg());
+					if(! ne_fibres[1]->is_pos()){
+						neu_swap_edge(brn, ii); // will be pos1 in case nil is not found.
+						if(min_ti_pos_idx == ii){ min_ti_pos_idx = 1; }
+					}
+					BRAIN_CK(fib1().is_pos());  
+					BRAIN_DBG(hf_pos = true);
 				}
 			}
 
 			if((fib_chg == cg_neutral) || (fib_chg == chg_op2)){
-				BRAIN_CK((chg_op2 != cg_positive) || (fib_chg != cg_negative));
+				BRAIN_CK(! f_pos);
+				BRAIN_CK(fib_chg != cg_negative);
 				BRAIN_CK(max_lev <= qua_lev);
 
 				if(q_neg){
+					BRAIN_CK(hf_pos || fib1().is_neg());
 					neu_swap_edge(brn, ii);
+					BRAIN_CK(! fib1().is_neg());
 				} else {
+					BRAIN_CK(chg_op2 == cg_neutral);
+					BRAIN_CK(fib0().is_pos()); 
+					BRAIN_CK(fib1().is_pos()); // BECAUSE INVARIANT_1 !!
 					swap_fibres_0(ii);
+					BRAIN_CK(fib0().is_nil());
 				}
 
 				BRAIN_CK_2(ne_fibres[0]->ck_all_tunnels());
 				BRAIN_CK_2(ne_fibres[1]->ck_all_tunnels());
 				BRAIN_CK_2(ne_fibres[ii]->ck_all_tunnels());
-
-				break;	// neu_is_satisf
+				
+				break;
 			}
 			BRAIN_DBG(
 				if(ne_fibres[ii]->qlevel() > max_lev){
@@ -357,13 +403,16 @@ neuron::neu_tunnel_signals(brain& brn, quanton& r_qua){
 	MARK_USED(dbg1);
 	MARK_USED(dbg2);
 	if(q_neg && (cg1 == cg_negative)){
-		BRAIN_CK(ck_all_charges(&brn, 1));
+		BRAIN_CK(ck_all_neg(&brn, 1));
 
 		for(long aa = fib_sz() - 1; aa > old_max; aa--){
+			BRAIN_CK(false);
 			max_tier = max_val(max_tier, ne_fibres[aa]->qu_tier);
 		}
 
 		max_tier = max_val(max_tier, ne_fibres[1]->qu_tier);
+		
+		BRAIN_CK(max_tier == find_max_tier(ne_fibres, 1));
 
 		quanton* forced_qua = forced_quanton();
 		BRAIN_CK(forced_qua != NULL_PT);
@@ -378,20 +427,51 @@ neuron::neu_tunnel_signals(brain& brn, quanton& r_qua){
 	}
 
 	if((cg0 != cg_neutral) && (cg1 != cg_neutral)){
-		BRAIN_DBG(long npos = 0);
-		BRAIN_CK(ck_all_has_charge(npos));
-		//if(ne_original && (cg0 == cg_positive) && (cg1 == cg_positive)){
+		BRAIN_CK(ck_all_has_charge());
+		
 		if(ne_original){
-			BRAIN_DBG(ne_dbg_filled_tk.update_ticket(brn));
+			BRAIN_DBG(
+				ne_dbg_filled_tk.update_ticket(brn);
+				quanton* f_pos = find_first_pos();
+				bool ck_m_idx = (	(f_pos != NULL_PT) ==
+									ne_fibres.is_valid_idx(min_ti_pos_idx));
+				BRAIN_CK(ck_m_idx);
+				if(f_pos != NULL_PT){
+					BRAIN_CK(ne_fibres.is_valid_idx(min_ti_pos_idx));
+					BRAIN_CK(ne_fibres[min_ti_pos_idx] == f_pos);
+				}
+			);
+			long min_pos_ti = INVALID_TIER;
+			if(ne_fibres.is_valid_idx(min_ti_pos_idx)){
+				min_pos_ti = ne_fibres[min_ti_pos_idx]->qu_tier;
+			}
+			
 			r_qua.qu_full_charged.push(this);
+			r_qua.qu_full_chg_min_ti.push(min_pos_ti);
 			DBG_PRT(32, os << "qua=" << &r_qua << " filled orig " << this);
 		}
 		dbg2 = true;
 	}
 
-	BRAIN_CK(! q_neg || dbg1 || ! ck_all_charges(&brn, 1));
-	BRAIN_DBG(long npos2 = 0; bool ck2 = ck_all_has_charge(npos2); );
-	BRAIN_CK(dbg2 || ! ck2);
+	BRAIN_CK(! q_neg || dbg1 || ! ck_all_neg(&brn, 1));
+	BRAIN_CK(dbg2 || ! ck_all_has_charge());
+}
+
+quanton*
+neuron::find_first_pos(){
+	quanton* f_pos = NULL_PT;
+	for(long ii = 0; ii < fib_sz(); ii++){
+		quanton* qua = ne_fibres[ii];
+		BRAIN_CK(qua != NULL_PT);
+		BRAIN_CK(qua->qu_tier != INVALID_TIER);
+		if(qua->is_pos()){
+			bool is_fst = ((f_pos == NULL_PT) || (qua->qu_tier < f_pos->qu_tier));
+			if(is_fst){ 
+				f_pos = qua; 
+			}
+		}
+	}
+	return f_pos;
 }
 
 
@@ -507,6 +587,7 @@ brain::init_brain(solver& ss){
 
 	br_num_active_neurons = 0;
 	br_num_active_alert_rels = 0;
+	br_num_active_neurolayers = 0;
 	br_num_active_neuromaps = 0;
 
 	BRAIN_DBG(
@@ -650,10 +731,14 @@ quanton::set_charge(brain& brn, neuron* neu, charge_t cha, long n_tier){
 
 		qu_full_charged.clear();
 		qu_inverse->qu_full_charged.clear();
+		qu_full_chg_min_ti.clear();
+		qu_inverse->qu_full_chg_min_ti.clear();
 
 	} else {
 		BRAIN_CK(qu_full_charged.is_empty());
 		BRAIN_CK(qu_inverse->qu_full_charged.is_empty());
+		BRAIN_CK(qu_full_chg_min_ti.is_empty());
+		BRAIN_CK(qu_inverse->qu_full_chg_min_ti.is_empty());
 
 		quanton& mot = *this;
 		brn.br_charge_trail.add_motive(mot, n_tier);
@@ -715,8 +800,8 @@ brain::brn_tunnel_signals(bool only_in_dom, row_quanton_t& all_impl_cho){
 		quanton* inv = qua->qu_inverse;
 		BRAIN_CK_0(inv != NULL_PT);
 
-		BRAIN_CK(qua->get_charge() == cg_positive);
-		BRAIN_CK(inv->get_charge() == cg_negative);
+		BRAIN_CK(qua->is_pos());
+		BRAIN_CK(inv->is_neg());
 
 		qua->qua_tunnel_signals(this);
 		inv->qua_tunnel_signals(this);
@@ -921,6 +1006,8 @@ brain::learn_mots(deduction& dct){
 neuron&
 brain::add_neuron(row_quanton_t& quans, quanton*& forced_qua, bool orig){
 	brain& brn = *this;
+	MARK_USED(brn);
+	
 	neuron& neu = locate_neuron();
 	neu.ne_original = orig;
 
@@ -1976,6 +2063,8 @@ bj_satisf_val_t
 brain::solve_instance(bool load_it){
 
 	DBG_COMMAND(1, br_dbg_keeping_learned = true);
+	IF_KEEP_LEARNED(br_dbg_keeping_learned = true);
+	
 	BRAIN_DBG(bool init_htm = false);
 	DBG_COMMAND(45, init_htm = true);
 	DBG_COMMAND(150, init_htm = true);
@@ -2067,6 +2156,7 @@ brain::deduce_and_reverse(){
 
 	bool in_full_anls = true;
 	DBG_COMMAND(2, in_full_anls = false); // ONLY_DEDUC
+	IF_ONLY_DEDUC(in_full_anls = false);
 	if(in_full_anls){
 		go_on = analyse(br_all_conflicts_found, dct);
 	} else {
@@ -2643,7 +2733,7 @@ quanton::set_source(brain& brn, neuron* neu){
 	}
 
 	BRAIN_CK_0(qu_source != NULL_PT);
-	BRAIN_CK(qu_source->ck_all_charges(&brn, 1));
+	BRAIN_CK(qu_source->ck_all_neg(&brn, 1));
 }
 
 void

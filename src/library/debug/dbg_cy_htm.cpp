@@ -661,7 +661,7 @@ coloring::dbg_set_brain_coloring(){
 
 void
 dbg_set_cy_sigs(brain& brn, row<prop_signal>& trace){
-	
+#ifdef FULL_DEBUG
 	for(long ii = 0; ii < trace.size(); ii++){
 		prop_signal& q_sig = trace[ii];
 		BRAIN_CK(q_sig.ps_quanton != NULL_PT);
@@ -672,11 +672,12 @@ dbg_set_cy_sigs(brain& brn, row<prop_signal>& trace){
 		qua->qu_dbg_cy_sig = &q_sig;
 		brn.br_tot_cy_sigs++;
 	}
+#endif
 }
 
 void
 dbg_reset_cy_sigs(brain& brn, row<prop_signal>& trace){
-	
+#ifdef FULL_DEBUG
 	for(long ii = 0; ii < trace.size(); ii++){
 		prop_signal& q_sig = trace[ii];
 		BRAIN_CK(q_sig.ps_quanton != NULL_PT);
@@ -687,7 +688,7 @@ dbg_reset_cy_sigs(brain& brn, row<prop_signal>& trace){
 		qua->qu_dbg_cy_sig = NULL_PT;
 		brn.br_tot_cy_sigs--;
 	}
-	
+#endif
 }
 
 void

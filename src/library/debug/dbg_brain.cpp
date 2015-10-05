@@ -479,7 +479,7 @@ neuromap::print_subnmp(bj_ostream& os, bool only_pts){
 #ifdef FULL_DEBUG
 	if(only_pts){
 		os << "{";
-		os << "idx=" << na_index;
+		os << "na_idx=" << na_index;
 		//os << ".tk" << na_dbg_update_tk;
 		//os << "(" << (void*)this <<")";
 		if(na_orig_cho != NULL_PT){
@@ -492,36 +492,42 @@ neuromap::print_subnmp(bj_ostream& os, bool only_pts){
 		return os;
 	}
 	os << "_______________________________________________________\n";
-	os << "NMP(" << (void*)this <<")={ " << bj_eol;
+	os << "NMP(" << (void*)this <<")={ \n";
 
-	os << " idx=" << na_index;
+	os << " na_idx=" << na_index;
 	os << " TK=" << na_dbg_update_tk;
-	os << " brn=" << (void*)na_brn;
 	
-	/*
-	bool n0 = has_tags0_n_notes0();
-	bool n1 = has_tags1_n_notes1();
-	bool n2 = has_tags2_n_notes2();
-	bool n3 = has_tags3_n_notes3();
-	bool n4 = has_tags4_n_notes4();
-	bool n5 = has_tags5_n_notes5();
-	*/
-	
-	//os << " hd=" << na_is_head;
-	//os << " ac=" << is_active();
-	os << " lv=" << na_orig_lv;
-	os << " cho=" << na_orig_cho;
-	os << " subnmp=" << (void*)na_submap;
-	//os << " mat=" << na_mates;
-	//os << " rel_idx=" << na_release_idx;
-	os << " #lv=" << na_num_submap;
-	
-	os << "\n ---------------------------";
-	
-	os << "\n\t na_propag=\n";
-	na_propag.print_row_data(os, true, "\n");
+	os << " o_cho=" << na_orig_cho;
+	os << " #sub=" << na_num_submap;
+	os << " sub1=(" << (void*)na_submap << ")";
+	os << " o_lv=" << na_orig_lv;
+	os << " n_lv=" << na_dbg_nxt_lv;
+	os << " a_lv=" << na_dbg_ac_lv;
+	os << " s_lv=" << na_dbg_st_lv;
+	os << " #qu=" << na_propag.size();
+	os << "\n";
 
-	os << "\n\t na_cov_by_propag_quas=\n";
+	os << " nxt_ps=" << na_next_psig;
+	os << " min_ti=" << na_min_ti;
+	os << " max_ti=" << na_max_ti;
+	os << " rel_idx=" << na_release_idx;
+	os << "\n";
+	
+	os << " ---------------------------\n";
+	
+	os << "\t na_propag_quas=\n";
+	os << na_propag << "\n";
+
+	brain& brn = get_brn();
+	row_neuron_t& prp_neus = brn.br_tmp_prt_nmp_neus;
+	prp_neus.clear();
+	append_all_trace_neus(na_propag, prp_neus);
+	os << "\n";
+	os << "\t na_propag_neus=\n";
+	prp_neus.print_row_data(os, true, "\n");
+	
+	os << "\n";
+	os << "\t na_cov_by_propag_quas=\n";
 	na_cov_by_propag_quas.print_row_data(os, true, "\n");
 	
 	os << "}\n";
@@ -558,7 +564,7 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 		os << "na{";
 		if(na_is_head){ os << "H."; }
 		if(! has_submap()){ os << "T."; }
-		os << "i" << na_index;
+		os << "na_idx=" << na_index;
 		os << ".u" << na_dbg_update_tk;
 		os << "(" << (void*)this << ")";
 		os << " o_cho=" << na_orig_cho;
@@ -858,7 +864,7 @@ quanton::ck_all_tunnels(){
 }
 
 bool
-neuron::ck_all_charges(brain* brn, long from){
+neuron::ck_all_neg(brain* brn, long from){
 	bool all_ok = true;
 #ifdef FULL_DEBUG
 	for(long ii = from; ii < fib_sz(); ii++){
@@ -869,10 +875,10 @@ neuron::ck_all_charges(brain* brn, long from){
 }
 
 bool
-neuron::ck_all_has_charge(long& npos){
+neuron::ck_all_has_charge(){
 	bool all_ok = true;
 #ifdef FULL_DEBUG
-	npos = 0;
+	long npos = 0;
 	for(long ii = 0; ii < fib_sz(); ii++){
 		quanton& qua = *(ne_fibres[ii]);
 		all_ok = (all_ok && qua.has_charge());
@@ -1417,7 +1423,7 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 		dominated = in_qu_dominated(*pt_brn);
 	}
 
-	if(from_pt){
+	/*if(from_pt){
 		if(neu != NULL_PT){
 			if(neu->ne_original){ os << "o"; }
 			else { os << "+"; }
@@ -1430,7 +1436,7 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 		if(is_opp_mn){ os << ".m." << opp.qu_lv_mono; }
 		os.flush();
 		return os;
-	}
+	}*/
 
 	if(from_pt){
 		//if(qu_block != NULL_PT){ os << "b"; }

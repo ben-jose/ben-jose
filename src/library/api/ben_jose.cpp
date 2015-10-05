@@ -73,11 +73,22 @@ bj_solver_t bj_solver_create(const char* bjs_dir_path){
 	
 	bj_solver_t bjs = (bj_solver_t)nw_slv;
 
+	IF_ONLY_DEDUC(bj_out << "ONLY_DEDUC !!! (compile option)" << bj_eol);
+	IF_KEEP_LEARNED(bj_out << "KEEP_LEARNED !!! (compile option)" << bj_eol);
+	IF_NEVER_FIND(bj_out << "NEVER_FIND !!! (compile option)" << bj_eol);
+	IF_NEVER_WRITE(bj_out << "NEVER_WRITE !!! (compile option)" << bj_eol);
+	
+	DBG_PRT_SLV(nw_slv, bj_out, 1, true, os << "KEEP_LEARNED");
+	DBG_PRT_SLV(nw_slv, bj_out, 2, true, os << "ONLY_DEDUC");
+	DBG_PRT_SLV(nw_slv, bj_out, 3, true, os << "VERIF_WRITE");
+	DBG_PRT_SLV(nw_slv, bj_out, 4, true, os << "NEVER_FIND");
+	DBG_PRT_SLV(nw_slv, bj_out, 5, true, os << "NEVER_WRITE");
+	DBG_PRT_SLV(nw_slv, bj_out, 6, true, os << "ONLY_READ");
+	
 	BRAIN_CK((bj_out << "doing CKs (plain BRN_CKs)" << bj_eol) && true);
 	BRAIN_CK_0((bj_out << "doing BRN_CK_0s" << bj_eol) && true);
 	BRAIN_CK_1((bj_out << "doing BRN_CK_1s" << bj_eol) && true);
 	BRAIN_CK_2((bj_out << "doing BRN_CK_2s" << bj_eol) && true);
-	DBG_PRT_SLV(nw_slv, bj_dbg, 3, true, os << "CAREFUL RUNNING VERIF ON WRITE !!!!!");
 	return bjs;
 }
 
@@ -95,14 +106,25 @@ void 		bj_solver_release(bj_solver_t bjs){
 			true
 		);
 	}
+
+	IF_ONLY_DEDUC(bj_out << "ONLY_DEDUC !!! (compile option)" << bj_eol);
+	IF_KEEP_LEARNED(bj_out << "KEEP_LEARNED !!! (compile option)" << bj_eol);
+	IF_NEVER_FIND(bj_out << "NEVER_FIND !!! (compile option)" << bj_eol);
+	IF_NEVER_WRITE(bj_out << "NEVER_WRITE !!! (compile option)" << bj_eol);
 	
-	solver::release_solver(the_slvr);
+	DBG_PRT_SLV(the_slvr, bj_out, 1, true, os << "KEEP_LEARNED");
+	DBG_PRT_SLV(the_slvr, bj_out, 2, true, os << "ONLY_DEDUC");
+	DBG_PRT_SLV(the_slvr, bj_out, 3, true, os << "VERIF_WRITE");
+	DBG_PRT_SLV(the_slvr, bj_out, 4, true, os << "NEVER_FIND");
+	DBG_PRT_SLV(the_slvr, bj_out, 5, true, os << "NEVER_WRITE");
+	DBG_PRT_SLV(the_slvr, bj_out, 6, true, os << "ONLY_READ");
 	
 	BRAIN_CK((bj_out << "doing CKs (plain BRN_CKs)" << bj_eol) && true);
 	BRAIN_CK_0((bj_out << "doing BRN_CK_0s" << bj_eol) && true);
 	BRAIN_CK_1((bj_out << "doing BRN_CK_1s" << bj_eol) && true);
 	BRAIN_CK_2((bj_out << "doing BRN_CK_2s" << bj_eol) && true);
-	DBG_PRT_SLV(the_slvr, bj_dbg, 3, true, os << "CAREFUL RUNNING VERIF ON WRITE !!!!!");
+
+	solver::release_solver(the_slvr);
 }
 
 const char* bj_get_path(bj_solver_t bjs){
