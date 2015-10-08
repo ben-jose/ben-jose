@@ -327,8 +327,10 @@ class ticket {
 		return ((tk_recoil != INVALID_RECOIL) && (tk_level != INVALID_LEVEL));
 	}
 
-	void	update_ticket(brain& brn);
+	void	update_ticket(ticket a_tk);
 
+	bool	is_older_than(ticket a_tk);
+	
 	bj_ostream&	print_ticket(bj_ostream& os, bool from_pt = false){
 		os << "[";
 		os << "rc:" << tk_recoil;
@@ -660,19 +662,16 @@ class quanton {
 	// maps in
 	neuromap*		qu_curr_nemap;
 	
-	// maped data
-	
-	//long			qu_nmp_tier;
-	//row_neuron_t	qu_nmp_full_charged;
-	//row_long_t		qu_nmp_full_chg_min_ti;
-	
 	// sorotr data
 
 	sortee			qu_tee;
 	sortrel			qu_reltee;
 
 	long			qu_tmp_col;
-		
+	
+	// new candidate system
+	ticket			qu_candidate_tk;
+	
 	// dbg attributes
 	DBG(
 		long			qu_dbg_tee_ti;
@@ -750,10 +749,6 @@ class quanton {
 
 		qu_curr_nemap = NULL_PT;
 		
-		//qu_nmp_tier = INVALID_TIER;
-		//qu_nmp_full_charged.clear();
-		//qu_nmp_full_chg_min_ti.clear();
-
 		qu_tee.init_sortee(true);
 		qu_reltee.init_sortrel(true);
 
@@ -770,6 +765,8 @@ class quanton {
 		}
 
 		qu_tmp_col = INVALID_COLOR;
+		
+		qu_candidate_tk.init_ticket();
 		
 		DBG(
 			qu_dbg_tee_ti = INVALID_NATURAL;
@@ -854,6 +851,7 @@ class quanton {
 	bool	is_learned_choice();
 	
 	bool 	is_qu_end_of_nmp(brain& brn);
+	bool 	is_qu_end_of_neuromap(brain& brn);
 	
 	long	find_alert_idx(bool is_init, row_quanton_t& all_pos);
 	void	update_alert_neu(brain& brn, bool is_init);
@@ -2156,7 +2154,7 @@ class neuromap {
 	
 	brain*			na_brn;
 	t_1byte			na_flags;
-	bool			na_nmp_qu_data_ok;
+	bool			na_fill_cov_ok;
 	bool			na_is_head;
 	long			na_active_idx;
 	long			na_old_active_idx;
@@ -2185,6 +2183,9 @@ class neuromap {
 	coloring		na_pend_col;
 	
 	bool			na_found_in_skl;
+	
+	// new candidate system
+	ticket			na_candidate_tk;
 	
 	BRAIN_DBG(
 		long				na_dbg_nxt_lv;
@@ -2216,7 +2217,7 @@ class neuromap {
 	void	init_neuromap(brain* pt_brn = NULL){
 		na_brn = pt_brn;
 		na_flags = 0;
-		na_nmp_qu_data_ok = false;
+		na_fill_cov_ok = false;
 		na_is_head = false;
 		na_active_idx = INVALID_IDX;
 		na_old_active_idx = INVALID_IDX;
@@ -2251,6 +2252,8 @@ class neuromap {
 		na_pend_col.init_coloring();
 		
 		na_found_in_skl = false;
+		
+		na_candidate_tk.init_ticket();
 		
 		DBG(
 			na_dbg_nxt_lv = INVALID_LEVEL;
@@ -2470,23 +2473,17 @@ class neuromap {
 	void		map_dbg_all_sub_update_html_file(ch_string msg);
 	
 	static
-	void	map_append_neus_in_nmp_from(brain& brn, row_neuron_t& all_neus, 
-							row_long_t& all_fll_min_ti,
+	void	map_append_neus_in_nmp_from(brain& brn, 
+							row_neuron_t& all_neus, row_long_t& all_fll_min_ti,
 							row_neuron_t& sel_neus, neurolayers& not_sel_neus, 
-							long min_ti, long max_ti, dbg_call_id dbg_call, 
-							neuromap* dbg_nmp = NULL_PT);
+							long min_ti);
 	
-	static 
-	void	map_fill_cov(brain& brn, long min_ti, long max_ti, 
-							row_neuron_t& all_filled, row_long_t& all_fll_min_ti,
-							neurolayers& not_sel_neus, row_neuron_t& all_cov, 
-							neuromap* dbg_nmp
-						);
-	
+	void	map_fill_cov();
+	void	map_fill_all_cov();
+
 	void	map_init_with(analyser& anlsr, neuromap* sub_nmp);
 	void	map_init_neu_layers();
 	void	map_update_with(analyser& anlsr, neuromap* sub_nmp);
-	void	map_update_with_2(analyser& anlsr, neuromap* sub_nmp);
 	
 	neurolayers& get_neurolayers(){
 		BRAIN_CK(na_neu_min_pos_ti != NULL_PT);
@@ -2496,14 +2493,9 @@ class neuromap {
 	bool	has_qua_tier(quanton& qua);
 	
 	void	map_reset_all_notes_and_tags();
+	
+	void	nmp_init_with(quanton& qua);
 
-	void	map_set_prop_nmp_data();
-	void	map_reset_prop_nmp_data();
-	void	map_set_all_prop_nmp_data();
-	void	map_reset_all_prop_nmp_data();
-	
-	DECLARE_NA_FLAG_ALL_FUNCS(propag, 3)
-	
 	bj_ostream&	print_neuromap(bj_ostream& os, bool from_pt = false);
 	
 	bj_ostream&	print_all_subnmp(bj_ostream& os, bool only_pts = false);
@@ -2828,15 +2820,6 @@ class qlayers_ref {
 		return nxt_qua;
 	}
 	
-	bool	is_end_of_nmp(brain& brn){
-		quanton* cur_qu = get_curr_quanton();
-		if(cur_qu == NULL_PT){
-			return false;
-		}
-		bool eonmp = cur_qu->is_qu_end_of_nmp(brn);
-		return eonmp;
-	}
-	
 	long	get_curr_qlevel(){
 		long lv = INVALID_LEVEL;
 		quanton* qua = get_curr_quanton();
@@ -2871,7 +2854,7 @@ class analyser {
 
 	row<prop_signal>	de_all_confl;
 	prop_signal 	de_next_bk_psig;
-	neurolayers 	de_propag_not_sel_neus;
+	//neurolayers 	de_propag_not_sel_neus;
 	
 	analyser(){
 		init_analyser();
@@ -3258,7 +3241,7 @@ public:
 	ch_string		br_file_name_in_ic;
 
 	// state attributes
-	ticket			br_current_ticket;
+	ticket			br_curr_choice_tk;
 
 	k_row<quanton>		br_positons;	// all quantons with positive charge
 	k_row<quanton>		br_negatons;	// all quantons with negative charge
@@ -3327,6 +3310,7 @@ public:
 	canon_cnf		br_tmp_wrt_guide_cnf;
 
 	row<neuromap*>	br_maps_active;
+	row<neuromap*>	br_candidate_nmp_lvs;
 
 	sort_glb 		br_forced_srg;
 	sort_glb 		br_filled_srg;
@@ -3568,8 +3552,6 @@ public:
 		deactivate_last_map();
 	}
 	
-	//void	get_all_retracted_to_write(deduction& dct, row<neuromap*>& to_wrt);
-
 	void	deactivate_last_map();
 	void    write_all_active();
 	void	deactivate_all_maps();
@@ -3741,16 +3723,16 @@ public:
 	quanton*	get_quanton(long q_id);
 	
 	recoil_counter_t	recoil(){
-		return br_current_ticket.tk_recoil;
+		return br_curr_choice_tk.tk_recoil;
 	}
 
 	void	inc_recoil(){
-		br_current_ticket.tk_recoil++;
+		br_curr_choice_tk.tk_recoil++;
 	}
 
 	long		level(){
-		BRAIN_CK(br_data_levels.size() == (br_current_ticket.tk_level + 1));
-		return br_current_ticket.tk_level;
+		BRAIN_CK(br_data_levels.size() == (br_curr_choice_tk.tk_level + 1));
+		return br_curr_choice_tk.tk_level;
 	}
 	
 	long		find_min_lv_to_setup();
@@ -3783,7 +3765,7 @@ public:
 	}
 	
 	void	inc_level(quanton& qua){
-		(br_current_ticket.tk_level)++;
+		(br_curr_choice_tk.tk_level)++;
 		
 		leveldat& dat_lv = inc_data_levels();
 		dat_lv.ld_chosen = &qua;
@@ -3796,6 +3778,9 @@ public:
 		return br_charge_trail.last_qlevel();
 	}
 
+	ticket	get_curr_cho_tk();
+	ticket	get_curr_cand_tk();
+	
 	quanton*	curr_cho(){
 		BRAIN_CK(! br_data_levels.is_empty());
 		leveldat* lv = br_data_levels.last();
@@ -3853,8 +3838,7 @@ public:
 	long	append_all_to_write(analyser& dedcer, long fst_lv, long tg_lv, 
 								row<neuromap*>& all_nmps);
 	
-	void	make_lv_last_active(long nxt_lv);
-	void	make_lv_last_active_2(neuromap& st_nmp, long nxt_lv);
+	void	make_lv_last_active(neuromap& st_nmp, long nxt_lv);
 	void	cut_old_head_of(neuromap& nmp_rl, neuromap& nmp);
 	void	find_and_cut_old_head_of(neuromap& nmp, long old_num_to_rl);
 	void	add_lv_neuromap_to_write(long nxt_lv, deduction& dct);
@@ -3865,7 +3849,12 @@ public:
 		return h_s;
 	}
 	
-	//bool 	needs_lv_setup(long nxt_lv, neuromap* in_nmp);
+	void	pop_last_cand_lv();
+	void	pop_all_cand_lvs();
+	void	update_cand_lvs(quanton& qua);
+	bool	in_last_cand_recoil();
+	bool	last_cand_cho_has_chg();
+	ticket	get_last_cand_tk();
 
 	bool	analyse(row<prop_signal>& all_confl, deduction& dct);
 	void	analyse_2(row<prop_signal>& all_confl, deduction& dct);
@@ -4005,9 +3994,9 @@ public:
 
 inline 
 void
-ticket::update_ticket(brain& brn){
-	tk_recoil = brn.recoil();
-	tk_level = brn.level();
+ticket::update_ticket(ticket a_tk){
+	tk_recoil = a_tk.tk_recoil;
+	tk_level = a_tk.tk_level;
 }
 
 inline 
@@ -4041,20 +4030,6 @@ quanton::get_source(){
 
 	BRAIN_CK((qu_source == NULL_PT) || ! qu_source->is_ne_virgin());
 	return qu_source;
-}
-
-inline
-bool
-quanton::is_qu_end_of_nmp(brain& brn){
-	if(qu_source == NULL_PT){
-		bool is_cho = is_lv_choice(brn);
-		return is_cho;
-		//return true;
-	}
-	if(! qu_source->ne_original){
-		return true;
-	}
-	return false;
 }
 
 inline

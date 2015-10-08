@@ -100,10 +100,10 @@ analyser::init_analyser(brain* brn){
 	bool has_br = (brn != NULL_PT);
 	if(has_br){
 		de_ref.init_qlayers_ref(&(brn->br_charge_trail));
-		de_propag_not_sel_neus.init_neurolayers(brn);
+		//de_propag_not_sel_neus.init_neurolayers(brn);
 	}
 	de_all_confl.clear(true, true);
-	de_propag_not_sel_neus.clear_all_neurons();
+	//de_propag_not_sel_neus.clear_all_neurons();
 
 	reset_deduc();
 }
@@ -409,7 +409,7 @@ analyser::init_calc_nmp(long min_lv){
 	BRAIN_CK(get_de_brain().br_ne_tot_tag1 == 0);
 	BRAIN_CK(min_lv < de_ref.get_curr_qlevel());
 	
-	de_propag_not_sel_neus.clear_all_neurons();
+	//de_propag_not_sel_neus.clear_all_neurons();
 }
 
 void
@@ -638,7 +638,6 @@ analyser::calc_neuromap(long min_lv, neuromap* prev_nmp, bool in_setup)
 			<< " cur_qlv=" << qlr.get_curr_qlevel() << bj_eol
 			<< " nxt_ps=" << de_next_bk_psig
 			<< " out_nmp=" << out_nmp << bj_eol
-			<< " eonmp=" << qlr.is_end_of_nmp(brn)
 			<< "}");
 	
 	BRAIN_CK((out_nmp == NULL_PT) || ! out_nmp->is_active());
@@ -692,8 +691,9 @@ analyser::find_min_lv_to_setup(long tg_lv){
 	return min_lv;
 }
 
+/*
 void
-brain::make_lv_last_active(long nxt_lv){
+brain::old_make_lv_last_active(long nxt_lv){
 	while(! br_maps_active.is_empty()){
 		neuromap* nmp = br_maps_active.last();
 		BRAIN_CK(nmp != NULL_PT);
@@ -703,7 +703,7 @@ brain::make_lv_last_active(long nxt_lv){
 		}
 		deactivate_last_map();
 	}
-}
+}*/
 
 neuromap* 
 find_parent_of(neuromap& hd_nmp, neuromap& sb_nmp){
@@ -722,7 +722,7 @@ find_parent_of(neuromap& hd_nmp, neuromap& sb_nmp){
 }
 
 void
-brain::make_lv_last_active_2(neuromap& st_nmp, long nxt_lv){
+brain::make_lv_last_active(neuromap& st_nmp, long nxt_lv){
 	BRAIN_CK(st_nmp.is_active());
 	
 	neuromap* pnt_nmp = NULL_PT;
@@ -760,40 +760,6 @@ brain::make_lv_last_active_2(neuromap& st_nmp, long nxt_lv){
 	}
 }
 
-/*
-void
-brain::cut_old_head_of(neuromap& nmp_rl, neuromap& nmp){
-	BRAIN_CK(nmp_rl.na_is_head);
-	neuromap* pnt_nmp = find_parent_of(nmp_rl, nmp);
-	nmp_rl.map_remove_from_release();
-	BRAIN_CK(pnt_nmp != NULL_PT);
-	BRAIN_CK(pnt_nmp->na_submap == &nmp);
-	neuromap* tmp_nmp = cut_neuromap(&nmp_rl, pnt_nmp);
-	MARK_USED(tmp_nmp);
-	BRAIN_CK(tmp_nmp == &nmp);
-	BRAIN_CK(nmp.na_is_head);
-}
-
-void
-brain::find_and_cut_old_head_of(neuromap& nmp, long old_rl_sz){
-	BRAIN_CK(old_rl_sz >= 0);
-	BRAIN_CK(! nmp.is_active());
-	BRAIN_CK(! nmp.na_is_head);
-	
-	long nmp_oact_idx = nmp.na_old_active_idx;
-	for(long aa = old_rl_sz; aa < br_nmps_to_release.size(); aa++){
-		if(br_nmps_to_release[aa] == NULL_PT){
-			continue;
-		}
-		neuromap& nmp_rl = *(br_nmps_to_release[aa]);
-		BRAIN_CK(! nmp_rl.is_active());
-		if(nmp_rl.na_old_active_idx < nmp_oact_idx){
-			cut_old_head_of(nmp_rl, nmp);
-			break;
-		}
-	}
-}*/
-
 void
 brain::add_lv_neuromap_to_write(long nxt_lv, deduction& dct){
 	quanton* dct_qu = dct.dt_forced;
@@ -817,16 +783,7 @@ brain::add_lv_neuromap_to_write(long nxt_lv, deduction& dct){
 		neuromap& nmp = lv_s.get_setup_neuromap();
 		BRAIN_CK(nmp.is_active());
 		
-		make_lv_last_active_2(nmp, nxt_lv);
-		/*
-		long old_rl_sz = br_nmps_to_release.size();
-		make_lv_last_active(nxt_lv);
-		
-		BRAIN_CK(br_nmps_to_release.size() >= old_rl_sz);
-		if(! nmp.na_is_head && (br_nmps_to_release.size() > old_rl_sz)){
-			// the head of nmp could be getting released. find it and make nmp the nw head.
-			find_and_cut_old_head_of(nmp, old_rl_sz);
-		}*/
+		make_lv_last_active(nmp, nxt_lv);
 		
 		leveldat& lv_w = get_data_level(nxt_lv);
 	
@@ -955,10 +912,7 @@ brain::analyse(row<prop_signal>& all_confl, deduction& out_dct){
 		f_nmp->map_reset_all_notes_and_tags(); 
 	}
 	
-	//mper.de_propag_not_sel_neus.clear_all_neurons();
-	//BRAIN_CK(mper.de_propag_not_sel_neus.is_empty());
-	
-	BRAIN_CK(dedser.de_propag_not_sel_neus.is_empty());
+	//BRAIN_CK(dedser.de_propag_not_sel_neus.is_empty());
 	BRAIN_CK(br_ne_tot_tag1 == 0);
 	
 	write_all_neuromaps(to_wrt); // deactivates final wrt maps
@@ -1165,14 +1119,8 @@ analyser::calc_setup_neuromap(neuromap* nmp, long nxt_lv, long ded_lv){
 
 void
 neuromap::map_reset_all_notes_and_tags(){
-	brain& brn = get_brn();
-	row_neuron_t& all_neus = brn.br_tmp_ck_neus;
-	all_neus.clear();
-	map_get_all_neus(all_neus);
-	reset_all_tag1(brn, all_neus);
-	
-	//map_reset_all_prop_nmp_data();
-	map_propag_reset_all_note3_n_tag3();
+	BRAIN_CK(get_brn().br_ne_tot_tag3 == 0);
+	BRAIN_CK(get_brn().br_ne_tot_tag1 == 0);
 }
 
 void

@@ -951,7 +951,7 @@ dbg_run_satex_on(brain& brn, ch_string f_nam, neuromap* dbg_nmp){
 		os << "ABORTING_DATA " << bj_eol;
 		ch_string o_ff = brn.dbg_prt_margin(os);
 		os << " nmp=" << dbg_nmp << bj_eol;
-		os << " brn_tk=" << brn.br_current_ticket << bj_eol;
+		os << " brn_tk=" << brn.br_curr_choice_tk << bj_eol;
 		os << "	LV=" << brn.level() << bj_eol;
 		os << " f_nam=" << f_nam << bj_eol;
 		os << " save_consec=" << brn.br_dbg.dbg_canon_save_id << bj_eol;
@@ -1556,7 +1556,7 @@ neuromap::map_dbg_print(bj_ostream& os, mem_op_t mm){
 	//os << STACK_STR << bj_eol;
 	os << "DBG_PRT=" << bj_eol;
 	os << this << bj_eol;
-	os << "brn_tk=" << brn.br_current_ticket << bj_eol;
+	os << "brn_tk=" << brn.br_curr_choice_tk << bj_eol;
 	if(mm == mo_save){ os << "SAVE "; }
 	if(mm == mo_find){ os << "FIND "; }
 
