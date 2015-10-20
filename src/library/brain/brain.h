@@ -262,6 +262,8 @@ void	dbg_prepare_used_dbg_ccl(row_quanton_t& rr_qua, canon_clause& dbg_ccl);
 void	dbg_print_ccls_neus(bj_ostream& os, row<canon_clause*>& dbg_ccls);
 bool	dbg_run_satex_on(brain& brn, ch_string f_nam, neuromap* dbg_nmp);
 
+comparison dbg_cmp_ps(prop_signal const & ps1, prop_signal const & ps2);
+
 charge_t 	negate_trinary(charge_t val);
 
 bool	has_neu(row_neuron_t& rr_neus, neuron* neu);
@@ -329,7 +331,7 @@ class ticket {
 
 	void	update_ticket(ticket a_tk);
 
-	bool	is_older_than(ticket a_tk);
+	bool	is_older_than(neuromap* nmp);
 	
 	bj_ostream&	print_ticket(bj_ostream& os, bool from_pt = false){
 		os << "[";
@@ -671,6 +673,7 @@ class quanton {
 	
 	// new candidate system
 	ticket			qu_candidate_tk;
+	neuromap*		qu_candidate_nmp;
 	
 	// dbg attributes
 	DBG(
@@ -767,6 +770,7 @@ class quanton {
 		qu_tmp_col = INVALID_COLOR;
 		
 		qu_candidate_tk.init_ticket();
+		qu_candidate_nmp = NULL_PT;
 		
 		DBG(
 			qu_dbg_tee_ti = INVALID_NATURAL;
@@ -780,7 +784,11 @@ class quanton {
 			qu_dbg_drw_y_pos = 0;
 		);
 	}
-
+	
+	void	set_candidate(neuromap& nmp);
+	void	reset_candidate();
+	bool	has_candidate();
+	
 	void	update_cicle_srcs(brain& brn, neuron* neu);
 	void	reset_cicle_src();
 		
@@ -835,6 +843,8 @@ class quanton {
 
 	void		add_source(neuron& neu);
 
+	bool 		has_learned_source();
+	
 	bool		in_qu_dominated(brain& brn);
 	void		make_qu_dominated(brain& brn);
 
@@ -881,6 +891,8 @@ class quanton {
 	bool 	has_lv_alert_neu(long lv_nmp);
 	
 	neuromap*	get_nmp_to_write(brain& brn);
+	neuromap*	get_candidate_to_write(brain& brn);
+	neuromap*	get_candidate_to_fill(brain& brn);
 
 	cy_quk_t	get_cy_kind();
 	
@@ -1591,6 +1603,7 @@ class prop_signal {
 	}
 
 	void	make_ps_dominated(brain& brn, row<neuromap*>& to_wrt);
+	void	get_ps_cand_to_wrt(brain& brn, row<neuromap*>& to_wrt);
 	
 	bool	is_ps_of_qua(quanton& qua, neuromap* dbg_nmp = NULL_PT);
 
@@ -1623,6 +1636,24 @@ make_all_ps_dominated(brain& brn, row<prop_signal>& trace,
 	for(long ii = first_idx; ii < last_idx; ii++){
 		prop_signal& q_sig = trace[ii];
 		q_sig.make_ps_dominated(brn, to_wrt);
+	}
+}
+
+inline
+void
+get_all_ps_cand_to_wrt(brain& brn, row<prop_signal>& trace, 
+			row<neuromap*>& to_wrt, 
+			long first_idx = 0, long last_idx = -1)
+{
+	if(last_idx < 0){ last_idx = trace.size(); }
+
+	BRAIN_CK(first_idx <= last_idx);
+	BRAIN_CK((first_idx == trace.size()) || trace.is_valid_idx(first_idx));
+	BRAIN_CK((last_idx == trace.size()) || trace.is_valid_idx(last_idx));
+
+	for(long ii = first_idx; ii < last_idx; ii++){
+		prop_signal& q_sig = trace[ii];
+		q_sig.get_ps_cand_to_wrt(brn, to_wrt);
 	}
 }
 
@@ -2158,6 +2189,8 @@ class neuromap {
 	bool			na_is_head;
 	long			na_active_idx;
 	long			na_old_active_idx;
+
+	recoil_counter_t	na_orig_rc;
 	
 	long			na_orig_lv;
 	long			na_orig_ti;
@@ -2186,8 +2219,10 @@ class neuromap {
 	
 	// new candidate system
 	ticket			na_candidate_tk;
+	quanton*		na_candidate_qua;
 	
 	BRAIN_DBG(
+		bool				na_dbg_cand_sys;
 		long				na_dbg_nxt_lv;
 		long				na_dbg_ac_lv;
 		long				na_dbg_st_lv;
@@ -2221,7 +2256,8 @@ class neuromap {
 		na_is_head = false;
 		na_active_idx = INVALID_IDX;
 		na_old_active_idx = INVALID_IDX;
-		
+
+		na_orig_rc = INVALID_RECOIL;
 		na_orig_lv = INVALID_LEVEL;
 		na_orig_ti = INVALID_TIER;
 		na_orig_cho = NULL_PT;
@@ -2254,8 +2290,10 @@ class neuromap {
 		na_found_in_skl = false;
 		
 		na_candidate_tk.init_ticket();
+		na_candidate_qua = NULL_PT;
 		
 		DBG(
+			na_dbg_cand_sys = false;
 			na_dbg_nxt_lv = INVALID_LEVEL;
 			na_dbg_ac_lv = INVALID_LEVEL;
 			na_dbg_st_lv = INVALID_LEVEL;
@@ -2287,6 +2325,7 @@ class neuromap {
 	}
 
 	void	full_release();
+	void	release_candidate();
 	
 	void	reset_neuromap(brain& brn);
 	
@@ -2346,6 +2385,8 @@ class neuromap {
 
 	//void	map_get_all_forced_ps(row<prop_signal>& all_ps, bool with_clear = true);
 	void	map_get_all_propag_ps(row<prop_signal>& all_ps);
+	void	map_rec_get_all_propag_ps(row<prop_signal>& all_ps);
+	bool	map_dbg_ck_ord(row<prop_signal>& all_ps);
 	//void	map_get_all_ps(row<prop_signal>& all_ps);
 
 	//void	map_get_all_confl_neus(row_neuron_t& all_neus);
@@ -2494,7 +2535,10 @@ class neuromap {
 	
 	void	map_reset_all_notes_and_tags();
 	
-	void	nmp_init_with(quanton& qua);
+	neuromap*	nmp_init_with(quanton& qua);
+	bool		nmp_is_cand(dbg_call_id dbg_id = dbg_call_1);
+	void		nmp_filter_cov();
+	void		nmp_filter_all_cov();
 
 	bj_ostream&	print_neuromap(bj_ostream& os, bool from_pt = false);
 	
@@ -3310,7 +3354,12 @@ public:
 	canon_cnf		br_tmp_wrt_guide_cnf;
 
 	row<neuromap*>	br_maps_active;
-	row<neuromap*>	br_candidate_nmp_lvs;
+	
+	row<neuromap*>		br_candidate_nmp_lvs;
+	row<neuromap*>		br_candidate_nxt_nmp_lvs;
+	neuromap*			br_candidate_next;
+	recoil_counter_t	br_candidate_nxt_rc;
+	long				br_candidate_dct_lv;
 
 	sort_glb 		br_forced_srg;
 	sort_glb 		br_filled_srg;
@@ -3818,9 +3867,9 @@ public:
 	void	retract_to(long tg_lv, bool full_reco);
 	bool	dbg_in_edge_of_level();
 	bool	dbg_in_edge_of_target_lv(deduction& dct);
-	void	dbg_old_reverse();
+	void	dbg_old_reverse_trail();
 	
-	bool	deduce_and_reverse();
+	bool	deduce_and_reverse_trail();
 	void	reverse(deduction& dct);
 	
 	bool 	ck_cov_flags();
@@ -3849,12 +3898,22 @@ public:
 		return h_s;
 	}
 	
-	void	pop_last_cand_lv();
-	void	pop_all_cand_lvs();
-	void	update_cand_lvs(quanton& qua);
-	bool	in_last_cand_recoil();
-	bool	last_cand_cho_has_chg();
-	ticket	get_last_cand_tk();
+	neuromap*	pop_cand_lv_in(row<neuromap*>& lvs, bool free_mem);
+	neuromap*	pop_cand_lv(bool free_mem);
+	void		pop_cand_lvs_until(quanton& qua);
+	void		pop_all_cand_lvs();
+	void		pop_all_nxt_cand_lvs();
+	
+	void	use_next_cand(quanton& qua);
+	
+	void	set_chg_cands_update(quanton& qua);
+	void	reset_chg_cands_update(quanton& qua);
+	void	reset_cand_next();
+	void	start_cand_retract(deduction& dct);
+	void	end_cand_retract();
+	void	init_cand_propag(neuromap& nmp, quanton* curr_qua);
+	
+	neuromap*	get_last_cand(dbg_call_id dbg_id);
 
 	bool	analyse(row<prop_signal>& all_confl, deduction& dct);
 	void	analyse_2(row<prop_signal>& all_confl, deduction& dct);
@@ -3921,6 +3980,10 @@ public:
 
 	ch_string 	dbg_prt_margin(bj_ostream& os, bool is_ck = false);
 	
+	ch_string&	dbg_get_file(){
+		return get_my_inst().ist_file_path;
+	}
+	
 	bool	ck_trail();
 	void	print_trail(bj_ostream& os, bool no_src_only = false);
 
@@ -3961,6 +4024,9 @@ public:
 	
 	void	dbg_lv_on(long lv_idx);
 	void	dbg_lv_off(long lv_idx);
+
+	void	dbg_prt_all_cands(bj_ostream& os);
+	void	dbg_prt_all_nxt_cands(bj_ostream& os);
 	
 	void 	dbg_prt_all_nmps(bj_ostream& os);
 	
@@ -4030,6 +4096,13 @@ quanton::get_source(){
 
 	BRAIN_CK((qu_source == NULL_PT) || ! qu_source->is_ne_virgin());
 	return qu_source;
+}
+
+inline
+bool
+quanton::has_learned_source(){
+	bool h_l_src = has_source() && ! qu_source->ne_original;
+	return h_l_src;
 }
 
 inline

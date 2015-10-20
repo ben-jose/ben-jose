@@ -816,7 +816,13 @@ write_all_neuromaps(row<neuromap*>& to_wrt){
 		BRAIN_CK(to_wrt[aa] != NULL_PT);
 		neuromap& nmp = *(to_wrt[aa]);
 		
-		BRAIN_DBG(quanton* qua = nmp.na_next_psig.ps_quanton);
+		BRAIN_DBG(
+			quanton* qua = nmp.na_next_psig.ps_quanton;
+			if(nmp.na_candidate_qua != NULL_PT){
+				BRAIN_CK(qua == NULL_PT);
+				qua = nmp.na_candidate_qua;
+			}
+		);
 		BRAIN_CK(qua != NULL_PT);
 		BRAIN_DBG(neuron* src = qua->qu_source);
 		BRAIN_CK((qua->qlevel() == ROOT_LEVEL) || (src != NULL_PT));
@@ -1019,26 +1025,6 @@ quanton::get_nmp_to_write(brain& brn){
 	return to_wrt;
 }
 
-void
-prop_signal::make_ps_dominated(brain& brn, row<neuromap*>& to_wrt){
-	if(ps_quanton != NULL_PT){
-		ps_quanton->make_qu_dominated(brn);
-		if(ps_quanton->is_qu_end_of_nmp(brn)){
-			DBG_PRT(43, os << "mk_ps_dom(end)=" << this);
-			neuromap* nmp = ps_quanton->get_nmp_to_write(brn);
-			if(nmp != NULL_PT){
-				DBG_PRT(102, os << "ADDING_to_wrt ";
-					os << "ps=" << this << "\n\n TO_WRT_NMP=\n" << nmp
-				);
-				to_wrt.push(nmp);
-			}
-		}
-	}
-	if(ps_source != NULL_PT){
-		ps_source->make_ne_dominated(brn);
-	}
-}
-
 bool
 neuromap::has_qua_tier(quanton& qua){
 	long min_ti = get_min_ti();
@@ -1121,21 +1107,6 @@ void
 neuromap::map_reset_all_notes_and_tags(){
 	BRAIN_CK(get_brn().br_ne_tot_tag3 == 0);
 	BRAIN_CK(get_brn().br_ne_tot_tag1 == 0);
-}
-
-void
-analyser::make_all_noted_dominated(row<neuromap*>& to_wrt, dbg_call_id dbg_id){
-	brain& brn = get_de_brain();
-	row<prop_signal>& all_noted = de_all_noted;
-	
-	DBG_PRT(102, os << "mk noted_dom(find_to_wrt) dbg_id=" << dbg_id << "\n";
-		os << "analizer=" << this
-	);
-	
-	make_all_ps_dominated(brn, all_noted, to_wrt); // calls make_ps_dominated
-	
-	BRAIN_DBG(qlayers_ref& qlr = de_ref);
-	BRAIN_CK(last_qu_noted() == qlr.get_curr_quanton());
 }
 
 neuromap*
@@ -1348,7 +1319,7 @@ analyser::neuromap_find_analysis(bool& found_top, analyser& deducer,
 		);
 		
 		if(nmp_causes.is_empty()){
-			DBG_PRT(100, os << "found_top_1");
+			DBG_PRT(39, os << "found_top_1");
 			found_top = true;
 			break;
 		}
@@ -1356,13 +1327,13 @@ analyser::neuromap_find_analysis(bool& found_top, analyser& deducer,
 	
 		long max_lv = find_max_level(nmp_causes);
 		if(max_lv == ROOT_LEVEL){
-			DBG_PRT(100, os << "found_top_2");
+			DBG_PRT(39, os << "found_top_2");
 			found_top = true;
 			break;
 		}
 		
 		if(nxt_lv <= 0){
-			DBG_PRT(100, os << "find_stop_1. (nxt_lv <= 0)."; 
+			DBG_PRT(39, os << "find_stop_1. (nxt_lv <= 0)."; 
 				os << " nxt_dct=" << nxt_dct << "\n";
 				os << " nxt_lv=" << nxt_lv << "\n";
 				os << " nmp=" << (void*)(out_nmp) << "\n";
@@ -1381,7 +1352,7 @@ analyser::neuromap_find_analysis(bool& found_top, analyser& deducer,
 		long old_lv = nxt_lv;
 		if(tmp_dct.dt_target_level >= old_lv){
 			BRAIN_CK(false);
-			DBG_PRT(100, os << "find_stop_2. (tgt_lv >= old_lv). nmp=" << (void*)(out_nmp));
+			DBG_PRT(39, os << "find_stop_2. (tgt_lv >= old_lv). nmp=" << (void*)(out_nmp));
 			break;
 		}
 		
@@ -1399,13 +1370,16 @@ analyser::neuromap_find_analysis(bool& found_top, analyser& deducer,
 		BRAIN_REL_CK(nxt_lv < old_lv);
 
 		if(! to_wrt.is_empty() && brn.lv_has_setup_nmp(nxt_lv + 1)){
-			DBG_PRT(100, os << "find_stop_3. has_to_wrt && has_stup. nmp=" << out_nmp);
+			DBG_PRT(39, os << "find_stop_3. has_to_wrt && has_stup. nmp=" << out_nmp;
+				os << "\n nxt_dct=" << nxt_dct;
+			);
 			break;
 		}
 		if(deducer.found_learned()){
-			DBG_PRT(100, os << "find_stop_4. found_lrnd. nmp=" << out_nmp << "\n";
+			DBG_PRT(39, os << "find_stop_4. found_lrnd. nmp=" << out_nmp << "\n";
 				os << " to_wrt_sz=" << to_wrt.size() << "\n";
 				os << " nx_lv_h_stp=" << brn.lv_has_setup_nmp(nxt_lv + 1) << "\n";
+				os << " nxt_dct=" << nxt_dct;
 			);
 			break;
 		}
@@ -1446,19 +1420,95 @@ propag_entry::init_propag_entry(quanton* pt_qua){
 		quanton& qua = *pt_qua;
 		quanton& opp = qua.opposite();
 		
-		/*
-		qua.qu_full_charged.copy_to(pe_qua_all_full_chg);
-		opp.qu_full_charged.copy_to(pe_opp_all_full_chg);
-
-		qua.qu_full_chg_min_ti.copy_to(pe_qua_all_min_ti);
-		opp.qu_full_chg_min_ti.copy_to(pe_opp_all_min_ti);
-		*/
-
 		qua.qu_full_charged.move_to(pe_qua_all_full_chg);
 		opp.qu_full_charged.move_to(pe_opp_all_full_chg);
 
 		qua.qu_full_chg_min_ti.move_to(pe_qua_all_min_ti);
 		opp.qu_full_chg_min_ti.move_to(pe_opp_all_min_ti);
 	}
+}
+
+neuromap*
+quanton::get_candidate_to_write(brain& brn){
+	BRAIN_CK(is_pos());
+	
+	quanton& opp = opposite();
+	if(opp.is_mono()){
+		DBG_PRT(55, os << "NOT_CAND_to_wrt. Mono=" << opp);
+		return NULL_PT; 
+	}
+	
+	if(! has_learned_source()){
+		return NULL_PT; 
+	}
+	
+	neuromap* to_wrt = qu_candidate_nmp;
+	
+	if(to_wrt == NULL_PT){ 
+		DBG_PRT(55, os << "NOT_CAND_to_wrt. NULL cand_nmp. NULL to_wrt");
+		return NULL_PT; 
+	}
+	BRAIN_CK(to_wrt->na_candidate_qua == this);
+	
+	return to_wrt;
+}
+
+void
+prop_signal::make_ps_dominated(brain& brn, row<neuromap*>& to_wrt){
+	if(ps_quanton != NULL_PT){
+		ps_quanton->make_qu_dominated(brn);
+		if(ps_quanton->is_qu_end_of_nmp(brn)){
+			DBG_PRT(43, os << "mk_ps_dom(end)=" << this);
+			neuromap* nmp = ps_quanton->get_nmp_to_write(brn);
+			if(nmp != NULL_PT){
+				BRAIN_CK(! nmp->na_dbg_cand_sys);
+				BRAIN_CK(ps_quanton->has_learned_source());
+				DBG_PRT(102, os << "ADDING_to_wrt ";
+					os << "ps=" << this << "\n\n TO_WRT_NMP=\n" << nmp
+				);
+				to_wrt.push(nmp);
+			}
+		}
+	}
+	if(ps_source != NULL_PT){
+		ps_source->make_ne_dominated(brn);
+	}
+}
+
+void
+prop_signal::get_ps_cand_to_wrt(brain& brn, row<neuromap*>& to_wrt){
+	if(ps_quanton != NULL_PT){
+		if(ps_quanton->is_qu_end_of_nmp(brn)){
+			neuromap* nmp = ps_quanton->get_candidate_to_write(brn);
+			if(nmp != NULL_PT){
+				BRAIN_CK(nmp->na_dbg_cand_sys);
+				//BRAIN_CK(false);
+				DBG_PRT(102, os << "ADDING_to_wrt ";
+					os << "ps=" << this << "\n\n TO_WRT_NMP=\n" << nmp
+				);
+				to_wrt.push(nmp);
+			}
+		}
+	}
+}
+
+void
+analyser::make_all_noted_dominated(row<neuromap*>& to_wrt, dbg_call_id dbg_id){
+	brain& brn = get_de_brain();
+	row<prop_signal>& all_noted = de_all_noted;
+	
+	/*DBG_PRT(102, os << "mk noted_dom(find_to_wrt) dbg_id=" << dbg_id << "\n";
+		os << "analizer=" << this
+	);*/
+	
+	get_all_ps_cand_to_wrt(brn, all_noted, to_wrt); // calls get_ps_cand_to_wrt
+	brn.br_tmp_foo_param.clear();
+	make_all_ps_dominated(brn, all_noted, brn.br_tmp_foo_param); // calls make_ps_dominated
+	brn.br_tmp_foo_param.clear();
+	
+	//make_all_ps_dominated(brn, all_noted, to_wrt); // calls make_ps_dominated
+	
+	BRAIN_DBG(qlayers_ref& qlr = de_ref);
+	BRAIN_CK(last_qu_noted() == qlr.get_curr_quanton());
 }
 

@@ -1,22 +1,22 @@
 
 CURR_LAPS=34 YES_SAT=1000 NO_SAT=0 TMOUT=0 MMOUT=0 ERR=0 UNKNOWN_SAT=0 
-SOLVE SEGs tot=94.49 avg=0.09 max=0.47 (avg/max)=20.28%
-BYTES USED tot=173216000.00 avg=173216.00 max=2351595520.00 (avg/max)=0.01%
+SOLVE SEGs tot=87.69 avg=0.09 max=0.45 (avg/max)=19.27%
+BYTES USED tot=173216000.00 avg=173216.00 max=1828098048.00 (avg/max)=0.01%
 
 
-LAPS tot=16295.00 avg=16.30 max=80.00 (avg/max)=20.37%
+LAPS tot=16296.00 avg=16.30 max=80.00 (avg/max)=20.37%
 LOAD SEGs tot=1.03 avg=0.00 max=0.00 (avg/max)=51.39%
-SOLVE SEGs tot=94.49 avg=0.09 max=0.47 (avg/max)=20.28%
-BYTES USED tot=173216000.00 avg=173216.00 max=2351595520.00 (avg/max)=0.01%
-SAVED tot=2473.00 avg=2.47 max=17.00 (avg/max)=14.55%
-VARIANTS tot=996.85 avg=0.50 max=1.00 (avg/max)=49.84%
+SOLVE SEGs tot=87.69 avg=0.09 max=0.45 (avg/max)=19.27%
+BYTES USED tot=173216000.00 avg=173216.00 max=1828098048.00 (avg/max)=0.01%
+SAVED tot=1698.00 avg=1.70 max=15.00 (avg/max)=11.32%
+VARIANTS tot=996.55 avg=0.50 max=1.00 (avg/max)=49.83%
 NUM_FINDS tot=0.00 avg=0.00 max=0.00 (avg/max)=0.00%
-QUICK_DISCARDS tot=437.00 avg=0.44 max=9.00 (avg/max)=4.86%
+QUICK_DISCARDS tot=436.00 avg=0.44 max=9.00 (avg/max)=4.84%
 OLD_PATH_HITS tot=0.00 avg=0.00 max=0.00 (avg/max)=0.00%
 NEW_PATH_HITS tot=0.00 avg=0.00 max=0.00 (avg/max)=0.00%
-SUB_CNF_HITS tot=8.00 avg=0.01 max=1.00 (avg/max)=0.80%
+SUB_CNF_HITS tot=7.00 avg=0.01 max=1.00 (avg/max)=0.70%
 EQ_NEW_HITS tot=0.00 avg=0.00 max=0.00 (avg/max)=0.00%
-EQ_OLD_HITS tot=8.00 avg=0.01 max=1.00 (avg/max)=0.80%
+EQ_OLD_HITS tot=7.00 avg=0.01 max=1.00 (avg/max)=0.70%
 SB_NEW_HITS tot=0.00 avg=0.00 max=0.00 (avg/max)=0.00%
 SB_OLD_HITS tot=0.00 avg=0.00 max=0.00 (avg/max)=0.00%
-TOTAL TIME = 96.08
+TOTAL TIME = 89.27

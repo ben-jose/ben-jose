@@ -552,6 +552,7 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 	MARK_USED(brn);
 	MARK_USED(from_pt);
 	if(from_pt){
+		bool h_cand = nmp_is_cand();
 		bool h_st = false;
 		if(brn.br_data_levels.is_valid_idx(na_orig_lv)){
 			leveldat& lv_dat = map_get_data_level();
@@ -576,6 +577,9 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 		os << " s_lv=" << na_dbg_st_lv;
 		//os << " all_ps=" << all_ps;
 		os << " #qu=" << all_ps.size();
+		if(h_cand){
+			os << " cand=" << na_candidate_qua;
+		}
 		if(h_st){
 			os << " o_lv_has_ST";
 		}
@@ -1067,7 +1071,7 @@ brain::dbg_ck_deducs(deduction& dct1, deduction& dct2){
 }
 
 void
-brain::dbg_old_reverse(){
+brain::dbg_old_reverse_trail(){
 #ifdef FULL_DEBUG
 	DBG(deduction& dct2 = br_dbg.dbg_deduc);
 	//long dbg_old_lv = level();
@@ -1408,6 +1412,8 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 	long qlv = qlevel();
 	long qti = ps_ti;
 	
+	bool h_cand = (qu_candidate_nmp != NULL_PT);
+	
 	quanton& opp = opposite();
 	
 	bool is_mn = (qu_lv_mono != INVALID_LEVEL);
@@ -1448,6 +1454,7 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 		//if(! has_source() && has_charge()){ os << "*"; }
 		if(qlv == 0){ os << "#"; }
 		if(is_end_nmp){ os << "E"; }
+		if(h_cand){ os << "C"; }
 		if(! h_src && h_chg){ os << "L" << qlv; }
 		/*if(! h_src && h_chg && (pt_brn != NULL_PT)){ 
 			brain& brn = *pt_brn;
@@ -1638,5 +1645,49 @@ brain::dbg_prt_all_nmps(bj_ostream& os){
 	}
 	os << "\n";
 #endif
+}
+
+void
+brain::dbg_prt_all_cands(bj_ostream& os){
+#ifdef FULL_DEBUG
+	os << "ALL_CANDS=\n";
+	for(long aa = 0; aa < br_candidate_nmp_lvs.size(); aa++){
+		BRAIN_CK(br_candidate_nmp_lvs[aa] != NULL_PT);
+		neuromap& nmp = *(br_candidate_nmp_lvs[aa]);
+		os << &nmp << "\n";
+	}
+	os << "\n";
+#endif
+}
+
+void
+brain::dbg_prt_all_nxt_cands(bj_ostream& os){
+#ifdef FULL_DEBUG
+	os << "ALL_NXT_CANDS=\n";
+	for(long aa = 0; aa < br_candidate_nxt_nmp_lvs.size(); aa++){
+		BRAIN_CK(br_candidate_nxt_nmp_lvs[aa] != NULL_PT);
+		neuromap& nmp = *(br_candidate_nxt_nmp_lvs[aa]);
+		os << &nmp << "\n";
+	}
+	os << "\n";
+#endif
+}
+
+comparison 
+dbg_cmp_ps(prop_signal const & ps1, prop_signal const & ps2){
+comparison vv = 0;
+#ifdef FULL_DEBUG
+	//vv = cmp_long(ps1.ps_tier, ps2.ps_tier);
+	vv = cmp_long(ps2.ps_tier, ps1.ps_tier);
+#endif
+return vv;
+}
+
+bool
+neuromap::map_dbg_ck_ord(row<prop_signal>& all_ps){
+#ifdef FULL_DEBUG
+	BRAIN_CK(all_ps.is_sorted(dbg_cmp_ps));
+#endif
+	return true;
 }
 

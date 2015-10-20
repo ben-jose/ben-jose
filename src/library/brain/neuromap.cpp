@@ -117,10 +117,16 @@ neuromap::map_make_dominated(){
 
 void
 neuromap::map_get_all_propag_ps(row<prop_signal>& all_ps){
+	map_rec_get_all_propag_ps(all_ps);
+	BRAIN_CK(map_dbg_ck_ord(all_ps));
+}
+
+void
+neuromap::map_rec_get_all_propag_ps(row<prop_signal>& all_ps){
 	if(! has_submap()){
 		all_ps.clear(true, true);
 	} else {
-		na_submap->map_get_all_propag_ps(all_ps);
+		na_submap->map_rec_get_all_propag_ps(all_ps);
 	}
 	
 	na_propag.append_to(all_ps);
@@ -586,9 +592,30 @@ neuron::make_ne_dominated(brain& brn){
 }
 
 void
+neuromap::release_candidate(){
+	BRAIN_CK(na_candidate_qua != NULL_PT);
+	BRAIN_CK(na_candidate_qua->qu_candidate_nmp == this);
+	
+	na_candidate_qua->reset_candidate();
+	
+	BRAIN_CK(na_orig_cho != NULL_PT);
+	
+	if(! na_is_head){
+		return;
+	}
+	full_release();
+}
+
+void
 neuromap::full_release(){
+	if(nmp_is_cand()){
+		na_is_head = true;
+		return;
+	}
+	
 	if(has_submap()){
 		na_submap->full_release();
+		na_submap = NULL_PT;
 	}
 	
 	BRAIN_CK(! is_active());
@@ -1447,6 +1474,8 @@ neuromap::map_get_initial_ps_coloring(brain& brn, row<prop_signal>& dtrace,
 	MARK_USED(brn);
 	
 	clr.init_coloring(&brn);
+	
+	DBG_PRT_WITH(108, brn, os << " all_ps=" << dtrace);
 
 	row_quanton_t&	all_quas = clr.co_quas;
 	row<long>&	qua_colors = clr.co_qua_colors;
@@ -2226,18 +2255,6 @@ neuromap::map_init_with(analyser& anlsr, neuromap* sub_nmp){
 }
 
 void
-neuromap::map_get_initial_guide_coloring(coloring& clr){
-	BRAIN_CK(&na_guide_col != &clr);
-
-	brain& brn = get_brn();
-	if(has_submap()){
-		map_get_initial_ps_coloring(brn, na_propag, clr);
-	} else {
-		map_get_simple_coloring(clr);
-	}
-}
-
-void
 neuromap::map_get_initial_tauto_coloring(coloring& prv_clr, coloring& tauto_clr)
 {
 	brain& brn = get_brn();
@@ -2500,6 +2517,52 @@ neuromap::map_fill_all_cov(){
 	}
 	map_fill_cov();
 	na_fill_cov_ok = true;
+}
+
+void
+neuromap::nmp_filter_cov(){
+	brain& brn = get_brn();
+	
+	BRAIN_CK(brn.br_ne_tot_tag2 == 0);
+	set_ps_all_note2_n_tag2(brn, na_propag, false, true);
+	BRAIN_CK(brn.br_qu_tot_note2 == 0);
+	
+	for(long aa = na_cov_by_propag_quas.last_idx(); aa >=0; aa--){
+		neuron* neu = na_cov_by_propag_quas[aa];
+		BRAIN_CK(neu != NULL_PT);
+		if(neu->has_tag2()){
+			na_cov_by_propag_quas.swapop(aa);
+		}
+	}
+	
+	BRAIN_CK(brn.br_qu_tot_note2 == 0);
+	reset_ps_all_note2_n_tag2(brn, na_propag, false, true);
+	BRAIN_CK(brn.br_ne_tot_tag2 == 0);
+}
+
+void
+neuromap::nmp_filter_all_cov(){
+	if(na_fill_cov_ok){
+		return;
+	}
+	if(has_submap()){
+		na_submap->nmp_filter_all_cov();
+	}
+	nmp_filter_cov();
+	na_fill_cov_ok = true;
+}
+
+void
+neuromap::map_get_initial_guide_coloring(coloring& clr){
+	BRAIN_CK(&na_guide_col != &clr);
+
+	brain& brn = get_brn();
+	if(has_submap()){
+		//BRAIN_CK(na_dbg_cand_sys);
+		map_get_initial_ps_coloring(brn, na_propag, clr);
+	} else {
+		map_get_simple_coloring(clr);
+	}
 }
 
 
