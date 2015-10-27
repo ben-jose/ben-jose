@@ -418,6 +418,7 @@ public:
 	ch_string		cf_sha_str;
 	ch_string		cf_minisha_str;
 	ch_string		cf_diff_minisha_str;
+	ch_string		cf_taut_minisha_str;
 
 	row<char>		cf_chars;
 	row<char>		cf_comment_chars;
@@ -472,6 +473,7 @@ public:
 		cf_sha_str = "";
 		cf_minisha_str = "";
 		cf_diff_minisha_str = "";
+		cf_taut_minisha_str = "";
 
 		cf_chars.clear(free_mem, free_mem);
 		cf_comment_chars.clear(free_mem, free_mem);
@@ -497,7 +499,7 @@ public:
 		SKELETON_CK(cf_unique_path.size() == 0);
 	}
 
-	void	init_with(skeleton_glb& skg, row<canon_clause*>& all_ccls, 
+	void	init_with_ccls(skeleton_glb& skg, row<canon_clause*>& all_ccls, 
 				long tot_vars = INVALID_NATURAL, 
 				long tot_lits = INVALID_NATURAL, 
 				long tot_twolits = INVALID_NATURAL, 

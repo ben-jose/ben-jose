@@ -895,6 +895,12 @@ canon_cnf::add_comment_chars_to(skeleton_glb& skg, row<char>& cnn, ch_string sv_
 	canon_string_append(cnn, pth1);
 	canon_string_append(cnn, "REF2=\n");
 	canon_string_append(cnn, pth2);
+	canon_string_append(cnn, "TAUT_MINISHA=\n'");
+	canon_string_append(cnn, cf_taut_minisha_str);
+	canon_string_append(cnn, "'\n");
+	canon_string_append(cnn, "DIFF_MINISHA=\n'");
+	canon_string_append(cnn, cf_minisha_str);
+	canon_string_append(cnn, "'\n");
 	canon_string_append(cnn, "FIRST_INSTANCE=\n");
 	canon_string_append(cnn, l3);
 }
@@ -919,7 +925,7 @@ canon_cnf::update_chars_to_write(){
 	ch_string hh_str = canon_header(cn_hd_str, all_ccl.size(), cf_dims.dd_tot_vars);
 	canon_string_append(cnn, hh_str);
 
-	DBG_PRT(70, 
+	DBG_PRT(99, 
 		os << "add_clauses_as_chars=" << bj_eol; 
 		all_ccl.print_row_data(os, true, "\n");
 	);
@@ -2109,7 +2115,7 @@ skeleton_glb::get_write_lock(ch_string lk_dir){
 	ch_string lk_nm = lk_dir + BJ_LOCK_NAME;
 	ch_string full_nm = as_full_path(lk_nm);
 
-	DBG_PRT(72, os << "GETTING LOCK '" << full_nm << "'");
+	DBG_PRT(100, os << "GETTING LOCK '" << full_nm << "'");
 
 	int fd_lock = get_file_write_lock(full_nm);
 	if(fd_lock == -1){
@@ -2172,7 +2178,7 @@ skeleton_glb::ref_vnt_name(ch_string vpth, ch_string sub_nm){
 }
 
 void
-canon_cnf::init_with(skeleton_glb& skg, row<canon_clause*>& all_ccls, 
+canon_cnf::init_with_ccls(skeleton_glb& skg, row<canon_clause*>& all_ccls, 
 		long tot_vars, long tot_lits, long tot_twolits, bool sorted_cnf)
 {
 	clear_cnf();

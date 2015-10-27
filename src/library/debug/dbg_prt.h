@@ -67,6 +67,15 @@ bj_ostream&	dbg_get_out_stm(solver* slv);
 
 //--end_of_def
 
+#define	DBG_COMM_WITH(lev, obj, comm) \
+	DBG( \
+		if(DBG_BR_COND((obj).get_dbg_slv(), lev, true)){ \
+			comm; \
+		} \
+	) \
+
+//--end_of_def
+
 void	dbg_print_left_margin(solver* pt_slv, bj_ostream& os, long dbg_lv);
 
 #define	DBG_PRT_SLV(pt_slv, o_stm, lev, cond, comm) \

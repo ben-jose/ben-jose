@@ -55,7 +55,10 @@ bool
 neuromap::map_write(){
 	DBG_COMMAND(5, return false);
 	IF_NEVER_WRITE(return false);
-	if(is_na_mono()){ return true; }
+	if(is_na_mono()){ 
+		DBG_PRT(102, os << " NOT_WRT_mono. na_idx=" << na_index);
+		return true; 
+	}
 	return map_oper(mo_save);
 }
 
@@ -1186,7 +1189,13 @@ neuromap::map_oper(mem_op_t mm){
 		}
 	}
 	
-	DBG_PRT(150, 
+	DBG_PRT(102, 
+		ch_string op_ok_str = (oper_ok)?("YES"):("no");
+		ch_string op_str = (na_dbg_nmp_mem_op == mo_find)?("Find"):("Write");
+		op_str += op_ok_str;
+		os << op_str << " na_idx=" << na_index << "\n";
+	);
+	DBG_PRT(70, 
 		ch_string op_ok_str = (oper_ok)?("YES"):("no");
 		ch_string op_str = (na_dbg_nmp_mem_op == mo_find)?("Find"):("Write");
 		op_str += op_ok_str;
@@ -1207,16 +1216,16 @@ neuromap::map_oper(mem_op_t mm){
 			bool id_was_wrt = (old_ids.find(str_id) != old_ids.end());
 			if(! id_was_wrt){
 				old_ids[str_id] = na_dbg_tauto_sha_str;
-				DBG_PRT_COND(101, id_was_wrt, 
+				DBG_PRT_COND(71, id_was_wrt, 
 					os << "ADDED wrt_id=" << na_dbg_phi_id
 				);
 				BRAIN_CK((old_ids.find(str_id) != old_ids.end()));
 			}
-			DBG_PRT_COND(101, id_was_wrt, 
+			DBG_PRT_COND(71, id_was_wrt, 
 				os << "REPEATED_WRITE for wrt_id=" << na_dbg_phi_id;
 				os << " old_sha=" << old_ids[str_id];
 			);
-			DBG_PRT_COND(101, ! id_was_wrt, 
+			DBG_PRT_COND(71, ! id_was_wrt, 
 				os << "FIRST_WRITE_OK for wrt_id=" << na_dbg_phi_id 
 					<< "\n wrt_is_str='" << str_id << "'"
 			);
@@ -1415,11 +1424,16 @@ neuromap::map_prepare_wrt_cnfs(mem_op_t mm, ref_strs& nxt_diff_phdat, row_str_t&
 	canon_cnf& tmp_diff_cnf = brn.br_tmp_wrt_diff_cnf;
 	canon_cnf& tmp_guide_cnf = brn.br_tmp_wrt_guide_cnf;
 
-	tmp_tauto_cnf.init_with(skg, tmp_tauto_ccls);
-	tmp_diff_cnf.init_with(skg, tmp_diff_ccls);
-	tmp_guide_cnf.init_with(skg, tmp_guide_ccls);
+	tmp_tauto_cnf.init_with_ccls(skg, tmp_tauto_ccls);
+	tmp_diff_cnf.init_with_ccls(skg, tmp_diff_ccls);
+	tmp_guide_cnf.init_with_ccls(skg, tmp_guide_ccls);
+	
+	DBG_PRT_COND(112, (tmp_tauto_cnf.cf_minisha_str == "8b9adc25fa"), 
+		os << " 8b9adc25fa nmp=" << this
+	);
 	
 	tmp_tauto_cnf.cf_diff_minisha_str = tmp_diff_cnf.cf_minisha_str;
+	tmp_diff_cnf.cf_taut_minisha_str = tmp_tauto_cnf.cf_minisha_str;
 
 	tmp_diff_cnf.cf_phdat = nxt_diff_phdat;
 	dbg_shas.move_to(tmp_diff_cnf.cf_dbg_shas);
@@ -1849,10 +1863,18 @@ neuromap::map_get_all_upper_quas(row_quanton_t& all_upper_quas){
 bool 
 neuromap::map_ck_all_upper_quas(row_quanton_t& all_quas){
 #ifdef FULL_DEBUG
+	brain& brn = get_brn();
 	for(long aa = 0; aa < all_quas.size(); aa++){
 		BRAIN_CK(all_quas[aa] != NULL_PT);
 		quanton& qua = *(all_quas[aa]);
-		BRAIN_CK(qua.qlevel() < na_orig_lv);
+		BRAIN_CK_PRT((qua.qlevel() < na_orig_lv), 
+			os << "\n_____________\n ABORT_DATA\n";
+			brn.dbg_prt_margin(os);
+			brn.print_trail(os);
+			os << this << "\n";
+			os << " qua=" << &qua;
+			os << " na_orig_lv=" << na_orig_lv;
+		);
 	}
 #endif
 return true;
@@ -2563,6 +2585,23 @@ neuromap::map_get_initial_guide_coloring(coloring& clr){
 	} else {
 		map_get_simple_coloring(clr);
 	}
+}
+
+void
+neuromap::nmp_add_to_write(row<neuromap*>& to_wrt){
+	if(has_na0()){
+		return;
+	}
+	if(has_submap()){
+		na_submap->nmp_add_to_write(to_wrt);
+	}
+	if(is_na_mono()){
+		return;
+	}
+	
+	brain& brn = get_brn();
+	set_na0(brn);
+	to_wrt.push(this);
 }
 
 

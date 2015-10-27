@@ -102,12 +102,15 @@ DEFINE_PS_FLAG_ALL_FUNCS(3);
 DEFINE_PS_FLAG_ALL_FUNCS(4);
 DEFINE_PS_FLAG_ALL_FUNCS(5);
 
-DEFINE_NA_FLAG_FUNCS(na_flags, tags0_n_notes0);
-DEFINE_NA_FLAG_FUNCS(na_flags, tags1_n_notes1);
-DEFINE_NA_FLAG_FUNCS(na_flags, tags2_n_notes2);
-DEFINE_NA_FLAG_FUNCS(na_flags, tags3_n_notes3);
-DEFINE_NA_FLAG_FUNCS(na_flags, tags4_n_notes4);
-DEFINE_NA_FLAG_FUNCS(na_flags, tags5_n_notes5);
+DEFINE_NA_FLAG_FUNCS(na_flags, na0);
+DEFINE_NA_FLAG_FUNCS(na_flags, na1);
+DEFINE_NA_FLAG_FUNCS(na_flags, na2);
+DEFINE_NA_FLAG_FUNCS(na_flags, na3);
+DEFINE_NA_FLAG_FUNCS(na_flags, na4);
+DEFINE_NA_FLAG_FUNCS(na_flags, na5);
+
+DEFINE_NA_FLAG_ALL_FUNCS(na0);
+DEFINE_NA_FLAG_ALL_FUNCS(na1);
 
 #define PRINT_PERIOD			4.0
 #define SOLVING_TIMEOUT			0.0		// 0.0 if no timeout
@@ -783,6 +786,7 @@ quanton::set_charge(brain& brn, neuron* neu, charge_t cha, long n_tier){
 	
 	if(cha != cg_neutral){
 		brn.set_chg_cands_update(*this);
+		//make_qu_dominated(brn); // CALC_VS_CAND
 	}
 }
 
@@ -1872,11 +1876,11 @@ brain::pulsate(){
 			ch_string rc_str = recoil().get_str();
 			htm_str += "BRN_recoil=" + rc_str + "<br>";
 		);
-		DBG_PRT(151, os << "bef_htm=" << bj_eol; print_trail(os);
+		DBG_PRT(72, os << "bef_htm=" << bj_eol; print_trail(os);
 			os << " num_conf=" << br_all_conflicts_found.size() << " br_lv=" << level()
 			<< " br_ti=" << tier();
 		);
-		DBG_COMMAND(151, dbg_update_html_cy_graph(CY_IC_KIND, NULL_PT, htm_str));
+		DBG_COMMAND(72, dbg_update_html_cy_graph(CY_IC_KIND, NULL_PT, htm_str));
 	
 		br_last_retract = (level() == ROOT_LEVEL);
 		if(level() == ROOT_LEVEL){ 
@@ -2081,9 +2085,13 @@ brain::solve_instance(bool load_it){
 	
 	BRAIN_DBG(bool init_htm = false);
 	DBG_COMMAND(45, init_htm = true);
-	DBG_COMMAND(150, init_htm = true);
-	DBG_COMMAND(151, init_htm = true);
+	DBG_COMMAND(70, init_htm = true);
+	DBG_COMMAND(72, init_htm = true);
 	BRAIN_DBG(if(init_htm){ dbg_init_html(); });
+
+	DBG_PRT(71, os << "FINDING_PHI_REPE");
+	DBG_PRT(110, os << "OLD_W_CALC");
+	DBG_PRT(111, os << "OLD_F_CALC");
 	
 	bj_output_t& o_info = get_out_info();
 	try{
@@ -2168,11 +2176,13 @@ brain::deduce_and_reverse_trail(){
 	deduction& dct = br_retract_dct;
 	dct.init_deduction();
 
+	candidates_before_analyse();
+	
 	bool in_full_anls = true;
 	DBG_COMMAND(2, in_full_anls = false); // ONLY_DEDUC
 	IF_ONLY_DEDUC(in_full_anls = false);
 	if(in_full_anls){
-		go_on = analyse(br_all_conflicts_found, dct);
+		go_on = analyse_conflicts(br_all_conflicts_found, dct);
 	} else {
 		br_deducer_anlsr.set_conflicts(br_all_conflicts_found);
 		
@@ -2185,12 +2195,15 @@ brain::deduce_and_reverse_trail(){
 		br_deducer_anlsr.deduction_analysis(br_deducer_anlsr.get_first_causes(), dct);
 	}
 	
-	reverse(dct);
+	candidates_before_reverse(dct);
+	reverse_with(dct);
+	candidates_after_reverse();
+	
 	return go_on;
 }
 
 void
-brain::reverse(deduction& dct){
+brain::reverse_with(deduction& dct){
 	BRAIN_DBG(leveldat& tg_lv = get_data_level(dct.dt_target_level));
 	BRAIN_CK_PRT((	(dct.dt_target_level == ROOT_LEVEL) || 
 					((tg_lv.ld_chosen != NULL_PT) && ! tg_lv.is_ld_mono())), 
@@ -2201,9 +2214,7 @@ brain::reverse(deduction& dct){
 	);
 	
 	// retract
-	start_cand_retract(dct);
 	retract_to(dct.dt_target_level, false);
-	end_cand_retract();
 	
 	// some checks
 
@@ -3149,6 +3160,10 @@ brain::pop_cand_lv_in(row<neuromap*>& lvs, bool free_mem){
 	BRAIN_CK(lst_nmp->na_candidate_qua->qu_candidate_nmp == lst_nmp);
 	
 	if(free_mem){
+		DBG_PRT(101, os << " POP_CAND." << lvs.size() << "." << lst_nmp;
+			os << STACK_STR << "\n";
+		);
+		
 		lst_nmp->release_candidate();
 		lst_nmp = NULL_PT;
 	}
@@ -3320,6 +3335,7 @@ brain::set_chg_cands_update(quanton& qua){
 	}
 
 	while(q_tk.is_older_than(get_last_cand(dbg_call_1))){
+		DBG_PRT(101, os << " poppong_cand. qua=" << &qua << " q_tk=" << q_tk);
 		pop_cand_lv(true);
 	}
 
@@ -3372,43 +3388,6 @@ brain::reset_cand_next(){
 }
 
 void
-brain::reset_chg_cands_update(quanton& qua){
-	/*if(! br_candidate_nxt_nmp_lvs.is_empty()){
-		br_candidate_nxt_nmp_lvs.append_to(br_candidate_nmp_lvs);
-		br_candidate_nxt_nmp_lvs.clear();
-		DBG_PRT(106, dbg_prt_all_cands(os));
-	}*/
-	
-	if(! qua.has_candidate()){
-		return;
-	}
-	
-	brain& brn = *this;
-	bool is_eonmp = qua.is_qu_end_of_neuromap(brn);
-	if(! is_eonmp){
-		return;
-	}
-	BRAIN_CK(br_candidate_nxt_nmp_lvs.is_empty());
-	BRAIN_CK(qua.has_candidate());
-	pop_cand_lvs_until(qua);
-	
-	neuromap* lst_cand = get_last_cand(dbg_call_1);
-	BRAIN_CK(lst_cand != NULL_PT);
-	BRAIN_CK(lst_cand->na_candidate_qua == &qua);
-	
-	bool upd_next = (	(br_candidate_nxt_rc < recoil()) && 
-						! qua.has_learned_source() &&
-						(qua.qlevel() == br_candidate_dct_lv)
-					);
-	if(upd_next){
-		reset_cand_next();
-		br_candidate_nxt_rc = recoil();
-		br_candidate_next = lst_cand;
-	}
-	pop_cand_lv(! upd_next);
-}
-
-void
 brain::pop_cand_lvs_until(quanton& qua){
 	BRAIN_DBG(brain& brn = *this);
 	BRAIN_CK(qua.is_pos());
@@ -3425,7 +3404,7 @@ brain::pop_cand_lvs_until(quanton& qua){
 }
 
 void
-brain::start_cand_retract(deduction& dct){
+brain::candidates_before_analyse(){
 	if(! br_candidate_nxt_nmp_lvs.is_empty()){
 		neuromap* tl_nmp = br_candidate_nxt_nmp_lvs.last();
 		if(tl_nmp != NULL_PT){
@@ -3441,16 +3420,26 @@ brain::start_cand_retract(deduction& dct){
 		br_candidate_nxt_nmp_lvs.clear();
 		DBG_PRT(109, dbg_prt_all_cands(os));
 	}
-	
-	BRAIN_CK(br_candidate_dct_lv == INVALID_LEVEL);
-	BRAIN_CK(dct.dt_forced != NULL_PT);
-	
-	br_candidate_dct_lv = dct.dt_forced->qlevel();
-	BRAIN_CK(br_candidate_dct_lv != INVALID_LEVEL);
+	DBG_PRT(101, os << "BEFORE_ANALYSE.\n"; dbg_prt_all_cands(os));
 }
 
 void
-brain::end_cand_retract(){
+brain::candidates_before_reverse(deduction& dct){
+	BRAIN_CK(br_candidate_dct_lv == INVALID_LEVEL);
+	BRAIN_CK(dct.dt_forced != NULL_PT);
+	
+	//br_candidate_dct_lv = dct.dt_forced->qlevel();
+	br_candidate_dct_lv = dct.dt_target_level + 1;
+	BRAIN_CK(br_candidate_dct_lv != INVALID_LEVEL);
+
+	DBG_PRT(101, os << " CAD_BEF_REV. dct=" << dct;
+		os << " br_candidate_dct_lv=" << br_candidate_dct_lv;
+	);
+	
+}
+
+void
+brain::candidates_after_reverse(){
 	BRAIN_CK(br_candidate_dct_lv != INVALID_LEVEL);
 	br_candidate_dct_lv = INVALID_LEVEL;
 }
@@ -3542,6 +3531,8 @@ neuromap::nmp_init_with(quanton& qua){
 	brn.br_candidate_nxt_nmp_lvs.push(nxt_nmp);
 	DBG_PRT(106, os << " PUSH_CAND." << brn.br_candidate_nxt_nmp_lvs.size();
 		os << "." << nxt_nmp);
+	DBG_PRT(101, os << " PUSH_CAND." << brn.br_candidate_nxt_nmp_lvs.size();
+		os << "." << nxt_nmp);
 	
 	return pnt_nmp;
 }
@@ -3579,4 +3570,47 @@ brain::init_cand_propag(neuromap& nmp, quanton* cur_qua){
 		nxt_ps.init_qua_signal(*nmp_cho);
 	}
 }
+
+void
+brain::reset_chg_cands_update(quanton& qua){
+	if(! qua.has_candidate()){
+		return;
+	}
+	
+	brain& brn = *this;
+	bool is_eonmp = qua.is_qu_end_of_neuromap(brn);
+	if(! is_eonmp){
+		return;
+	}
+	BRAIN_CK(br_candidate_nxt_nmp_lvs.is_empty());
+	BRAIN_CK(qua.has_candidate());
+	pop_cand_lvs_until(qua);
+	
+	neuromap* lst_cand = get_last_cand(dbg_call_1);
+	BRAIN_CK(lst_cand != NULL_PT);
+	BRAIN_CK(lst_cand->na_candidate_qua == &qua);
+	
+	bool upd_next = (	(br_candidate_nxt_rc < recoil()) && 
+						! qua.has_learned_source() &&
+						(qua.qlevel() == br_candidate_dct_lv)
+					);
+	
+	DBG_PRT(101, os << " qua=" << &qua;
+		os << " na_idx=" << lst_cand->na_index; 
+		os << " upd_next=" << upd_next << "\n";
+		os << " br_candidate_nxt_rc=" << br_candidate_nxt_rc;
+		os << " br_rc=" << recoil() << "\n";
+		os << " qu_lnd=" << qua.has_learned_source() << "\n";
+		os << " qu_lv=" << qua.qlevel();
+		os << " br_candidate_dct_lv=" << br_candidate_dct_lv;
+	);
+	if(upd_next){
+		reset_cand_next();
+		br_candidate_nxt_rc = recoil();
+		br_candidate_next = lst_cand;
+	}
+	pop_cand_lv(! upd_next);
+}
+
+// CALC_VS_CAND
 
