@@ -284,6 +284,7 @@ void	split_tees(brain& brn, sort_glb& srg,
 
 
 void	write_all_neuromaps(row<neuromap*>& to_wrt);
+void	write_all_nmps(row<neuromap*>& to_wrt);
 
 void	get_all_ps_cand_to_wrt(brain& brn, row<prop_signal>& trace, row<neuromap*>& to_wrt);
 
@@ -1619,6 +1620,15 @@ class prop_signal {
 	
 	void	set_nmp_data(propag_entry& pntry);
 	void	reset_nmp_data(propag_entry& pntry);
+	
+	bool	equal_ps_to(prop_signal& ps2){
+		bool c1 = (ps_quanton == ps2.ps_quanton);
+		bool c2 = (ps_source == ps2.ps_source);
+		bool c3 = (ps_tier == ps2.ps_tier);
+		
+		bool eq = (c1 && c2 && c3);
+		return eq;
+	}
 
 	solver*	get_dbg_slv();
 	
@@ -2626,7 +2636,7 @@ class neuromap {
 	void	map_reset_all_notes_and_tags();
 	
 	neuromap*	nmp_init_with(quanton& qua);
-	bool		nmp_is_cand(dbg_call_id dbg_id = dbg_call_1);
+	bool		nmp_is_cand(bool ck_chg = true, dbg_call_id dbg_id = dbg_call_1);
 	void		nmp_filter_cov();
 	void		nmp_filter_all_cov();
 
@@ -3700,6 +3710,9 @@ public:
 	void	deactivate_all_maps();
 	void	close_all_maps();
 
+	void	pop_all_canditates();
+	void	write_all_canditates();
+	
 	void	print_active_maps(bj_ostream& os);
 
 	// aux neurolayers
@@ -3992,11 +4005,11 @@ public:
 		return h_s;
 	}
 	
-	neuromap*	pop_cand_lv_in(row<neuromap*>& lvs, bool free_mem);
+	neuromap*	pop_cand_lv_in(row<neuromap*>& lvs, bool free_mem, bool force_rel);
 	neuromap*	pop_cand_lv(bool free_mem);
 	void		pop_cand_lvs_until(quanton& qua);
 	void		pop_all_cand_lvs();
-	void		pop_all_nxt_cand_lvs();
+	void		pop_all_nxt_cand_lvs(long tg_lv = INVALID_LEVEL);
 	
 	void	use_next_cand(quanton& qua);
 	
@@ -4008,7 +4021,7 @@ public:
 	void	candidates_after_reverse();
 	void	init_cand_propag(neuromap& nmp, quanton* curr_qua);
 	
-	neuromap*	get_last_cand(dbg_call_id dbg_id);
+	neuromap*	get_last_cand(dbg_call_id dbg_id = dbg_call_1);
 	
 	bool	analyse_conflicts(row<prop_signal>& all_confl, deduction& dct);
 	void	analyse_2(row<prop_signal>& all_confl, deduction& dct);
@@ -4120,8 +4133,9 @@ public:
 	void	dbg_lv_on(long lv_idx);
 	void	dbg_lv_off(long lv_idx);
 
-	void	dbg_prt_all_cands(bj_ostream& os);
-	void	dbg_prt_all_nxt_cands(bj_ostream& os);
+	void	dbg_prt_all_candidates(bj_ostream& os, row_neuromap_t& all_cand, bool just_ids);
+	void	dbg_prt_all_cands(bj_ostream& os, bool just_ids = false);
+	void	dbg_prt_all_nxt_cands(bj_ostream& os, bool just_ids = false);
 	
 	void 	dbg_prt_all_nmps(bj_ostream& os);
 	

@@ -562,10 +562,15 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 		row<prop_signal>& all_ps = brn.br_tmp_prt_ps;
 		map_get_all_propag_ps(all_ps);
 		
-		os << "na{";
+		if(na_dbg_cand_sys){
+			os << "ca{";
+		} else {
+			os << "na{";
+		}
+		os << "na_idx=" << na_index;
+		os << ".rc=" << na_orig_rc;
 		if(na_is_head){ os << "H."; }
 		if(! has_submap()){ os << "T."; }
-		os << "na_idx=" << na_index;
 		os << ".u" << na_dbg_update_tk;
 		os << "(" << (void*)this << ")";
 		os << " o_cho=" << na_orig_cho;
@@ -1454,7 +1459,10 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 		//if(! has_source() && has_charge()){ os << "*"; }
 		if(qlv == 0){ os << "#"; }
 		if(is_end_nmp){ os << "E"; }
-		if(h_cand){ os << "C"; }
+		if(h_cand){ 
+			os << "C"; 
+			os << qu_candidate_nmp->na_index;
+		}
 		if(! h_src && h_chg){ os << "L" << qlv; }
 		/*if(! h_src && h_chg && (pt_brn != NULL_PT)){ 
 			brain& brn = *pt_brn;
@@ -1648,28 +1656,37 @@ brain::dbg_prt_all_nmps(bj_ostream& os){
 }
 
 void
-brain::dbg_prt_all_cands(bj_ostream& os){
+brain::dbg_prt_all_candidates(bj_ostream& os, row_neuromap_t& all_cand, bool just_ids){
 #ifdef FULL_DEBUG
-	os << "ALL_CANDS=\n";
-	for(long aa = 0; aa < br_candidate_nmp_lvs.size(); aa++){
-		BRAIN_CK(br_candidate_nmp_lvs[aa] != NULL_PT);
-		neuromap& nmp = *(br_candidate_nmp_lvs[aa]);
-		os << &nmp << "\n";
+	for(long aa = 0; aa < all_cand.size(); aa++){
+		BRAIN_CK(all_cand[aa] != NULL_PT);
+		neuromap& nmp = *(all_cand[aa]);
+		if(just_ids){
+			os << "(na_idx=" << nmp.na_index;
+			os << ".rc=" << nmp.na_orig_rc;
+			os << ".q_cand=" << nmp.na_candidate_qua;
+			os << ") ";
+		} else {
+			os << &nmp << "\n";
+		}
 	}
 	os << "\n";
 #endif
 }
 
 void
-brain::dbg_prt_all_nxt_cands(bj_ostream& os){
+brain::dbg_prt_all_cands(bj_ostream& os, bool just_ids){
+#ifdef FULL_DEBUG
+	os << "ALL_CANDS=\n";
+	dbg_prt_all_candidates(os, br_candidate_nmp_lvs, just_ids);
+#endif
+}
+
+void
+brain::dbg_prt_all_nxt_cands(bj_ostream& os, bool just_ids){
 #ifdef FULL_DEBUG
 	os << "ALL_NXT_CANDS=\n";
-	for(long aa = 0; aa < br_candidate_nxt_nmp_lvs.size(); aa++){
-		BRAIN_CK(br_candidate_nxt_nmp_lvs[aa] != NULL_PT);
-		neuromap& nmp = *(br_candidate_nxt_nmp_lvs[aa]);
-		os << &nmp << "\n";
-	}
-	os << "\n";
+	dbg_prt_all_candidates(os, br_candidate_nxt_nmp_lvs, just_ids);
 #endif
 }
 

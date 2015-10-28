@@ -606,6 +606,12 @@ neuromap::release_candidate(){
 	if(! na_is_head){
 		return;
 	}
+	
+	DBG_PRT(101, os << " RELEASE_CAND.\n";
+		os << this;
+		os << "\n\n" << STACK_STR;
+	);
+	
 	full_release();
 }
 
@@ -1873,7 +1879,12 @@ neuromap::map_ck_all_upper_quas(row_quanton_t& all_quas){
 			brn.print_trail(os);
 			os << this << "\n";
 			os << " qua=" << &qua;
+			os << " na_cho=" << na_orig_cho;
 			os << " na_orig_lv=" << na_orig_lv;
+			os << " qua_tk=" << qua.qu_charge_tk;
+			if(na_orig_cho != NULL_PT){
+				os << " cho_tk=" << na_orig_cho->qu_charge_tk;
+			}
 		);
 	}
 #endif
