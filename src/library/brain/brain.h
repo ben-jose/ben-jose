@@ -3105,6 +3105,10 @@ class analyser {
 	
 	long		find_min_lv_to_setup(long tg_lv);
 
+	long		get_nxt_calc_lv(neuromap* out_nmp, long nxt_lv, neuromap* to_find, 
+								bool& found_top, analyser& deducer, 
+								deduction& nxt_dct, row<neuromap*>& to_wrt);
+	
 	neuromap* 	neuromap_find_analysis(bool& found_top, analyser& deducer, 
 						deduction& prv_dct, deduction& nxt_dct, 
 						row<neuromap*>& to_wrt);

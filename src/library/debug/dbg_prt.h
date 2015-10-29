@@ -110,6 +110,12 @@ void	dbg_print_left_margin(solver* pt_slv, bj_ostream& os, long dbg_lv);
 #define DBG_SLOW(prm)
 //define DBG_SLOW(prm)	DBG(prm)
 
+#define DBG_PRT_ABORT(brn) \
+		os << "\n________________\n ABORT_DATA\n"; \
+		brn.dbg_prt_margin(os); \
+	
+//--end_of_def
+
 #ifdef FULL_DEBUG
 	ch_string get_cy_dir(brain& brn);
 #endif	
