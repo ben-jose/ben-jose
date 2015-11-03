@@ -50,7 +50,6 @@ analyser class methos and funcs.
 void
 analyser::reset_deduc(){
 	de_all_noted.clear(true, true);
-	de_all_propag.clear(true, true);
 	
 	de_all_learned_propag.clear();
 	
@@ -171,7 +170,7 @@ analyser::set_nxt_propag(quanton* pt_nxt_qua, bool mv_fll_chg){
 	}
 	quanton& nxt_qua = *pt_nxt_qua;
 	
-	prop_signal& nxt_sig = de_all_propag.inc_sz();
+	prop_signal nxt_sig;
 	nxt_sig.init_qua_signal(nxt_qua);
 	
 	if((nxt_sig.ps_source != NULL_PT) && ! nxt_sig.ps_source->ne_original){
@@ -258,13 +257,6 @@ analyser::ck_deduc_init(long deduc_lv, bool full_ck){
 	BRAIN_CK(nkpr.dk_quas_lyrs.is_empty());
 	BRAIN_CK(de_nkpr.nk_get_counter() == 0);
 	BRAIN_CK(de_all_noted.size() == 0); 
-	BRAIN_CK_PRT((de_all_propag.size() == num_propag), os << "________________\n"; 
-		brn.dbg_prt_margin(os);
-		os << " full_ck=" << full_ck;
-		os << " prop_sz=" << de_all_propag.size();
-		os << " has_curr_qu=" << qlr.has_curr_quanton();
-		os << " num_propag=" << num_propag;
-	);
 	BRAIN_CK_PRT(brn.br_dbg_keeping_learned || de_all_learned_propag.is_empty(),
 		quanton* curr_qu = qlr.get_curr_quanton();
 		os << "\n________________\n ABORT_DATA\n"; 
@@ -623,7 +615,6 @@ prop_signal::get_ps_cand_to_wrt(brain& brn, row<neuromap*>& to_wrt){
 				DBG_PRT(102, os << "ADDING_CAND_to_wrt ";
 					os << "ps=" << this << "\n\n CAND_TO_WRT=\n" << nmp
 				);
-				//nmp->nmp_add_to_write(to_wrt);  // CURR_
 				
 				if(nmp->is_na_mono()){
 					BRAIN_CK(nmp->has_submap());

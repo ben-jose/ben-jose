@@ -431,7 +431,6 @@ neuron::neu_tunnel_signals(brain& brn, quanton& r_qua){
 		
 		if(ne_original){
 			BRAIN_DBG(
-				ne_dbg_filled_tk.update_ticket(brn.br_curr_choice_tk);
 				quanton* f_pos = find_first_pos();
 				bool ck_m_idx = (	(f_pos != NULL_PT) ==
 									ne_fibres.is_valid_idx(min_ti_pos_idx));
@@ -443,14 +442,14 @@ neuron::neu_tunnel_signals(brain& brn, quanton& r_qua){
 			);
 			
 			quanton* min_pos_qua = &r_qua;
-			long min_pos_ti = INVALID_TIER;
+			//long min_pos_ti = INVALID_TIER;
 			if(ne_fibres.is_valid_idx(min_ti_pos_idx)){
 				min_pos_qua = ne_fibres[min_ti_pos_idx];
-				min_pos_ti = min_pos_qua->qu_tier;
+				//min_pos_ti = min_pos_qua->qu_tier;
 			}
 			
-			r_qua.qu_full_charged.push(this);
-			r_qua.qu_full_chg_min_ti.push(min_pos_ti);
+			//r_qua.qu_full_charged.push(this);
+			//r_qua.qu_full_chg_min_ti.push(min_pos_ti);
 			
 			BRAIN_CK(min_pos_qua != NULL_PT);
 			neuromap* creat_cand = min_pos_qua->get_candidate_to_fill(brn);
@@ -751,16 +750,16 @@ quanton::set_charge(brain& brn, neuron* neu, charge_t cha, long n_tier){
 
 		//qu_charge_tk.tk_recoil = brn.recoil();
 
-		qu_full_charged.clear();
-		qu_inverse->qu_full_charged.clear();
-		qu_full_chg_min_ti.clear();
-		qu_inverse->qu_full_chg_min_ti.clear();
+		//qu_full_charged.clear();
+		//qu_inverse->qu_full_charged.clear();
+		//qu_full_chg_min_ti.clear();
+		//qu_inverse->qu_full_chg_min_ti.clear();
 
 	} else {
-		BRAIN_CK(qu_full_charged.is_empty());
-		BRAIN_CK(qu_inverse->qu_full_charged.is_empty());
-		BRAIN_CK(qu_full_chg_min_ti.is_empty());
-		BRAIN_CK(qu_inverse->qu_full_chg_min_ti.is_empty());
+		//BRAIN_CK(qu_full_charged.is_empty());
+		//BRAIN_CK(qu_inverse->qu_full_charged.is_empty());
+		//BRAIN_CK(qu_full_chg_min_ti.is_empty());
+		//BRAIN_CK(qu_inverse->qu_full_chg_min_ti.is_empty());
 
 		quanton& mot = *this;
 		brn.br_charge_trail.add_motive(mot, n_tier);
@@ -1889,11 +1888,9 @@ brain::pulsate(){
 		if(! cho.qu_has_been_cho){ 
 			cho.qu_has_been_cho = true; 
 			BRAIN_DBG(
-				cho.qu_dbg_fst_lap_cho = brn.br_curr_choice_tk.tk_recoil;
 				br_dbg.dbg_all_chosen.push(&cho);
 			)
 		}
-		BRAIN_DBG(if(cho.opposite().qu_has_been_cho){ cho.qu_dbg_num_laps_cho++; });
 		DBG_PRT(25, os << "**CHOICE** " << cho);
 	}
 }
@@ -2710,20 +2707,11 @@ void
 quanton::set_source(brain& brn, neuron* neu){
 	BRAIN_CK((qu_source == NULL_PT) || (qu_inverse->qu_source == NULL_PT));
 	BRAIN_CK((qu_inverse->qu_source == NULL_PT) || (neu == NULL_PT));
-	BRAIN_CK((neu == NULL_PT) || neu->ne_original || ! neu->ne_dbg_used_no_orig);
 
 	BRAIN_DBG(
-		if((neu != NULL_PT) && ! neu->ne_original){
-			BRAIN_CK(neu->ne_dbg_used_no_orig == false);
-			neu->ne_dbg_used_no_orig = true;
-		}
-
 		if(! has_charge()){
 			BRAIN_CK(neu == NULL_PT);
 			BRAIN_CK(qu_inverse->qu_source == NULL_PT);
-			if((qu_source != NULL_PT) && ! qu_source->ne_original){
-				qu_source->ne_dbg_used_no_orig = false;
-			}		
 		}
 	)
 	

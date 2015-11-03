@@ -241,18 +241,6 @@ ck_motives(brain& brn, row_quanton_t& mots){
 	return true;
 }
 
-void
-brain::dbg_add_to_used(neuron& neu){
-#ifdef FULL_DEBUG
-	if(! neu.ne_dbg_in_used){
-		neu.ne_dbg_in_used = true;
-		if(neu.ne_original){
-			br_dbg.dbg_original_used.push(&neu);
-		} 
-	}
-#endif
-}
-
 #ifdef FULL_DEBUG
 void
 dbg_inst_info::init_dbg_inst_info(){
@@ -271,7 +259,6 @@ dbg_inst_info::init_dbg_inst_info(){
 	dbg_canon_find_id = 0;
 	dbg_canon_save_id = 0;
 	
-	dbg_original_used.clear();
 	dbg_all_chosen.clear();
 	
 	dbg_just_read = false;
@@ -731,7 +718,6 @@ neuron::print_neu_base(bj_ostream& os, bool from_pt, bool from_tee, bool sort_fi
 		os << "ne={";
 		os << ((void*)(this)) << " ";
 		os << ne_index << " ";
-		os << "nmp=" << ((void*)ne_curr_nemap) << " ";
 		if(ne_original){
 			os << "o";
 		} else {
@@ -999,8 +985,6 @@ neuron::dbg_old_set_motives(brain& brn, notekeeper& nke, bool is_first){
 	BRAIN_CK(is_first || (ne_fibres[0]->get_charge() == cg_positive) );
 	BRAIN_CK(is_first || is_ne_inert());
 
-	BRAIN_DBG(brn.dbg_add_to_used(neu));
-
 	row_quanton_t& causes = ne_fibres;
 	BRAIN_CK(! causes.is_empty());
 
@@ -1163,7 +1147,6 @@ brain::dbg_old_reverse_trail(){
 			if(src != NULL_PT){
 				src->dbg_old_set_motives(brn, nke0, false);
 				BRAIN_CK(nke0.dk_num_noted_in_layer > 0);
-				BRAIN_CK(! src->ne_original || has_neu(qua.qu_full_charged, src));
 			} else {
 				BRAIN_CK(! qua.has_source());
 				BRAIN_CK(! dct.is_dt_virgin());
