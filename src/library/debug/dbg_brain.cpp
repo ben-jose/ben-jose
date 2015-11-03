@@ -81,7 +81,7 @@ brain::dbg_prt_margin(bj_ostream& os, bool is_ck){
 	f_nam = inst_info.ist_file_path;
 	
 	recoil_counter_t the_rec = recoil();
-	recoil_counter_t the_lap = br_dbg_round;
+	recoil_counter_t the_lap = br_round;
 	if(the_lap >= 0){
 		if(is_ck){ os << "LAP="; }
 		os << the_lap << "." << the_rec << ".";
@@ -567,8 +567,10 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 		} else {
 			os << "na{";
 		}
-		os << "na_idx=" << na_index;
-		os << ".rc=" << na_orig_rc;
+		os << " " << dbg_na_id();
+		if(na_dbg_cand_sys){
+			os << " cand_tk=" << na_candidate_tk;
+		}
 		if(na_is_head){ os << "H."; }
 		if(! has_submap()){ os << "T."; }
 		os << ".u" << na_dbg_update_tk;
@@ -613,6 +615,13 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 		os << " all_cov_by_forced=" << bj_eol;
 		all_ne.print_row_data(os, true, "\n");
 		*/
+		os << "\n nmp_neus_idxs=[";
+		for(long aa = 0; aa < na_cov_by_propag_quas.size(); aa++){
+			neuron* neu = na_cov_by_propag_quas[aa];
+			BRAIN_CK(neu != NULL_PT);
+			os << neu->ne_index << ".";
+		}
+		os << "]\n";
 		
 		//os << " cho=" << na_orig_cho;
 		os << "}";
@@ -956,13 +965,24 @@ dbg_run_satex_on(brain& brn, ch_string f_nam, neuromap* dbg_nmp){
 #ifdef FULL_DEBUG
 	bool is_no = dbg_run_satex_is_no_sat(f_nam);
 	MARK_USED(is_no);
+	DBG_COMM_WITH(70, brn, 
+		if(! is_no){
+			ch_string msg_htm = "ABORTING_WITH";
+			if(dbg_nmp != NULL_PT){
+				msg_htm = dbg_nmp->map_dbg_html_data_str(msg_htm);
+			}
+			
+			brn.dbg_update_html_cy_graph(CY_NMP_KIND, 
+						&(brn.br_tmp_ini_tauto_col), msg_htm);
+		}
+	);
 	DBG_COND_COMM(! is_no ,
 		os << "ABORTING_DATA " << bj_eol;
 		ch_string o_ff = brn.dbg_prt_margin(os);
 		os << " nmp=" << dbg_nmp << bj_eol;
 		os << " brn_tk=" << brn.br_curr_choice_tk << bj_eol;
 		os << "	LV=" << brn.level() << bj_eol;
-		os << " f_nam=" << f_nam << bj_eol;
+		os << " f_nam=\n" << f_nam << bj_eol;
 		os << " save_consec=" << brn.br_dbg.dbg_canon_save_id << bj_eol;
 		os << " during ff=" << o_ff << bj_eol;
 		os << "END_OF_aborting_data" << bj_eol;
@@ -1662,8 +1682,7 @@ brain::dbg_prt_all_candidates(bj_ostream& os, row_neuromap_t& all_cand, bool jus
 		BRAIN_CK(all_cand[aa] != NULL_PT);
 		neuromap& nmp = *(all_cand[aa]);
 		if(just_ids){
-			os << "(na_idx=" << nmp.na_index;
-			os << ".rc=" << nmp.na_orig_rc;
+			os << "(" << nmp.dbg_na_id();
 			os << ".q_cand=" << nmp.na_candidate_qua;
 			os << ") ";
 		} else {
@@ -1706,5 +1725,29 @@ neuromap::map_dbg_ck_ord(row<prop_signal>& all_ps){
 	BRAIN_CK(all_ps.is_sorted(dbg_cmp_ps));
 #endif
 	return true;
+}
+
+ch_string
+neuromap::dbg_na_id(){
+	ch_string i_s = "INVALID_NA_ID";
+#ifdef FULL_DEBUG
+	bj_ostr_stream os;
+	os << "{na_idx=" << na_index << ".rn=" << na_orig_rnd << "}";
+	
+	i_s = os.str();
+#endif
+	return i_s;
+}
+
+ch_string
+neuromap::map_dbg_get_phi_ids_str(){
+	ch_string str_id = "";
+#ifdef FULL_DEBUG
+	bj_ostr_stream ss_msg;
+	ss_msg << na_dbg_phi_id;
+	
+	str_id = ss_msg.str();
+#endif
+	return str_id;
 }
 

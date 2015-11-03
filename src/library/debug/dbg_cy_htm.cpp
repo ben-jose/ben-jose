@@ -561,16 +561,17 @@ neuromap::map_dbg_html_data_str(ch_string msg){
 	ss_msg << HTMi_h2;
 	brn.dbg_prt_margin(ss_msg);
 	ss_msg << msg;
-	ss_msg << " na_idx=" << na_index << " rc=" << na_orig_rc;
+	ss_msg << " " << dbg_na_id();
 	ss_msg << HTMe_h2 << "\n";
 	
-	ss_msg << "nmp=" << this << HTM_br << "\n";
-	ss_msg << "#sub=" << na_num_submap;
+	ss_msg << "nmp=" << this << HTM_br << "\n" << HTM_br << HTM_br;
+	ss_msg << " is_MONO=" << is_na_mono();
+	ss_msg << " #sub=" << na_num_submap;
 	ss_msg << " has_sub=" << has_submap();
 	ss_msg << HTM_br << "\n";
 	ss_msg << "all_sub=[";
 	print_all_subnmp(ss_msg, true);
-	ss_msg << "]";
+	ss_msg << "]\n";
 	ss_msg << HTM_br << "\n";
 	ss_msg << "ALL_MONOS=";
 	brn.dbg_print_htm_all_monos(ss_msg);
