@@ -54,7 +54,6 @@ DEFINE_GET_DBG_SLV(prop_signal)
 DEFINE_GET_DBG_SLV(deduction)
 DEFINE_GET_DBG_SLV(coloring)
 DEFINE_GET_DBG_SLV(neuromap)
-DEFINE_GET_DBG_SLV(neurolayers)
 DEFINE_GET_DBG_SLV(qulayers)
 DEFINE_GET_DBG_SLV(notekeeper)
 DEFINE_GET_DBG_SLV(analyser)
@@ -249,8 +248,6 @@ neuron::neu_swap_edge(brain& brn, long ii){
 		ne_edge_tk.update_ticket(brn.br_curr_choice_tk);
 
 		BRAIN_CK(is_ticket_eq(ne_edge_tk, brn.br_curr_choice_tk));
-		//BRAIN_CK(ne_edge_tk.is_active(brn));
-
 		BRAIN_CK(ne_fibres[ii]->is_neg());
 	}
 }
@@ -596,7 +593,7 @@ brain::init_brain(solver& ss){
 	
 	reset_conflict();
 
-	br_num_memo = 0;
+	//br_num_memo = 0;
 
 	br_top_block.init_quanton(this, cg_neutral, INVALID_IDX, NULL);
 	
@@ -607,7 +604,6 @@ brain::init_brain(solver& ss){
 
 	br_num_active_neurons = 0;
 	br_num_active_alert_rels = 0;
-	br_num_active_neurolayers = 0;
 	br_num_active_neuromaps = 0;
 	
 	br_candidate_next = NULL_PT;
@@ -630,8 +626,8 @@ brain::release_all_sortors(){
 	br_guide_neus_srg.release_all();
 	br_guide_quas_srg.release_all();
 
-	br_compl_neus_srg.release_all();
-	br_compl_quas_srg.release_all();
+	//br_compl_neus_srg.release_all();
+	//br_compl_quas_srg.release_all();
 	
 	br_tauto_neus_srg.release_all();
 	br_tauto_quas_srg.release_all();
@@ -666,10 +662,8 @@ brain::release_brain(){
 	br_tmp_load_quantons.clear(false, true);
 
 	br_tmp_motives.clear(false, true);
-	br_tmp_edge.clear(false, true);
 
 	// state attributes
-	//satisfying.clear(true, true);
 	br_positons.clear(true, true);	
 
 	br_negatons.clear(true, true);	
@@ -794,12 +788,11 @@ quanton::set_charge(brain& brn, neuron* neu, charge_t cha, long n_tier){
 	
 	if(cha != cg_neutral){
 		brn.set_chg_cands_update(*this);
-		//make_qu_dominated(brn); // CALC_VS_CAND
 	}
 }
 
 long
-brain::brn_tunnel_signals(bool only_in_dom, row_quanton_t& all_impl_cho){
+brain::brn_tunnel_signals(bool only_orig, row_quanton_t& all_impl_cho){
 	brain& brn = *this;
 	MARK_USED(brn);
 	BRAIN_CK(br_ne_tot_tag0 == 0);
@@ -824,7 +817,7 @@ brain::brn_tunnel_signals(bool only_in_dom, row_quanton_t& all_impl_cho){
 	//BRAIN_DBG(quanton* l_trl = br_charge_trail.last_quanton());
 	
 	while(has_psignals()){
-		quanton* qua = receive_psignal(only_in_dom);
+		quanton* qua = receive_psignal(only_orig);
 		if(qua == NULL_PT){
 			BRAIN_CK((curr_cho() == NULL_PT) || curr_cho()->has_charge());
 			continue;
@@ -886,18 +879,17 @@ brain::choose_quanton(){
 		return qua;
 	}
 
-	while(! br_maps_active.is_empty()){
-		neuromap* pt_mpp = br_maps_active.last();
-		BRAIN_CK(pt_mpp != NULL_PT);
-		neuromap& mpp_dom = *pt_mpp;
-		qua = mpp_dom.map_choose_quanton();
+	//BRAIN_CK(r_maps_active.is_empty());
+	/*
+	while(! r_maps_active.is_empty()){
+		neuromap* pt_mpp = r_maps_active.last();
+		neuromap& mpp_dm = *pt_mpp;
+		qua = mpp_dm.map_choose_quanton();
 		if(qua != NULL_PT){
 			return qua;
 		}
-		BRAIN_CK(qua == NULL_PT);
-		DBG_PRT(43, os << "DEACT_IN_CHO nmp=" << (void*)pt_mpp);
-		deactivate_last_map();
-	}
+		eactivate_last_map();
+	}*/
 
 	for(long ii = 0; ii < br_choices.size(); ii++){
 		quanton* qua_ii = br_choices[ii];
@@ -1294,20 +1286,6 @@ brain::fill_with_origs(row_neuron_t& neus){
 	}
 }
 
-void
-brain::write_all_active(){
-	// write all pending
-	row_neuromap_t& to_wrt = br_tmp_maps_to_write;
-	to_wrt.clear();
-	
-	BRAIN_CK(! br_data_levels.is_empty());
-	BRAIN_CK(level() == ROOT_LEVEL);
-	leveldat& lv = get_data_level(ROOT_LEVEL);
-	
-	lv.ld_nmps_to_write.append_all_as<neuromap>(to_wrt);
-	write_all_neuromaps(to_wrt);
-}
-
 void 
 brain::find_result(){
 	DBG_PRT(147, dbg_print_all_qua_rels(os));
@@ -1345,13 +1323,6 @@ brain::find_result(){
 	}
 	
 	bj_satisf_val_t resp_solv = get_result();
-	if(resp_solv == bjr_no_satisf){
-		bool old_w_sel = false;
-		DBG_COMMAND(110, old_w_sel = true);
-		if(old_w_sel){
-			write_all_active();
-		} 
-	}
 
 	br_tmp_assig_quantons.clear();
 
@@ -1385,7 +1356,7 @@ brain::find_result(){
 	);
 
 	pop_all_canditates();
-	close_all_maps();
+	//close_all_maps();
 
 	if(level() != ROOT_LEVEL){
 		retract_to(ROOT_LEVEL, false);
@@ -1420,27 +1391,6 @@ solver::update_dbg2(dbg_inst_info& ist_info){
 	}
 }
 #endif
-
-void
-brain::deactivate_all_maps(){
-	while(! br_maps_active.is_empty()){
-		deactivate_last_map();
-	}
-	BRAIN_CK(br_maps_active.is_empty());
-}
-
-void
-brain::close_all_maps(){
-	deactivate_all_maps();
-	release_all_neuromaps();
-	BRAIN_CK_PRT((br_num_active_neuromaps == 0), 
-			os << "_______\n#act_nmps=" << br_num_active_neuromaps
-				<< " #fr_nmps=" << br_free_neuromaps.size() 
-				<< " #nmps=" << br_neuromaps.size() 
-				<< bj_eol;
-				dbg_prt_all_nmps(os);
-	);
-}
 
 void
 notekeeper::set_motive_notes(row_quanton_t& rr_qua, long from, long until){
@@ -1562,7 +1512,7 @@ brain::dec_level(){
 	brain& brn = *this;
 	lv.reset_monos(brn);
 	lv.release_learned(brn);
-	lv.let_maps_go(brn);
+	//lv.let_maps_go(brn);
 
 	br_curr_choice_tk.tk_level--;
 	leveldat* pt_lv = br_data_levels.pop();
@@ -1614,7 +1564,7 @@ brain::retract_to(long tg_lv, bool full_reco)
 }
 
 quanton*
-brain::receive_psignal(bool only_in_dom){
+brain::receive_psignal(bool only_orig){
 	BRAIN_CK(has_psignals());
 	brain& brn = *this;
 	prop_signal& sgnl = pick_psignal();
@@ -1628,7 +1578,7 @@ brain::receive_psignal(bool only_in_dom){
 	long sg_tier = sgnl.ps_tier;
 	BRAIN_CK(sg_tier != INVALID_TIER);
 	
-	DBG_PRT(21, os << sgnl << " odom=" << only_in_dom; os << " HIT ENTER TO CONTINUE...");
+	DBG_PRT(21, os << sgnl << " oorig=" << only_orig; os << " HIT ENTER TO CONTINUE...");
 	DBG_COMMAND(21, getchar());
 	
 	if(! qua.has_charge() && opp.is_note0()){
@@ -1661,10 +1611,10 @@ brain::receive_psignal(bool only_in_dom){
 		} 
 		pt_qua = NULL_PT;
 	} else {
-		BRAIN_CK_PRT((! only_in_dom || (sg_tier == tier()) || (sg_tier == (tier() + 1))),
+		BRAIN_CK_PRT((! only_orig || (sg_tier == tier()) || (sg_tier == (tier() + 1))),
 				os << "____________________\n";
 				brn.dbg_prt_margin(os);
-				os << " only_in_dom=" << only_in_dom << "\n";
+				os << " only_orig=" << only_orig << "\n";
 				os << " ti=" << tier() << "\n";
 				os << " sg_tier=" << sg_tier << "\n";
 				os << " neu=" << neu << "\n";
@@ -3254,6 +3204,7 @@ brain::get_last_cand(dbg_call_id dbg_id){
 	return l_cand;
 }
 
+/*
 ticket
 brain::get_curr_cand_tk(){
 	ticket ctk;
@@ -3265,7 +3216,7 @@ brain::get_curr_cand_tk(){
 ticket
 brain::get_curr_cho_tk(){
 	return br_curr_choice_tk;
-}
+}*/
 
 void
 quanton::set_candidate(neuromap& nmp){
@@ -3456,9 +3407,6 @@ neuromap::nmp_init_with(quanton& qua){
 		prv_lv = pnt_nmp->na_candidate_tk.tk_level;
 	}
 	
-	BRAIN_CK(na_min_ti == INVALID_TIER);
-	BRAIN_CK(na_max_ti == INVALID_TIER);
-
 	if(na_is_head){
 		prv_lv = brn.get_lst_cand_lv();
 	}
@@ -3672,12 +3620,6 @@ brain::candidates_after_reverse(){
 
 void
 brain::write_all_canditates(){
-	bool old_w_sel = false;
-	DBG_COMMAND(110, old_w_sel = true);
-	if(old_w_sel){
-		return;
-	}
-	
 	BRAIN_CK(br_candidate_nxt_nmp_lvs.is_empty());
 	write_all_nmps(br_candidate_nmp_lvs);
 }

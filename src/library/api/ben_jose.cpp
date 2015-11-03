@@ -85,9 +85,6 @@ bj_solver_t bj_solver_create(const char* bjs_dir_path){
 	DBG_PRT_SLV(nw_slv, bj_out, 5, true, os << "NEVER_WRITE");
 	DBG_PRT_SLV(nw_slv, bj_out, 6, true, os << "ONLY_READ");
 
-	DBG_PRT_SLV(nw_slv, bj_out, 110, true, os << "OLD_W_CALC");
-	DBG_PRT_SLV(nw_slv, bj_out, 111, true, os << "OLD_F_CALC");
-
 	BRAIN_CK((bj_out << "doing CKs (plain BRN_CKs)" << bj_eol) && true);
 	BRAIN_CK_0((bj_out << "doing BRN_CK_0s" << bj_eol) && true);
 	BRAIN_CK_1((bj_out << "doing BRN_CK_1s" << bj_eol) && true);
@@ -121,9 +118,6 @@ void 		bj_solver_release(bj_solver_t bjs){
 	DBG_PRT_SLV(the_slvr, bj_out, 4, true, os << "NEVER_FIND");
 	DBG_PRT_SLV(the_slvr, bj_out, 5, true, os << "NEVER_WRITE");
 	DBG_PRT_SLV(the_slvr, bj_out, 6, true, os << "ONLY_READ");
-	
-	DBG_PRT_SLV(the_slvr, bj_out, 110, true, os << "OLD_W_CALC");
-	DBG_PRT_SLV(the_slvr, bj_out, 111, true, os << "OLD_F_CALC");
 	
 	BRAIN_CK((bj_out << "doing CKs (plain BRN_CKs)" << bj_eol) && true);
 	BRAIN_CK_0((bj_out << "doing BRN_CK_0s" << bj_eol) && true);

@@ -79,7 +79,7 @@
 //52 -1			// 52. deduction::dbg_set_with
 //53 -1			// 53. analyser::neuromap_setup_analysis
 //54 -1			// 54. analyser::calc_neuromap. no_lrnd calc_nmp. calc_orig_neuromap
-//55 -1			// 55. prop_signal::make_ps_dominated. add_wrt_nmp. 	(phi_dbg)
+//55 -1			// 55. get_candidate_to_write. add_wrt_nmp. 	(phi_dbg)
 
 // sortor
 
@@ -136,23 +136,22 @@
 
 // find and write dbg
 
-//101 -1 			// 101. 
+//101 -1 			// 101. push/pop cands
 //102 -1			// 102. NMP_TO_WRT // dbg_1
 //103 -1			// 103. training during find
-//104 -1			// 104. aux_dbg ne_make_dom
+//104 -1			// 104. 
 //105 -1			// 105. aux_bdg. ! is_ps_of_qua.
 //106 -1			// 106. nw push/pop cands
 //107 -1			// 107. PRT_SORTING
 //108 -1			// 108. get.initial_ps_col
 //109 -1			// 109. prt all cands
-//110 -1			// 110. OLD_CALC_NMP_W
-
-
+//110 -1			// 110. 
 //111 -1			// 111. 
-//112 -1			// 112. 
-//113 -1			// 113. 
-//114 -1			// 114. 
-//115 -1			// 115. 
+
+//112 -1			// 112. why calc != cand
+//113 -1			// 113. dbg nw f_cand
+//114 -1			// 114. dbg_nw w_cand
+//115 -1			// 115. dbg_ W cand
 //116 -1			// 116. 
 //117 -1			// 117. 
 //118 -1			// 118. 
