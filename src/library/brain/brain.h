@@ -227,6 +227,7 @@ typedef	row<row_neuron_t>	row_row_neuron_t;
 typedef	row<neuromap*>		row_neuromap_t;
 
 typedef bj_big_int_t	recoil_counter_t;
+typedef bj_big_int_t	round_counter_t;
 
 DECLARE_PRINT_FUNCS(ticket)
 DECLARE_PRINT_FUNCS(alert_rel)
@@ -328,8 +329,6 @@ class ticket {
 	bool	is_valid(){
 		return ((tk_recoil != INVALID_RECOIL) && (tk_level != INVALID_LEVEL));
 	}
-
-	void	update_ticket(ticket a_tk);
 
 	bool	is_older_than(neuromap* nmp);
 	
@@ -1040,7 +1039,7 @@ class coloring {
 	long		set_all_##flag_nam(brain& brn, row_neuron_t& rr_all); \
 	long		append_all_not_##flag_nam(brain& brn, row_neuron_t& rr_src, \
 							row_neuron_t& rr_dst); \
-	bool		same_neurons_##flag_nam(brain& brn, row_neuron_t& sup_ss, \
+	neuron*		same_neurons_##flag_nam(brain& brn, row_neuron_t& sup_ss, \
 							row_neuron_t& sub_ss); \
 	bool		all_neurons_have_##flag_nam(row_neuron_t& rr1, bool val = true); \
 \
@@ -1101,21 +1100,23 @@ class coloring {
 		return num_neu_app; \
 	} \
  	\
-	bool		same_neurons_##flag_nam(brain& brn, row_neuron_t& sup_ss, \
+	neuron*		same_neurons_##flag_nam(brain& brn, row_neuron_t& sup_ss, \
 						row_neuron_t& sub_ss) \
 	{ \
 		BRAIN_CK(brn.br_ne_tot_##flag_nam == 0); \
 		set_all_##flag_nam(brn, sup_ss); \
-		bool sm_neus = true; \
+		neuron* bad_neu = NULL_PT; \
 		for(long aa = 0; aa < sub_ss.size(); aa++){ \
+			BRAIN_CK(sub_ss[aa] != NULL_PT); \
 			neuron& neu = *(sub_ss[aa]); \
 			if(! neu.has_##flag_nam()){ \
-				sm_neus = false; \
+				bad_neu = &neu; \
+				break; \
 			} \
 		} \
 		reset_all_##flag_nam(brn, sup_ss); \
 		BRAIN_CK(brn.br_ne_tot_##flag_nam == 0); \
-		return sm_neus; \
+		return bad_neu; \
 	} \
  	\
 	bool		all_neurons_have_##flag_nam(row_neuron_t& rr1, bool val) \
@@ -1183,6 +1184,8 @@ class neuron {
 	long			ne_tmp_col;
 
 	ticket			ne_candidate_tk;
+	ticket			ne_cand_tk;
+	ticket			ne_nxt_cand_tk;
 	
 	DBG(
 		canon_clause	ne_dbg_ccl;
@@ -1245,6 +1248,8 @@ class neuron {
 		ne_tmp_col = INVALID_COLOR;
 		
 		ne_candidate_tk.init_ticket();
+		ne_cand_tk.init_ticket();
+		ne_nxt_cand_tk.init_ticket();
 		
 		DBG(
 			ne_dbg_ccl.cc_me = this;
@@ -1366,7 +1371,8 @@ class neuron {
 		return NULL_PT;
 	}
 	
-	quanton*	find_first_pos();
+	quanton*	dbg_find_first_pos();
+	bool		dbg_ck_min_pos_idx(long min_ti_pos_idx);
 		
 	bool	is_ne_alert(){ // not yet satisf
 		bool is_alrt = (find_is_pos() == NULL_PT);
@@ -1377,13 +1383,6 @@ class neuron {
 		return ! is_ne_alert();
 	}
 
-	//bool	all_marked_after_idx(brain& brn, long trl_idx);
-	bool	in_neuromap(brain& brn, long min_tier, long max_tier, long& upper_pos_ti, 
-							neuromap* dbg_nmp);
-	
-	bool	can_add_to_nmp();
-
-	//for IS_SAT_CK
 	bool	dbg_ne_compute_ck_sat();
 
 	void	fill_mutual_sortees(brain& brn);
@@ -1396,6 +1395,10 @@ class neuron {
 	sorset*	get_sorset(){
 		return ne_tee.so_vessel;
 	}
+	
+	void	set_ne_cand_tk(ticket& nmp_tk);
+	void	set_nxt_cand_tk(brain& brn, ticket& nmp_tk);
+	bool	in_older_than_last_candidate(brain& brn);
 
 	bj_ostream&		dbg_ne_print_col_cy_node(bj_ostream& os);
 	bj_ostream&		dbg_ne_print_col_cy_edge(bj_ostream& os, long& consec);
@@ -2050,7 +2053,7 @@ class neuromap {
 	bool			na_fill_cov_ok;
 	bool			na_is_head;
 
-	recoil_counter_t	na_orig_rnd;
+	round_counter_t	na_orig_rnd;
 	
 	long			na_orig_lv;
 	long			na_orig_ti;
@@ -2063,7 +2066,7 @@ class neuromap {
 	
 	row<prop_signal>	na_propag; // all psigs propagated
 	row<cov_entry>		na_all_centry;
-	row_neuron_t		na_cov_by_propag_quas; 
+	row_neuron_t		na_all_cov;
 	
 	coloring		na_guide_col;
 	coloring		na_pend_col;
@@ -2116,7 +2119,7 @@ class neuromap {
 		
 		na_propag.clear(true, true);
 		na_all_centry.clear(true, true);
-		na_cov_by_propag_quas.clear();
+		na_all_cov.clear();
 		
 		na_guide_col.init_coloring();
 		na_pend_col.init_coloring();
@@ -2235,8 +2238,7 @@ class neuromap {
 	neuromap*	nmp_init_with(quanton& qua);
 	bool		nmp_is_cand(bool ck_chg = true, dbg_call_id dbg_id = dbg_call_1);
 	void		nmp_fill_upper_covs();
-	void		nmp_filter_cov();
-	void		nmp_filter_all_cov();
+	void		nmp_fill_all_upper_covs();
 
 	bool 	dbg_has_simple_coloring_quas(coloring& clr);
 	void 	dbg_prt_simple_coloring(bj_ostream& os);
@@ -2920,8 +2922,9 @@ public:
 	ch_string		br_file_name_in_ic;
 
 	// state attributes
+	recoil_counter_t 	br_prv_round_last_rc;
 	ticket				br_curr_choice_tk;
-	recoil_counter_t 	br_round;
+	round_counter_t 	br_round;
 
 	k_row<quanton>		br_positons;	// all quantons with positive charge
 	k_row<quanton>		br_negatons;	// all quantons with negative charge
@@ -3413,6 +3416,10 @@ public:
 		return is_mn;
 	}
 
+	void	update_charge_tk(ticket& nw_tk);
+	void	update_trail_tk(ticket& nw_tk);
+	void	update_cand_tk(ticket& nw_tk);
+	
 	bool 	lv_has_learned(){
 		return data_level().has_learned();
 	}
@@ -3451,7 +3458,11 @@ public:
 	void	candidates_after_reverse();
 	void	init_cand_propag(neuromap& nmp, quanton* curr_qua);
 	
-	void		update_cand_tk(ticket& nw_tk);
+	bool	in_current_round(ticket& the_tk){
+		bool in_rnd = (the_tk.tk_recoil > br_prv_round_last_rc);
+		return in_rnd;
+	}
+	
 	long		get_lst_cand_lv();
 	neuromap*	get_last_cand(dbg_call_id dbg_id = dbg_call_1);
 	
@@ -3517,6 +3528,7 @@ public:
 	}
 
 	ch_string 	dbg_prt_margin(bj_ostream& os, bool is_ck = false);
+	void		dbg_prt_cand_info(bj_ostream& os, neuron& neu);
 	
 	ch_string&	dbg_get_file(){
 		return get_my_inst().ist_file_path;
@@ -3587,13 +3599,6 @@ public:
 
 //=============================================================================
 // INLINES dependant on class declarations  
-
-inline 
-void
-ticket::update_ticket(ticket a_tk){
-	tk_recoil = a_tk.tk_recoil;
-	tk_level = a_tk.tk_level;
-}
 
 inline 
 void			

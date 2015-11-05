@@ -115,7 +115,7 @@ neuromap::map_get_all_cov_neus(row_neuron_t& all_neus, bool with_clear, bool ski
 		return;
 	}
 	
-	na_cov_by_propag_quas.append_to(all_neus);
+	na_all_cov.append_to(all_neus);
 }
 
 quanton*	
@@ -1470,8 +1470,8 @@ coloring::dbg_equal_nmp_to(coloring& col2, bool skip_all_n1){
 	BRAIN_CK(brn.br_ne_tot_tag5 == 0);
 	
 	bool c1 = dbg_equal_positons(brn, co_quas, col2.co_quas, skip_all_n1);
-	bool c2 = same_neurons_tag5(brn, co_neus, col2.co_neus);
-	bool c3 = same_neurons_tag5(brn, col2.co_neus, co_neus);
+	bool c2 = (same_neurons_tag5(brn, co_neus, col2.co_neus) == NULL_PT);
+	bool c3 = (same_neurons_tag5(brn, col2.co_neus, co_neus) == NULL_PT);
 	
 	all_eq = (c1 && c2 && c3);
 	
@@ -1735,43 +1735,6 @@ split_tees(brain& brn, sort_glb& srg, row<sortee*>& sorted_tees, row<sortee*>& s
 }
 
 void
-neuromap::nmp_filter_cov(){
-	brain& brn = get_brn();
-	
-	BRAIN_CK(brn.br_ne_tot_tag2 == 0);
-	set_ps_all_note2_n_tag2(brn, na_propag, false, true);
-	BRAIN_CK(brn.br_qu_tot_note2 == 0);
-	
-	for(long aa = na_cov_by_propag_quas.last_idx(); aa >=0; aa--){
-		neuron* neu = na_cov_by_propag_quas[aa];
-		BRAIN_CK(neu != NULL_PT);
-		
-		if(neu->has_tag2()){
-			na_cov_by_propag_quas.swapop(aa);
-		}
-		
-		neu->ne_candidate_tk = na_candidate_tk;
-	}
-	
-	BRAIN_CK(brn.br_qu_tot_note2 == 0);
-	reset_ps_all_note2_n_tag2(brn, na_propag, false, true);
-	BRAIN_CK(brn.br_ne_tot_tag2 == 0);
-}
-
-void
-neuromap::nmp_filter_all_cov(){
-	if(na_fill_cov_ok){
-		return;
-	}
-	if(has_submap()){
-		na_submap->nmp_filter_all_cov();
-	}
-	nmp_filter_cov();
-	nmp_fill_upper_covs();
-	na_fill_cov_ok = true;
-}
-
-void
 neuromap::map_get_initial_guide_coloring(coloring& clr){
 	BRAIN_CK(&na_guide_col != &clr);
 
@@ -1783,7 +1746,24 @@ neuromap::map_get_initial_guide_coloring(coloring& clr){
 }
 
 void
+neuromap::nmp_fill_all_upper_covs(){
+	if(na_fill_cov_ok){
+		return;
+	}
+	if(has_submap()){
+		na_submap->nmp_fill_all_upper_covs();
+	}
+	nmp_fill_upper_covs();
+	na_fill_cov_ok = true;
+}
+
+void
 neuromap::nmp_fill_upper_covs(){
+	for(long aa = 0; aa < na_all_cov.size(); aa++){
+		neuron* neu = na_all_cov[aa];
+		BRAIN_CK(neu != NULL_PT);
+		neu->set_ne_cand_tk(na_candidate_tk);
+	}
 	for(long aa = 0; aa < na_all_centry.size(); aa++){
 		cov_entry& cty = na_all_centry[aa];
 		neuromap* nmp = cty.ce_nmp;
@@ -1795,8 +1775,8 @@ neuromap::nmp_fill_upper_covs(){
 		BRAIN_CK(nmp->na_dbg_creating);
 		BRAIN_CK(nmp->nmp_is_cand());
 		
-		neu->ne_candidate_tk = nmp->na_candidate_tk;
-		nmp->na_cov_by_propag_quas.push(neu);
+		neu->set_ne_cand_tk(nmp->na_candidate_tk);
+		nmp->na_all_cov.push(neu);
 	}
 }
 

@@ -81,10 +81,10 @@ brain::dbg_prt_margin(bj_ostream& os, bool is_ck){
 	f_nam = inst_info.ist_file_path;
 	
 	recoil_counter_t the_rec = recoil();
-	recoil_counter_t the_lap = br_round;
-	if(the_lap >= 0){
+	round_counter_t the_rnd = br_round;
+	if(the_rnd >= 0){
 		if(is_ck){ os << "LAP="; }
-		os << the_lap << "." << the_rec << ".";
+		os << the_rnd << "." << the_rec << ".";
 	}
 #endif
 	return f_nam;
@@ -504,8 +504,8 @@ neuromap::print_subnmp(bj_ostream& os, bool only_pts){
 	prp_neus.print_row_data(os, true, "\n");
 	
 	os << "\n";
-	os << "\t na_cov_by_propag_quas=\n";
-	na_cov_by_propag_quas.print_row_data(os, true, "\n");
+	os << "\t na_all_cov=\n";
+	na_all_cov.print_row_data(os, true, "\n");
 	
 	os << "}\n";
 	os.flush();
@@ -581,8 +581,8 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 		all_ne.print_row_data(os, true, "\n");
 		*/
 		os << "\n nmp_neus_idxs=[";
-		for(long aa = 0; aa < na_cov_by_propag_quas.size(); aa++){
-			neuron* neu = na_cov_by_propag_quas[aa];
+		for(long aa = 0; aa < na_all_cov.size(); aa++){
+			neuron* neu = na_all_cov[aa];
 			BRAIN_CK(neu != NULL_PT);
 			os << neu->ne_index << ".";
 		}
