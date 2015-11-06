@@ -1184,8 +1184,6 @@ class neuron {
 	long			ne_tmp_col;
 
 	ticket			ne_candidate_tk;
-	ticket			ne_cand_tk;
-	ticket			ne_nxt_cand_tk;
 	
 	DBG(
 		canon_clause	ne_dbg_ccl;
@@ -1248,8 +1246,6 @@ class neuron {
 		ne_tmp_col = INVALID_COLOR;
 		
 		ne_candidate_tk.init_ticket();
-		ne_cand_tk.init_ticket();
-		ne_nxt_cand_tk.init_ticket();
 		
 		DBG(
 			ne_dbg_ccl.cc_me = this;
@@ -1397,8 +1393,6 @@ class neuron {
 	}
 	
 	void	set_ne_cand_tk(ticket& nmp_tk);
-	void	set_nxt_cand_tk(brain& brn, ticket& nmp_tk);
-	bool	in_older_than_last_candidate(brain& brn);
 
 	bj_ostream&		dbg_ne_print_col_cy_node(bj_ostream& os);
 	bj_ostream&		dbg_ne_print_col_cy_edge(bj_ostream& os, long& consec);
@@ -2198,6 +2192,7 @@ class neuromap {
 	bool 	map_ck_all_upper_quas(row_quanton_t& all_upper_quas);
 	void 	map_get_all_upper_quas(row_quanton_t& all_upper_quas);
 
+	quanton*	map_choose_propag_qua();
 	quanton*	map_choose_quanton();
 	
 	bool	map_ck_all_quas();
@@ -2238,7 +2233,11 @@ class neuromap {
 	neuromap*	nmp_init_with(quanton& qua);
 	bool		nmp_is_cand(bool ck_chg = true, dbg_call_id dbg_id = dbg_call_1);
 	void		nmp_fill_upper_covs();
-	void		nmp_fill_all_upper_covs();
+	void		nmp_fill_all_upper_covs(long dbg_idx = 0);
+	
+	void		nmp_set_quas_cand_tk();
+	void		nmp_set_neus_cand_tk();
+	void		nmp_set_all_cand_tk();
 
 	bool 	dbg_has_simple_coloring_quas(coloring& clr);
 	void 	dbg_prt_simple_coloring(bj_ostream& os);
