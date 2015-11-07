@@ -961,7 +961,7 @@ deduction::dbg_set_with(brain& brn, notekeeper& nke, quanton& nxt_qua){
 
 	nke.dk_quas_lyrs.get_all_ordered_quantons(dt_motives);
 
-	DBG_PRT(51, os << " motives_by_lv= " << nke.dk_quas_lyrs.dk_quas_by_layer);
+	DBG_PRT(51, os << " motives_by_lv= " << nke.dk_quas_lyrs.ql_quas_by_layer);
 	DBG_PRT(52, os << "LV=" <<  nke.dk_note_layer << " motives " 
 		<< dt_motives << " opp_nxt=" << &opp_nxt);
 
@@ -1247,7 +1247,7 @@ bj_ostream&
 qulayers::print_qulayers(bj_ostream& os, bool from_pt){
 	MARK_USED(from_pt);
 	os << "qlys={";
-	dk_quas_by_layer.print_row_data(os, true, "\n");
+	ql_quas_by_layer.print_row_data(os, true, "\n");
 	os << "}";
 	os.flush();
 	return os;

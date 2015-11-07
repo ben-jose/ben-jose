@@ -915,10 +915,6 @@ neuromap::map_prepare_wrt_cnfs(mem_op_t mm, ref_strs& nxt_diff_phdat, row_str_t&
 	tmp_diff_cnf.init_with_ccls(skg, tmp_diff_ccls);
 	tmp_guide_cnf.init_with_ccls(skg, tmp_guide_ccls);
 	
-	DBG_PRT_COND(112, (tmp_tauto_cnf.cf_minisha_str == "8b9adc25fa"), 
-		os << " 8b9adc25fa nmp=" << this
-	);
-	
 	tmp_tauto_cnf.cf_diff_minisha_str = tmp_diff_cnf.cf_minisha_str;
 	tmp_diff_cnf.cf_taut_minisha_str = tmp_tauto_cnf.cf_minisha_str;
 
@@ -977,8 +973,6 @@ neuromap::map_get_ini_guide_col(coloring& clr)
 	
 	clr.init_coloring(&brn);
 	
-	DBG_PRT_WITH(108, brn, os << " all_ps=" << dtrace);
-
 	row_quanton_t&	all_quas = clr.co_quas;
 	row<long>&	qua_colors = clr.co_qua_colors;
 
@@ -1044,14 +1038,6 @@ neuromap::map_get_ini_guide_col(coloring& clr)
 			
 			all_neus.push(&neu); 
 			neu_colors.push(col_ne);
-			
-			BRAIN_DBG(bool is_bug_115 = ((na_index == 4) &&
-				(neu.ne_index == 154));
-			);
-			DBG_PRT_COND(115, is_bug_115,
-				os << " BUG." << " nmp=" << this << "\n";
-				os << " neu=" << &neu << "\n";
-			);
 		}
 	}
 
@@ -1599,12 +1585,6 @@ neuromap::map_init_stab_guide(){
 	guide_col.add_coloring(ini_guide_col);
 	
 	map_stab_guide_col();
-	
-	DBG_PRT_COND(115, (na_index == 4), 
-		os << " guide=" << na_guide_col << "\n";
-		os << " full_nmp_4_BUG=\n" << *this << "\n";
-	);
-	
 }
 
 void

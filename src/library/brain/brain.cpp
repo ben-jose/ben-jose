@@ -587,10 +587,10 @@ brain::init_brain(solver& ss){
 	br_dbg_full_col.init_coloring();
 
 	br_deducer_anlsr.init_analyser(this);
-	br_neuromaper_anlsr.init_analyser(this);
+	//br_neuromaper_anlsr.init_analyser(this);
 	
 	br_deducer_anlsr.init_nk_with_note0(br_deducer_anlsr.de_nkpr, brn);
-	br_neuromaper_anlsr.init_nk_with_note5(br_neuromaper_anlsr.de_nkpr, brn);
+	//br_neuromaper_anlsr.init_nk_with_note5(br_neuromaper_anlsr.de_nkpr, brn);
 	
 	reset_conflict();
 
@@ -1453,7 +1453,7 @@ notekeeper::set_motive_notes(row_quanton_t& rr_qua, long from, long until){
 					<< " #not_lv " << dk_num_noted_in_layer 
 					<< " lv=" << dk_note_layer
 					<< " motives_by_lv=\n";
-					dk_quas_lyrs.dk_quas_by_layer.print_row_data(os, true, "\n");
+					dk_quas_lyrs.ql_quas_by_layer.print_row_data(os, true, "\n");
 			);
 			
 		}
@@ -1479,7 +1479,7 @@ notekeeper::clear_all_quantons(long lim_lv, bool reset_notes){
 	BRAIN_CK(ck_funcs());
 
 	brain& brn = get_dk_brain();
-	row_row_quanton_t& all_qu_lyrs = dk_quas_lyrs.dk_quas_by_layer;
+	row_row_quanton_t& all_qu_lyrs = dk_quas_lyrs.ql_quas_by_layer;
 	
 	if(lim_lv < 0){
 		lim_lv = all_qu_lyrs.size();
@@ -3258,7 +3258,6 @@ brain::use_next_cand(quanton& qua){
 		br_candidate_next = NULL_PT;
 		
 		DBG_PRT(106, os << " use.next_cand");
-		DBG_PRT(114, os << " use.next_cand. qua=" << &qua);
 	}
 }
 
@@ -3309,9 +3308,8 @@ brain::candidates_before_analyse(){
 		
 		br_candidate_nxt_nmp_lvs.append_to(br_candidate_nmp_lvs);
 		br_candidate_nxt_nmp_lvs.clear();
-		DBG_PRT(109, dbg_prt_all_cands(os));
 	}
-	DBG_PRT(115, os << "BEFORE_ANALYSE.\n"; dbg_prt_all_cands(os, false);
+	DBG_PRT(101, os << "BEFORE_ANALYSE.\n"; dbg_prt_all_cands(os, false);
 		print_trail(os);
 		os << "\n end_of BEFORE_ANALYSE\n\n";
 	);
