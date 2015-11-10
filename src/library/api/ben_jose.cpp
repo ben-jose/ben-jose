@@ -124,6 +124,11 @@ void 		bj_solver_release(bj_solver_t bjs){
 	BRAIN_CK_1((bj_out << "doing BRN_CK_1s" << bj_eol) && true);
 	BRAIN_CK_2((bj_out << "doing BRN_CK_2s" << bj_eol) && true);
 
+	DBG_PRT_SLV(the_slvr, bj_out, -1, (the_slvr != NULL_PT), 
+		os << the_slvr->slv_dbg2.dbg_avg_num_filled << "\n";
+		os << the_slvr->slv_dbg2.dbg_avg_neu_sz << "\n";
+	);
+	
 	solver::release_solver(the_slvr);
 }
 

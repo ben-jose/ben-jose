@@ -47,6 +47,13 @@ neuromap::map_find(){
 	DBG_COMMAND(4, return false);
 	IF_NEVER_FIND(return false);
 	BRAIN_CK(! is_na_mono());
+	if(na_found_in_skl != mf_invalid){
+		if(na_found_in_skl == mf_found){
+			return true;
+		}
+		BRAIN_CK(na_found_in_skl == mf_not_found);
+		return false;
+	}
 	return map_oper(mo_find);
 }
 //TODO: get rid of NOT_DBG macro
@@ -597,8 +604,13 @@ neuromap::map_oper(mem_op_t mm){
 
 		///////  end of debug of NO DEBUG
 
+		na_found_in_skl = mf_not_found;
+		
 		oper_ok = (fst_idx != INVALID_NATURAL);
 		if(oper_ok){
+			
+			na_found_in_skl = mf_found;
+			
 			ch_string fst_vpth = 
 				tmp_diff_cnf.get_variant_path(skg, fst_idx, skg.in_dbg_verif());
 				
@@ -611,8 +623,6 @@ neuromap::map_oper(mem_op_t mm){
 			
 			o_info.bjo_sub_cnf_hits++;
 
-			na_found_in_skl = true;
-			
 			/*row_neuron_t& all_neus_in_vnt = na_all_neus_in_vnt_found;
 			all_neus_in_vnt.clear();
 			
@@ -1725,8 +1735,9 @@ neuromap::nmp_fill_upper_covs(){
 		BRAIN_CK(nmp->na_dbg_cand_sys);
 		BRAIN_CK(nmp->na_dbg_creating);
 		BRAIN_CK(nmp->nmp_is_cand());
+		BRAIN_CK(! nmp->na_candidate_tk.is_tk_virgin());
 		
-		neu->set_ne_cand_tk(nmp->na_candidate_tk);
+		neu->ne_candidate_tk = nmp->na_candidate_tk;
 		nmp->na_all_cov.push(neu);
 	}
 }
@@ -1805,5 +1816,14 @@ neuromap::nmp_set_all_cand_tk(){
 	}
 	nmp_set_quas_cand_tk();
 	nmp_set_neus_cand_tk();
+}
+
+void
+neuromap::nmp_set_all_num_sub(){
+	na_num_submap = 0;
+	if(has_submap()){
+		na_submap->nmp_set_all_num_sub();
+		na_num_submap = na_submap->na_num_submap + 1;
+	}
 }
 

@@ -119,12 +119,8 @@ Declarations of classes and that implement the neural network.
 #define MAX_CY_STEPS 1000
 
 #define ROOT_LEVEL 0
-#define MIN_TRAIL_SZ 1
 
-#define MIN_NUM_BLKS 100
-#define MIN_NUM_MAPS 100
-
-#define MIN_TRAINABLE_NUM_SUB 2
+#define MIN_TRAINABLE_NUM_SUB 3
 
 enum action_t {
 	ac_invalid = -100,
@@ -147,6 +143,13 @@ enum cy_quk_t {
 	cq_for = 4,
 };
 
+enum mem_find_t {
+	mf_invalid = 0,
+	mf_found = 1,
+	mf_not_found = 2
+};
+
+
 #define k_invalid_order		0
 #define k_left_order		1
 #define k_right_order		2
@@ -158,6 +161,7 @@ enum cy_quk_t {
 #define INVALID_TIER -1
 #define INVALID_BLOCK -1
 #define INVALID_COLOR -1
+#define INVALID_NUM_SUB -1
 
 #define INVALID_MINSHA "invalid_minsha"
 #define INVALID_SHA "invalid_sha"
@@ -673,6 +677,7 @@ class quanton {
 	
 	// dbg attributes
 	DBG(
+		long			qu_dbg_num_fill_by_qua;
 		long			qu_dbg_tee_ti;
 		prop_signal*	qu_dbg_cy_sig;
 		neuromap*		qu_dbg_cy_nmp;
@@ -730,6 +735,8 @@ class quanton {
 		qu_lv_mono = INVALID_LEVEL;
 
 		qu_choice_idx = INVALID_IDX;
+		
+		//qu_full_charged.clear();
 
 		qu_flags = 0;
 
@@ -765,6 +772,7 @@ class quanton {
 		qu_candidate_nmp = NULL_PT;
 		
 		DBG(
+			qu_dbg_num_fill_by_qua = 0;
 			qu_dbg_tee_ti = INVALID_NATURAL;
 			qu_dbg_cy_sig = NULL_PT;
 			qu_dbg_cy_nmp = NULL_PT;
@@ -1184,6 +1192,8 @@ class neuron {
 	long			ne_tmp_col;
 
 	ticket			ne_candidate_tk;
+	ticket			ne_cand_tk;
+	ticket			ne_nxt_cand_tk;
 	
 	DBG(
 		canon_clause	ne_dbg_ccl;
@@ -1246,6 +1256,8 @@ class neuron {
 		ne_tmp_col = INVALID_COLOR;
 		
 		ne_candidate_tk.init_ticket();
+		ne_cand_tk.init_ticket();
+		ne_nxt_cand_tk.init_ticket();
 		
 		DBG(
 			ne_dbg_ccl.cc_me = this;
@@ -1392,7 +1404,8 @@ class neuron {
 		return ne_tee.so_vessel;
 	}
 	
-	void	set_ne_cand_tk(ticket& nmp_tk);
+	void	set_nxt_cand_tk(brain& brn, ticket& nmp_tk);
+	bool	in_older_than_last_candidate(brain& brn);
 
 	bj_ostream&		dbg_ne_print_col_cy_node(bj_ostream& os);
 	bj_ostream&		dbg_ne_print_col_cy_edge(bj_ostream& os, long& consec);
@@ -2044,7 +2057,6 @@ class neuromap {
 	
 	brain*			na_brn;
 	t_1byte			na_flags;
-	bool			na_fill_cov_ok;
 	bool			na_is_head;
 
 	round_counter_t	na_orig_rnd;
@@ -2065,7 +2077,7 @@ class neuromap {
 	coloring		na_guide_col;
 	coloring		na_pend_col;
 	
-	bool			na_found_in_skl;
+	mem_find_t		na_found_in_skl;
 	
 	// new candidate system
 	ticket			na_candidate_tk;
@@ -2096,7 +2108,6 @@ class neuromap {
 	void	init_neuromap(brain* pt_brn = NULL){
 		na_brn = pt_brn;
 		na_flags = 0;
-		na_fill_cov_ok = false;
 		na_is_head = false;
 
 		na_orig_rnd = INVALID_ROUND;
@@ -2109,7 +2120,7 @@ class neuromap {
 		na_nxt_no_mono = this;
 		na_submap = NULL_PT;
 
-		na_num_submap = 1;
+		na_num_submap = INVALID_NUM_SUB;
 		
 		na_propag.clear(true, true);
 		na_all_centry.clear(true, true);
@@ -2118,7 +2129,7 @@ class neuromap {
 		na_guide_col.init_coloring();
 		na_pend_col.init_coloring();
 		
-		na_found_in_skl = false;
+		na_found_in_skl = mf_invalid;
 		
 		na_candidate_tk.init_ticket();
 		na_candidate_qua = NULL_PT;
@@ -2239,6 +2250,8 @@ class neuromap {
 	void		nmp_set_neus_cand_tk();
 	void		nmp_set_all_cand_tk();
 
+	void		nmp_set_all_num_sub();
+	
 	bool 	dbg_has_simple_coloring_quas(coloring& clr);
 	void 	dbg_prt_simple_coloring(bj_ostream& os);
 	
@@ -2861,6 +2874,7 @@ public:
 		row_quanton_t		br_dbg_phi_id_quas;
 		str_str_map_t 		br_dbg_phi_wrt_ids;
 		bool				br_dbg_keeping_learned;
+		long			 	br_dbg_min_trainable_num_sub;
 	)
 	IF_KEEP_LEARNED(
 		bool				br_dbg_keeping_learned;

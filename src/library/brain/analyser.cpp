@@ -184,14 +184,6 @@ analyser::find_next_noted(){
 	}
 
 	BRAIN_CK(nkpr.dk_note_layer <= get_de_brain().level());
-	BRAIN_DBG(brain& brn = get_de_brain());
-	DBG_PRT_COND(104, (brn.br_round > 29), 
-		row_quanton_t& all_notes = brn.br_tmp_prt_quas;
-		de_nkpr.dk_quas_lyrs.get_all_ordered_quantons(all_notes);
-		os << " all_notes=" << all_notes << "\n";
-		os << " nxt_noted=" << de_next_bk_psig << "\n";
-		os << " in_end=" << in_end << "\n";
-	);
 	return in_end;
 }
 
@@ -280,10 +272,6 @@ analyser::deduction_init(row_quanton_t& causes, long max_lv){
 	set_notes_of(causes, true);
 	
 	BRAIN_CK_PRT((nkpr.dk_tot_noted > 0), get_de_brain().dbg_prt_margin(os));
-	BRAIN_DBG(brain& brn = get_de_brain());
-	DBG_PRT_COND(104, (brn.br_round > 29), 
-		os << " causes=" << causes << "\n";
-	);
 	
 	find_next_noted();
 }
@@ -554,13 +542,17 @@ prop_signal::get_ps_cand_to_wrt(brain& brn, row<neuromap*>& to_wrt){
 				DBG_PRT(102, os << "ADDING_CAND_to_wrt ";
 					os << "ps=" << this << "\n\n CAND_TO_WRT=\n" << nmp
 				);
-				
-				if(nmp->is_na_mono()){
-					BRAIN_CK(nmp->has_submap());
-					nmp = nmp->na_submap;
-					BRAIN_CK(! nmp->is_na_mono());
+				long min_sub = MIN_TRAINABLE_NUM_SUB;
+				DBG_COMMAND(104, min_sub = brn.br_dbg_min_trainable_num_sub);
+				BRAIN_CK(nmp->na_num_submap != INVALID_NUM_SUB);
+				if(nmp->na_num_submap >= min_sub){
+					if(nmp->is_na_mono()){
+						BRAIN_CK(nmp->has_submap());
+						nmp = nmp->na_submap;
+						BRAIN_CK(! nmp->is_na_mono());
+					}
+					to_wrt.push(nmp);
 				}
-				to_wrt.push(nmp);
 			}
 		}
 	}
@@ -616,6 +608,17 @@ brain::candidate_find_analysis(bool& found_top, analyser& deducer,
 		long q_lv = qua.qlevel();
 		if(q_lv > (nxt_lv + 1)){
 			continue;
+		}
+		
+		long min_sub = MIN_TRAINABLE_NUM_SUB;
+		DBG_COMMAND(104, min_sub = brn.br_dbg_min_trainable_num_sub);
+		BRAIN_CK(out_nmp->na_num_submap != INVALID_NUM_SUB);
+		if(out_nmp->na_num_submap < min_sub){
+			continue;
+		}
+		
+		if(q_lv < nxt_lv){
+			break;
 		}
 		
 		BRAIN_DBG(num_fnd++);

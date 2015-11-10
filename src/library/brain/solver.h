@@ -63,6 +63,9 @@ public:
 	long	dbg_max_wrt_num_subnmp;
 	long	dbg_max_fnd_num_subnmp;
 	
+	avg_stat	dbg_avg_num_filled;
+	avg_stat	dbg_avg_neu_sz;
+	
 	ch_string	dbg_html_out_path;
 	
 	dbg_slvr_info(){
@@ -73,6 +76,9 @@ public:
 		dbg_max_lv = 0;
 		dbg_max_wrt_num_subnmp = 0;
 		dbg_max_fnd_num_subnmp = 0;
+		
+		dbg_avg_num_filled.vs_nam = "NUM_FILLED";
+		dbg_avg_neu_sz.vs_nam = "NEU_SZ";
 		
 		dbg_html_out_path = ".";
 	}
