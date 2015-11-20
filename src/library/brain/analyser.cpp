@@ -397,6 +397,21 @@ write_all_nmps(row<neuromap*>& to_wrt){
 	}
 }
 
+row_quanton_t&
+analyser::get_first_causes(){
+	BRAIN_CK(! de_all_confl.is_empty());
+	prop_signal& cfl = de_all_confl.first();
+	
+	BRAIN_CK(cfl.ps_quanton != NULL);
+	BRAIN_CK(cfl.ps_quanton->get_charge() == cg_negative);
+	BRAIN_CK(cfl.ps_source != NULL);
+	BRAIN_CK(cfl.ps_source->ne_original);
+	
+	row_quanton_t& causes = cfl.ps_source->ne_fibres;
+	BRAIN_CK(! causes.is_empty());
+	return causes;
+}
+
 bool
 brain::analyse_conflicts(row<prop_signal>& all_confl, deduction& out_dct){
 	BRAIN_CK(! br_dbg_keeping_learned);
@@ -530,32 +545,6 @@ get_all_ps_cand_to_wrt(brain& brn, row<prop_signal>& trace, row<neuromap*>& to_w
 	}
 	reset_all_na0(brn, to_wrt);
 	BRAIN_CK(brn.br_na_tot_na0 == 0);
-}
-
-void
-prop_signal::get_ps_cand_to_wrt(brain& brn, row<neuromap*>& to_wrt){
-	if(ps_quanton != NULL_PT){
-		if(ps_quanton->is_qu_end_of_nmp(brn)){
-			neuromap* nmp = ps_quanton->get_candidate_to_write(brn);
-			if(nmp != NULL_PT){
-				BRAIN_CK(nmp->na_dbg_cand_sys);
-				DBG_PRT(102, os << "ADDING_CAND_to_wrt ";
-					os << "ps=" << this << "\n\n CAND_TO_WRT=\n" << nmp
-				);
-				long min_sub = MIN_TRAINABLE_NUM_SUB;
-				DBG_COMMAND(104, min_sub = brn.br_dbg_min_trainable_num_sub);
-				BRAIN_CK(nmp->na_num_submap != INVALID_NUM_SUB);
-				if(nmp->na_num_submap >= min_sub){
-					if(nmp->is_na_mono()){
-						BRAIN_CK(nmp->has_submap());
-						nmp = nmp->na_submap;
-						BRAIN_CK(! nmp->is_na_mono());
-					}
-					to_wrt.push(nmp);
-				}
-			}
-		}
-	}
 }
 
 void
@@ -732,4 +721,31 @@ brain::candidate_find_analysis(bool& found_top, analyser& deducer,
 	
 	//return out_nmp;
 } // end_of_candidate_fnd_analysis
+
+void
+prop_signal::get_ps_cand_to_wrt(brain& brn, row<neuromap*>& to_wrt){
+	BRAIN_CK(ps_quanton != NULL_PT);
+	if(ps_quanton != NULL_PT){
+		if(ps_quanton->is_qu_end_of_neuromap(brn)){
+			neuromap* nmp = ps_quanton->get_candidate_to_write(brn);
+			if(nmp != NULL_PT){
+				BRAIN_CK(nmp->na_dbg_cand_sys);
+				DBG_PRT(102, os << "ADDING_CAND_to_wrt ";
+					os << "ps=" << this << "\n\n CAND_TO_WRT=\n" << nmp
+				);
+				long min_sub = MIN_TRAINABLE_NUM_SUB;
+				DBG_COMMAND(104, min_sub = brn.br_dbg_min_trainable_num_sub);
+				BRAIN_CK(nmp->na_num_submap != INVALID_NUM_SUB);
+				if(nmp->na_num_submap >= min_sub){
+					if(nmp->is_na_mono()){
+						BRAIN_CK(nmp->has_submap());
+						nmp = nmp->na_submap;
+						BRAIN_CK(! nmp->is_na_mono());
+					}
+					to_wrt.push(nmp);
+				}
+			}
+		}
+	}
+}
 

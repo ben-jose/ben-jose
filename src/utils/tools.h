@@ -180,6 +180,14 @@ cmp_long(long const & n1, long const & n2){
 
 inline 
 comparison 
+cmp_char(char const & c1, char const & c2){ 
+	if(c1 == c2){ return 0; }
+	if(c1 < c2){ return -1; }
+	return 1;
+}
+
+inline 
+comparison 
 cmp_double(double const & n1, double const & n2){ 
 	if(n1 == n2){ return 0; }
 	if(n1 < n2){ return -1; }
@@ -703,7 +711,6 @@ public:
 		if(! rw2.is_valid_idx(first_ii)){ return false; }
 		if(! rw2.is_valid_idx(last_ii - 1)){ return false; }
 
-		//for(row_index ii = 0; ii < sz; ii++){
 		for (row_index ii = first_ii; ii < last_ii; ii++){
 			if(pos(ii) != rw2.pos(ii)){
 				return false;
@@ -712,8 +719,9 @@ public:
 		return true;
 	}
 
-	long	equal_to_diff(row_data<obj_t>& rw2, row_data<obj_t>& diff, 
-						  row_index first_ii = 0, row_index last_ii = -1)
+	long	equal_to_diff(cmp_func_t cmp_fn, 
+				row_data<obj_t>& rw2, row_data<obj_t>* diff = NULL_PT, 
+				row_index first_ii = 0, row_index last_ii = -1)
 	{
 		if((sz == 0) && (rw2.size() == 0)){
 			return true;
@@ -725,15 +733,21 @@ public:
 			first_ii = 0;
 		}
 
-		diff.fill_new(last_ii);
+		if(diff != NULL_PT){
+			diff->fill_new(last_ii);
+		}
 
 		long df_pos = INVALID_IDX;
-		//for(row_index ii = 0; ii < sz; ii++){
 		for (row_index ii = first_ii; ii < last_ii; ii++){
 			if(! is_valid_idx(ii)){ break; }
 			if(! rw2.is_valid_idx(ii)){ break; }
-			if(pos(ii) != rw2.pos(ii)){
-				diff[ii] = pos(ii);
+			
+			//if(pos(ii) != rw2.pos(ii)){
+			if((*cmp_fn)(pos(ii), rw2.pos(ii)) != 0){
+				if(diff != NULL_PT){
+					//diff[ii] = pos(ii);
+					diff->pos(ii) = pos(ii);
+				}
 				if(df_pos == INVALID_IDX){
 					df_pos = ii;
 				}

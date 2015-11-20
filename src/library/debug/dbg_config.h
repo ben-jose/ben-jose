@@ -45,29 +45,38 @@ Declaration of functions to read and parse config files.
 
 #define DBG_NUM_LEVS 200
 
+class debug_entry;
+class debug_info;
+
+DECLARE_PRINT_FUNCS(debug_entry)
+DECLARE_PRINT_FUNCS(debug_info)
+
 //=================================================================
 // debug_entry
 
 class debug_entry {
 	public:
-	long		dbg_round;
+	long		dbg_recoil;
 	long		dbg_id;
 
 	debug_entry(){
-		dbg_round = -1;
+		dbg_recoil = -1;
 		dbg_id = -1;
 	}
 
 	~debug_entry(){
 	}
 
-	bj_ostream& 	print_debug_entry(bj_ostream& os);
+	bj_ostream&	print_debug_entry(bj_ostream& os, bool from_pt = false){
+		os << "dbg(rc=" << dbg_recoil << ", idx=" << dbg_id << ")";
+		return os;
+	}
 
 };
 
 inline
 comparison	cmp_dbg_entries(debug_entry const & e1, debug_entry const & e2){
-	return cmp_long(e1.dbg_round, e2.dbg_round);
+	return cmp_long(e1.dbg_recoil, e2.dbg_recoil);
 }
 
 //=================================================================
@@ -77,8 +86,8 @@ class debug_info {
 	public:
 	row<debug_entry>	dbg_start_dbg_entries;
 	row<debug_entry>	dbg_stop_dbg_entries;
-	long			dbg_current_start_entry;
-	long			dbg_current_stop_entry;
+	long			dbg_current_start_idx;
+	long			dbg_current_stop_idx;
 	row<bool>	dbg_levs_arr;
 	bool 		dbg_bad_cycle1;
 
@@ -92,8 +101,8 @@ class debug_info {
 	void init_debug_info(){
 		dbg_start_dbg_entries.clear();
 		dbg_stop_dbg_entries.clear();
-		dbg_current_start_entry = 0;
-		dbg_current_stop_entry = 0;
+		dbg_current_start_idx = 0;
+		dbg_current_stop_idx = 0;
 		dbg_levs_arr.fill(false, DBG_NUM_LEVS);
 		dbg_bad_cycle1 = false;
 	}
@@ -108,7 +117,14 @@ class debug_info {
 		dbg_levs_arr[lv_idx] = false;
 	}
 	
-	//bj_ostream& 	print_debug_info(bj_ostream& os);
+	bj_ostream&	print_debug_info(bj_ostream& os, bool from_pt = false){
+		os << " dbg_start_dbg_entries=\n";
+		dbg_start_dbg_entries.print_row_data(os, true, "\n");
+		os << " dbg_stop_dbg_entries=\n";
+		dbg_stop_dbg_entries.print_row_data(os, true, "\n");
+		os << " num_lvs=" << dbg_levs_arr.size();
+		return os;
+	}
 
 };
 
@@ -132,22 +148,11 @@ class config_reader {
 	void	read_config(debug_info& dbg_inf, const char* f_name);
 };
 
-//void rm_ic_files();
+//=============================================================================
+// printing funcs
 
-//=================================================================
-// FUNCTION
-
-inline
-bj_ostream& 	
-debug_entry::print_debug_entry(bj_ostream& os){
-	os << "dbg(p=" << dbg_round << ", i=" << dbg_id << ")";
-	return os;
-}
-
-inline
-bj_ostream& operator << (bj_ostream& os, debug_entry& dbg_ety){
-	return dbg_ety.print_debug_entry(os);
-}
+DEFINE_PRINT_FUNCS(debug_entry)
+DEFINE_PRINT_FUNCS(debug_info)
 
 
 #endif		// CONFIG_H

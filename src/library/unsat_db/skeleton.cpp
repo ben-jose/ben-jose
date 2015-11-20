@@ -214,7 +214,7 @@ canon_equal(skeleton_glb& skg, ch_string& the_pth, row<char>& cnn){
 	bool ld_ok = canon_load(skg, the_pth, cnn2);
 	if(ld_ok){
 		DBG(
-			df_pos = cnn2.equal_to_diff(cnn, diff0);
+			df_pos = cnn2.equal_to_diff(cmp_char, cnn, &diff0);
 			cnn_eq2 = (df_pos == INVALID_IDX);
 		);
 		cnn_eq = cnn2.equal_to(cnn);

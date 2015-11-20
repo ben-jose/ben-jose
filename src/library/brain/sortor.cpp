@@ -40,7 +40,7 @@ Classes and that implement a sortor.
 #include "skeleton.h"
 #include "sortor.h"
 
-#include "brain.h"	// only needed for print_sortee
+#include "brain.h"	// only needed for print_sortee & debug of stab_mutual_unique
 
 char* sortee::CL_NAME = as_pt_char("{sortee}");
 char* sorset::CL_NAME = as_pt_char("{sorset}");
@@ -79,9 +79,10 @@ sortee::print_sortee(bj_ostream& os, bool from_pt){
 
 	//if(! from_pt){
 		// NEEDS_brain_h
-		os << "tee{(" << so_sorset_consec << "." << so_tee_consec << ") ";
+		os << "tee{(" << so_sorset_consec << "." << so_tee_consec << ").";
 		
 		if(so_dbg_me_class == 1){
+			os << "q.";
 			SORTER_CK(so_me != NULL_PT);
 			quanton& qua = *((quanton*)so_me);
 			
@@ -92,6 +93,7 @@ sortee::print_sortee(bj_ostream& os, bool from_pt){
 			//os << "  ==  " << so_qua_id;
 		}
 		if(so_dbg_me_class == 2){
+			os << "n.";
 			SORTER_CK(so_me != NULL_PT);
 			//neuron& neu = *((neuron*)so_me);
 			//os << &neu;
@@ -679,7 +681,8 @@ sortee::update_totals(sort_glb& srg, long tgt_sz){
 
 void
 sort_glb::sort_all_from(row<sortee*>& tees, sort_id_t curr_id, 
-						bool add_ccl_id, long ccl_id, bool sort_opps, tgt_ccl_t tgt)
+						bool add_ccl_id, long ccl_id, bool sort_opps, 
+						tgt_ccl_t tgt, sort_glb* dbg_srg, sortee* dbg_srt)
 {
 	sort_glb& srg = *this;
 
@@ -694,7 +697,22 @@ sort_glb::sort_all_from(row<sortee*>& tees, sort_id_t curr_id,
 		sortee& the_tee = *pt_tee;
 
 		SORTER_CK_PRT(! the_tee.is_alone(),
-			os << "\n_____________\nABORT_DATA\n";
+			brain& brn = get_dbg_brain();
+			DBG_PRT_ABORT(brn);
+			os << " srg=" << srg << "\n__end_of_srg_\n";
+			if(dbg_srg != NULL_PT){
+				os << " dbg_srg=" << *dbg_srg << "\n__end_of_dbg_srg_\n";
+			}
+			if(dbg_srt != NULL_PT){
+				os << " dbg_srt=" << *dbg_srt << "\n__end_of_dbg_srt_\n";
+			}
+			os << "TEES=\n";
+			tees.print_row_data(os, true, "\n");
+			os << " \n";
+			os << " add_ccl_id=" << add_ccl_id << "\n";
+			os << " ccl_id=" << ccl_id << "\n";
+			os << " curr_id=" << curr_id << "\n";
+			os << " (tgt == tc_none) =" << (tgt == tc_none) << "\n";
 			os << " the_tee=" << &the_tee << "\n";
 		);
 
@@ -783,6 +801,13 @@ cmp_sortees(sortee* const & srt1, sortee* const & srt2){
 }
 
 // mutual stab
+
+brain&
+sort_glb::get_dbg_brain(){
+	brain* pt_brn = get_dbg_brn();
+	BRAIN_CK(pt_brn != NULL_PT);
+	return *pt_brn;
+}
 
 void
 sorset::step_mutual_stabilize_rec(sort_glb& srg1, sort_glb& srg2)
@@ -902,12 +927,22 @@ sorset::step_mutual_stabilize_rec(sort_glb& srg1, sort_glb& srg2)
 
 		if(oper == sm_with_neus){
 			row<sortee*>& all_mates = srt.so_related->so_mates;
-			srg2.sort_all_from(all_mates, curr_stab_consec, false, 0, true);
+			srg2.sort_all_from(all_mates, curr_stab_consec, false, 0, true, tc_none,
+								&srg1, &srt);
 		}
 
 		if(oper == sm_with_opps){
 			sortee& opp = srt.opposite();
-			SORTER_CK(! opp.is_alone());
+			SORTER_CK_PRT((! opp.is_alone()), 
+				brain& brn = srg1.get_dbg_brain();
+				DBG_PRT_ABORT(brn);
+				os << " SRG1=\n" << srg1 << "\n++++++++++++++++++++++++++++++++\n";
+				os << " SRG2=\n" << srg2 << "\n++++++++++++++++++++++++++++++++\n";
+				os << " srt=" << srt << "\n";
+				os << " srt_alone=" << srt.is_alone() << "\n";
+				os << " opp=" << opp << "\n";
+				os << " opp_alone=" << opp.is_alone() << "\n";
+			);
 			sorset& vssl = opp.get_vessel();
 	
 			if(&vssl != this){
@@ -922,7 +957,8 @@ sorset::step_mutual_stabilize_rec(sort_glb& srg1, sort_glb& srg2)
 			long qua_id = srt.get_qua_id(srg1);
 			
 			row<sortee*>& all_mates = srt.so_related->so_mates;
-			srg2.sort_all_from(all_mates, curr_stab_consec, true, qua_id, false, tc_mates);
+			srg2.sort_all_from(all_mates, curr_stab_consec, true, qua_id, false, tc_mates,
+								&srg1, &srt);
 		}
 	}
 
@@ -968,10 +1004,13 @@ sort_glb::step_mutual_stabilize(sort_glb& srg2, step_mutual_op_t op){
 
 	sg_cnf_clauses.clear();
 
-	row<sorset*> sets;
+	//row<sorset*> sets;
+	row<sorset*>& sets = sg_step_prv_sorsets;
+	sets.clear();
 
 	SORTER_CK(! sg_step_sorsets.is_empty());
-	DBG(
+	SORTER_DBG(
+		//brain& brn = get_dbg_brain();
 		long old_ss_sz = sg_step_sorsets.size();
 		bool ss_0_hs = false;
 		bool ss_0_hi = false;
@@ -1203,10 +1242,13 @@ sort_glb::stab_mutual_choose_one(sort_glb& srg2){
 }
 
 void
-sort_glb::stab_mutual_unique(sort_glb& srg2){
+sort_glb::stab_mutual_unique(sort_glb& srg2, neuromap* dbg_nmp){
 	SORTER_CK(&srg2 != this);
 	sort_glb& srg1 = *this;
 
+	SORTER_DBG(sg_dbg_nmp = dbg_nmp);
+	SORTER_DBG(srg2.sg_dbg_nmp = dbg_nmp);
+	
 	SORTER_CK(srg1.has_head());
 	SORTER_CK(srg2.has_head());
 	
@@ -1464,6 +1506,9 @@ sort_glb::print_sort_glb(bj_ostream& os, bool from_pt){
 	//os << "SORSETS=\n";
 	//os << sg_step_sorsets << "\n"
 	
+	os << "PRV STEP SORSETS=\n";
+	sg_step_prv_sorsets.print_row_data(os, true, "\n.......................\n");
+
 	os.flush();
 	return os;
 }

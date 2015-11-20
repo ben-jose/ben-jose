@@ -64,6 +64,7 @@ classes to implement a sortor.
 class solver;
 class brain;
 class skeleton_glb;
+class neuromap;
 
 //class binder;
 class sortee;
@@ -226,7 +227,7 @@ public:
 	sortee&		opposite(){
 		SORTER_CK(so_me != NULL_PT);
 		SORTER_CK(so_related != NULL_PT);
-		SORTER_CK(so_related->so_opposite);
+		SORTER_CK(so_related->so_opposite != NULL_PT);
 		return *(so_related->so_opposite);
 	}
 
@@ -653,6 +654,7 @@ public:
 	bool 		sg_step_all_consec;
 	row<sortee*>	sg_step_sortees;
 	row<sorset*>	sg_step_sorsets;
+	row<sorset*>	sg_step_prv_sorsets;
 	sorset*		sg_step_first_multiple;
 	sortee*		sg_step_next_choice;
 
@@ -666,7 +668,9 @@ public:
 
 	// dbg attrs
 
-	DBG(
+	SORTER_DBG(
+		neuromap*	sg_dbg_nmp;
+		
 		long	sg_dbg_fst_num_items;
 		long	sg_dbg_num_items;
 	);
@@ -713,6 +717,8 @@ public:
 		return the_brn;
 	}
 
+	brain&	get_dbg_brain();
+		
 	solver*	get_dbg_slv();
 
 	void	set_dbg_brn(brain* the_brn){
@@ -750,6 +756,7 @@ public:
 		sg_step_all_consec = false;
 		sg_step_sortees.clear();
 		sg_step_sorsets.clear();
+		sg_step_prv_sorsets.clear();
 		sg_step_first_multiple = NULL_PT;
 		sg_step_next_choice = NULL_PT;
 
@@ -758,7 +765,9 @@ public:
 
 		sg_tot_ss_marks = 0;
 
-		DBG(
+		SORTER_DBG(
+			sg_dbg_nmp = NULL_PT;
+			
 			sg_dbg_fst_num_items = 0;
 			sg_dbg_num_items = 0;
 		);
@@ -784,11 +793,9 @@ public:
 		sg_dbg_cnf_tot_onelit = 0;
 	}
 
-	//void	start_sort_glb(long aprox_srs);
-
 	void	sort_all_from(row<sortee*>& tees, sort_id_t curr_id, 
-			bool add_ccl_id = false, long ccl_id = 0, bool sort_opps = false, 
-			tgt_ccl_t tgt = tc_none);
+			bool add_ccl_id, long ccl_id, bool sort_opps, 
+			tgt_ccl_t tgt, sort_glb* dbg_srg = NULL_PT, sortee* dbg_srt = NULL_PT);
 
 	bool	has_head(){
 		return (sg_head != NULL_PT);
@@ -865,7 +872,7 @@ public:
 	
 	void		stab_mutual_init();
 	void		stab_mutual(sort_glb& mates_srg);
-	void		stab_mutual_unique(sort_glb& mates_srg);
+	void		stab_mutual_unique(sort_glb& mates_srg, neuromap* dbg_nmp = NULL_PT);
 	void		stab_mutual_choose_one(sort_glb& srg2);
 	void		stab_mutual_end(sort_glb& mates_srg, bool unique_ccls);
 	void		stab_mutual_walk();

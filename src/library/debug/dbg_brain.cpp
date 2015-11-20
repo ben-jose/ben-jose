@@ -481,6 +481,10 @@ neuromap::print_subnmp(bj_ostream& os, bool only_pts){
 
 	os << " na_idx=" << na_index;
 	
+	if(is_na_mono()){
+		os << " mono";
+	}
+	
 	os << " o_cho=" << na_orig_cho;
 	os << " #sub=" << na_num_submap;
 	os << " sub1=(" << (void*)na_submap << ")";
@@ -495,6 +499,12 @@ neuromap::print_subnmp(bj_ostream& os, bool only_pts){
 	os << "\t na_propag_quas=\n";
 	os << na_propag << "\n";
 
+	row_quanton_t ex_quas;
+	na_all_qua.append_all_as<quanton>(ex_quas);
+	
+	os << "\t na_all_qua=\n";
+	os << ex_quas << "\n";
+	
 	brain& brn = get_brn();
 	row_neuron_t& prp_neus = brn.br_tmp_prt_nmp_neus;
 	prp_neus.clear();
@@ -1367,7 +1377,7 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 	bool is_end_nmp = false;
 	
 	if(pt_brn != NULL_PT){
-		is_end_nmp = is_qu_end_of_nmp(*pt_brn);
+		is_end_nmp = is_qu_end_of_neuromap(*pt_brn);
 	}
 
 	/*if(from_pt){
@@ -1406,10 +1416,6 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 			leveldat& lv = brn.get_data_level(qlv);
 			bool is_qu = (this == lv.ld_chosen) || (qu_tier == 1);
 			
-			if(is_qu && lv.has_to_write_neuromaps()){ 
-				os << ".w"; 
-				print_all_in_grip(os, lv.ld_nmps_to_write);
-			}
 			if(is_qu && lv.has_learned()){ 
 				os << ".l"; 
 				if(lv.ld_learned.size() > 1){
@@ -1456,7 +1462,7 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 	os << "CHG " << dbg_trinary_to_str(qu_charge) << " ";
 	os << "chtk{" << qu_charge_tk << "} ";
 	os << "sp_" << dbg_trinary_to_str(qu_spin) << " ";
-	os << "st_" << qu_choice_idx << " ";
+	os << "st_" << qu_dbg_choice_idx << " ";
 	os << "ps_src ";
 		os << neu;
 	os << "current_src ";
@@ -1539,7 +1545,12 @@ neuromap::map_ck_contained_in(coloring& colr, dbg_call_id dbg_id){
 	row_quanton_t& all_quas = colr.co_quas;
 	for(int ii = 0; ii < all_quas.size(); ii++){
 		BRAIN_CK(all_quas[ii] != NULL_PT);
-		BRAIN_CK(all_quas[ii]->has_note1());
+		BRAIN_CK_PRT(all_quas[ii]->has_note1(), 
+			DBG_PRT_ABORT(brn);
+			os << *this << "\n++++++++++++++++++++\n\n";
+			os << " qua=" << all_quas[ii] << "\n";
+			os << " dbg_id=" << dbg_id << "\n";
+		);
 	}
 	
 	reset_all_note1(brn, m_quas);
