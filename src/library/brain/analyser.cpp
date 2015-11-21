@@ -399,6 +399,8 @@ write_all_nmps(row<neuromap*>& to_wrt){
 
 row_quanton_t&
 analyser::get_first_causes(){
+	brain& brn = get_de_brain();
+	
 	BRAIN_CK(! de_all_confl.is_empty());
 	prop_signal& cfl = de_all_confl.first();
 	
@@ -406,6 +408,8 @@ analyser::get_first_causes(){
 	BRAIN_CK(cfl.ps_quanton->get_charge() == cg_negative);
 	BRAIN_CK(cfl.ps_source != NULL);
 	BRAIN_CK(cfl.ps_source->ne_original);
+	
+	brn.update_tk_write(cfl.ps_source->ne_in_write_tk);
 	
 	row_quanton_t& causes = cfl.ps_source->ne_fibres;
 	BRAIN_CK(! causes.is_empty());
@@ -525,26 +529,17 @@ analyser::find_all_to_write(row<neuromap*>& to_wrt){
 	DBG_PRT(102, os << "find-all_to_wrt\n";
 		brn.dbg_prt_all_cands(os);
 	);
-	
-	BRAIN_CK(brn.br_na_tot_na0 == 0);
-	
-	get_all_ps_cand_to_wrt(brn, all_noted, to_wrt);
-	BRAIN_CK(brn.br_na_tot_na0 == 0);
-	
-	BRAIN_DBG(qlayers_ref& qlr = de_ref);
-	BRAIN_CK(last_qu_noted() == qlr.get_curr_quanton());
-}
 
-void
-get_all_ps_cand_to_wrt(brain& brn, row<prop_signal>& trace, row<neuromap*>& to_wrt)
-{
 	BRAIN_CK(brn.br_na_tot_na0 == 0);
-	for(long ii = 0; ii < trace.size(); ii++){
-		prop_signal& q_sig = trace[ii];
+	for(long ii = 0; ii < all_noted.size(); ii++){
+		prop_signal& q_sig = all_noted[ii];
 		q_sig.get_ps_cand_to_wrt(brn, to_wrt);
 	}
 	reset_all_na0(brn, to_wrt);
 	BRAIN_CK(brn.br_na_tot_na0 == 0);
+	
+	BRAIN_DBG(qlayers_ref& qlr = de_ref);
+	BRAIN_CK(last_qu_noted() == qlr.get_curr_quanton());
 }
 
 void
@@ -618,12 +613,15 @@ brain::candidate_find_analysis(bool& found_top, analyser& deducer,
 			BRAIN_CK(to_find != NULL_PT);
 		}
 		if((to_find != last_found) && ! to_find->map_find()){
+			BRAIN_CK(to_find != NULL_PT);
 			DBG_PRT(39, os << "CANNOT find nmp=" << (void*)(out_nmp) << "\n";
 				os << " nxt_dct=" << nxt_dct << "\n";
 				os << " nxt_lv=" << nxt_lv << "\n";
 				to_wrt.print_row_data(os, true, "\n");
 			);
 			DBG_PRT(70, 
+				os << "candidate_find_analysis\n";
+				os.flush();
 				ch_string msg = HTMi_h1 "FindNOT" HTMe_h1;
 				to_find->map_dbg_update_html_file(msg);
 			);
@@ -651,7 +649,7 @@ brain::candidate_find_analysis(bool& found_top, analyser& deducer,
 		BRAIN_DBG(
 			row_quanton_t rr_aux;
 			to_find->map_get_all_upper_quas(rr_aux);
-			BRAIN_CK(same_quantons_note2(brn, nmp_causes, rr_aux));
+			BRAIN_CK(same_quantons_note2(brn, rr_aux, nmp_causes));
 		);
 		
 		if(nmp_causes.is_empty()){
@@ -746,6 +744,9 @@ prop_signal::get_ps_cand_to_wrt(brain& brn, row<neuromap*>& to_wrt){
 				}
 			}
 		}
+	}
+	if(ps_source != NULL_PT){
+		brn.update_tk_write(ps_source->ne_in_write_tk);
 	}
 }
 

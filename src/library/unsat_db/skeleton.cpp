@@ -2088,14 +2088,11 @@ canon_cnf::save_cnf(skeleton_glb& skg, ch_string sv_pth){
 	}
 
 	DBG_PRT(95, 
-		dbg_inst_info& dbg_inf = skg.get_dbg_brn()->br_dbg;
 		os << "AFTER save_cnf \n";
 		os << " pth1=" << pth1 << "\n";
 		os << " sv_pth=" << sv_pth << "\n";
 		os << " sv_name=" << sv_name << "\n";
-		os << " ok=" << sv_ok << " existed=" << existed
-		<< " dbg_id=" << dbg_inf.dbg_canon_save_id << "\n";
-		//os << skg.kg_dbg_all_wrt_paths;
+		os << " ok=" << sv_ok << " existed=" << existed << "\n";
 	);
 
 	return sv_ok;

@@ -256,8 +256,6 @@ dbg_inst_info::init_dbg_inst_info(){
 	
 	dbg_find_id = 0;
 	dbg_save_id = 0;
-	dbg_canon_find_id = 0;
-	dbg_canon_save_id = 0;
 	
 	dbg_all_chosen.clear();
 	
@@ -836,7 +834,7 @@ quanton::ck_all_tunnels(){
 }
 
 bool
-neuron::ck_all_neg(brain* brn, long from){
+neuron::ck_all_neg(long from){
 	bool all_ok = true;
 #ifdef FULL_DEBUG
 	for(long ii = from; ii < fib_sz(); ii++){
@@ -929,7 +927,6 @@ dbg_run_satex_on(brain& brn, ch_string f_nam, neuromap* dbg_nmp){
 		os << " brn_tk=" << brn.br_curr_choice_tk << bj_eol;
 		os << "	LV=" << brn.level() << bj_eol;
 		os << " f_nam=\n" << f_nam << bj_eol;
-		os << " save_consec=" << brn.br_dbg.dbg_canon_save_id << bj_eol;
 		os << " during ff=" << o_ff << bj_eol;
 		os << "END_OF_aborting_data" << bj_eol;
 	);

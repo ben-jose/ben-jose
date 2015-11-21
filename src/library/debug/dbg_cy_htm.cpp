@@ -170,6 +170,7 @@ brain::dbg_update_html_cy_graph(ch_string cy_kk, coloring* the_col, ch_string ht
 		}
 		the_col = &br_dbg_full_col;
 	}
+	
 	BRAIN_CK(the_col != NULL_PT);
 	BRAIN_CK(the_col->get_dbg_brn() != NULL_PT);
 	
@@ -311,7 +312,7 @@ brain::dbg_br_print_col_cy_nodes(bj_ostream& os, bool is_ic){
 		bool has_cy_nmp = (! is_ic && (qua.qu_dbg_cy_nmp != NULL_PT));
 		long qti = qua.qu_tier;
 		bool is_cho = qua.is_choice();
-		bool is_lrn = qua.is_learned_choice();
+		bool is_lrn = qua.has_learned_source();
 		//bool is_mon = qua.is_opp_mono();
 		
 		if(has_cy_nmp){
@@ -391,6 +392,7 @@ coloring::dbg_print_col_cy_graph(bj_ostream& os, bool is_ic){
 		return os;
 	}
 	DBG_PRT(46, os << "Printing col=" << (void*)this);
+	
 	
 	brain& brn = *pt_br;
 	//long num_step = 0;
@@ -736,7 +738,7 @@ quanton::get_cy_kind(){
 #ifdef FULL_DEBUG
 	kk = cq_reg;
 	bool is_cy_cho = is_choice();
-	bool is_cy_lrn = is_learned_choice();
+	bool is_cy_lrn = has_learned_source();
 	//bool is_mon = is_opp_mono();
 	if(is_cy_cho){ kk = cq_cho; }
 	if(is_cy_lrn){ kk = cq_for; }
