@@ -563,11 +563,10 @@ sorset::walk_to_row_rec(bool set_consecs, long& consec,
 
 void
 sort_glb::build_cnf(skeleton_glb& skg, canon_cnf& the_cnf, row<canon_clause*>& the_ccls, 
-			ch_string ph_str, bool sorted_cnf)
+			bool sorted_cnf)
 {
 	the_cnf.clear_cnf();
 	the_cnf.cf_sorted = sorted_cnf;
-	the_cnf.cf_phase_str = ph_str;
 	the_cnf.cf_dims = sg_cnf_dims;
 
 	the_ccls.move_to(the_cnf.cf_clauses);
@@ -1272,16 +1271,16 @@ sort_glb::stab_mutual_unique(sort_glb& srg2, neuromap* dbg_nmp){
 }
 
 canon_cnf&
-sort_glb::get_final_cnf(skeleton_glb& skg, ch_string comment, bool sorted_cnf){
+sort_glb::get_final_cnf(skeleton_glb& skg, bool sorted_cnf){
 	// after any stab_mutual
-	DBG_PRT(64, os << " get_cnf=" << this << " " << comment << bj_eol;
+	DBG_PRT(64, os << " get_cnf=" << this << "\n";
 		sg_cnf_clauses.print_row_data(os, true, "\n");
 	);
 
 	BRAIN_CK(! sg_one_ccl_per_ss || (sg_step_sorsets.size() == sg_cnf_clauses.size()));
 	BRAIN_CK(sg_one_ccl_per_ss || (sg_step_sortees.size() == sg_cnf_clauses.size()));
 
-	build_cnf(skg, sg_cnf_step, sg_cnf_clauses, comment, sorted_cnf);
+	build_cnf(skg, sg_cnf_step, sg_cnf_clauses, sorted_cnf);
 	return sg_cnf_step;
 }
 

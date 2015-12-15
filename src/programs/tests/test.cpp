@@ -1072,16 +1072,18 @@ test_skl(){
 	ch_string skl_nt_pth = GSKE.as_full_path(SKG_CNF_DIR);
 
 	os << "1. SAVING TEST ..."  << bj_eol;
-
+	
 	for(long aa = 0; aa < NUM_CNFS; aa++){
 		the_cnf.release_and_init(GSKE, true);
 		gen_phases(rnd_gen, the_cnf.cf_phdat);
 		gen_ccls_cnf(rnd_gen, the_cnf, max_ccl_sz, max_num_ccls_cnf, max_num_vars_cnf);
 
-		ch_string cnn_name = the_cnf.get_cnf_path() + SKG_DIFF_NAME;
-		if(! GSKE.ref_exists(cnn_name)){
+		the_cnf.cf_kind = fk_diff;
+		ch_string cnn_base_name = the_cnf.get_cnf_path();
+		
+		if(! GSKE.ref_exists(cnn_base_name)){
 			os << "num_test=" << aa << bj_eol;
-			the_cnf.save_cnf(GSKE, cnn_name);
+			the_cnf.save_cnf(GSKE, cnn_base_name);
 
 			long f_idx = the_cnf.first_vnt_i_super_of(GSKE);
 			MARK_USED(f_idx);

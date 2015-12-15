@@ -233,13 +233,13 @@ canon_equal(skeleton_glb& skg, ch_string& the_pth, row<char>& cnn){
 			
 			ch_string tau_pth = tmp_tauto_cnf.get_cnf_path();
 			
-			ch_string sv_pth1 = tau_pth + SKG_CANON_NAME;
-			ch_string sv_pth2 = tau_pth + SKG_DIFF_NAME;
-			ch_string sv_pth3 = tau_pth + SKG_GUIDE_NAME;
+			tmp_tauto_cnf.cf_kind = fk_canon;
+			tmp_diff_cnf.cf_kind = fk_diff;
+			tmp_guide_cnf.cf_kind = fk_guide;
 			
-			ch_string sv_nm1 = tmp_tauto_cnf.prepare_cnf(skg, sv_pth1);
-			ch_string sv_nm2 = tmp_diff_cnf.prepare_cnf(skg, sv_pth2);
-			ch_string sv_nm3 = tmp_guide_cnf.prepare_cnf(skg, sv_pth3);
+			ch_string sv_nm1 = tmp_tauto_cnf.prepare_cnf(skg, tau_pth);
+			ch_string sv_nm2 = tmp_diff_cnf.prepare_cnf(skg, tau_pth);
+			ch_string sv_nm3 = tmp_guide_cnf.prepare_cnf(skg, tau_pth);
 			
 			row<char>& cnf_chrs_1 = tmp_tauto_cnf.cf_chars;
 			row<char>& cnf_chrs_2 = tmp_diff_cnf.cf_chars;
@@ -874,35 +874,6 @@ canon_cnf::release_all_clauses(skeleton_glb& skg, bool free_mem){
 		skg.release_clause(ccl, free_mem);
 	}
 	all_ccl.clear(free_mem, free_mem);
-}
-
-void
-canon_cnf::add_comment_chars_to(skeleton_glb& skg, row<char>& cnn, ch_string sv_ref_pth){
-	cnn.clear();
-
-	ch_string l2 = sv_ref_pth + "\n";
-
-	ch_string pth1 = cf_phdat.pd_ref1_nam + "\n";
-	ch_string pth2 = cf_phdat.pd_ref2_nam + "\n";
-
-	ch_string l3 = skg.kg_instance_file_nam + "\n";
-
-	canon_string_append(cnn, "PHASE=\n");
-	canon_string_append(cnn, cf_phase_str);
-	canon_string_append(cnn, "ORIG_REF_PATH=\n");
-	canon_string_append(cnn, l2);
-	canon_string_append(cnn, "REF1=\n");
-	canon_string_append(cnn, pth1);
-	canon_string_append(cnn, "REF2=\n");
-	canon_string_append(cnn, pth2);
-	canon_string_append(cnn, "TAUT_MINISHA=\n'");
-	canon_string_append(cnn, cf_taut_minisha_str);
-	canon_string_append(cnn, "'\n");
-	canon_string_append(cnn, "DIFF_MINISHA=\n'");
-	canon_string_append(cnn, cf_minisha_str);
-	canon_string_append(cnn, "'\n");
-	canon_string_append(cnn, "FIRST_INSTANCE=\n");
-	canon_string_append(cnn, l3);
 }
 
 void
@@ -1659,12 +1630,19 @@ canon_cnf::all_nxt_vnt(skeleton_glb& skg, row<variant>& all_next, row<ch_string>
 }
 
 long
-canon_cnf::first_vnt_i_super_of(skeleton_glb& skg, instance_info* iinfo){
+canon_cnf::first_vnt_i_super_of(skeleton_glb& skg, ch_string gui_sha_str, 
+								instance_info* iinfo)
+{
+	bool verif_gui_sha = (gui_sha_str != "");
+	SKELETON_CK((iinfo == NULL) == (gui_sha_str == ""));
 	SKELETON_CK(! has_instance_info());
 	cf_inst_inf = iinfo;
 	
 	long fst_vnt = INVALID_NATURAL;
 
+	DBG_PRT(118, os << "FST_VNT_SUPER of msha=" << cf_minisha_str << "\n";
+		os << " cf_phdat.vnt_nam()=\n" << cf_phdat.vnt_nam();
+	);
 	//for(long aa = 0; aa < SKG_MAX_NUM_VARIANT; aa++){
 
 	bj_big_int_t num_vnts = get_num_variants(skg);
@@ -1678,11 +1656,22 @@ canon_cnf::first_vnt_i_super_of(skeleton_glb& skg, instance_info* iinfo){
 		if(vpth == ""){
 			break;
 		}
+		if(verif_gui_sha){
+			ch_string vnt_gui_sha_str = skg.read_guide_sha_str(vpth);
+			if(gui_sha_str != vnt_gui_sha_str){
+				continue;
+			}
+		}
+		
 		bool supe1 = i_super_of_vnt(skg, vpth);
 		if(supe1){
 			fst_vnt = aa;
 			ch_string elp_nm = skg.ref_vnt_name(vpth, SKG_ELAPSED_NAME);
 			update_elapsed(skg.as_full_path(elp_nm));
+			DBG_PRT(118, os << "FOUND FST_VNT_SUPER of msha=" << cf_minisha_str << "\n";
+				os << " aa=" << aa << "\n";
+				os << " vpth=\n" << vpth << "\n";
+			);
 			break;
 		}
 	}
@@ -1918,8 +1907,10 @@ canon_cnf::is_new(skeleton_glb& skg){
 }
 
 ch_string
-canon_cnf::prepare_cnf(skeleton_glb& skg, ch_string sv_pth)
+canon_cnf::prepare_cnf(skeleton_glb& skg, ch_string sv_base_pth)
 {
+	ch_string sv_pth = sv_base_pth + get_kind_name();
+	
 	DBG_PRT(73, os << "prepare_cnf'" << sv_pth << "'" << bj_eol 
 		<< cf_sha_str << bj_eol 
 		<< cf_phdat << bj_eol 
@@ -1930,13 +1921,6 @@ canon_cnf::prepare_cnf(skeleton_glb& skg, ch_string sv_pth)
 	SKELETON_CK(skg.kg_root_path != "");
 
 	update_chars_to_write();
-
-	bool has_phases = has_phase_path();
-
-	if(has_phases){
-		ch_string sv_dir = path_get_directory(sv_pth, true);
-		add_comment_chars_to(skg, cf_comment_chars, sv_dir);
-	}
 
 	DBG(
 		ch_string sha_verif;
@@ -1974,7 +1958,8 @@ dbg_map_add_path(skeleton_glb& skg, ch_string sv_name){
 }
 
 bool
-canon_cnf::save_cnf(skeleton_glb& skg, ch_string sv_pth){
+canon_cnf::save_cnf(skeleton_glb& skg, ch_string sv_base_pth){
+	ch_string sv_pth = sv_base_pth + get_kind_name();
 	ch_string sv_dir = path_get_directory(sv_pth, true);
 	
 	if(! skg.ref_in_skl(sv_dir)){
@@ -1985,11 +1970,12 @@ canon_cnf::save_cnf(skeleton_glb& skg, ch_string sv_pth){
 		return false;
 	}
 
-	ch_string sv_name = prepare_cnf(skg, sv_pth);
+	ch_string sv_name = prepare_cnf(skg, sv_base_pth);
 	
 	ch_string pth1 = cf_phdat.pd_ref1_nam;
 	ch_string pth2 = cf_phdat.pd_ref2_nam;
-	bool has_phases = has_phase_path();
+	
+	SKELETON_CK(has_phase_path() == is_diff());
 	
 	// saving
 
@@ -2018,7 +2004,7 @@ canon_cnf::save_cnf(skeleton_glb& skg, ch_string sv_pth){
 			skg.report_err(sv_pth, skg.kg_collisions_path);
 		}
 		DBG(
-			if(existed && has_phases){
+			if(existed && is_diff()){
 				brain* pt_brn = skg.get_dbg_brn();
 				SKELETON_CK(pt_brn != NULL_PT);
 				brain& brn = *pt_brn;
@@ -2039,7 +2025,11 @@ canon_cnf::save_cnf(skeleton_glb& skg, ch_string sv_pth){
 		);
 	}
 
-	if(has_phases && sv_ok){
+	if(is_guide() && sv_ok){
+		skg.write_guide_sha_str(sv_dir, cf_sha_str);
+	}
+	
+	if(is_diff() && sv_ok){
 		SKELETON_CK(pth1 != sv_dir);
 		SKELETON_CK(pth2 != sv_dir);
 
@@ -2056,8 +2046,11 @@ canon_cnf::save_cnf(skeleton_glb& skg, ch_string sv_pth){
 		SKELETON_CK((pth1 == "") || skg.find_skl_path(skg.as_full_path(pth1)));
 		SKELETON_CK((pth2 == "") || skg.find_skl_path(skg.as_full_path(pth2)));
 
+		row<char>& comm_chrs = cf_comment_chars;
+		BRAIN_CK(! comm_chrs.is_empty());
+		
 		ch_string comm_name = skg.as_full_path(skg.ref_vnt_name(sv_dir, SKG_COMMENT_NAME));
-		canon_save(skg, comm_name, cf_comment_chars);
+		canon_save(skg, comm_name, comm_chrs);
 
 		ch_string elp_nm = skg.as_full_path(skg.ref_vnt_name(sv_dir, SKG_ELAPSED_NAME));
 		update_elapsed(elp_nm);
@@ -2296,4 +2289,65 @@ print_str_long_map(bj_ostream& os, string_long_map_t& pmp){
 	return true;
 }
 
+void
+skeleton_glb::add_comment_chars_to(brain& brn, ref_strs& pth_refs, 
+								   ch_string sv_ref_pth, row<char>& cnn)
+{
+	cnn.clear();
+
+	ch_string l2 = sv_ref_pth + "\n";
+
+	ch_string pth1 = pth_refs.pd_ref1_nam + "\n";
+	ch_string pth2 = pth_refs.pd_ref2_nam + "\n";
+
+	ch_string l3 = kg_instance_file_nam + "\n";
+
+	canon_string_append(cnn, "ORIG_REF_PATH=\n");
+	canon_string_append(cnn, l2);
+	canon_string_append(cnn, "REF1=\n");
+	canon_string_append(cnn, pth1);
+	canon_string_append(cnn, "REF2=\n");
+	canon_string_append(cnn, pth2);
+	canon_string_append(cnn, "TAUTO_MINISHA=\n'");
+	canon_string_append(cnn, brn.br_tmp_wrt_tauto_cnf.cf_minisha_str);
+	canon_string_append(cnn, "'\n");
+	canon_string_append(cnn, "DIFF_MINISHA=\n'");
+	canon_string_append(cnn, brn.br_tmp_wrt_diff_cnf.cf_minisha_str);
+	canon_string_append(cnn, "'\n");
+	canon_string_append(cnn, "GUIDE_MINISHA=\n'");
+	canon_string_append(cnn, brn.br_tmp_wrt_guide_cnf.cf_minisha_str);
+	canon_string_append(cnn, "'\n");
+	canon_string_append(cnn, "TAUTO_SHA=\n'");
+	canon_string_append(cnn, brn.br_tmp_wrt_tauto_cnf.cf_sha_str);
+	canon_string_append(cnn, "'\n");
+	canon_string_append(cnn, "DIFF_SHA=\n'");
+	canon_string_append(cnn, brn.br_tmp_wrt_diff_cnf.cf_sha_str);
+	canon_string_append(cnn, "'\n");
+	canon_string_append(cnn, "GUIDE_SHA=\n'");
+	canon_string_append(cnn, brn.br_tmp_wrt_guide_cnf.cf_sha_str);
+	canon_string_append(cnn, "'\n");
+	canon_string_append(cnn, "FIRST_INSTANCE=\n");
+	canon_string_append(cnn, l3);
+}
+
+ch_string
+skeleton_glb::read_guide_sha_str(ch_string vpth){
+	ch_string gui_sstr_nm = ref_vnt_name(vpth, SKG_GUIDE_SHA_NAME);
+	ch_string f_nm = as_full_path(gui_sstr_nm);
+	ch_string sha_str = get_fstr(f_nm);
+	return sha_str;
+}
+
+void
+skeleton_glb::write_guide_sha_str(ch_string vpth, ch_string sha_str){
+	ch_string gui_sstr_nm = ref_vnt_name(vpth, SKG_GUIDE_SHA_NAME);
+	ch_string f_nm = as_full_path(gui_sstr_nm);
+	if(file_exists(f_nm)){
+		return;
+	}
+	long wr_ok = set_fstr(f_nm, sha_str);
+	if(wr_ok != 0){
+		unlink(f_nm.c_str());
+	}
+}
 

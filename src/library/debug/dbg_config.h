@@ -131,6 +131,7 @@ class debug_info {
 //=================================================================
 // config_reader
 
+void	dbg_read_dbg_conf(debug_info& dbg_inf);
 void	dbg_init_dbg_conf(debug_info& dbg_inf);
 void	dbg_update_config_entries(debug_info& dbg_inf, bj_big_int_t curr_round);
 

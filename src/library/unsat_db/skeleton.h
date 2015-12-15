@@ -118,6 +118,7 @@ class ref_strs;
 #define SKG_CANON_NAME		"canon.skl"
 #define SKG_DIFF_NAME		"diff.skl"
 #define SKG_GUIDE_NAME		"guide.skl"
+#define SKG_GUIDE_SHA_NAME	"guide_sha.skl"
 #define SKG_COMMENT_NAME	"comment.skl"
 #define SKG_ELAPSED_NAME	"elapsed.skl"
 #define SKG_NUM_VNT_NAME	"numvariants.skl"
@@ -225,10 +226,10 @@ public:
 	}
 
 	bj_ostream&	print_ref_strs(bj_ostream& os, bool from_pt = false){
-		os << "strs=[" << bj_eol;
-		os << " '" << pd_ref1_nam << "'" << bj_eol;
-		os << " '" << pd_ref2_nam << "'" << bj_eol;
-		os << "]";
+		os << "REFS=[\n";
+		os << " ref1=\n" << pd_ref1_nam << "\n";
+		os << " ref2=\n" << pd_ref2_nam << "\n";
+		os << "]\n";
 	
 		os.flush();
 		return os;
@@ -405,9 +406,18 @@ cmp_variant(variant const & vnt1, variant const & vnt2);
 //=================================================================
 // canon_cnf
 
+enum cnf_kind_t {
+	fk_invalid = 10,
+	fk_guide,
+	fk_diff,
+	fk_canon
+};
+
 class canon_cnf {
 public:
 	SKELETON_DBG(brain*		cf_pt_brn;)
+	
+	cnf_kind_t		cf_kind;
 	
 	bool			cf_sorted;
 
@@ -418,7 +428,6 @@ public:
 	ch_string		cf_sha_str;
 	ch_string		cf_minisha_str;
 	ch_string		cf_diff_minisha_str;
-	ch_string		cf_taut_minisha_str;
 
 	row<char>		cf_chars;
 	row<char>		cf_comment_chars;
@@ -463,6 +472,8 @@ public:
 	void init_canon_cnf(bool free_mem = false){
 		SKELETON_DBG(cf_pt_brn = NULL);
 		
+		cf_kind = fk_invalid;
+		
 		cf_sorted = true;
 	
 		cf_dims.init_dima_dims(INVALID_NATURAL);
@@ -473,7 +484,6 @@ public:
 		cf_sha_str = "";
 		cf_minisha_str = "";
 		cf_diff_minisha_str = "";
-		cf_taut_minisha_str = "";
 
 		cf_chars.clear(free_mem, free_mem);
 		cf_comment_chars.clear(free_mem, free_mem);
@@ -559,6 +569,38 @@ public:
 		return cf_phdat.has_ref();
 	}
 
+	bool	is_canon(){
+		return (cf_kind == fk_canon);
+	}
+	
+	bool	is_diff(){
+		return (cf_kind == fk_diff);
+	}
+	
+	bool	is_guide(){
+		return (cf_kind == fk_guide);
+	}
+
+	ch_string	get_kind_name(){
+		ch_string fnm = "";
+		SKELETON_CK(cf_kind != fk_invalid);
+		switch(cf_kind){
+			case fk_guide: 
+				fnm = SKG_GUIDE_NAME;
+				break;
+			case fk_diff: 
+				fnm = SKG_DIFF_NAME;
+				break;
+			case fk_canon: 
+				fnm = SKG_CANON_NAME;
+				break;
+			default: 
+				break;
+		}
+		SKELETON_CK(fnm != "");
+		return fnm;
+	}
+
 	ch_string	get_all_variant_dir_name();
 	ch_string	get_variant_ref_fname(long num_vnt);
 	ch_string	get_variant_path(skeleton_glb& skg, long num_vnt, bool skip_report = false);
@@ -572,7 +614,8 @@ public:
 	void		set_num_variants(skeleton_glb& skg, bj_big_int_t num_vnts);
 
 	bool	all_nxt_vnt(skeleton_glb& skg, row<variant>& all_next, row<ch_string>& all_del);
-	long	first_vnt_i_super_of(skeleton_glb& skg, instance_info* iinfo = NULL);
+	long	first_vnt_i_super_of(skeleton_glb& skg, ch_string gui_sha_str = "", 
+								 instance_info* iinfo = NULL);
 	bool	ck_vnts(skeleton_glb& skg);
 
 	ch_string	get_cnf_path();
@@ -591,13 +634,12 @@ public:
 	
 	bool	is_new(skeleton_glb& skg);
 	
-	ch_string prepare_cnf(skeleton_glb& skg, ch_string sv_pth);
+	ch_string prepare_cnf(skeleton_glb& skg, ch_string sv_base_pth);
 
 	bool	save_canon_cnf(ch_string& the_pth, row<char>& cnn, bool write_once = true);
 	bool	save_cnf(skeleton_glb& skg, ch_string pth);
 	void	update_parent_variants(skeleton_glb& skg, ch_string sv_dir);
 
-	void	add_comment_chars_to(skeleton_glb& skg, row<char>& cnn, ch_string sv_ref_pth);
 	void	update_chars_to_write();
 
 	void	load_lits(skeleton_glb& skg, row_long_t& all_lits, long& tot_lits, 
@@ -766,9 +808,15 @@ public:
 		return strset_size(kg_cnf_new_paths);
 	}
 
+	void	add_comment_chars_to(brain& brn, ref_strs& pth_refs, 
+								 ch_string sv_ref_pth, row<char>& cnn);
+	
 	int		get_write_lock(ch_string lk_dir);
 	void	drop_write_lock(ch_string lk_dir, int fd_lock);
 
+	ch_string	read_guide_sha_str(ch_string vpth);
+	void		write_guide_sha_str(ch_string vpth, ch_string sha_str);
+	
 	bj_ostream&	print_paths(bj_ostream& os);
 };
 

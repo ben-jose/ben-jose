@@ -724,7 +724,7 @@ public:
 				row_index first_ii = 0, row_index last_ii = -1)
 	{
 		if((sz == 0) && (rw2.size() == 0)){
-			return true;
+			return INVALID_IDX;
 		}
 		if((last_ii < 0) || (last_ii > sz)){
 			last_ii = sz;
@@ -738,7 +738,8 @@ public:
 		}
 
 		long df_pos = INVALID_IDX;
-		for (row_index ii = first_ii; ii < last_ii; ii++){
+		row_index ii = INVALID_IDX;
+		for (ii = first_ii; ii < last_ii; ii++){
 			if(! is_valid_idx(ii)){ break; }
 			if(! rw2.is_valid_idx(ii)){ break; }
 			
@@ -752,6 +753,9 @@ public:
 					df_pos = ii;
 				}
 			}
+		}
+		if((ii >= 0) && (ii != last_ii)){
+			df_pos = ii;
 		}
 		return df_pos;
 	}

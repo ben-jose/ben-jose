@@ -853,10 +853,10 @@ public:
 	sortee&		get_sortee_of_ccl_id(long ccl_id);
 
 	void		build_cnf(skeleton_glb& skg, canon_cnf& the_cnf, 
-					row<canon_clause*>& the_ccls, ch_string ph_str, bool sorted_cnf);
+					row<canon_clause*>& the_ccls, bool sorted_cnf);
 	
-	void		step_build_cnf(skeleton_glb& skg, ch_string ph_str = "", 
-							   bool sorted_cnf = true);
+	//void		step_build_cnf(skeleton_glb& skg, ch_string ph_str = "", 
+	//						   bool sorted_cnf = true);
 
 	void		stab_choose_one();
 	void		stab_release_all_sorsets();
@@ -877,7 +877,7 @@ public:
 	void		stab_mutual_end(sort_glb& mates_srg, bool unique_ccls);
 	void		stab_mutual_walk();
 	
-	canon_cnf&	get_final_cnf(skeleton_glb& skg, ch_string comment, bool sorted_cnf);
+	canon_cnf&	get_final_cnf(skeleton_glb& skg, bool sorted_cnf);
 
 	bool		base_path_exists(skeleton_glb& skg);
 

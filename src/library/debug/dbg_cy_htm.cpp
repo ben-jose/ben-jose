@@ -556,6 +556,7 @@ neuromap::map_dbg_html_data_str(ch_string msg){
 	ch_string htm_msg = "INVALID_HTML";
 #ifdef FULL_DEBUG
 	brain& brn = get_brn();
+	ch_string id_str = map_dbg_get_phi_ids_str();
 	
 	bj_ostr_stream ss_msg;
 	ss_msg << HTMi_h1 << "BRN_recoil=" << brn.recoil() << HTMe_h1 << "\n";
@@ -563,7 +564,7 @@ neuromap::map_dbg_html_data_str(ch_string msg){
 	ss_msg << HTMi_h2;
 	brn.dbg_prt_margin(ss_msg);
 	ss_msg << msg;
-	ss_msg << " " << dbg_na_id();
+	ss_msg << " " << dbg_na_id() << " '" << id_str << "'";
 	ss_msg << HTMe_h2 << "\n";
 	
 	ss_msg << "nmp=" << this << HTM_br << "\n" << HTM_br << HTM_br;
@@ -578,7 +579,6 @@ neuromap::map_dbg_html_data_str(ch_string msg){
 	ss_msg << "ALL_MONOS=";
 	brn.dbg_print_htm_all_monos(ss_msg);
 	ss_msg << HTM_br << "\n";
-	ch_string id_str = map_dbg_get_phi_ids_str();
 	ss_msg << "nmp_phi_id='" << id_str << "'" << HTM_br << "\n";
 	ss_msg << "min_sha=" << na_dbg_tauto_min_sha_str << HTM_br << "\n";
 	ss_msg << "sha=" << na_dbg_tauto_sha_str << HTM_br << "\n";

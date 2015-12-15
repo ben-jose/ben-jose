@@ -144,10 +144,16 @@ config_reader::read_config(debug_info& dbg_info, const char* file_nm){
 #endif
 }
 
-void	dbg_init_dbg_conf(debug_info& dbg_info){
+void	dbg_read_dbg_conf(debug_info& dbg_info){
 #ifdef FULL_DEBUG
 	config_reader conf_rdr;
 	conf_rdr.read_config(dbg_info, "dbg_ben_jose.conf");
+#endif
+}
+
+void	dbg_init_dbg_conf(debug_info& dbg_info){
+#ifdef FULL_DEBUG
+	dbg_info.dbg_levs_arr.fill(false, DBG_NUM_LEVS);
 
 	dbg_info.dbg_current_start_idx = 0;
 	dbg_info.dbg_current_stop_idx = 0;
