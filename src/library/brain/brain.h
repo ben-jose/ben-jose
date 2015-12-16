@@ -2348,7 +2348,7 @@ class neuromap {
 	bool 	map_write(bool force_full = false);
 	bool 	map_oper(mem_op_t mm);
 	bool 	map_prepare_mem_oper(mem_op_t mm);
-	void 	map_prepare_wrt_cnfs(mem_op_t mm, ref_strs& nxt_diff_phdat, row_str_t& dbg_shas);
+	void 	map_prepare_wrt_cnfs(mem_op_t mm, ch_string quick_find_ref, row_str_t& dbg_shas);
 	void 	map_set_stab_guide();
 	void 	map_stab_guide_col();
 	void 	map_init_stab_guide();

@@ -150,7 +150,7 @@ ch_string	nam_subset_resp(cmp_is_sub rr);
 void		string_replace_char(ch_string& src_str, char orig, char repl);
 
 bool		path_is_dead_lock(ch_string the_pth);
-bool		path_is_diff_file(ch_string the_pth);
+//bool		path_is_diff_file(ch_string the_pth);
 
 bool 		dims_path_exists(ch_string base_pth, const dima_dims& dims);
 
@@ -196,6 +196,7 @@ class ref_strs {
 public:	
 	ch_string	pd_ref1_nam;
 	ch_string	pd_ref2_nam;
+	ch_string	pd_ref3_nam;
 
 	ref_strs(){
 		init_ref_strs();
@@ -207,13 +208,14 @@ public:
 	void		init_ref_strs(){
 		pd_ref1_nam = "";
 		pd_ref2_nam = "";
+		pd_ref3_nam = "";
 	}
 
 	bool		has_ref(){
 		bool h1 = (pd_ref1_nam != "");
 		bool h2 = (pd_ref2_nam != "");
 		bool has_r = (h1 || h2);
-		SKELETON_CK(! has_r || (h1 && h2));
+		SKELETON_CK(has_r == (h1 && h2));
 		return has_r;
 	}
 
@@ -229,6 +231,7 @@ public:
 		os << "REFS=[\n";
 		os << " ref1=\n" << pd_ref1_nam << "\n";
 		os << " ref2=\n" << pd_ref2_nam << "\n";
+		os << " ref3=\n" << pd_ref3_nam << "\n";
 		os << "]\n";
 	
 		os.flush();
@@ -448,7 +451,10 @@ public:
 	ch_string 		cf_tmp_pth1;
 	ch_string 		cf_tmp_pth2;
 
-	SKELETON_DBG(void* cf_dbg_orig_nmp);
+	SKELETON_DBG(
+		void* 	cf_dbg_orig_nmp;
+		bool	cf_dbg_file_existed;
+	);
 		
 	canon_cnf(){
 		init_canon_cnf();
@@ -504,7 +510,10 @@ public:
 		cf_tmp_pth1 = "";
 		cf_tmp_pth2 = "";
 		
-		SKELETON_DBG(cf_dbg_orig_nmp = NULL_PT);
+		SKELETON_DBG(
+			cf_dbg_orig_nmp = NULL_PT;
+			cf_dbg_file_existed = false;
+		);
 		
 		SKELETON_CK(cf_unique_path.size() == 0);
 	}
@@ -581,6 +590,25 @@ public:
 		return (cf_kind == fk_guide);
 	}
 
+	void	update_diff_refs(skeleton_glb& skg, ch_string sv_vpth);
+	void	update_mng_verif_sys(skeleton_glb& skg, ch_string sv_vpth);
+	
+	void	set_kind_from(ch_string the_pth){
+		SKELETON_CK(cf_kind == fk_invalid);
+		
+		ch_string nm = path_get_name(the_pth);
+		if(nm == SKG_GUIDE_NAME){
+			cf_kind = fk_guide;
+		} else
+		if(nm == SKG_DIFF_NAME){
+			cf_kind = fk_diff;
+		} else
+		if(nm == SKG_CANON_NAME){
+			cf_kind = fk_canon;
+		} 
+		SKELETON_CK(cf_kind != fk_invalid);
+	}
+	
 	ch_string	get_kind_name(){
 		ch_string fnm = "";
 		SKELETON_CK(cf_kind != fk_invalid);
@@ -697,7 +725,7 @@ public:
 	row<canon_clause*>	kg_free_clauses;
 
 	bool			kg_dbg_only_save;
-	bool			kg_dbg_verifying;
+	bool			kg_dbg_verifying_skeleton_tree;
 	bool			kg_dbg_local_verifying;
 
 	bool			kg_dbg_save_canon;
@@ -763,7 +791,9 @@ public:
 	void	start_local();
 	void	clear_all();
 
-	bool 	in_dbg_verif(){ return (kg_dbg_verifying || kg_dbg_local_verifying); }
+	bool 	in_dbg_verif(){ 
+		return (kg_dbg_verifying_skeleton_tree || kg_dbg_local_verifying); 
+	}
 
 	canon_clause&	get_new_clause();
 	void	release_clause(canon_clause& ccl, bool free_mem);

@@ -363,10 +363,6 @@ neuron::update_create_cand(brain& brn, quanton& r_qua,
 		BRAIN_DBG(op1 = 2);
 		cov_entry& cty = curr_nmp->na_all_centry.inc_sz();
 		cty.init_cov_entry(&creat_cand, this);
-		
-		DBG_PRT_COND(115, ((brn.br_round == 43) && (ne_index == 55)),
-			os << "RN_43,NE_IDX_55." << "FILLED_COV cty=" << cty;
-		);
 	}
 }
 
@@ -602,12 +598,6 @@ quanton::qua_tunnel_signals(brain& brn){
 	BRAIN_CK(get_charge() != cg_neutral);
 	BRAIN_CK(qlevel() != INVALID_LEVEL);
 	
-	DBG_PRT_COND(115, ((abs_id() == 45) && 
-		((brn.recoil() == 101) || (brn.recoil() == 102))), 
-		 os << "RC_101,RC_102,QUA_45. all_tunn. qua=" << this << "\n";
-		 qu_tunnels.print_row_data(os, true, "\n");
-	);
-
 	for(long ii = qu_tunnels.size() - 1; (ii >= 0); ii--){
 		BRAIN_CK(qu_tunnels[ii] != NULL);
 		neuron& neu = *(qu_tunnels[ii]);
@@ -2018,17 +2008,6 @@ brain::solve_instance(bool load_it){
 				throw instance_exception(inx_bad_lit);
 			}
 		}
-		DBG_COMMAND(115, 
-			br_dbg_watched_nmp_idx = 14;
-			br_dbg_watched_nmp_tk.tk_recoil = 115;
-			br_dbg_watched_nmp_tk.tk_level = 6;
-			
-		);
-		DBG_COMMAND(118, 
-			ch_string dbg_f_nam = "uf50-0151.yos";
-			ch_string dbg_curr_nam = path_get_name(get_my_inst().ist_file_path);
-			br_dbg_is_watched_file = (dbg_f_nam == dbg_curr_nam);
-		);
 		find_result();
 	} catch (skeleton_exception& ex1){
 		print_ex(ex1);
@@ -3708,11 +3687,7 @@ brain::set_chg_cands_update(quanton& qua){
 				init_cand_propag(*pnt_nmp, &qua);
 			}
 			
-			DBG_PRT(112, os << " LOCATED nmp=" << &nxt_nmp);
 			DBG_PRT(106, os << " upd_cands_CHO_eonmp");
-			DBG_PRT_COND(115, ((nxt_nmp.na_index == 10) || (nxt_nmp.na_index == 14)), 
-				 os << "NA_IDX_10,NA_IDX_14. LOCATED nmp=" << nxt_nmp.dbg_na_id()
-			);
 		}
 	}
 	
@@ -3872,7 +3847,6 @@ brain::get_min_trainable_num_sub(){
 void
 neuron::set_cand_tk(ticket& n_tk){
 	ne_candidate_tk = n_tk;
-	DBG_PRT_COND(115, (ne_index == 55), os << "NE_IDX_55. set_cand_tk neu=" << this);
 }
 
 void
@@ -3886,12 +3860,6 @@ neuron::neu_tunnel_signals(brain& brn, quanton& r_qua){
 	quanton* qua = &r_qua;
 	BRAIN_CK(qua->get_charge() != cg_neutral);
 	DBG_PRT(17, os << "tunneling " << qua << " in " << this);
-	BRAIN_DBG(bool is_bug_55 = ((r_qua.abs_id() == 45) && (ne_index == 55) &&
-		((brn.recoil() == 101) || (brn.recoil() == 102)));
-	);
-	DBG_PRT_COND(115, is_bug_55, 
-		 os << "RC_101,RC_102,QUA_45. tunn " << qua << " in " << this;
-	);
 	BRAIN_CK(! ne_fibres.is_empty());
 	BRAIN_CK(ne_fibres.size() > 1);
 	BRAIN_CK(ck_tunnels());
@@ -3977,7 +3945,6 @@ neuron::neu_tunnel_signals(brain& brn, quanton& r_qua){
 					
 					neu_swap_edge(brn, ii, max_lv_idx); // will be pos1 if nil is not found.
 					if(min_ti_pos_idx == ii){ min_ti_pos_idx = 1; }
-					DBG_PRT_COND(115, is_bug_55, os << "RC_101,RC_102,QUA_45. case1\n");
 					
 					BRAIN_CK(fib1().is_pos());  
 					BRAIN_DBG(hf_pos = true);
@@ -3993,14 +3960,12 @@ neuron::neu_tunnel_signals(brain& brn, quanton& r_qua){
 					BRAIN_CK(hf_pos || fib1().is_neg());
 					neu_swap_edge(brn, ii, max_lv_idx);
 					BRAIN_CK(! fib1().is_neg());
-					DBG_PRT_COND(115, is_bug_55, os << "RC_101,RC_102,QUA_45. case2\n");
 				} else {
 					BRAIN_CK(chg_op2 == cg_neutral);
 					BRAIN_CK(fib0().is_pos()); 
 					BRAIN_CK(fib1().is_pos()); // BECAUSE INVARIANT_1 !!
 					swap_fibres_0(ii, max_lv_idx);
 					BRAIN_CK(fib0().is_nil());
-					DBG_PRT_COND(115, is_bug_55, os << "RC_101,RC_102,QUA_45. case3\n");
 				}
 
 				BRAIN_CK_2(ne_fibres[0]->ck_all_tunnels());
@@ -4071,22 +4036,7 @@ neuron::neu_tunnel_signals(brain& brn, quanton& r_qua){
 			}
 		}
 		
-		DBG_COMMAND(117, 
-			if(max_lv_idx > 1){
-				row_long_t chgs;
-				dbg_get_charges(chgs);
-				bool other = ((chgs[0] != 1) || (chgs[1] != 1) || (chgs[2] != 0));
-				DBG_PRT_COND(117, other, 
-					os << "FILLED not ZERO max_lv_idx=" << max_lv_idx;
-					os << " chgs=" << chgs;
-				);
-			}
-		);
-		
 		if(ne_original){
-			DBG_PRT_COND(115, ((brn.br_round == 43) && (ne_index == 55)),
-				os << "RN_43,NE_IDX_55." << "FILLED neu=" << this;
-			);
 			BRAIN_DBG(r_qua.qu_dbg_num_fill_by_qua++);
 			BRAIN_CK(dbg_ck_min_pos_idx(min_ti_pos_idx));
 			

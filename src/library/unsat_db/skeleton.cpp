@@ -137,11 +137,11 @@ canon_sha(row<char>& cnn, ch_string& sha_txt, ch_string& minisha_txt){
 	);*/
 }
 
-bool
+/*bool
 path_is_diff_file(ch_string the_pth){
 	bool is_df = (path_get_name(the_pth) == SKG_DIFF_NAME);
 	return is_df;
-}
+}*/
 
 bool
 canon_save(skeleton_glb& skg, ch_string& the_pth, row<char>& cnn, bool write_once){
@@ -604,7 +604,7 @@ skeleton_glb::init_skeleton_glb(){
 	SKELETON_CK(kg_free_clauses.is_empty());
 
 	kg_dbg_only_save = false;
-	kg_dbg_verifying = false;
+	kg_dbg_verifying_skeleton_tree = false;
 	kg_dbg_local_verifying = false;
 
 	kg_dbg_save_canon = true;
@@ -615,7 +615,7 @@ skeleton_glb::init_skeleton_glb(){
 
 	if(! kg_dbg_save_canon){
 		kg_dbg_only_save = false;
-		kg_dbg_verifying = false;
+		kg_dbg_verifying_skeleton_tree = false;
 		kg_dbg_local_verifying = false;
 	}
 
@@ -731,20 +731,20 @@ skeleton_glb::init_paths(){
 	path_create(as_full_path(kg_broken_path));
 
 	if(file_exists(kg_verify_path)){
-		kg_dbg_verifying = true;
+		kg_dbg_verifying_skeleton_tree = true;
 		kg_dbg_local_verifying = false;
 
 		time_t tt = path_verify(kg_verify_path);
 		if(tt != -1){
 			kg_verify_mtime = tt;
 		} else {
-			kg_dbg_verifying = false;
+			kg_dbg_verifying_skeleton_tree = false;
 			kg_dbg_local_verifying = false;
 		}
 	}
 
 	if(kg_dbg_only_save){
-		kg_dbg_verifying = false;
+		kg_dbg_verifying_skeleton_tree = false;
 		kg_dbg_local_verifying = false;
 	}
 }
@@ -1184,12 +1184,13 @@ canon_cnf::load_from(skeleton_glb& skg, ch_string& f_nam){
 	release_and_init(skg);
 	all_lits.clear();
 
-	bool is_diff = path_is_diff_file(f_nam);
+	set_kind_from(f_nam);
+	//bool is_diff = path_is_diff_file(f_nam);
 	
 	bool load_ok = true;
 	dimacs_loader	the_loader(get_dbg_brn());
 	try{
-		the_loader.parse_file(f_nam, all_lits, is_diff);
+		the_loader.parse_file(f_nam, all_lits, is_diff());
 	} catch (const top_exception& ex1){
 		load_ok = false;
 	}
@@ -1233,7 +1234,7 @@ canon_cnf::load_from(skeleton_glb& skg, ch_string& f_nam){
 		return false;
 	}
 
-	if(! is_diff && (cf_dims.dd_tot_lits <= 0)){
+	if(! is_diff() && (cf_dims.dd_tot_lits <= 0)){
 		DBG_PRT(79, os << "5. LOAD CNN FAILED f_nam=" << f_nam);
 		SKELETON_CK(false);
 		return false;
@@ -1467,7 +1468,7 @@ skeleton_glb::find_skl_path(ch_string pth_to_find, instance_info* iinfo){
 	bool to_inser = false;
 	if(! found_it){
 		to_inser = true;
-		if(! kg_dbg_verifying){
+		if(! kg_dbg_verifying_skeleton_tree){
 			found_it = file_exists(pth_to_find);
 		} else {
 			found_it = file_newer_than(pth_to_find, kg_verify_mtime);
@@ -1640,11 +1641,6 @@ canon_cnf::first_vnt_i_super_of(skeleton_glb& skg, ch_string gui_sha_str,
 	
 	long fst_vnt = INVALID_NATURAL;
 
-	DBG_PRT(118, os << "FST_VNT_SUPER of msha=" << cf_minisha_str << "\n";
-		os << " cf_phdat.vnt_nam()=\n" << cf_phdat.vnt_nam();
-	);
-	//for(long aa = 0; aa < SKG_MAX_NUM_VARIANT; aa++){
-
 	bj_big_int_t num_vnts = get_num_variants(skg);
 	
 	if(has_instance_info()){
@@ -1658,6 +1654,7 @@ canon_cnf::first_vnt_i_super_of(skeleton_glb& skg, ch_string gui_sha_str,
 		}
 		if(verif_gui_sha){
 			ch_string vnt_gui_sha_str = skg.read_guide_sha_str(vpth);
+			SKELETON_CK(gui_sha_str == vnt_gui_sha_str);
 			if(gui_sha_str != vnt_gui_sha_str){
 				continue;
 			}
@@ -1668,10 +1665,6 @@ canon_cnf::first_vnt_i_super_of(skeleton_glb& skg, ch_string gui_sha_str,
 			fst_vnt = aa;
 			ch_string elp_nm = skg.ref_vnt_name(vpth, SKG_ELAPSED_NAME);
 			update_elapsed(skg.as_full_path(elp_nm));
-			DBG_PRT(118, os << "FOUND FST_VNT_SUPER of msha=" << cf_minisha_str << "\n";
-				os << " aa=" << aa << "\n";
-				os << " vpth=\n" << vpth << "\n";
-			);
 			break;
 		}
 	}
@@ -1907,9 +1900,9 @@ canon_cnf::is_new(skeleton_glb& skg){
 }
 
 ch_string
-canon_cnf::prepare_cnf(skeleton_glb& skg, ch_string sv_base_pth)
+canon_cnf::prepare_cnf(skeleton_glb& skg, ch_string vpth)
 {
-	ch_string sv_pth = sv_base_pth + get_kind_name();
+	ch_string sv_pth = vpth + get_kind_name();
 	
 	DBG_PRT(73, os << "prepare_cnf'" << sv_pth << "'" << bj_eol 
 		<< cf_sha_str << bj_eol 
@@ -1958,11 +1951,11 @@ dbg_map_add_path(skeleton_glb& skg, ch_string sv_name){
 }
 
 bool
-canon_cnf::save_cnf(skeleton_glb& skg, ch_string sv_base_pth){
-	ch_string sv_pth = sv_base_pth + get_kind_name();
-	ch_string sv_dir = path_get_directory(sv_pth, true);
+canon_cnf::save_cnf(skeleton_glb& skg, ch_string sv_vpth){
+	SKELETON_CK(cf_kind != fk_invalid);
+	ch_string sv_pth = sv_vpth + get_kind_name();
 	
-	if(! skg.ref_in_skl(sv_dir)){
+	if(! skg.ref_in_skl(sv_vpth)){
 		return false;
 	}
 
@@ -1970,17 +1963,14 @@ canon_cnf::save_cnf(skeleton_glb& skg, ch_string sv_base_pth){
 		return false;
 	}
 
-	ch_string sv_name = prepare_cnf(skg, sv_base_pth);
-	
-	ch_string pth1 = cf_phdat.pd_ref1_nam;
-	ch_string pth2 = cf_phdat.pd_ref2_nam;
+	ch_string sv_name = prepare_cnf(skg, sv_vpth);
 	
 	SKELETON_CK(has_phase_path() == is_diff());
 	
 	// saving
 
-	if(! skg.ref_exists(sv_dir)){
-		skg.ref_create(sv_dir);
+	if(! skg.ref_exists(sv_vpth)){
+		skg.ref_create(sv_vpth);
 	}
 	
 	DBG_COMMAND(146, dbg_map_add_path(skg, sv_name));
@@ -1994,98 +1984,33 @@ canon_cnf::save_cnf(skeleton_glb& skg, ch_string sv_base_pth){
 		}
 	);
 
-	DBG(bool existed = false);
+	DBG(cf_dbg_file_existed = false);
 	bool sv_ok = canon_save(skg, sv_name, cf_chars);
 	if(! sv_ok){
 		sv_ok = canon_equal(skg, sv_name, cf_chars);
-		DBG(existed = sv_ok);
+		SKELETON_DBG(cf_dbg_file_existed = sv_ok);
 		if(! sv_ok){
 			DBG_PRT(DBG_ALL_LVS, os << "SAVING_CANON_CNF_SHA_STR=\n" << cf_sha_str);
 			skg.report_err(sv_pth, skg.kg_collisions_path);
 		}
-		DBG(
-			if(existed && is_diff()){
-				brain* pt_brn = skg.get_dbg_brn();
-				SKELETON_CK(pt_brn != NULL_PT);
-				brain& brn = *pt_brn;
-				SKELETON_CK_PRT(((pth1 == "") || skg.ref_exists(pth1)),
-					os << "______________\n ABORTING_DATA " << bj_eol;
-					brn.dbg_prt_margin(os);
-					os << " cnf=\n" << this << bj_eol;
-					os << " cf_phdat=" << cf_phdat << bj_eol;
-					os << " sv_name=" << sv_name << bj_eol;
-					os << " pth1=" << pth1 << bj_eol;
-					os << "END_OF_aborting_data" << bj_eol;
-				);
-				SKELETON_CK((pth2 == "") || skg.ref_exists(pth2));
-
-				SKELETON_CK((pth1 == "") || skg.find_skl_path(skg.as_full_path(pth1)));
-				SKELETON_CK((pth2 == "") || skg.find_skl_path(skg.as_full_path(pth2)));
-			}
-		);
 	}
 
 	if(is_guide() && sv_ok){
-		skg.write_guide_sha_str(sv_dir, cf_sha_str);
+		skg.write_guide_sha_str(sv_vpth, cf_sha_str);
 	}
 	
 	if(is_diff() && sv_ok){
-		SKELETON_CK(pth1 != sv_dir);
-		SKELETON_CK(pth2 != sv_dir);
-
-		if((pth1 != "") && ! skg.ref_exists(pth1)){
-			skg.ref_create(pth1);
+		update_diff_refs(skg, sv_vpth);
+		if(skg.in_dbg_verif()){
+			update_mng_verif_sys(skg, sv_vpth);
 		}
-		if((pth2 != "") && ! skg.ref_exists(pth2)){
-			skg.ref_create(pth2);
-		}
-
-		SKELETON_CK((pth1 == "") || skg.ref_exists(pth1));
-		SKELETON_CK((pth2 == "") || skg.ref_exists(pth2));
-
-		SKELETON_CK((pth1 == "") || skg.find_skl_path(skg.as_full_path(pth1)));
-		SKELETON_CK((pth2 == "") || skg.find_skl_path(skg.as_full_path(pth2)));
-
-		row<char>& comm_chrs = cf_comment_chars;
-		BRAIN_CK(! comm_chrs.is_empty());
-		
-		ch_string comm_name = skg.as_full_path(skg.ref_vnt_name(sv_dir, SKG_COMMENT_NAME));
-		canon_save(skg, comm_name, comm_chrs);
-
-		ch_string elp_nm = skg.as_full_path(skg.ref_vnt_name(sv_dir, SKG_ELAPSED_NAME));
-		update_elapsed(elp_nm);
-
-		update_parent_variants(skg, sv_dir);
 	}
-
-	if(skg.kg_dbg_local_verifying && sv_ok){
-		ch_string full_pth1 = skg.as_full_path(pth1);
-		ch_string full_pth2 = skg.as_full_path(pth2);
-		ch_string full_sv_dir = skg.as_full_path(sv_dir);
-		
-		string_set_t& all_to_find = skg.kg_cnf_paths_found;
-		strset_add_path(all_to_find, full_pth1);
-		strset_add_path(all_to_find, full_pth2);
-		strset_add_path(all_to_find, full_sv_dir);
-
-		string_set_t& all_nw = skg.kg_cnf_new_paths;
-		strset_add_path(all_nw, full_pth1);
-		strset_add_path(all_nw, full_pth2);
-		strset_add_path(all_nw, full_sv_dir);
-	}
-
-	if(skg.kg_dbg_verifying && sv_ok){ 
-		skg.ref_touch(pth1);
-		skg.ref_touch(pth2);
-		skg.ref_touch(sv_dir);
-	}
-
+	
 	DBG_PRT(95, 
 		os << "AFTER save_cnf \n";
-		os << " pth1=" << pth1 << "\n";
 		os << " sv_pth=" << sv_pth << "\n";
 		os << " sv_name=" << sv_name << "\n";
-		os << " ok=" << sv_ok << " existed=" << existed << "\n";
+		os << " ok=" << sv_ok << " existed=" << cf_dbg_file_existed << "\n";
 	);
 
 	return sv_ok;
@@ -2299,6 +2224,7 @@ skeleton_glb::add_comment_chars_to(brain& brn, ref_strs& pth_refs,
 
 	ch_string pth1 = pth_refs.pd_ref1_nam + "\n";
 	ch_string pth2 = pth_refs.pd_ref2_nam + "\n";
+	ch_string pth3 = pth_refs.pd_ref3_nam + "\n";
 
 	ch_string l3 = kg_instance_file_nam + "\n";
 
@@ -2308,6 +2234,8 @@ skeleton_glb::add_comment_chars_to(brain& brn, ref_strs& pth_refs,
 	canon_string_append(cnn, pth1);
 	canon_string_append(cnn, "REF2=\n");
 	canon_string_append(cnn, pth2);
+	canon_string_append(cnn, "REF3=\n");
+	canon_string_append(cnn, pth3);
 	canon_string_append(cnn, "TAUTO_MINISHA=\n'");
 	canon_string_append(cnn, brn.br_tmp_wrt_tauto_cnf.cf_minisha_str);
 	canon_string_append(cnn, "'\n");
@@ -2348,6 +2276,107 @@ skeleton_glb::write_guide_sha_str(ch_string vpth, ch_string sha_str){
 	long wr_ok = set_fstr(f_nm, sha_str);
 	if(wr_ok != 0){
 		unlink(f_nm.c_str());
+	}
+}
+
+void
+canon_cnf::update_diff_refs(skeleton_glb& skg, ch_string sv_vpth){
+	SKELETON_CK(is_diff());
+	SKELETON_CK(has_phase_path());
+	ch_string pth1 = cf_phdat.pd_ref1_nam;
+	ch_string pth2 = cf_phdat.pd_ref2_nam;
+	ch_string pth3 = cf_phdat.pd_ref3_nam;
+
+	SKELETON_CK(pth1 != sv_vpth);
+	SKELETON_CK(pth2 != sv_vpth);
+	SKELETON_CK(pth3 != sv_vpth);
+
+	SKELETON_DBG(
+		if(cf_dbg_file_existed){
+			ch_string sv_pth = sv_vpth + get_kind_name();
+			ch_string sv_name = skg.as_full_path(sv_pth);
+			
+			brain* pt_brn = skg.get_dbg_brn();
+			SKELETON_CK(pt_brn != NULL_PT);
+			brain& brn = *pt_brn;
+			SKELETON_CK_PRT(((pth1 == "") || skg.ref_exists(pth1)),
+				os << "______________\n ABORTING_DATA " << bj_eol;
+				brn.dbg_prt_margin(os);
+				os << " cnf=\n" << this << bj_eol;
+				os << " cf_phdat=" << cf_phdat << bj_eol;
+				os << " sv_name=" << sv_name << bj_eol;
+				os << " pth1=" << pth1 << bj_eol;
+				os << "END_OF_aborting_data" << bj_eol;
+			);
+			SKELETON_CK((pth2 == "") || skg.ref_exists(pth2));
+
+			SKELETON_CK((pth1 == "") || skg.find_skl_path(skg.as_full_path(pth1)));
+			SKELETON_CK((pth2 == "") || skg.find_skl_path(skg.as_full_path(pth2)));
+		}
+	);
+	
+	if((pth1 != "") && ! skg.ref_exists(pth1)){
+		skg.ref_create(pth1);
+	}
+	if((pth2 != "") && ! skg.ref_exists(pth2)){
+		skg.ref_create(pth2);
+	}
+	if((pth3 != "") && ! skg.ref_exists(pth3)){
+		skg.ref_create(pth3);
+	}
+
+	SKELETON_CK((pth1 == "") || skg.ref_exists(pth1));
+	SKELETON_CK((pth2 == "") || skg.ref_exists(pth2));
+	SKELETON_CK((pth3 == "") || skg.ref_exists(pth3));
+
+	SKELETON_CK((pth1 == "") || skg.find_skl_path(skg.as_full_path(pth1)));
+	SKELETON_CK((pth2 == "") || skg.find_skl_path(skg.as_full_path(pth2)));
+	SKELETON_CK((pth3 == "") || skg.find_skl_path(skg.as_full_path(pth3)));
+
+	row<char>& comm_chrs = cf_comment_chars;
+	BRAIN_CK(! comm_chrs.is_empty());
+	
+	ch_string comm_name = skg.as_full_path(skg.ref_vnt_name(sv_vpth, SKG_COMMENT_NAME));
+	canon_save(skg, comm_name, comm_chrs);
+
+	ch_string elp_nm = skg.as_full_path(skg.ref_vnt_name(sv_vpth, SKG_ELAPSED_NAME));
+	update_elapsed(elp_nm);
+
+	update_parent_variants(skg, sv_vpth);
+}
+
+void
+canon_cnf::update_mng_verif_sys(skeleton_glb& skg, ch_string sv_vpth){
+	SKELETON_CK(is_diff());
+	SKELETON_CK(has_phase_path());
+	ch_string pth1 = cf_phdat.pd_ref1_nam;
+	ch_string pth2 = cf_phdat.pd_ref2_nam;
+	ch_string pth3 = cf_phdat.pd_ref3_nam;
+
+	SKELETON_CK(pth1 != sv_vpth);
+	SKELETON_CK(pth2 != sv_vpth);
+	SKELETON_CK(pth3 != sv_vpth);
+
+	if(skg.kg_dbg_local_verifying){
+		ch_string full_pth1 = skg.as_full_path(pth1);
+		ch_string full_pth2 = skg.as_full_path(pth2);
+		ch_string full_sv_vpth = skg.as_full_path(sv_vpth);
+		
+		string_set_t& all_to_find = skg.kg_cnf_paths_found;
+		strset_add_path(all_to_find, full_pth1);
+		strset_add_path(all_to_find, full_pth2);
+		strset_add_path(all_to_find, full_sv_vpth);
+
+		string_set_t& all_nw = skg.kg_cnf_new_paths;
+		strset_add_path(all_nw, full_pth1);
+		strset_add_path(all_nw, full_pth2);
+		strset_add_path(all_nw, full_sv_vpth);
+	}
+
+	if(skg.kg_dbg_verifying_skeleton_tree){ 
+		skg.ref_touch(pth1);
+		skg.ref_touch(pth2);
+		skg.ref_touch(sv_vpth);
 	}
 }
 

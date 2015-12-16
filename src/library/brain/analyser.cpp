@@ -404,19 +404,7 @@ brain::analyse_conflicts(row<prop_signal>& all_confl, deduction& out_dct){
 	analyser& dedser = br_deducer_anlsr;
 	dedser.set_conflicts(all_confl);
 	
-	DBG_PRT(112, 
-		os << " CANDS=\n";
-		br_candidate_nmp_lvs.print_row_data(os, true, "\n");
-		os << " NXT_CANDS=\n";
-		br_candidate_nxt_nmp_lvs.print_row_data(os, true, "\n");
-	);
 	DBG_PRT(40, os << "bef_ana=" << bj_eol; print_trail(os);
-		os << " num_conf=" << br_all_conflicts_found.size() << " br_lv=" << level()
-		<< " br_ti=" << tier();
-	);
-	DBG_PRT_COND(115, ((br_round == 43) || (br_round == 55)), 
-		os << "bef_ana=" << bj_eol; print_trail(os);
-		os << " NEU_55=" << &(br_neurons[55]) << "\n";
 		os << " num_conf=" << br_all_conflicts_found.size() << " br_lv=" << level()
 		<< " br_ti=" << tier();
 	);
@@ -825,8 +813,6 @@ brain::write_analysis(row_quanton_t& causes, deduction& dct){
 	qlayers_ref& qlr = br_wrt_ref;
 	long tg_lv = dct.dt_target_level;
 	
-	DBG_PRT(113, os << " w_anal tg_lv=" << tg_lv);
-	
 	write_update_all_tk(causes);
 	
 	quanton* nxt_qua = qlr.get_curr_quanton();
@@ -873,8 +859,6 @@ quanton::update_qu_to_wrt_tk(){
 	BRAIN_CK(qu_inverse != NULL_PT);
 	qu_upd_to_wrt_tk = qu_charge_tk;
 	qu_inverse->qu_upd_to_wrt_tk = qu_charge_tk;
-	
-	DBG_PRT(112, os << " update_wrt qua=" << this << " qw_tk=" << qu_upd_to_wrt_tk);
 }
 
 void
@@ -882,8 +866,6 @@ neuron::update_ne_to_wrt_tk(brain& brn, ticket& wrt_tk){
 	//BRAIN_CK(! ne_candidate_tk.is_older_than(brn.get_last_cand()));
 	
 	ne_to_wrt_tk = wrt_tk;
-	
-	DBG_PRT(112, os << " update_wrt neu=" << this << " nw_tk=" << ne_to_wrt_tk);
 }
 
 void

@@ -1023,7 +1023,7 @@ test_skl(){
 	GSKE.print_paths(os);
 
 	GSKE.kg_find_cnn_pth = true;
-	GSKE.kg_dbg_verifying = false;
+	GSKE.kg_dbg_verifying_skeleton_tree = false;
 	GSKE.kg_dbg_only_save = false;
 
 	os << "Type RETURN ..." << bj_eol;
