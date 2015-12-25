@@ -857,6 +857,8 @@ class quanton {
 		return is_clc_cho;
 	}
 	
+	bool		ck_biqu(brain& brn);
+	
 	bool 	is_qu_end_of_neuromap(brain& brn);
 	
 	long	find_alert_idx(bool is_init, row_quanton_t& all_pos);
@@ -1949,6 +1951,19 @@ class qulayers {
 		return nmm;
 	}
 	
+	long	get_all_sz(row_long_t& all_sz, long fst_ly){
+		all_sz.clear();
+		long nmm = 0;
+		for(long aa = fst_ly; aa < ql_quas_by_layer.size(); aa++){
+			row_quanton_t& lv_mots = ql_quas_by_layer[aa];
+			long mot_sz = lv_mots.size();
+			
+			all_sz.push(mot_sz);
+			nmm += mot_sz;
+		}
+		return nmm;
+	}
+	
 	bool	is_ql_empty(){
 		return (get_tot_quantons() == 0);
 	}
@@ -2185,6 +2200,8 @@ class neuromap {
 		mem_op_t 			na_dbg_nmp_mem_op;
 		ch_string			na_dbg_tauto_min_sha_str;
 		ch_string			na_dbg_tauto_sha_str;
+		ch_string			na_dbg_guide_sha_str;
+		ch_string			na_dbg_quick_sha_str;
 		ch_string			na_dbg_tauto_pth;
 		
 		coloring			na_dbg_tauto_col;
@@ -2248,6 +2265,8 @@ class neuromap {
 			na_dbg_nmp_mem_op = mo_invalid;
 			na_dbg_tauto_min_sha_str = INVALID_MINSHA;
 			na_dbg_tauto_sha_str = INVALID_SHA;
+			na_dbg_guide_sha_str = INVALID_SHA;
+			na_dbg_quick_sha_str = INVALID_SHA;
 			na_dbg_tauto_pth = INVALID_PATH;
 			
 			na_dbg_tauto_col.init_coloring();
@@ -2327,9 +2346,9 @@ class neuromap {
 		return h_s;
 	}
 	
-	bool	in_root(){
+	/*bool	in_root(){
 		return (na_orig_lv == ROOT_LEVEL);
-	}
+	}*/
 	
 	leveldat& 	map_get_data_level();
 	
@@ -2379,6 +2398,8 @@ class neuromap {
 	void		nmp_update_to_write(row_neuron_t& upd_from, ticket& nmp_wrt_tk);
 	void		nmp_update_all_to_write(ticket& nmp_wrt_tk);
 	void		nmp_reset_write();
+	
+	void		nmp_add_to_write(row_neuromap_t& to_wrt);
 	
 	bool 	dbg_has_simple_coloring_quas(coloring& clr);
 	void 	dbg_prt_simple_coloring(bj_ostream& os);
@@ -2997,6 +3018,9 @@ public:
 	
 	deduction 		br_tmp_find_dct;
 	
+	row_long_t		br_tmp_all_sz_side1;
+	row_long_t		br_tmp_all_sz_side2;
+	
 	row_quanton_t 	br_tmp_fixing_quantons;
 	row_quanton_t 	br_tmp_load_quantons;
 	row_quanton_t 	br_tmp_assig_quantons;
@@ -3015,6 +3039,7 @@ public:
 	row_quanton_t 	br_tmp_prv_biqus;
 	row_quanton_t 	br_tmp_nxt_biqus;
 	row_quanton_t 	br_tmp_all_cicles;
+	row_quanton_t 	br_tmp_cicles_lv_quas;
 	row_quanton_t 	br_tmp_biqus_lv1;
 	row_quanton_t 	br_tmp_biqus_lv2;
 	row_quanton_t 	br_tmp_biqus_lv3;
@@ -3224,6 +3249,8 @@ public:
 	long		propagate_signals();
 	void		pulsate();
 	void		start_propagation(quanton& qua);
+	comparison	select_propag_side(long sz1, row_long_t& all_sz1, 
+									long sz2, row_long_t& all_sz2);
 
 	void		init_forced_sorter();
 
@@ -3292,6 +3319,7 @@ public:
 	void 		get_all_bineu_sources(quanton& cho, row_quanton_t& all_src);
 	void 		get_all_cicle_cho(row_quanton_t& all_cicl);
 	quanton*	get_cicles_common_cho(quanton*& replace_cho, row_quanton_t& all_impl_cho);
+	void		get_last_lv_charges(row_quanton_t& all_lv_pos);
 	
 	bj_ostream& 	print_psignals(bj_ostream& os, bool just_qua = false){
 		os << "[";
@@ -3529,6 +3557,13 @@ public:
 		return is_mn;
 	}
 
+	long	get_last_lv_all_trail_sz(row_long_t& all_sz){
+		quanton& cho = curr_choice();
+		all_sz.clear();
+		long num_prop = br_charge_trail.get_all_sz(all_sz, cho.qu_tier);
+		return num_prop;
+	}
+	
 	void	update_tk_charge(ticket& nw_tk);
 	void	update_tk_trail(ticket& nw_tk);
 	
@@ -3570,7 +3605,7 @@ public:
 	void	candidates_before_reverse(deduction& dct);
 	void	candidates_after_reverse();
 	void	init_cand_propag(neuromap& nmp, quanton* curr_qua);
-	void	old_init_cand_propag(neuromap& nmp, quanton* curr_qua);
+	//void	old_init_cand_propag(neuromap& nmp, quanton* curr_qua);
 	
 	bool	in_current_round(ticket& the_tk){
 		bool in_rnd = (the_tk.tk_recoil > br_prv_round_last_rc);
@@ -3584,10 +3619,9 @@ public:
 						deduction& prv_dct, deduction& nxt_dct, 
 						row_neuromap_t& to_wrt);
 	
-	//void		pop_all_outdated_cands_with_neu(neuron& neu);
-	//void		pop_all_outdated_cands_with_qua(quanton& qua);
+	void		add_top_cands(row_neuromap_t& to_wrt);
 	
-	bool	analyse_conflicts(row<prop_signal>& all_confl, deduction& dct);
+	bool		analyse_conflicts(row<prop_signal>& all_confl, deduction& dct);
 
 	void 		write_analysis(row_quanton_t& causes, deduction& dct);
 	void		write_update_all_tk(row_quanton_t& causes);

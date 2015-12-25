@@ -77,7 +77,7 @@ bool
 neuromap::map_write(bool force_full){
 	DBG_COMMAND(5, return false);
 	IF_NEVER_WRITE(return false);
-
+	
 	BRAIN_CK(is_ticket_eq(na_candidate_tk, na_dbg_candidate_tk));
 	//BRAIN_CK(! is_na_mono() || ! na_submap->na_upd_to_write);
 	nmp_reset_write();
@@ -86,12 +86,14 @@ neuromap::map_write(bool force_full){
 		nmp_update_all_to_write(na_candidate_tk);
 		BRAIN_CK(na_upd_to_write);
 	}
+	bool w_ok = false;
 	if(is_na_mono()){ 
 		BRAIN_CK(has_submap());
-		bool r_op_sub = na_submap->map_oper(mo_save);
-		return r_op_sub;
+		w_ok = na_submap->map_oper(mo_save);
+	} else {
+		w_ok = map_oper(mo_save);
 	}
-	return map_oper(mo_save);
+	return w_ok;
 }
 
 void
@@ -194,6 +196,10 @@ void
 neuromap::full_release(){
 	BRAIN_CK(is_ticket_eq(na_candidate_tk, na_dbg_candidate_tk));
 	BRAIN_CK(! nmp_is_cand(false));
+
+	DBG_PRT(110, os << " RELEASED nmp=" << dbg_na_id() << "\n";
+		os << " phi_id=" << na_dbg_phi_id << "\n";
+	);
 	
 	if(has_submap()){
 		na_submap->full_release();
@@ -724,10 +730,10 @@ neuromap::map_oper(mem_op_t mm){
 	bool prep_ok = map_prepare_mem_oper(mm);
 
 	if(! prep_ok){
-		DBG_PRT(47, os << "map_oper skip (prepare == false) nmp=" << (void*)this);
+		DBG_PRT(47, os << "map_oper skip (prepare == false) nmp=" << dbg_na_id());
 		return false;
 	}
-	DBG_PRT(47, os << "map_oper_go nmp=" << (void*)this);
+	DBG_PRT(47, os << "map_oper_go nmp=" << dbg_na_id());
 
 	skeleton_glb& skg = brn.get_skeleton();
 
@@ -753,6 +759,8 @@ neuromap::map_oper(mem_op_t mm){
 		na_dbg_nmp_mem_op = mm;
 		na_dbg_tauto_min_sha_str = tmp_tauto_cnf.cf_minisha_str;
 		na_dbg_tauto_sha_str = tmp_tauto_cnf.cf_sha_str;
+		na_dbg_guide_sha_str = tmp_guide_cnf.cf_sha_str;
+		na_dbg_quick_sha_str = tmp_diff_cnf.cf_phdat.pd_ref3_nam;
 		na_dbg_tauto_pth = tmp_tauto_cnf.get_cnf_path();
 	);
 	
@@ -842,6 +850,7 @@ neuromap::map_oper(mem_op_t mm){
 		}
 	}
 	
+	DBG_PRT(109, os << STACK_STR << "\n");
 	DBG_PRT(102, 
 		ch_string op_ok_str = (oper_ok)?("YES"):("no");
 		ch_string op_str = (na_dbg_nmp_mem_op == mo_find)?("Find"):("Write");
@@ -869,18 +878,23 @@ neuromap::map_oper(mem_op_t mm){
 			bool id_was_wrt = (old_ids.find(str_id) != old_ids.end());
 			if(! id_was_wrt){
 				old_ids[str_id] = na_dbg_tauto_sha_str;
-				DBG_PRT_COND(71, id_was_wrt, 
-					os << "ADDED wrt_id=" << na_dbg_phi_id
+				DBG_PRT(71, 
+					os << "ADDED wrt_id=" << na_dbg_phi_id << "\n";
+					os << " wrt_phi_id_str='" << str_id << "'\n";
 				);
 				BRAIN_CK((old_ids.find(str_id) != old_ids.end()));
 			}
 			DBG_PRT_COND(71, id_was_wrt, 
-				os << "REPEATED_WRITE for wrt_id=" << na_dbg_phi_id;
-				os << " old_sha=" << old_ids[str_id];
+				os << "REPEATED_WRITE for wrt_id=" << na_dbg_phi_id << "\n";
+				os << " old_sha=" << old_ids[str_id] << "\n";
+				os << " cur_sha=" << na_dbg_tauto_sha_str << "\n";
+				os << " tau_sha=" << tmp_tauto_cnf.cf_sha_str << "\n";
+				os << " wrt_phi_id_str='" << str_id << "'\n";
 			);
 			DBG_PRT_COND(71, ! id_was_wrt, 
-				os << "FIRST_WRITE_OK for wrt_id=" << na_dbg_phi_id 
-					<< "\n wrt_is_str='" << str_id << "'"
+				os << "FIRST_WRITE_OK for wrt_id=" << na_dbg_phi_id << "\n";
+				os << " wrt_phi_id_str='" << str_id << "'\n";
+				os << " cur_sha=" << na_dbg_tauto_sha_str << "\n";
 			);
 		}
 	);
@@ -975,8 +989,9 @@ neuromap::map_prepare_mem_oper(mem_op_t mm){
 	dbg_shas.push(gui_cnf.cf_sha_str + "\n");
 	
 	// FIND_GUIDE
-	//if(has_submap() && (mm == mo_find)){
-	if(mm == mo_find){
+	bool in_fnd = (mm == mo_find);
+	//bool in_fnd = (has_submap() && (mm == mo_find));
+	if(in_fnd){
 		instance_info& iinfo = brn.get_my_inst();
 		
 		ch_string pth1 = skg.as_full_path(quick_find_ref);

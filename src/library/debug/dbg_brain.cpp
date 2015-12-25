@@ -1279,16 +1279,16 @@ prop_signal::print_prop_signal(bj_ostream& os, bool from_pt){
 		return os;
 	}
 	
-	if(ps_quanton != NULL_PT){
+	/*if(ps_quanton != NULL_PT){
 		return ps_quanton->print_quanton_base(os, true, ps_tier, ps_source, false);
-	}
+	}*/
 	
 	os << " ps{";
 	os << ps_quanton;
+	os << "." << ps_tier;
 	//if(ps_source == NULL_PT){ os << ".NULL_SRC"; }
 	//else { os << "." << ((void*)ps_source) << "." << ps_source->ne_index; }
-	//os << ps_source << ".";
-	os << ps_tier;
+	os << ".\n" << ps_source << "\n";
 	os << "}";
 	os.flush();
 	return os;
