@@ -197,7 +197,7 @@ neuromap::full_release(){
 	BRAIN_CK(is_ticket_eq(na_candidate_tk, na_dbg_candidate_tk));
 	BRAIN_CK(! nmp_is_cand(false));
 
-	DBG_PRT(110, os << " RELEASED nmp=" << dbg_na_id() << "\n";
+	DBG_PRT(53, os << " RELEASED nmp=" << dbg_na_id() << "\n";
 		os << " phi_id=" << na_dbg_phi_id << "\n";
 	);
 	
@@ -850,22 +850,24 @@ neuromap::map_oper(mem_op_t mm){
 		}
 	}
 	
-	DBG_PRT(109, os << STACK_STR << "\n");
 	DBG_PRT(102, 
+		if(brn.br_dbg_found_top){ os << STACK_STR << "\n"; }
 		ch_string op_ok_str = (oper_ok)?("YES"):("no");
 		ch_string op_str = (na_dbg_nmp_mem_op == mo_find)?("Find"):("Write");
 		op_str += op_ok_str;
 		os << op_str << " na_idx=" << na_index << "\n";
 	);
-	DBG_PRT(70, 
+	DBG_PRT(70,
+		if(brn.br_dbg_found_top){ os << STACK_STR << "\n"; }
 		ch_string op_ok_str = (oper_ok)?("YES"):("no");
 		ch_string op_str = (na_dbg_nmp_mem_op == mo_find)?("Find"):("Write");
 		op_str += op_ok_str;
 		
 		ch_string msg_htm = map_dbg_html_data_str(op_str);;
 		
-		brn.dbg_update_html_cy_graph(CY_NMP_KIND, 
-					&(brn.br_tmp_ini_tauto_col), msg_htm);
+		map_dbg_set_cy_maps();
+		brn.dbg_update_html_cy_graph(CY_NMP_KIND, &(brn.br_tmp_ini_tauto_col), msg_htm);
+		map_dbg_reset_cy_maps();
 	);
 	BRAIN_DBG(
 		bool has_phi = (brn.br_dbg_num_phi_grps != INVALID_NATURAL);
@@ -1554,8 +1556,8 @@ neuromap::map_get_all_upper_quas(row_quanton_t& all_upper_quas){
 	
 	row_neuron_t& all_neus = brn.br_tmp_nmp_neus_for_upper_qu;
 	all_neus.clear();
-	//map_get_all_neus(all_neus, true);
-	map_get_all_neus(all_neus, false);
+	map_get_all_neus(all_neus, true);
+	//map_get_all_neus(all_neus, false);
 	
 	for(long aa = 0; aa < all_neus.size(); aa++){
 		BRAIN_CK(all_neus[aa] != NULL_PT);

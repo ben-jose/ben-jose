@@ -182,11 +182,13 @@ brain::dbg_update_html_cy_graph(ch_string cy_kk, coloring* the_col, ch_string ht
 	of_st << "};" << bj_eol;
 	
 	if(is_ic){
+		of_st << "// is_ic\n";
 		of_st << stp_js_plays_var_nm << " = [" << bj_eol;
 		dbg_print_cy_graph_node_plays(of_st);
 		of_st << "];" << bj_eol;
 	} 
 	if(! is_ic){
+		of_st << "// ! is_ic\n";
 		of_st << stp_js_plays_var_nm << " = [" << bj_eol;
 		dbg_print_cy_nmp_node_plays(of_st);
 		of_st << "];" << bj_eol;
@@ -496,7 +498,6 @@ neuromap::map_dbg_set_cy_maps(){
 		qua->qu_dbg_cy_nmp = nxt_nmp;
 		brn.br_tot_cy_nmps++;
 		
-		//dbg_set_cy_sigs(brn, nxt_nmp->na_trail_propag);
 		dbg_set_cy_sigs(brn, nxt_nmp->na_propag);
 		
 		nxt_nmp = nxt_nmp->na_submap;
@@ -521,7 +522,6 @@ neuromap::map_dbg_reset_cy_maps(){
 		qua->qu_dbg_cy_nmp = NULL_PT;
 		brn.br_tot_cy_nmps--;
 		
-		//dbg_reset_cy_sigs(brn, nxt_nmp->na_trail_propag);
 		dbg_reset_cy_sigs(brn, nxt_nmp->na_propag);
 		
 		nxt_nmp = nxt_nmp->na_submap;
@@ -599,7 +599,7 @@ neuromap::map_dbg_update_html_file(ch_string msg){
 #ifdef FULL_DEBUG
 	brain& brn = get_brn();
 	
-	ch_string htm_msg = map_dbg_html_data_str(msg);;
+	ch_string htm_msg = map_dbg_html_data_str(msg);
 	
 	coloring full_col;
 	map_dbg_get_cy_coloring(full_col);

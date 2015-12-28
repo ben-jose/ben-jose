@@ -919,8 +919,14 @@ dbg_run_satex_on(brain& brn, ch_string f_nam, neuromap* dbg_nmp){
 				msg_htm = dbg_nmp->map_dbg_html_data_str(msg_htm);
 			}
 			
+			if(dbg_nmp != NULL_PT){
+				dbg_nmp->map_dbg_set_cy_maps();
+			}
 			brn.dbg_update_html_cy_graph(CY_NMP_KIND, 
 						&(brn.br_tmp_ini_tauto_col), msg_htm);
+			if(dbg_nmp != NULL_PT){
+				dbg_nmp->map_dbg_reset_cy_maps();
+			}
 		}
 	);
 	if(! is_no){

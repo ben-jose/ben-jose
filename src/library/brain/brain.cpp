@@ -441,6 +441,7 @@ brain::init_brain(solver& ss){
 		br_dbg_watched_nmp_tk.init_ticket();
 		br_dbg_is_watched_file = false;
 		br_dbg_skl_bug = false;
+		br_dbg_found_top = false;
 	);
 	br_pt_slvr = &ss;
 	
@@ -2102,10 +2103,8 @@ brain::deduce_and_reverse_trail(){
 
 void
 brain::write_all_canditates(){
-	DBG_COMMAND(110, dbg_lv_on(109));
 	BRAIN_CK(br_candidate_nxt_nmp_lvs.is_empty());
 	write_all_nmps(br_candidate_nmp_lvs);
-	DBG_COMMAND(110, dbg_lv_off(109));
 }
 
 void
@@ -2748,8 +2747,6 @@ neuron::append_ne_biqu(brain& brn, quanton& cho, quanton& pos_qu, row_quanton_t&
 	long b_lv = brn.level();
 	long c_lv = cho.qlevel();
 	
-	BRAIN_DBG(bool bug_cicl = (ne_index == 15));
-
 	quanton* biqu = NULL_PT;
 	for(long aa = 0; aa < fib_sz(); aa++){
 		quanton* qua = ne_fibres[aa];
@@ -2767,23 +2764,16 @@ neuron::append_ne_biqu(brain& brn, quanton& cho, quanton& pos_qu, row_quanton_t&
 			bool is_biqu = ((b_lv == q_lv) && ! in_confl);
 			if(is_biqu){
 				if(biqu != NULL_PT){
-					DBG_PRT_COND(112, bug_cicl, os << "BRK1 ne_15";
-						os << " biqu=" << biqu << " qua=" << qua
-					);
 					biqu = NULL_PT;
 					break;
 				}
 				biqu = qua;
 			} else {
 				if(q_lv >= c_lv){
-					DBG_PRT_COND(112, bug_cicl, os << "BRK2 ne_15";
-						os << " biqu=" << biqu << " qua=" << qua
-					);
 					biqu = NULL_PT;
 					break;
 				}
 			}
-			DBG_PRT_COND(112, bug_cicl, os << "ne_15 biqu=" << biqu << " qua=" << qua);
 		}
 		
 	}
@@ -3719,7 +3709,7 @@ brain::set_chg_cands_update(quanton& qua){
 				init_cand_propag(*pnt_nmp, &qua);
 			}
 			
-			DBG_PRT(110, os << " LOCATED nmp=" << nxt_nmp.dbg_na_id() << "\n";
+			DBG_PRT(53, os << " LOCATED nmp=" << nxt_nmp.dbg_na_id() << "\n";
 				os << " phi_id=" << nxt_nmp.na_dbg_phi_id << "\n";
 			);
 			DBG_PRT(106, os << " upd_cands_CHO_eonmp nmp=" << nxt_nmp.dbg_na_id());
@@ -3890,6 +3880,11 @@ neuron::neu_tunnel_signals(brain& brn, quanton& r_qua){
 	BRAIN_CK(! is_ne_virgin());
 	BRAIN_CK(brn.br_dbg_keeping_learned || ne_original || 
 		(brn.br_dbg.dbg_last_recoil_lv == brn.level())
+	);
+	
+	DBG_PRT_COND(112, (ne_index >= 0) && (ne_index <= 2), 
+		os << "NE_0-2 tunn_sig r_qua=" << &r_qua;
+		os << " neu=" << this
 	);
 
 	quanton* qua = &r_qua;
@@ -4145,6 +4140,7 @@ brain::select_propag_side(long sz1, row_long_t& all_sz1, long sz2, row_long_t& a
 	return resp;
 }
 
+/*
 void
 brain::start_propagation(quanton& nxt_qua){
 	BRAIN_CK(data_level().ld_idx == level());
@@ -4194,9 +4190,8 @@ brain::start_propagation(quanton& nxt_qua){
 		}
 	}
 }
+*/
 
-
-/*
 void
 brain::start_propagation(quanton& nxt_qua){
 	BRAIN_CK(data_level().ld_idx == level());
@@ -4257,5 +4252,4 @@ brain::start_propagation(quanton& nxt_qua){
 	
 	BRAIN_CK(prv_lv == level());
 }
-*/
 

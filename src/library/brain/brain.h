@@ -3000,6 +3000,7 @@ public:
 		ticket				br_dbg_watched_nmp_tk;
 		bool				br_dbg_is_watched_file;
 		bool				br_dbg_skl_bug;
+		bool				br_dbg_found_top;
 	)
 	IF_KEEP_LEARNED(
 		bool				br_dbg_keeping_learned;
