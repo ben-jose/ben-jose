@@ -343,6 +343,7 @@ sort_all_qu_tees(brain& brn, row_quanton_t& all_quas, row<long>& qua_colors,
 		if((pend_col != NULL_PT) && qua_mates.is_empty() && opp_mates.is_empty()){
 			pend_col->co_quas.push(&qua);
 			pend_col->co_qua_colors.push(qua_colors[kk]);
+			//pend_col->co_qua_colors.push(1);
 			DBG_PRT_WITH(43, brn, os << " pend qua=" << &qua);
 			continue;
 		}
@@ -2029,17 +2030,20 @@ neuromap::nmp_fill_upper_covs(){
 
 quanton*	
 neuromap::map_choose_propag_qua(){ 
-	quanton* qua = NULL;
+	//quanton* qua = NULL;
 	long max_ii = na_propag.last_idx();
 	for(long ii = max_ii; ii >= 0; ii--){
 		prop_signal& nxt_ps = na_propag[ii];
 		quanton* qua = nxt_ps.ps_quanton;
 		BRAIN_CK(qua != NULL_PT);
 		if(! qua->has_charge()){
+			DBG_PRT(105, os << "NMP_CHOICE qua=" << qua << " cand=";
+				print_cand_id(os);
+			);
 			return qua;
 		}
 	}
-	return qua;
+	return NULL;
 }
 
 quanton*	

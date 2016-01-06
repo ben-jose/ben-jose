@@ -2414,7 +2414,9 @@ class neuromap {
 	bool		dbg_ck_cand(bool nw_cands);
 	ch_string	dbg_na_id();
 	bool		dbg_is_watched();
+	long		dbg_get_depth_in(neuromap& hd_nmp);
 	
+	bj_ostream&	print_cand_id(bj_ostream& os);
 	bj_ostream&	print_nmp_hd(bj_ostream& os);
 	
 	bj_ostream&	print_neuromap(bj_ostream& os, bool from_pt = false);
@@ -2954,6 +2956,9 @@ public:
 	long	dbg_max_lv;
 	long	dbg_max_wrt_num_subnmp;
 	long	dbg_max_fnd_num_subnmp;
+
+	bj_big_int_t	dbg_num_glb_cho;
+	bj_big_int_t	dbg_num_loc_cho;
 	
 	dbg_inst_info(){
 		init_dbg_inst_info();
@@ -3250,8 +3255,8 @@ public:
 	long		propagate_signals();
 	void		pulsate();
 	void		start_propagation(quanton& qua);
-	comparison	select_propag_side(long sz1, row_long_t& all_sz1, 
-									long sz2, row_long_t& all_sz2);
+	comparison	select_propag_side(bool cnfl1, long sz1, row_long_t& all_sz1, 
+								bool cnfl2, long sz2, row_long_t& all_sz2);
 
 	void		init_forced_sorter();
 

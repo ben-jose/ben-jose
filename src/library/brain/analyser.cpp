@@ -889,9 +889,6 @@ quanton::update_qu_to_wrt_tk(){
 void
 neuron::update_ne_to_wrt_tk(brain& brn, ticket& wrt_tk){
 	//BRAIN_CK(! ne_candidate_tk.is_older_than(brn.get_last_cand()));
-	DBG_PRT_COND(112, (ne_index == 0), os << "NE_0 upd_wrt_tk=" << wrt_tk;
-		os << " neu=" << this
-	);
 	
 	ne_to_wrt_tk = wrt_tk;
 }

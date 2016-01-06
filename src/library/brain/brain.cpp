@@ -800,6 +800,7 @@ brain::choose_quanton(){
 		}
 		qua = nmp->map_choose_quanton();
 		if(qua != NULL_PT){
+			BRAIN_DBG(br_dbg.dbg_num_loc_cho++);
 			return qua;
 		}
 	}
@@ -822,6 +823,10 @@ brain::choose_quanton(){
 		qua = qua->qu_inverse;
 	}
 
+	BRAIN_DBG(br_dbg.dbg_num_glb_cho++);
+	DBG_PRT(105, os << "GLB_CHO qua=" << qua << "\n";
+		print_trail(os);
+	);
 	return qua;
 }
 
@@ -1752,7 +1757,7 @@ brain::pulsate(){
 		DBG(
 			ch_string htm_str = "";
 			ch_string rc_str = recoil().get_str();
-			htm_str += "BRN_recoil=" + rc_str + "<br>";
+			htm_str += "BRN_recoil=" + rc_str;
 		);
 		DBG_PRT(72, os << "bef_htm=" << bj_eol; print_trail(os);
 			os << " num_conf=" << br_all_conflicts_found.size() << " br_lv=" << level()
@@ -2044,6 +2049,10 @@ brain::solve_instance(bool load_it){
 	o_info.bjo_max_variants = iinfo.ist_num_variants_stat.vs_max_val.get_d();
 	o_info.bjo_avg_variants = iinfo.ist_num_variants_stat.avg.get_d();
 
+	DBG_PRT(105, os << " LOC_CHOS=" << br_dbg.dbg_num_loc_cho << "/";
+		os << (br_dbg.dbg_num_loc_cho + br_dbg.dbg_num_glb_cho);
+	);
+	
 	BRAIN_DBG(if(init_htm){ dbg_finish_html(); });
 	
 	return o_info.bjo_result;
@@ -3882,11 +3891,6 @@ neuron::neu_tunnel_signals(brain& brn, quanton& r_qua){
 		(brn.br_dbg.dbg_last_recoil_lv == brn.level())
 	);
 	
-	DBG_PRT_COND(112, (ne_index >= 0) && (ne_index <= 2), 
-		os << "NE_0-2 tunn_sig r_qua=" << &r_qua;
-		os << " neu=" << this
-	);
-
 	quanton* qua = &r_qua;
 	BRAIN_CK(qua->get_charge() != cg_neutral);
 	DBG_PRT(17, os << "tunneling " << qua << " in " << this);
@@ -4109,11 +4113,19 @@ neuron::dbg_get_charges(row_long_t& chgs){
 }
 
 comparison
-brain::select_propag_side(long sz1, row_long_t& all_sz1, long sz2, row_long_t& all_sz2){
-	if(sz1 < sz2){
+brain::select_propag_side(bool cnfl1, long sz1, row_long_t& all_sz1, 
+						bool cnfl2, long sz2, row_long_t& all_sz2)
+{
+	if(cnfl1 && ! cnfl2){
 		return -1;
 	}
+	if(! cnfl1 && cnfl2){
+		return 1;
+	}
 	if(sz1 > sz2){
+		return -1;
+	}
+	if(sz1 < sz2){
 		return 1;
 	}
 	long resp = 0;
@@ -4141,8 +4153,8 @@ brain::select_propag_side(long sz1, row_long_t& all_sz1, long sz2, row_long_t& a
 }
 
 /*
-void
-brain::start_propagation(quanton& nxt_qua){
+void // OLD
+brain::start_propagation(quanton& nxt_qua){ // OLD
 	BRAIN_CK(data_level().ld_idx == level());
 	
 	quanton& qua = nxt_qua;
@@ -4192,8 +4204,8 @@ brain::start_propagation(quanton& nxt_qua){
 }
 */
 
-void
-brain::start_propagation(quanton& nxt_qua){
+void // NEW
+brain::start_propagation(quanton& nxt_qua){ // NEW
 	BRAIN_CK(data_level().ld_idx == level());
 	
 	quanton& qua = nxt_qua;
@@ -4232,6 +4244,7 @@ brain::start_propagation(quanton& nxt_qua){
 	BRAIN_CK(curr_cho() == &qua);
 	BRAIN_CK(! data_level().has_learned());
 	long sz1 = get_last_lv_all_trail_sz(all_sz1);
+	bool cnfl1 = found_conflict();
 
 	replace_choice(qua, opp, dbg_call_1);
 	BRAIN_CK(prv_lv == level());
@@ -4243,8 +4256,9 @@ brain::start_propagation(quanton& nxt_qua){
 	BRAIN_CK(curr_cho() == &opp);
 	BRAIN_CK(! data_level().has_learned());
 	long sz2 = get_last_lv_all_trail_sz(all_sz2);
+	bool cnfl2 = found_conflict();
 	
-	comparison nxt_side = select_propag_side(sz1, all_sz1, sz2, all_sz2);
+	comparison nxt_side = select_propag_side(cnfl1, sz1, all_sz1, cnfl2, sz2, all_sz2);
 	
 	if(nxt_side < 0){
 		replace_choice(opp, qua, dbg_call_2);

@@ -273,6 +273,9 @@ dbg_inst_info::init_dbg_inst_info(){
 	dbg_max_lv = 0;
 	dbg_max_wrt_num_subnmp = 0;
 	dbg_max_fnd_num_subnmp = 0;
+	
+	dbg_num_glb_cho = 0;
+	dbg_num_loc_cho = 0;
 }
 #endif
 
@@ -1763,5 +1766,39 @@ neuron::ck_all_has_charge(long max_lv_idx){
 	}
 #endif
 	return all_ok;
+}
+
+long
+neuromap::dbg_get_depth_in(neuromap& hd_nmp){
+	neuromap* nxt_nmp = &hd_nmp;
+	long dpth = 0;
+	while(nxt_nmp != NULL_PT){
+		dpth++;
+		if(nxt_nmp == this){
+			return dpth;
+		}
+		nxt_nmp = nxt_nmp->na_submap;
+	}
+	return 0;
+}
+
+bj_ostream&
+neuromap::print_cand_id(bj_ostream& os){
+#ifdef FULL_DEBUG
+	brain& brn = get_brn();
+	row_neuromap_t& all_cand = brn.br_candidate_nmp_lvs;
+	os << "[";
+	for(long aa = 0; aa < all_cand.size(); aa++){
+		BRAIN_CK(all_cand[aa] != NULL_PT);
+		neuromap& nmp = *(all_cand[aa]);
+		long dpth = dbg_get_depth_in(nmp);
+		os << dpth;
+		if(dpth > 9){
+			os << ".";
+		}
+	}
+	os << "]";
+#endif
+	return os;
 }
 

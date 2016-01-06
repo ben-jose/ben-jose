@@ -61,6 +61,16 @@ some strings for html printing.
 #define HTMe_src "'></script>"
 #define HTMi_script "<script>"
 #define HTMe_script "</script>"
+#define HTMi_pre "<pre>"
+#define HTMe_pre "</pre>"
+#define HTMi_style "<style>"
+#define HTMe_style "</style>"
+
+#define HTM_word_wrap_css3 "white-space: pre-wrap;       /* css-3 */"
+#define HTM_word_wrap_mozilla "white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */"
+#define HTM_word_wrap_opera4 "white-space: -pre-wrap;      /* Opera 4-6 */"
+#define HTM_word_wrap_opera7 "white-space: -o-pre-wrap;    /* Opera 7 */"
+#define HTM_word_wrap_ie "word-wrap: break-word;       /* Internet Explorer 5.5+ */"
 
 #define HTM_div(nm_dv) "<div id='" + nm_dv + "'></div>" 
 	

@@ -1,13 +1,13 @@
 
 CURR_LAPS=449 YES_SAT=1000 NO_SAT=0 TMOUT=0 MMOUT=0 ERR=0 UNKNOWN_SAT=0 
-SOLVE SEGs tot=595.95 avg=0.60 max=6.57 (avg/max)=9.07%
-BYTES USED tot=173356000.00 avg=173356.00 max=1675616256.00 (avg/max)=0.01%
+SOLVE SEGs tot=609.18 avg=0.61 max=6.71 (avg/max)=9.08%
+BYTES USED tot=173356000.00 avg=173356.00 max=1878941696.00 (avg/max)=0.01%
 
 
 LAPS tot=296025.00 avg=296.03 max=2623.00 (avg/max)=11.29%
-LOAD SEGs tot=3.12 avg=0.00 max=0.00 (avg/max)=77.96%
-SOLVE SEGs tot=595.95 avg=0.60 max=6.57 (avg/max)=9.07%
-BYTES USED tot=173356000.00 avg=173356.00 max=1675616256.00 (avg/max)=0.01%
+LOAD SEGs tot=3.11 avg=0.00 max=0.00 (avg/max)=62.24%
+SOLVE SEGs tot=609.18 avg=0.61 max=6.71 (avg/max)=9.08%
+BYTES USED tot=173356000.00 avg=173356.00 max=1878941696.00 (avg/max)=0.01%
 SAVED tot=5031.00 avg=5.03 max=117.00 (avg/max)=4.30%
 VARIANTS tot=3037.64 avg=1.52 max=3.00 (avg/max)=50.63%
 NUM_FINDS tot=619.00 avg=0.62 max=57.00 (avg/max)=1.09%
@@ -19,4 +19,4 @@ EQ_NEW_HITS tot=0.00 avg=0.00 max=0.00 (avg/max)=0.00%
 EQ_OLD_HITS tot=0.00 avg=0.00 max=0.00 (avg/max)=0.00%
 SB_NEW_HITS tot=0.00 avg=0.00 max=0.00 (avg/max)=0.00%
 SB_OLD_HITS tot=261.00 avg=0.26 max=40.00 (avg/max)=0.65%
-TOTAL TIME = 600.19
+TOTAL TIME = 613.47

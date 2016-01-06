@@ -104,9 +104,23 @@ brain::dbg_start_html(){
 	of << "\t\t " << HTMi_src << CY_LIB_DIR << "/cytoscape.js" << HTMe_src << bj_eol;
 	of << "\t\t " << HTMi_src << CY_LIB_DIR << "/show_cnf_fn.js" << HTMe_src << bj_eol;
 	
-	of << "\t" << HTMe_head << bj_eol;
+	of << "\t\t " << HTMi_style << "\n";
+	of << "\t\t " << "pre {\n";
+	of << "\t\t\t " << HTM_word_wrap_css3 << "\n";
+	of << "\t\t\t " << HTM_word_wrap_mozilla << "\n";
+	of << "\t\t\t " << HTM_word_wrap_opera4 << "\n";
+	of << "\t\t\t " << HTM_word_wrap_opera7 << "\n";
+	of << "\t\t\t " << HTM_word_wrap_ie << "\n";
+	of << "\t\t " << "}\n";
+	of << "\t\t " << HTMe_style << "\n";
 	
+	of << "\t" << HTMe_head << bj_eol;
 	of << "\t" << HTMi_body << bj_eol;
+	of << "\t" << HTMi_pre << bj_eol;
+
+	of << HTMi_h1 << "\n";
+	of << htm_tit << "\n";
+	of << HTMe_h1 << "\n";
 	
 	of.flush();
 
@@ -120,6 +134,7 @@ brain::dbg_finish_html(){
 	bj_ofstream& of = br_dbg_htm_os;
 	BRAIN_CK(of.good() && of.is_open());
 
+	of << "\t" << HTMe_pre << bj_eol;
 	of << "\t" << HTMe_body << bj_eol;
 	of << HTMe_html << bj_eol;
 	
@@ -209,7 +224,7 @@ brain::dbg_update_html_cy_graph(ch_string cy_kk, coloring* the_col, ch_string ht
 	}
 	
 	ch_string stp_aa_str = long_to_str(aa);
-	ch_string step_title = "Graph #" + stp_aa_str + HTM_br;
+	ch_string step_title = "Graph #" + stp_aa_str;
 	of << "\t\t " << step_title << bj_eol;
 
 	ch_string div_nm = "cnf_graph_" + stp_aa_str;
@@ -567,18 +582,18 @@ neuromap::map_dbg_html_data_str(ch_string msg){
 	ss_msg << " " << dbg_na_id() << " '" << id_str << "'";
 	ss_msg << HTMe_h2 << "\n";
 	
-	ss_msg << "nmp=" << this << HTM_br << "\n" << HTM_br << HTM_br;
+	ss_msg << "nmp=" << this << "\n";
 	ss_msg << " is_MONO=" << is_na_mono();
 	ss_msg << " #sub=" << na_num_submap;
 	ss_msg << " has_sub=" << has_submap();
-	ss_msg << HTM_br << "\n";
+	ss_msg << "\n";
 	ss_msg << "all_sub=[";
 	print_all_subnmp(ss_msg, true);
 	ss_msg << "]\n";
-	ss_msg << HTM_br << "\n";
+	ss_msg << "\n";
 	ss_msg << "ALL_MONOS=";
 	brn.dbg_print_htm_all_monos(ss_msg);
-	ss_msg << HTM_br << "\n";
+	ss_msg << "\n";
 	ss_msg << "nmp_phi_id='" << id_str << "'" << "\n";
 	ss_msg << "min_sha=" << na_dbg_tauto_min_sha_str << "\n";
 	ss_msg << "tauto_sha=" << na_dbg_tauto_sha_str << "\n";
@@ -587,7 +602,7 @@ neuromap::map_dbg_html_data_str(ch_string msg){
 	ss_msg << "path=\n" << na_dbg_tauto_pth << "\n";
 	ss_msg << "COL=\n";
 	na_dbg_tauto_col.dbg_print_qua_ids(ss_msg);
-	ss_msg << HTM_br << "\n";
+	ss_msg << "\n";
 	
 	htm_msg = ss_msg.str();
 #endif

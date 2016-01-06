@@ -78,15 +78,18 @@ bj_ostream&	dbg_get_out_stm(solver* slv);
 
 void	dbg_print_left_margin(solver* pt_slv, bj_ostream& os, long dbg_lv);
 
+//			bool is_htm_1 = (&bj_dbg != &os);
+
+
 #define	DBG_PRT_SLV(pt_slv, o_stm, lev, cond, comm) \
 	DBG( \
 		if(DBG_BR_COND(pt_slv, lev, cond)){ \
 			bj_ostream& os = dbg_get_out_stm(pt_slv); \
-			bool is_htm_1 = (&bj_dbg != &os); \
+			bool is_htm_1 = false; \
 			if(is_htm_1){ os << bj_eol << "<pre>"; } \
 			dbg_print_left_margin(pt_slv, os, lev); \
 			comm; \
-			if(is_htm_1){ os << "</pre><br>" << bj_eol; } \
+			if(is_htm_1){ os << "</pre>" << bj_eol; } \
 			os << bj_eol; \
 			os.flush(); \
 		} \
