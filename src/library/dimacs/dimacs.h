@@ -123,6 +123,24 @@ public:
 
 	~dima_dims(){
 	}
+	
+	void	update_with_sz(long cls_sz){
+		dd_tot_ccls++;
+		dd_tot_lits += cls_sz;
+		if(cls_sz == 2){ dd_tot_twolits++; }
+	}
+	
+	static
+	long	max_abs_of(row<long>& all_lits){
+		long mm = 0;
+		for(long aa = 0; aa < all_lits.size(); aa++){
+			long vv = abs_long(all_lits[aa]);
+			if(vv > mm){
+				mm = vv;
+			}
+		}
+		return mm;
+	}
 
 	void	init_dima_dims(long ini_val = 0){
 		dd_tot_ccls = ini_val;

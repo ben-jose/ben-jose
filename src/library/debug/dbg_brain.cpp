@@ -317,7 +317,12 @@ dbg_find_diff_tauto_vs_simple_neus(brain& brn, row_neuron_t& not_in_tauto,
 	row_neuron_t& dbg_simple_neus = brn.br_dbg.dbg_simple_neus;
 
 	row_neuron_t dbg_tauto_neus;
-	srt_row_as<neuron>(brn.br_tauto_neus_srg.sg_step_sortees, dbg_tauto_neus);
+	//srt_row_as<neuron>(brn.br_tauto_neus_srg.sg_step_sortees, dbg_tauto_neus);
+	
+	sort_glb& srg = brn.br_tauto_neus_srg;
+	row<sortee*>& rr1 = brn.br_tauto_neus_srg.sg_step_sortees;
+	row<long> cols;
+	srt_row_as_colors<neuron>(srg, rr1, dbg_tauto_neus, cols, tid_sset_consec, false);
 
 	dbg_find_not_in_rr1(brn, dbg_tauto_neus, dbg_simple_neus, not_in_tauto);
 	dbg_find_not_in_rr1(brn, dbg_simple_neus, dbg_tauto_neus, not_in_simple);
@@ -594,9 +599,11 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 		map_get_all_quas(all_f_qu);
 		os << "\n nmp_quas=" << all_f_qu << "\n";
 		
+		row_neuron_t all_f_ne;
+		map_get_all_neus(all_f_ne);
 		os << "\n nmp_neus_idxs=[";
-		for(long aa = 0; aa < na_all_cov.size(); aa++){
-			neuron* neu = na_all_cov[aa];
+		for(long aa = 0; aa < all_f_ne.size(); aa++){
+			neuron* neu = all_f_ne[aa];
 			BRAIN_CK(neu != NULL_PT);
 			os << neu->ne_index << ".";
 		}
@@ -914,20 +921,23 @@ bool
 dbg_run_satex_on(brain& brn, ch_string f_nam, neuromap* dbg_nmp){
 #ifdef FULL_DEBUG
 	bool is_no = dbg_run_satex_is_no_sat(f_nam);
+	bool has_nmp = (dbg_nmp != NULL_PT);
+	bool is_min_wrt = (has_nmp && (dbg_nmp->na_upd_to_write));
+	
 	MARK_USED(is_no);
 	DBG_COMM_WITH(70, brn, 
 		if(! is_no){
 			ch_string msg_htm = "ABORTING_WITH";
-			if(dbg_nmp != NULL_PT){
+			if(has_nmp){
 				msg_htm = dbg_nmp->map_dbg_html_data_str(msg_htm);
 			}
 			
-			if(dbg_nmp != NULL_PT){
+			if(has_nmp){
 				dbg_nmp->map_dbg_set_cy_maps();
 			}
 			brn.dbg_update_html_cy_graph(CY_NMP_KIND, 
 						&(brn.br_tmp_ini_tauto_col), msg_htm);
-			if(dbg_nmp != NULL_PT){
+			if(has_nmp){
 				dbg_nmp->map_dbg_reset_cy_maps();
 			}
 		}
@@ -941,7 +951,7 @@ dbg_run_satex_on(brain& brn, ch_string f_nam, neuromap* dbg_nmp){
 		os << "\n=========================================================\n";
 		os << "\n=========================================================\n";
 		os << "ABORTING_DATA ";
-		if((dbg_nmp != NULL_PT) && (dbg_nmp->na_upd_to_write)){
+		if(is_min_wrt){
 			os << "(MINIMAL_WRITE)";
 		}
 		os << "\n";
@@ -953,7 +963,7 @@ dbg_run_satex_on(brain& brn, ch_string f_nam, neuromap* dbg_nmp){
 		
 		brn.dbg_prt_all_cands(os, true);
 		brn.dbg_prt_all_nxt_cands(os, true);
-		if(dbg_nmp != NULL_PT){
+		if(has_nmp){
 			os << " nmp=\n" << *dbg_nmp << "\n\n";
 			os << " na_idx=" << dbg_nmp->na_index;
 		}
@@ -964,7 +974,7 @@ dbg_run_satex_on(brain& brn, ch_string f_nam, neuromap* dbg_nmp){
 		os << " \nduring ff=\n" << o_ff << bj_eol;
 		
 		os << "END_OF_aborting_data";
-		if((dbg_nmp != NULL_PT) && (dbg_nmp->na_upd_to_write)){
+		if(is_min_wrt){
 			os << "(MINIMAL_WRITE)";
 		}
 		os << "\n";
@@ -972,10 +982,15 @@ dbg_run_satex_on(brain& brn, ch_string f_nam, neuromap* dbg_nmp){
 		os << bj_eol;
 		os.flush();
 
-		if((dbg_nmp != NULL_PT) && (dbg_nmp->na_upd_to_write)){
+		if(is_min_wrt){
+			BRAIN_CK(! dbg_nmp->na_dbg_is_no_abort_full_nmp);
+			dbg_nmp->na_dbg_is_no_abort_full_nmp = true;
+			
 			dbg_nmp->map_write(true);
+			
 			ch_string o_ff2 = brn.dbg_prt_margin(os);
-			os << "CNF_FULL_FILE=\n" << f_nam << "\n";
+			os << "CNF_FULL_FILE=\n" << dbg_nmp->na_dbg_is_no_abort_full_wrt_pth << "\n";
+			os << "CNF_DURING_MIN_FILE=\n" << f_nam << "\n";
 			os << " \nduring ff=\n" << o_ff2 << "\n";
 			os << "FULL_WRITE_OK !!!!\n\n";
 		}
@@ -1391,6 +1406,7 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 	}
 	if(from_tee){
 		os << qu_id; 
+		os << ".ti." << ps_ti; 
 		os << "|" << qu_tee.so_qua_id;
 		os.flush();
 		return os;
@@ -1800,5 +1816,25 @@ neuromap::print_cand_id(bj_ostream& os){
 	os << "]";
 #endif
 	return os;
+}
+
+void
+neuron::dbg_get_charges(row_long_t& chgs){
+#ifdef FULL_DEBUG
+	for(long aa = 0; aa < fib_sz(); aa++){
+		BRAIN_CK(ne_fibres[aa] != NULL_PT);
+		quanton& qua = *(ne_fibres[aa]);
+		if(qua.is_pos()){
+			chgs.push(1);
+		}
+		if(qua.is_neg()){
+			chgs.push(0);
+		}
+		if(qua.is_nil()){
+			chgs.push(3);
+		}
+		//chgs.push(qua.qlevel());
+	}
+#endif
 }
 

@@ -41,6 +41,7 @@ Classes and that implement a sortor.
 #include "sortor.h"
 
 #include "brain.h"	// only needed for print_sortee & debug of stab_mutual_unique
+//include "dbg_sortor.h"	// only needed for elem_sor last decl
 
 char* sortee::CL_NAME = as_pt_char("{sortee}");
 char* sorset::CL_NAME = as_pt_char("{sorset}");
@@ -79,7 +80,19 @@ sortee::print_sortee(bj_ostream& os, bool from_pt){
 
 	//if(! from_pt){
 		// NEEDS_brain_h
-		os << "tee{(" << so_sorset_consec << "." << so_tee_consec << ").";
+		os << "tee{";
+		os << "(";
+		if(so_sorset_consec != INVALID_NATURAL){
+			os << so_sorset_consec;
+		}
+		if((so_walk_consec != 0) && (so_walk_consec != INVALID_NATURAL)){
+			os << ".l." << so_walk_consec;
+		}
+		os << ".c." << so_tee_consec;
+		if((so_wlk_consec != 0) && (so_wlk_consec != INVALID_NATURAL)){
+			os << ".w." << so_wlk_consec;
+		}
+		os << ").";
 		
 		if(so_dbg_me_class == 1){
 			os << "q.";
@@ -89,6 +102,7 @@ sortee::print_sortee(bj_ostream& os, bool from_pt){
 			neuron* src = qua.get_source();
 			qua.print_quanton_base(os, true, qua.qu_tier, src, true);
 			
+			//os << qua.qu_id; 
 			//os << &qua;
 			//os << "  ==  " << so_qua_id;
 		}
@@ -570,12 +584,18 @@ sort_glb::build_cnf(skeleton_glb& skg, canon_cnf& the_cnf, row<canon_clause*>& t
 	the_cnf.cf_dims = sg_cnf_dims;
 
 	the_ccls.move_to(the_cnf.cf_clauses);
+	
+	SORTER_CK(! the_cnf.cf_clauses.is_empty());
+	SORTER_CK_PRT((the_cnf.cf_dims.dd_tot_ccls == the_cnf.cf_clauses.size()), 
+		sort_glb& srg = *this;
+		DBG_PRT_ABORT(srg);
+		os << " tot=" << the_cnf.cf_dims.dd_tot_ccls << "\n";
+		os << " sz=" << the_cnf.cf_clauses.size() << "\n";
+	);
 
 	the_cnf.calc_sha();
 
 	SORTER_CK(! the_cnf.cf_sha_str.empty());
-
-	//DBG_PRT(56, os << "the_cnf.cf_dims.dd_tot_twolits=" << the_cnf.cf_dims.dd_tot_twolits);
 
 	the_cnf.init_skl_paths(skg);
 }
@@ -627,17 +647,17 @@ sort_glb::stab_recover_it(){
 	stab_release_all_sorsets();
 
 	sort_glb& srg = *this;
-	BRAIN_CK(! has_head());
+	SORTER_CK(! has_head());
 	sorset& hd_nsr = get_head_ss();
-	BRAIN_CK(has_head());
+	SORTER_CK(has_head());
 
 	SORTER_CK(! hd_nsr.has_subsets());
 	SORTER_CK(! hd_nsr.has_items());
 
 	row<sortee*>& tees = sg_step_sortees;
-	BRAIN_CK(tees.is_empty());
+	SORTER_CK(tees.is_empty());
 	for(long aa = 0; aa < tees.size(); aa++){
-		BRAIN_CK(false);
+		SORTER_CK(false);
 		sortee& tee = *(tees[aa]);
 		SORTER_CK(tee.is_alone());
 
@@ -671,8 +691,10 @@ sortee::update_totals(sort_glb& srg, long tgt_sz){
 	if(so_ccl.cc_size() == tgt_sz){
 		long n_sz = so_ccl.cc_size();
 
-		if(n_sz == 2){ srg.sg_cnf_dims.dd_tot_twolits++; }
-		srg.sg_cnf_dims.dd_tot_lits += n_sz;
+		srg.sg_cnf_dims.update_with_sz(n_sz);
+
+		//if(n_sz == 2){ srg.sg_cnf_dims.dd_tot_twolits++; }
+		//srg.sg_cnf_dims.dd_tot_lits += n_sz;
 
 		if(n_sz == 1){ srg.sg_dbg_cnf_tot_onelit++; }
 	}
@@ -764,13 +786,15 @@ srs_row_as_clauses(sort_glb& srg, row<sorset*>& rr1, row<canon_clause*>& rr2){
 
 		SORTER_CK(ccl_sz > 1);
 
-		srg.sg_cnf_dims.dd_tot_lits += ccl_sz;
-		if(ccl_sz == 2){ srg.sg_cnf_dims.dd_tot_twolits++; }
+		//srg.sg_cnf_dims.dd_tot_lits += ccl_sz;
+		//if(ccl_sz == 2){ srg.sg_cnf_dims.dd_tot_twolits++; }
 
 		rr2.push(&(the_ccl));
+		srg.sg_cnf_dims.update_with_sz(ccl_sz);
 	}
 
-	srg.sg_cnf_dims.dd_tot_ccls = rr2.size();
+	SORTER_CK(srg.sg_cnf_dims.dd_tot_ccls == rr2.size());
+	//srg.sg_cnf_dims.dd_tot_ccls = rr2.size();
 
 	return all_consec;
 }
@@ -804,8 +828,18 @@ cmp_sortees(sortee* const & srt1, sortee* const & srt2){
 brain&
 sort_glb::get_dbg_brain(){
 	brain* pt_brn = get_dbg_brn();
-	BRAIN_CK(pt_brn != NULL_PT);
+	SORTER_CK(pt_brn != NULL_PT);
 	return *pt_brn;
+}
+
+ch_string
+sort_glb::dbg_prt_margin(bj_ostream& os, bool is_ck){
+	ch_string ret = "INVALID_STR_sort_glb::dbg_prt_margin";
+	brain* pt_brn = get_dbg_brn();
+	if(pt_brn != NULL_PT){
+		pt_brn->dbg_prt_margin(os, is_ck);
+	}
+	return ret;
 }
 
 void
@@ -814,8 +848,10 @@ sorset::step_mutual_stabilize_rec(sort_glb& srg1, sort_glb& srg2)
 	// pre checks
 	
 	step_mutual_op_t oper = srg1.sg_step_mutual_op;
+	bool is_wlk_op = ((oper == sm_walk) || (oper == sm_get_ccls)); 
 	
-	SORTER_CK((oper == sm_walk) || (&srg1 != &srg2));
+	//SORTER_CK((oper == sm_walk) || (&srg1 != &srg2));
+	SORTER_CK(is_wlk_op || (&srg1 != &srg2));
 	SORTER_CK(srg1.sg_curr_stab_consec >= srg1.sg_dbg_last_id);
 	SORTER_CK(srg2.sg_curr_stab_consec >= srg2.sg_dbg_last_id);
 	
@@ -841,7 +877,7 @@ sorset::step_mutual_stabilize_rec(sort_glb& srg1, sort_glb& srg2)
 	row<canon_clause*>& all_ccl = srg1.sg_step_mutual_clauses;
 
 	sort_id_t* pt_stab_consec = &(srg2.sg_curr_stab_consec); // matches sort_from srg param
-	bool& one_ccl = srg1.sg_one_ccl_per_ss;
+	bool one_ccl = srg1.sg_one_ccl_per_ss;
 
 	if(oper == sm_with_opps){
 		// srg1 is passed to sort from
@@ -865,8 +901,7 @@ sorset::step_mutual_stabilize_rec(sort_glb& srg1, sort_glb& srg2)
 		all_ss.push(this);
 	}
 
-	//bool has_one_item = one_item();
-	bool set_mul_op = ((oper == sm_walk) || (oper == sm_get_ccls)); 
+	bool set_mul_op = is_wlk_op; 
 	if(set_mul_op && (srg1.sg_step_first_multiple == NULL_PT) && is_multitem()){
 		srg1.sg_step_first_multiple = this;
 	}
@@ -889,10 +924,13 @@ sorset::step_mutual_stabilize_rec(sort_glb& srg1, sort_glb& srg2)
 				has_diff = true;
 			}
 
-			if(oper != sm_walk){
-				srt.so_tee_consec = tee_consec;
-			} else {
+			SORTER_CK(tee_consec != 0);
+			if(oper == sm_walk){
+				srt.so_tee_consec = INVALID_NATURAL;
 				srt.so_wlk_consec = tee_consec;
+			} else {
+				srt.so_tee_consec = tee_consec;
+				srt.so_wlk_consec = INVALID_NATURAL;
 			}
 	
 			if(all_consec){			
@@ -913,11 +951,15 @@ sorset::step_mutual_stabilize_rec(sort_glb& srg1, sort_glb& srg2)
 
 		canon_clause& tee_ccl = srt.so_ccl;
 		if(oper == sm_get_ccls){
-			//SORTER_CK(! one_ccl);
-			// one ccl by sorset
-			if(one_ccl){ if(rgt == fst){ all_ccl.push(&tee_ccl); } }
-			else { all_ccl.push(&tee_ccl); }
-		} else {
+			bool add_it = (! one_ccl || (rgt == fst));
+			if(add_it){
+				all_ccl.push(&tee_ccl);
+				long ccl_sz = tee_ccl.cc_size();
+				srg1.sg_cnf_dims.update_with_sz(ccl_sz);
+			}
+		} 
+		if(! is_wlk_op){
+			SORTER_CK(oper != sm_get_ccls);
 			// clear my ccls
 			tee_ccl.cc_clear(false);
 		}
@@ -997,11 +1039,13 @@ sort_glb::step_mutual_stabilize(sort_glb& srg2, step_mutual_op_t op){
 	sg_step_mutual_op = op;
 	sg_step_mutual_clauses.clear();
 
-	init_counters();
+	if(op != sm_walk){
+		init_counters();
+		sg_dbg_cnf_tot_onelit = 0;
 
-	sg_dbg_cnf_tot_onelit = 0;
-
-	sg_cnf_clauses.clear();
+		sg_cnf_clauses.clear();
+		sg_got_ccls = false;
+	}
 
 	//row<sorset*> sets;
 	row<sorset*>& sets = sg_step_prv_sorsets;
@@ -1009,7 +1053,7 @@ sort_glb::step_mutual_stabilize(sort_glb& srg2, step_mutual_op_t op){
 
 	SORTER_CK(! sg_step_sorsets.is_empty());
 	SORTER_DBG(
-		//brain& brn = get_dbg_brain();
+		brain& brn = get_dbg_brain();
 		long old_ss_sz = sg_step_sorsets.size();
 		bool ss_0_hs = false;
 		bool ss_0_hi = false;
@@ -1060,13 +1104,19 @@ sort_glb::step_mutual_stabilize(sort_glb& srg2, step_mutual_op_t op){
 		os << " ssets_sz=" << sg_step_sorsets.size() << "\n";
 	);
 	SORTER_CK((op == sm_with_opps) || (sg_step_sorsets.size() <= sg_step_sortees.size()));
-	SORTER_CK(sg_cnf_dims.is_dd_virgin());
-	SORTER_CK(sg_cnf_clauses.is_empty());
+	//SORTER_CK(sg_cnf_dims.is_dd_virgin());
+	SORTER_CK((op == sm_walk) || sg_cnf_clauses.is_empty());
 	SORTER_CK((op == sm_get_ccls) || sg_step_mutual_clauses.is_empty());
 
 	if(op == sm_get_ccls){
 		sg_step_mutual_clauses.move_to(sg_cnf_clauses);
-		sg_cnf_dims.dd_tot_ccls = sg_cnf_clauses.size();
+		SORTER_CK_PRT((sg_cnf_dims.dd_tot_ccls == sg_cnf_clauses.size()), 
+			DBG_PRT_ABORT(brn);
+			os << " tot=" << sg_cnf_dims.dd_tot_ccls << "\n";
+			os << " sz=" << sg_cnf_clauses.size() << "\n";
+		);
+		//sg_cnf_dims.dd_tot_ccls = sg_cnf_clauses.size();
+		sg_got_ccls = true;
 	}
 	if(! srg1.has_head()){
 		DBG_PRT(61, os << "INITING head of " << &srg1);
@@ -1100,7 +1150,13 @@ sort_glb::stab_mutual_walk(){
 }
 
 void
-sort_glb::stab_mutual(sort_glb& srg2){
+sort_glb::stab_mutual(sort_glb& srg2, bool one_ccl_per_ss){
+	stab_mutual_core(srg2);
+	stab_mutual_end(srg2, one_ccl_per_ss);
+}
+
+void
+sort_glb::stab_mutual_core(sort_glb& srg2){
 	SORTER_CK(&srg2 != this);
 	sort_glb& srg1 = *this;
 	
@@ -1138,10 +1194,10 @@ sort_glb::stab_mutual(sort_glb& srg2){
 	SORTER_CK(! srg1.sg_step_has_diff);
 	SORTER_CK(! srg2.sg_step_has_diff);
 	
-	stab_mutual_end(srg2, true);
-	
 	SORTER_CK(srg1.sg_step_sortees.size() == srg1.sg_dbg_fst_num_items);
 	SORTER_CK(srg2.sg_step_sortees.size() == srg2.sg_dbg_fst_num_items);
+
+	//stab_mutual_end(srg2, true);
 }
 
 void
@@ -1159,8 +1215,8 @@ sort_glb::stab_mutual_end(sort_glb& srg2, bool unique_ccls){
 	SORTER_CK(srg1.sg_step_sorsets.size() == 1);
 	
 	srg1.sg_one_ccl_per_ss = unique_ccls;
-	//srg1.sg_one_ccl_per_ss = false;
-	srg1.step_mutual_stabilize(srg2, sm_get_ccls);
+	//srg1.step_mutual_stabilize(srg2, sm_get_ccls);
+	srg1.step_mutual_stabilize(srg1, sm_get_ccls);
 
 	SORTER_CK(srg1.sg_curr_stab_consec >= srg1.sg_dbg_last_id);
 	SORTER_CK(srg2.sg_curr_stab_consec >= srg2.sg_dbg_last_id);
@@ -1255,7 +1311,7 @@ sort_glb::stab_mutual_unique(sort_glb& srg2, neuromap* dbg_nmp){
 
 	bool all_consec = false;
 	while(! all_consec){
-		stab_mutual(srg2);
+		stab_mutual_core(srg2);
 
 		all_consec = srg2.sg_step_all_consec;
 
@@ -1264,6 +1320,8 @@ sort_glb::stab_mutual_unique(sort_glb& srg2, neuromap* dbg_nmp){
 		}
 	}
 	SORTER_CK(srg2.sg_step_all_consec);
+	
+	stab_mutual_end(srg2, true);
 
 	DBG_PRT(63, 
 			os << " UNIQUE cnf=" << bj_eol; sg_cnf_clauses.print_row_data(os, true, "\n");
@@ -1271,14 +1329,35 @@ sort_glb::stab_mutual_unique(sort_glb& srg2, neuromap* dbg_nmp){
 }
 
 canon_cnf&
-sort_glb::get_final_cnf(skeleton_glb& skg, bool sorted_cnf){
+sort_glb::get_final_cnf(skeleton_glb& skg, bool sorted_cnf, bool one_ccl_per_ss,
+					long precalc_tot_vars)
+{
 	// after any stab_mutual
+	SORTER_CK(! sg_cnf_clauses.is_empty());
+	if(sg_cnf_clauses.is_empty()){
+		sort_glb& srg1 = *this;
+		
+		sg_one_ccl_per_ss = one_ccl_per_ss;
+		step_mutual_stabilize(srg1, sm_get_ccls);
+
+		//SORTER_CK(precalc_tot_vars != 0);
+		sg_cnf_dims.dd_tot_vars = precalc_tot_vars;
+	}
+	SORTER_CK(! sg_cnf_clauses.is_empty());
 	DBG_PRT(64, os << " get_cnf=" << this << "\n";
 		sg_cnf_clauses.print_row_data(os, true, "\n");
 	);
 
-	BRAIN_CK(! sg_one_ccl_per_ss || (sg_step_sorsets.size() == sg_cnf_clauses.size()));
-	BRAIN_CK(sg_one_ccl_per_ss || (sg_step_sortees.size() == sg_cnf_clauses.size()));
+	SORTER_CK(! sg_one_ccl_per_ss || (sg_step_sorsets.size() == sg_cnf_clauses.size()));
+	SORTER_CK_PRT((sg_one_ccl_per_ss || (sg_step_sortees.size() == sg_cnf_clauses.size())),
+		brain& brn = get_dbg_brain();
+		DBG_PRT_ABORT(brn);
+		os << " one_ccl_per_ss=" << sg_one_ccl_per_ss << "\n";
+		os << " tee_sz=" << sg_step_sortees.size() << "\n";
+		os << " cnf_sz=" << sg_cnf_clauses.size() << "\n";
+		os << " sg_got_ccls=" << sg_got_ccls << "\n";
+		sg_cnf_clauses.print_row_data(os, true, "\n");
+	);
 
 	build_cnf(skg, sg_cnf_step, sg_cnf_clauses, sorted_cnf);
 	return sg_cnf_step;
@@ -1524,4 +1603,18 @@ sortee::is_next_choice(sort_glb& srg1){
 	//if(c1 > 0){ return true; }
 	return false;
 }
+
+/*
+template
+bool srt_row_as_colors<neuron>(sort_glb& srg, row<sortee*>& rr1, row<neuron*>& rr2, 
+				row<long>& cols, tee_id_t consec_kk, bool unique_ccls);
+
+template
+bool srt_row_as_colors<quanton>(sort_glb& srg, row<sortee*>& rr1, row<quanton*>& rr2, 
+				row<long>& cols, tee_id_t consec_kk, bool unique_ccls);
+
+template
+bool srt_row_as_colors<elem_sor>(sort_glb& srg, row<sortee*>& rr1, row<elem_sor*>& rr2, 
+				row<long>& cols, tee_id_t consec_kk, bool unique_ccls);
+*/
 

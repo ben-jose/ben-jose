@@ -296,6 +296,11 @@ public:
 		return obj;
 	}
 
+	bool	cc_is_empty(){
+		SKELETON_CK(! cc_in_free);
+		return is_empty();
+	}
+
 	long	cc_size(){
 		SKELETON_CK(! cc_in_free);
 		return size();

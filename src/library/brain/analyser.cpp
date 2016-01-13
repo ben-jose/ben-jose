@@ -692,24 +692,13 @@ brain::candidate_find_analysis(bool& found_top, analyser& deducer,
 		tmp_dct.init_deduction();
 		deducer.deduction_analysis(nmp_causes, tmp_dct, max_lv);
 		write_analysis(nmp_causes, tmp_dct);
- 
 		
 		long old_lv = nxt_lv;
 		if(tmp_dct.dt_target_level >= old_lv){
-			BRAIN_CK_PRT(false, 
-				DBG_PRT_ABORT(brn);
-				print_trail(os);
-				os << " nmp_causes=" << nmp_causes << "\n";
-				os << " max_lv=" << max_lv << "\n";
-				os << " nxt_lv=" << nxt_lv << "\n";
-				os << " tg_lv=" << tmp_dct.dt_target_level << "\n";
-				os << " nmp=" << out_nmp << "\n";
-				os << " neu[8]=" << &(br_neurons[8]) << "\n";
-			);
+			BRAIN_CK(false);
 			DBG_PRT(39, os << "#f=" << ncf << "." << dbg_num_cicl;
 				os << ".find_continue. (tgt_lv >= old_lv).";
 				os << " nmp=" << (void*)(out_nmp));
-			//continue;
 			break;
 		}
 		
@@ -737,6 +726,25 @@ brain::candidate_find_analysis(bool& found_top, analyser& deducer,
 	
 	//return out_nmp;
 } // end_of_candidate_fnd_analysis
+
+void
+brain::add_top_cands(row_neuromap_t& to_wrt){
+	row_neuromap_t& all_cand = br_candidate_nmp_lvs;
+	for(long aa = 0; aa < all_cand.size(); aa++){
+		neuromap* nmp = all_cand[aa];
+		BRAIN_CK(nmp != NULL_PT);
+		BRAIN_CK(nmp->nmp_is_cand());
+		
+		quanton& qua = *(nmp->na_candidate_qua);
+		BRAIN_CK(qua.is_pos());
+		
+		long q_lv = qua.qlevel();
+		if(q_lv != ROOT_LEVEL){
+			break;
+		}
+		nmp->nmp_add_to_write(to_wrt);
+	}
+}
 
 void
 prop_signal::get_ps_cand_to_wrt(brain& brn, row<neuromap*>& to_wrt){
@@ -793,16 +801,75 @@ analyser::deduction_analysis(row_quanton_t& causes, deduction& dct, long max_lv)
 
 	fill_dct(dct);
 
-	/*while(! is_de_end_of_neuromap()){
-		BRAIN_CK(qlr.has_curr_quanton());
-		find_next_source();
-	}
-	BRAIN_CK(qlr.has_curr_quanton());*/
-	
 	// reset all
 	nkpr.clear_all_quantons();
 	BRAIN_CK(nkpr.dk_quas_lyrs.is_ql_empty());
 	BRAIN_CK(nkpr.nk_get_counter() == 0);
+}
+
+bool
+quanton::is_qu_to_upd_wrt_tk(){
+	bool is_e = is_ticket_eq(qu_upd_to_wrt_tk, qu_charge_tk);
+	return is_e;
+}
+
+bool
+neuron::is_ne_to_wrt(){
+	BRAIN_CK(ck_wrt_qu0(false));
+	bool is_e = is_ticket_eq(ne_upd_to_wrt_tk, ne_fibres[0]->qu_charge_tk);
+	return is_e;
+}
+
+bool
+neuron::ck_wrt_qu0(bool just_upd){ 
+#ifdef FULL_DEBUG
+	quanton* qu0 = ne_fibres[0];
+	if(qu0 == NULL_PT){
+		return false;
+	}
+	if(! qu0->has_charge()){
+		return false;
+	}
+	if(! just_upd && ! is_ne_source()){
+		return false;
+	}
+#endif
+	return true;
+}
+
+void
+quanton::update_qu_to_wrt_tk(){
+	BRAIN_CK(qu_inverse != NULL_PT);
+	qu_upd_to_wrt_tk = qu_charge_tk;
+	qu_inverse->qu_upd_to_wrt_tk = qu_charge_tk;
+}
+
+void
+neuron::update_ne_to_wrt_tk(brain& brn, ticket& wrt_tk){
+	//BRAIN_CK(! ne_candidate_tk.is_older_than(brn.get_last_cand()));
+	
+	ne_to_wrt_tk = wrt_tk;
+}
+
+void
+brain::write_get_tk(ticket& nw_tk){
+	row_neuromap_t& cands = br_candidate_nmp_lvs;
+	row_neuromap_t& nxt_cands = br_candidate_nxt_nmp_lvs;
+	//BRAIN_CK(nxt_cands.is_empty());
+	
+	long prv_lv = 0;
+	if(! nxt_cands.is_empty()){
+		BRAIN_CK(nxt_cands.last() != NULL_PT);
+		prv_lv = nxt_cands.last()->get_cand_lv();
+	} else {
+		if(! cands.is_empty()){
+			BRAIN_CK(cands.last() != NULL_PT);
+			prv_lv = cands.last()->get_cand_lv();
+		}
+	}
+	
+	nw_tk.tk_level = prv_lv;
+	nw_tk.tk_recoil = recoil();
 }
 
 void
@@ -848,88 +915,6 @@ brain::write_analysis(row_quanton_t& causes, deduction& dct){
 		}
 		nxt_qua->update_source_wrt_tk(brn);
 		nxt_qua = qlr.dec_curr_quanton();
-	}
-}
-
-bool
-quanton::is_qu_to_upd_wrt_tk(){
-	bool is_e = is_ticket_eq(qu_upd_to_wrt_tk, qu_charge_tk);
-	return is_e;
-}
-
-bool
-neuron::is_ne_to_wrt(){
-	BRAIN_CK(ck_wrt_qu0(false));
-	bool is_e = is_ticket_eq(ne_upd_to_wrt_tk, ne_fibres[0]->qu_charge_tk);
-	return is_e;
-}
-
-bool
-neuron::ck_wrt_qu0(bool just_upd){
-	quanton* qu0 = ne_fibres[0];
-	if(qu0 == NULL_PT){
-		return false;
-	}
-	if(! qu0->has_charge()){
-		return false;
-	}
-	if(! just_upd && ! is_ne_source()){
-		return false;
-	}
-	return true;
-}
-
-void
-quanton::update_qu_to_wrt_tk(){
-	BRAIN_CK(qu_inverse != NULL_PT);
-	qu_upd_to_wrt_tk = qu_charge_tk;
-	qu_inverse->qu_upd_to_wrt_tk = qu_charge_tk;
-}
-
-void
-neuron::update_ne_to_wrt_tk(brain& brn, ticket& wrt_tk){
-	//BRAIN_CK(! ne_candidate_tk.is_older_than(brn.get_last_cand()));
-	
-	ne_to_wrt_tk = wrt_tk;
-}
-
-void
-brain::write_get_tk(ticket& nw_tk){
-	row_neuromap_t& cands = br_candidate_nmp_lvs;
-	row_neuromap_t& nxt_cands = br_candidate_nxt_nmp_lvs;
-	//BRAIN_CK(nxt_cands.is_empty());
-	
-	long prv_lv = 0;
-	if(! nxt_cands.is_empty()){
-		BRAIN_CK(nxt_cands.last() != NULL_PT);
-		prv_lv = nxt_cands.last()->get_cand_lv();
-	} else {
-		if(! cands.is_empty()){
-			BRAIN_CK(cands.last() != NULL_PT);
-			prv_lv = cands.last()->get_cand_lv();
-		}
-	}
-	
-	nw_tk.tk_level = prv_lv;
-	nw_tk.tk_recoil = recoil();
-}
-
-void
-brain::add_top_cands(row_neuromap_t& to_wrt){
-	row_neuromap_t& all_cand = br_candidate_nmp_lvs;
-	for(long aa = 0; aa < all_cand.size(); aa++){
-		neuromap* nmp = all_cand[aa];
-		BRAIN_CK(nmp != NULL_PT);
-		BRAIN_CK(nmp->nmp_is_cand());
-		
-		quanton& qua = *(nmp->na_candidate_qua);
-		BRAIN_CK(qua.is_pos());
-		
-		long q_lv = qua.qlevel();
-		if(q_lv != ROOT_LEVEL){
-			break;
-		}
-		nmp->nmp_add_to_write(to_wrt);
 	}
 }
 

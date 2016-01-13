@@ -878,7 +878,16 @@ canon_cnf::release_all_clauses(skeleton_glb& skg, bool free_mem){
 
 void
 canon_cnf::update_chars_to_write(){
-	SKELETON_CK(cf_dims.dd_tot_ccls == cf_clauses.size());
+	SKELETON_DBG(
+		brain* pt_brn = get_dbg_brn();
+		SKELETON_CK(pt_brn != NULL_PT);
+		brain& brn = *pt_brn;
+	);
+	SKELETON_CK_PRT((cf_dims.dd_tot_ccls == cf_clauses.size()),
+		DBG_PRT_ABORT(brn);
+		os << " dims_tot=" << cf_dims.dd_tot_ccls << "\n";
+		os << " cls_sz=" << cf_clauses.size() << "\n";
+	);
 	
 	row<canon_clause*>& all_ccl = cf_clauses;
 	if(all_ccl.size() == cf_num_cls_in_chars){
@@ -908,6 +917,11 @@ canon_cnf::update_chars_to_write(){
 		canon_clause& ccl1 = *(all_ccl[ii]);
 
 		DBG_PRT(85, ccl1.print_canon_clause(os));
+		SKELETON_CK_PRT((! ccl1.cc_is_empty()), 
+			DBG_PRT_ABORT(brn);
+			os << " all_ccl=\n";
+			all_ccl.print_row_data(os, true, "\n");
+		);
 		ccl1.add_chars_to(cnn);
 	}
 	cf_num_cls_in_chars = all_ccl.size();

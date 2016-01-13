@@ -353,12 +353,12 @@ neuron::update_create_cand(brain& brn, quanton& r_qua,
 			BRAIN_DBG(op1 = 1);
 			creat_cand.na_all_cov.push(this);
 		} 
-		BRAIN_DBG(
+		/*BRAIN_DBG(
 			if(in_prop) {
 				prop_signal& nxt_ps = creat_cand.na_all_propag.inc_sz();
 				nxt_ps.init_qua_signal(fib0());
 			}
-		);
+		);*/
 	} else {
 		BRAIN_DBG(op1 = 2);
 		cov_entry& cty = curr_nmp->na_all_centry.inc_sz();
@@ -2193,11 +2193,11 @@ brain::dbg_prt_full_stab(){
 
 	neus_srg.sg_cnf_clauses.clear();
 	
-	neus_srg.stab_mutual(quas_srg);
+	neus_srg.stab_mutual(quas_srg, true);
 	
 	//bj_out << "ALL_CCL=\n";
 	
-	canon_cnf& the_cnf = neus_srg.get_final_cnf(skg, true);
+	canon_cnf& the_cnf = neus_srg.get_final_cnf(skg, true, true);
 
 	bj_out << "THE_CNF=" << bj_eol;
 	bj_out << the_cnf;
@@ -3300,9 +3300,9 @@ neuromap::nmp_init_with(quanton& qua){
 	
 	qua.set_candidate(*nxt_nmp);
 	
-	BRAIN_CK(na_all_propag.is_empty());
-	prop_signal& fst_ps = na_all_propag.inc_sz();
-	fst_ps.init_qua_signal(qua);
+	//BRAIN_CK(na_all_propag.is_empty());
+	//prop_signal& fst_ps = na_all_propag.inc_sz();
+	//fst_ps.init_qua_signal(qua);
 	
 	long prv_lv = INVALID_LEVEL;
 	
@@ -3352,114 +3352,8 @@ brain::get_lst_cand_lv(){
 	return prv_lv;
 }
 
-/*void
-brain::old_init_cand_propag(neuromap& nmp, quanton* cur_qua){
-	BRAIN_DBG(brain& brn = *this);
-	quanton* nmp_cho = nmp.na_orig_cho;
-	BRAIN_CK(nmp_cho != NULL_PT);
-	BRAIN_CK(nmp_cho->is_pos());
-	
-	if(! nmp.na_propag.is_empty()){
-		BRAIN_DBG(
-			qlayers_ref qlr;
-			qlr.init_qlayers_ref(&(br_charge_trail));
-			qlr.reset_curr_quanton();
-			
-			quanton* prop_qu = qlr.get_curr_quanton();
-			BRAIN_CK(prop_qu != NULL_PT);
-			
-			if(cur_qua != NULL_PT){
-				BRAIN_CK(cur_qua->is_pos());
-				BRAIN_CK(prop_qu == cur_qua);
-				prop_qu = qlr.dec_curr_quanton();
-			}
-			
-			for(long aa = 0; aa < nmp.na_propag.size(); aa++){
-				BRAIN_CK(prop_qu != NULL_PT);
-				prop_signal aux_ps;
-				aux_ps.init_qua_signal(*prop_qu);
-				BRAIN_CK_PRT((aux_ps.equal_ps_to(nmp.na_propag[aa])), 
-					DBG_PRT_ABORT(brn);
-					os << " prop=" << nmp.na_propag << "\n";
-					os << " aux_ps=" << aux_ps << "\n";
-					os << " aa=" << aa << "\n";
-				);
-				prop_qu = qlr.dec_curr_quanton();
-			}
-		);
-		return;
-	}
-	
-	nmp.na_all_propag.append_to(nmp.na_propag, 0 , -1 , true);
-}*/
-
 bool operator != (const prop_signal& ps1, const prop_signal& ps2){
 	return (dbg_cmp_ps(ps1, ps2) != 0);
-}
-
-void
-brain::init_cand_propag(neuromap& nmp, quanton* cur_qua){
-	quanton* nmp_cho = nmp.na_orig_cho;
-	BRAIN_CK(nmp_cho != NULL_PT);
-	BRAIN_CK(nmp_cho->is_pos());
-	
-	qlayers_ref qlr;
-	qlr.init_qlayers_ref(&(br_charge_trail));
-	qlr.reset_curr_quanton();
-	
-	quanton* prop_qu = qlr.get_curr_quanton();
-	BRAIN_CK(prop_qu != NULL_PT);
-	
-	if(cur_qua != NULL_PT){
-		BRAIN_CK(cur_qua->is_pos());
-		BRAIN_CK(prop_qu == cur_qua);
-		prop_qu = qlr.dec_curr_quanton();
-	}
-	
-	if(! nmp.na_propag.is_empty()){
-		BRAIN_DBG(
-			for(long aa = 0; aa < nmp.na_propag.size(); aa++){
-				BRAIN_CK(prop_qu != NULL_PT);
-				prop_signal aux_ps;
-				aux_ps.init_qua_signal(*prop_qu);
-				BRAIN_CK(aux_ps.equal_ps_to(nmp.na_propag[aa]));
-				prop_qu = qlr.dec_curr_quanton();
-			}
-		);
-		return;
-	}
-	
-	BRAIN_CK_PRT((nmp.na_propag.is_empty()), 
-		os << "\n_________________\n ABORT_DATA\n";
-		dbg_prt_margin(os);
-		os << nmp.dbg_na_id();
-	);
-	
-	while((prop_qu != NULL_PT) && (prop_qu != nmp_cho)){
-		prop_signal& nxt_ps = nmp.na_propag.inc_sz();
-		nxt_ps.init_qua_signal(*prop_qu);
-		
-		prop_qu = qlr.dec_curr_quanton();
-	}
-	
-	BRAIN_CK((prop_qu == NULL_PT) || (prop_qu == nmp_cho));
-	if(prop_qu == nmp_cho){
-		prop_signal& nxt_ps = nmp.na_propag.inc_sz();
-		nxt_ps.init_qua_signal(*nmp_cho);
-	}
-	
-	BRAIN_DBG(
-		brain& brn = *this;
-		row<prop_signal>& all_dbg_p = brn.br_dbg_propag;
-		all_dbg_p.clear(true, true);
-		nmp.na_all_propag.append_to(all_dbg_p, 0 , -1 , true);
-
-		//prop_signal& nxt_ps = all_dbg_p.inc_sz();
-		//nxt_ps.init_qua_signal(*nmp_cho);
-	);
-	//BRAIN_CK((nmp.na_propag.equal_to_diff(dbg_cmp_ps, all_dbg_p) == INVALID_IDX) ==
-	//	nmp.na_propag.equal_to(all_dbg_p)); // OK.
-	//BRAIN_CK_PRT(nmp.na_propag.equal_to(all_dbg_p)); // NOT ok.
 }
 
 void
@@ -4094,24 +3988,6 @@ neuron::neu_tunnel_signals(brain& brn, quanton& r_qua){
 	BRAIN_CK(dbg2 || ! ck_all_has_charge(INVALID_IDX));
 }
 
-void
-neuron::dbg_get_charges(row_long_t& chgs){
-	for(long aa = 0; aa < fib_sz(); aa++){
-		BRAIN_CK(ne_fibres[aa] != NULL_PT);
-		quanton& qua = *(ne_fibres[aa]);
-		if(qua.is_pos()){
-			chgs.push(1);
-		}
-		if(qua.is_neg()){
-			chgs.push(0);
-		}
-		if(qua.is_nil()){
-			chgs.push(3);
-		}
-		//chgs.push(qua.qlevel());
-	}
-}
-
 comparison
 brain::select_propag_side(bool cnfl1, long sz1, row_long_t& all_sz1, 
 						bool cnfl2, long sz2, row_long_t& all_sz2)
@@ -4122,23 +3998,23 @@ brain::select_propag_side(bool cnfl1, long sz1, row_long_t& all_sz1,
 	if(! cnfl1 && cnfl2){
 		return 1;
 	}
-	if(sz1 > sz2){
+	/*if(sz1 > sz2){
 		return -1;
 	}
 	if(sz1 < sz2){
 		return 1;
-	}
+	}*/
 	long resp = 0;
 	long ii = 0;
 	while(true){
 		bool ok1 = all_sz1.is_valid_idx(ii);
 		bool ok2 = all_sz2.is_valid_idx(ii);
 		if(! ok1){
-			resp = -1;
+			resp = 1;
 			break;
 		}
 		if(! ok2){
-			resp = 1;
+			resp = -1;
 			break;
 		}
 		long v1 = all_sz1[ii];
@@ -4151,58 +4027,6 @@ brain::select_propag_side(bool cnfl1, long sz1, row_long_t& all_sz1,
 	}
 	return resp;
 }
-
-/*
-void // OLD
-brain::start_propagation(quanton& nxt_qua){ // OLD
-	BRAIN_CK(data_level().ld_idx == level());
-	
-	quanton& qua = nxt_qua;
-	
-	BRAIN_CK(! qua.is_mono() || qua.is_opp_mono());
-
-	inc_level(qua);
-
-	BRAIN_DBG(long prv_lv = level());
-	BRAIN_CK(data_level().ld_chosen == &qua);
-
-	BRAIN_CK(! has_psignals());
-	send_psignal(qua, NULL, tier() + 1);
-	BRAIN_CK(has_psignals());
-
-	//return; // debug purposes
-	if(qua.is_mono() || qua.is_opp_mono()){
-		return;
-	}
-
-	long num1 = propagate_signals();
-	BRAIN_DBG(long old_lv = level());
-	BRAIN_CK(old_lv <= prv_lv);
-	quanton& prv_cho1 = curr_choice();
-	BRAIN_CK(num1 > 0);
-
-	if(! found_conflict()){
-		quanton& opp_cho1 = prv_cho1.opposite();
-		replace_choice(prv_cho1, opp_cho1, dbg_call_1);
-		
-		long num2 = propagate_signals();
-		quanton& prv_cho2 = curr_choice();
-		BRAIN_CK(num2 > 0);
-
-		if(! found_conflict() && (&opp_cho1 == &prv_cho2)){
-			if(num1 > num2){
-				replace_choice(prv_cho2, prv_cho1, dbg_call_2);
-				BRAIN_CK(old_lv == level());
-			}
-
-			if((num1 == num2) && prv_cho1.qu_has_been_cho){
-				replace_choice(prv_cho2, prv_cho1, dbg_call_3);
-				BRAIN_CK(old_lv == level());
-			}
-		}
-	}
-}
-*/
 
 void // NEW
 brain::start_propagation(quanton& nxt_qua){ // NEW
@@ -4265,5 +4089,69 @@ brain::start_propagation(quanton& nxt_qua){ // NEW
 	}
 	
 	BRAIN_CK(prv_lv == level());
+}
+
+void
+brain::init_cand_propag(neuromap& nmp, quanton* cur_qua){
+	quanton* nmp_cho = nmp.na_orig_cho;
+	BRAIN_CK(nmp_cho != NULL_PT);
+	BRAIN_CK(nmp_cho->is_pos());
+	
+	qlayers_ref qlr;
+	qlr.init_qlayers_ref(&(br_charge_trail));
+	qlr.reset_curr_quanton();
+	
+	quanton* prop_qu = qlr.get_curr_quanton();
+	BRAIN_CK(prop_qu != NULL_PT);
+	
+	if(cur_qua != NULL_PT){
+		BRAIN_CK(cur_qua->is_pos());
+		BRAIN_CK(prop_qu == cur_qua);
+		prop_qu = qlr.dec_curr_quanton();
+	}
+	
+	if(! nmp.na_propag.is_empty()){
+		BRAIN_DBG(
+			for(long aa = 0; aa < nmp.na_propag.size(); aa++){
+				BRAIN_CK(prop_qu != NULL_PT);
+				prop_signal aux_ps;
+				aux_ps.init_qua_signal(*prop_qu);
+				BRAIN_CK(aux_ps.equal_ps_to(nmp.na_propag[aa]));
+				prop_qu = qlr.dec_curr_quanton();
+			}
+		);
+		return;
+	}
+	
+	BRAIN_CK_PRT((nmp.na_propag.is_empty()), 
+		os << "\n_________________\n ABORT_DATA\n";
+		dbg_prt_margin(os);
+		os << nmp.dbg_na_id();
+	);
+	
+	while((prop_qu != NULL_PT) && (prop_qu != nmp_cho)){
+		prop_signal& nxt_ps = nmp.na_propag.inc_sz();
+		nxt_ps.init_qua_signal(*prop_qu);
+		
+		prop_qu = qlr.dec_curr_quanton();
+	}
+	
+	BRAIN_CK((prop_qu == NULL_PT) || (prop_qu == nmp_cho));
+	if(prop_qu == nmp_cho){
+		prop_signal& nxt_ps = nmp.na_propag.inc_sz();
+		nxt_ps.init_qua_signal(*nmp_cho);
+	}
+	
+	/*
+	BRAIN_DBG(
+		brain& brn = *this;
+		row<prop_signal>& all_dbg_p = brn.br_dbg_propag;
+		all_dbg_p.clear(true, true);
+		nmp.na_all_propag.append_to(all_dbg_p, 0 , -1 , true);
+	);
+	//BRAIN_CK((nmp.na_propag.equal_to_diff(dbg_cmp_ps, all_dbg_p) == INVALID_IDX) ==
+	//	nmp.na_propag.equal_to(all_dbg_p)); // OK.
+	//BRAIN_CK_PRT(nmp.na_propag.equal_to(all_dbg_p)); // NOT ok.
+	*/
 }
 

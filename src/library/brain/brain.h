@@ -476,7 +476,7 @@ class alert_rel {
 	void		append_all_has_##flag_nam(brain& brn, row_quanton_t& rr_src, \
 							row_quanton_t& rr_dst, bool val_has = true); \
 	bool		same_quantons_##flag_nam(brain& brn, row_quanton_t& sup_ss, \
-							row_quanton_t& sub_ss); \
+							row_quanton_t& sub_ss, row_quanton_t* all_bad_qua = NULL_PT); \
 	bool		all_qu_have_##flag_nam(brain& brn, row_quanton_t& rr1, bool val = true); \
 \
 
@@ -562,7 +562,7 @@ class alert_rel {
 	} \
  	\
 	bool		same_quantons_##flag_nam(brain& brn, row_quanton_t& sup_ss, \
-						row_quanton_t& sub_ss) \
+						row_quanton_t& sub_ss, row_quanton_t* all_bad_qua) \
 	{ \
 		BRAIN_CK(brn.br_qu_tot_##flag_nam == 0); \
 		set_all_##flag_nam(brn, sup_ss); \
@@ -571,6 +571,7 @@ class alert_rel {
 			quanton& qua = *(sub_ss[aa]); \
 			if(! qua.has_##flag_nam()){ \
 				sm_quas = false; \
+				if(all_bad_qua != NULL_PT){ all_bad_qua->push(&qua); } \
 			} \
 		} \
 		reset_all_##flag_nam(brn, sup_ss); \
@@ -1226,7 +1227,7 @@ class neuron {
 	long			ne_tmp_col;
 
 	ticket			ne_candidate_tk;
-	ticket			ne_first_candidate_tk;
+	//ticket			ne_first_candidate_tk;
 	
 	// min_wrt system
 	ticket			ne_upd_to_wrt_tk;
@@ -1294,7 +1295,7 @@ class neuron {
 		ne_tmp_col = INVALID_COLOR;
 		
 		ne_candidate_tk.init_ticket();
-		ne_first_candidate_tk.init_ticket();
+		//ne_first_candidate_tk.init_ticket();
 		
 		ne_upd_to_wrt_tk.init_ticket();
 		ne_to_wrt_tk.init_ticket();
@@ -1427,9 +1428,9 @@ class neuron {
 	//void	set_ne_nxt_cand_tk(brain& brn, ticket& nmp_tk);
 	//bool	in_older_than_last_candidate(brain& brn);
 	
-	void	set_first_cand_tk(){
+	/*void	set_first_cand_tk(){
 		ne_first_candidate_tk = ne_candidate_tk;
-	}
+	}*/
 	
 	void	set_cand_tk(ticket& n_tk);
 	
@@ -2178,6 +2179,7 @@ class neuromap {
 	
 	row_neuron_t		na_all_found;
 	
+	long			na_guide_tot_vars;
 	coloring		na_guide_col;
 	coloring		na_pend_col;
 	
@@ -2188,7 +2190,7 @@ class neuromap {
 	quanton*		na_candidate_qua;
 	
 	// new candidate system
-	row<prop_signal>	na_all_propag;
+	//row<prop_signal>	na_all_propag;
 	grip				na_all_neu;
 	grip				na_all_qua;
 	
@@ -2203,6 +2205,9 @@ class neuromap {
 		ch_string			na_dbg_guide_sha_str;
 		ch_string			na_dbg_quick_sha_str;
 		ch_string			na_dbg_tauto_pth;
+		
+		ch_string			na_dbg_is_no_abort_full_wrt_pth;
+		bool				na_dbg_is_no_abort_full_nmp;
 		
 		coloring			na_dbg_tauto_col;
 		row_long_t 			na_dbg_phi_id;
@@ -2245,6 +2250,7 @@ class neuromap {
 		
 		na_all_found.clear();
 		
+		na_guide_tot_vars = 0;
 		na_guide_col.init_coloring();
 		na_pend_col.init_coloring();
 		
@@ -2253,7 +2259,7 @@ class neuromap {
 		na_candidate_tk.init_ticket();
 		na_candidate_qua = NULL_PT;
 
-		na_all_propag.clear(true, true);
+		//na_all_propag.clear(true, true);
 		na_all_neu.forced_let_go();
 		na_all_qua.forced_let_go();
 		
@@ -2268,6 +2274,9 @@ class neuromap {
 			na_dbg_guide_sha_str = INVALID_SHA;
 			na_dbg_quick_sha_str = INVALID_SHA;
 			na_dbg_tauto_pth = INVALID_PATH;
+			
+			na_dbg_is_no_abort_full_wrt_pth = INVALID_PATH;
+			na_dbg_is_no_abort_full_nmp = false;
 			
 			na_dbg_tauto_col.init_coloring();
 			na_dbg_phi_id.clear();
@@ -2444,7 +2453,7 @@ class notekeeper {
 	typedef long (*do_append_fn_pt_t)(brain& brn, row_quanton_t& src, 
 										  row_quanton_t& dst);
 	typedef bool (*do_same_fn_pt_t)(brain& brn, row_quanton_t& rr1, 
-										  row_quanton_t& rr2);
+							row_quanton_t& rr2, row_quanton_t* all_bad_qua);
 
 	brain*			dk_brain;
 
@@ -2531,7 +2540,7 @@ class notekeeper {
 	bool 	nk_same_quas_noted(row_quanton_t& rr1, row_quanton_t& rr2){
 		BRAIN_CK(dk_same_quas_noted_fn != NULL_PT);
 		brain& brn = get_dk_brain();
-		return (*dk_same_quas_noted_fn)(brn, rr1, rr2);
+		return (*dk_same_quas_noted_fn)(brn, rr1, rr2, NULL_PT);
 	}
 
 	brain*	get_dbg_brn(){
@@ -2996,7 +3005,7 @@ public:
 		str_str_map_t 		br_dbg_phi_wrt_ids;
 		bool				br_dbg_keeping_learned;
 		long			 	br_dbg_min_trainable_num_sub;
-		row<prop_signal>	br_dbg_propag;
+		//row<prop_signal>	br_dbg_propag;
 		row<prop_signal>	br_dbg_all_ps_upd_wrt;
 		row_neuron_t		br_dbg_all_neu_upd_wrt;
 		bj_big_int_t		br_dbg_num_find_anal;

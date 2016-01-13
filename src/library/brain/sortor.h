@@ -65,6 +65,7 @@ class solver;
 class brain;
 class skeleton_glb;
 class neuromap;
+class elem_sor;
 
 //class binder;
 class sortee;
@@ -131,6 +132,7 @@ comparison	cmp_sortees(sortee* const & srt1, sortee* const & srt2);
 enum tee_id_t {
 	tid_none,
 	tid_wlk_consec,
+	tid_sset_consec,
 	tid_tee_consec,
 	tid_qua_id
 };
@@ -265,7 +267,7 @@ public:
 
 template<class obj_t1>
 bool
-srt_row_as(row<sortee*>& rr1, row<obj_t1*>& rr2){
+tees_row_as(row<sortee*>& rr1, row<obj_t1*>& rr2){
 	long last_item_id = INVALID_NATURAL;
 	bool all_consec = true;
 	rr2.clear();
@@ -287,78 +289,9 @@ srt_row_as(row<sortee*>& rr1, row<obj_t1*>& rr2){
 
 template<class obj_t1>
 bool
-srt_row_as_colors(row<sortee*>& rr1, row<obj_t1*>& rr2, row<long>& cols, 
-				tee_id_t consec_kk = tid_tee_consec, bool unique_ccls = false)
-{
-	sorset* last_ss = NULL_PT;
-	long last_item_id = INVALID_NATURAL;
-	bool all_consec = true;
-	rr2.clear();
-	rr2.set_cap(rr1.size());
-	cols.clear();
-	cols.set_cap(rr1.size());
-	for(long ii = 0; ii < rr1.size(); ii++){
-		sortee& srt = *(rr1[ii]);
-		SORTER_CK(srt.has_vessel());
-		
-		long the_consec = srt.so_tee_consec;
-		if(consec_kk == tid_wlk_consec){
-			the_consec = srt.so_wlk_consec;
-		}
-		if(consec_kk == tid_qua_id){
-			the_consec = srt.so_qua_id;
-		}
-		SORTER_CK(the_consec != 0);
-		
-		if(unique_ccls && (last_ss != NULL_PT) && (srt.so_vessel == last_ss)){
-			continue;
-		}
+srt_row_as_colors(sort_glb& srg, row<sortee*>& rr1, row<obj_t1*>& rr2, row<long>& cols, 
+				tee_id_t consec_kk, bool unique_ccls);
 
-		all_consec = all_consec && (last_item_id != the_consec);
-		last_item_id = the_consec;
-		last_ss = srt.so_vessel;
-
-		cols.push(last_item_id);
-
-		obj_t1& obj_1 = srt.me_as<obj_t1>();
-		rr2.push(&obj_1);
-	}
-	return all_consec;
-}
-
-/*
-inline
-bool
-srt_row_as_clauses(row<sortee*>& rr1, row<canon_clause*>& rr2){
-	long last_item_id = INVALID_NATURAL;
-	bool all_consec = true;
-	rr2.clear();
-	rr2.set_cap(rr1.size());
-	for(long ii = 0; ii < rr1.size(); ii++){
-		sortee& srt = *(rr1[ii]);
-
-		all_consec = all_consec && (last_item_id != srt.so_sorset_consec);
-		last_item_id = srt.so_sorset_consec;
-
-		rr2.push(&(srt.so_ccl));
-	}
-	return all_consec;
-}
-*/
-
-template<class obj_t1>
-void
-void_pts_row_as(row<void*>& rr1, row<obj_t1*>& rr2){
-	rr2.clear();
-	rr2.set_cap(rr1.size());
-	for(long ii = 0; ii < rr1.size(); ii++){
-		void* pt_gen_obj = rr1[ii];
-		obj_t1* pt_obj = (obj_t1*)pt_gen_obj;
-
-		SORTER_CK((pt_obj == NULL_PT) || (pt_obj->get_cls_name() == obj_t1::CL_NAME));
-		rr2.push(pt_obj);
-	}
-}
 
 //=================================================================
 // sorset
@@ -646,6 +579,7 @@ public:
 	sort_id_t	sg_tot_stab_steps;
 	sort_id_t	sg_curr_stab_consec;
 	bool		sg_one_ccl_per_ss;
+	bool		sg_got_ccls;
 
 	step_op_t	sg_step_op;
 	bool		sg_step_has_confl;
@@ -685,23 +619,14 @@ public:
 	row<sorset*>	sg_tmp_srss;
 
 	row_long_t		sg_tmp_id_trail;
-	//row_long_t	sg_tmp_seps_trail;
-	//row<void*> 	sg_tmp_srcs_trail;
 
 	// cnf data
 
-	/*
-	long			sg_cnf_tot_vars;
-	long			sg_cnf_tot_ccls;
-	long			sg_cnf_tot_lits;
-	long			sg_cnf_tot_twolits;
-	*/
-
-	dima_dims		sg_cnf_dims;
+	dima_dims			sg_cnf_dims;
 	row<canon_clause*>	sg_cnf_clauses;
-	canon_cnf		sg_cnf_step;
+	canon_cnf			sg_cnf_step;
 
-	long			sg_dbg_cnf_tot_onelit;
+	long				sg_dbg_cnf_tot_onelit;
 
 	sort_glb(){
 		init_sort_glb();
@@ -721,6 +646,8 @@ public:
 		
 	solver*	get_dbg_slv();
 
+	ch_string 	dbg_prt_margin(bj_ostream& os, bool is_ck = false);
+	
 	void	set_dbg_brn(brain* the_brn){
 		DBG(
 			sg_pt_brn = the_brn;
@@ -742,12 +669,10 @@ public:
 
 		sg_num_active_ss = 0;
 
-		//sg_has_dual = false;
-		//sg_first_srt = NULL_PT;
-
-		sg_tot_stab_steps = 0;	
+		sg_tot_stab_steps = 0;
 		sg_curr_stab_consec = 0;
 		sg_one_ccl_per_ss = true;
+		sg_got_ccls = false;
 
 		sg_step_op = po_full;
 		sg_step_has_confl = false;
@@ -778,17 +703,7 @@ public:
 		sg_tmp_srts.clear();
 		sg_tmp_srss.clear();
 
-		//sg_tmp_seps_trail.clear();
-		//sg_tmp_id_trail.clear();
-		//sg_tmp_srcs_trail.clear();
-
 		sg_cnf_dims.init_dima_dims();
-		/*
-		sg_cnf_tot_vars = 0;
-		sg_cnf_tot_ccls = 0;
-		sg_cnf_tot_lits = 0;
-		sg_cnf_tot_twolits = 0;
-		*/
 
 		sg_dbg_cnf_tot_onelit = 0;
 	}
@@ -871,13 +786,15 @@ public:
 	bool 		ck_stab_inited();
 	
 	void		stab_mutual_init();
-	void		stab_mutual(sort_glb& mates_srg);
+	void		stab_mutual_core(sort_glb& mates_srg);
+	void		stab_mutual(sort_glb& mates_srg, bool one_ccl_per_ss);
 	void		stab_mutual_unique(sort_glb& mates_srg, neuromap* dbg_nmp = NULL_PT);
 	void		stab_mutual_choose_one(sort_glb& srg2);
 	void		stab_mutual_end(sort_glb& mates_srg, bool unique_ccls);
 	void		stab_mutual_walk();
 	
-	canon_cnf&	get_final_cnf(skeleton_glb& skg, bool sorted_cnf);
+	canon_cnf&	get_final_cnf(skeleton_glb& skg, bool sorted_cnf, bool one_ccl_per_ss, 
+					long precalc_tot_vars = 0);
 
 	bool		base_path_exists(skeleton_glb& skg);
 
@@ -934,7 +851,14 @@ public:
 	bool		sort_to_row_and_all_consec(row<obj_t1*>& sorted, bool& all_consec){
 		bool set_consecs = true;
 		bool has_diff = sort_to_tmp_srts(set_consecs);
-		all_consec = srt_row_as<obj_t1>(sg_tmp_srts, sorted);
+		
+		all_consec = tees_row_as<obj_t1>(sg_tmp_srts, sorted);
+		
+		//sort_glb& srg = *this;
+		//row<long> cols;
+		//all_consec = srt_row_as_colors<obj_t1>(srg, sg_tmp_srts, sorted, cols,
+		//							tid_sset_consec, false);
+		
 		DBG_SORTOR_PRT(56, os << "sort_to_row " << obj_t1::CL_NAME);
 		return has_diff;
 	}
@@ -1002,6 +926,56 @@ sorset::reset_ss_mark(sort_glb& srg){
 DEFINE_PRINT_FUNCS(sorset);
 DEFINE_PRINT_FUNCS(sortee);
 DEFINE_PRINT_FUNCS(sort_glb);
+
+template<class obj_t1>
+bool
+srt_row_as_colors(sort_glb& srg, row<sortee*>& rr1, row<obj_t1*>& rr2, row<long>& cols, 
+				tee_id_t consec_kk, bool unique_ccls)
+{
+	sorset* last_ss = NULL_PT;
+	long last_item_consec = INVALID_NATURAL;
+	bool all_consec = true;
+	rr2.clear();
+	rr2.set_cap(rr1.size());
+	cols.clear();
+	cols.set_cap(rr1.size());
+	for(long ii = 0; ii < rr1.size(); ii++){
+		sortee& srt = *(rr1[ii]);
+		SORTER_CK(srt.has_vessel());
+		
+		long the_consec = srt.so_tee_consec;
+		if(consec_kk == tid_wlk_consec){
+			the_consec = srt.so_wlk_consec;
+		}
+		if(consec_kk == tid_qua_id){
+			the_consec = srt.so_qua_id;
+		}
+		if(consec_kk == tid_sset_consec){
+			the_consec = srt.so_sorset_consec;
+		}
+		SORTER_CK(the_consec != 0);
+		SORTER_CK_PRT(
+			(last_item_consec == INVALID_NATURAL) || (last_item_consec <= the_consec),
+			DBG_PRT_ABORT(srg);
+			os << "sortees=\n";
+			os << rr1 << "\n";
+ 		);
+		
+		if(unique_ccls && (last_ss != NULL_PT) && (srt.so_vessel == last_ss)){
+			continue;
+		}
+
+		all_consec = all_consec && (last_item_consec != the_consec);
+		last_item_consec = the_consec;
+		last_ss = srt.so_vessel;
+
+		cols.push(last_item_consec);
+
+		obj_t1& obj_1 = srt.me_as<obj_t1>();
+		rr2.push(&obj_1);
+	}
+	return all_consec;
+}
 
 
 #endif		// SORTOR_H
