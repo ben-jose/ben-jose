@@ -979,6 +979,7 @@ update_rnd_elap_in_dir(tak_mak& gg, ch_string& dir_nm){
 	}
 }
 
+/*
 void
 gen_phases(tak_mak& gg, ref_strs& the_ph){
 	the_ph.init_ref_strs();
@@ -997,10 +998,10 @@ gen_phases(tak_mak& gg, ref_strs& the_ph){
 	if(num_pha >= 2){
 		the_ph.pd_ref2_nam = rr_pth + "/test_ref2/";
 	}
-	/*if(num_pha >= 3){
-		the_ph.pd_ref3_nam = rr_pth + "/test_ref3/";
-	}*/
-}
+	//if(num_pha >= 3){
+	//	the_ph.pd_ref3_nam = rr_pth + "/test_ref3/";
+	//}
+}*/
 
 void
 test_skl(){
@@ -1075,7 +1076,7 @@ test_skl(){
 	
 	for(long aa = 0; aa < NUM_CNFS; aa++){
 		the_cnf.release_and_init(GSKE, true);
-		gen_phases(rnd_gen, the_cnf.cf_phdat);
+		//gen_phases(rnd_gen, the_cnf.cf_phdat);
 		gen_ccls_cnf(rnd_gen, the_cnf, max_ccl_sz, max_num_ccls_cnf, max_num_vars_cnf);
 
 		the_cnf.cf_kind = fk_diff;

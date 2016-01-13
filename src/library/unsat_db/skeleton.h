@@ -62,7 +62,7 @@ class canon_clause;
 class variant;
 class canon_cnf;
 class skeleton_glb;
-class ref_strs;
+//class ref_strs;
 
 
 #define SKELETON_DBG(prm) DBG(prm)
@@ -137,7 +137,7 @@ class ref_strs;
 DECLARE_PRINT_FUNCS(canon_clause)
 DECLARE_PRINT_FUNCS(variant)
 DECLARE_PRINT_FUNCS(canon_cnf)
-DECLARE_PRINT_FUNCS(ref_strs)
+//DECLARE_PRINT_FUNCS(ref_strs)
 
 //=================================================================
 // path funcs
@@ -189,6 +189,7 @@ public:
 	{}
 };
 
+/*
 //=================================================================
 // ref_strs
 
@@ -238,7 +239,7 @@ public:
 		return os;
 	}
 
-};
+};*/
 
 //=================================================================
 // canon_clause
@@ -447,7 +448,10 @@ public:
 
 	long			cf_num_purged;
 
-	ref_strs		cf_phdat;
+	canon_cnf*		cf_guide_cnf;
+	canon_cnf*		cf_tauto_cnf;
+	ch_string		cf_quick_find_ref;
+	//ref_strs		cf_phdat;
 	row_str_t		cf_dbg_shas;
 	
 	instance_info* 	cf_inst_inf;
@@ -506,7 +510,10 @@ public:
 
 		cf_num_purged = 0;
 
-		cf_phdat.init_ref_strs();
+		cf_guide_cnf = NULL_PT;
+		cf_tauto_cnf = NULL_PT;
+		cf_quick_find_ref = "";
+		//cf_phdat.init_ref_strs();
 		cf_dbg_shas.clear(free_mem, free_mem);
 		
 		cf_inst_inf = NULL_PT;
@@ -580,7 +587,47 @@ public:
 	void	release_all_clauses(skeleton_glb& skg, bool free_mem = false);
 
 	bool	has_phase_path(){
-		return cf_phdat.has_ref();
+		//return cf_phdat.has_ref();
+		return has_cnfs();
+	}
+	
+	bool	has_cnfs(){
+		bool c1 = (cf_guide_cnf != NULL_PT);
+		bool c2 = (cf_tauto_cnf != NULL_PT);
+		bool c_ok = (c1 && c2);
+		return c_ok;
+	}
+
+	ch_string	get_ref1_nam(){
+		SKELETON_CK(has_cnfs());
+		SKELETON_CK(is_diff());
+		//SKELETON_CK(cf_phdat.has_ref());
+		//SKELETON_CK(cf_phdat.pd_ref1_nam == cf_guide_cnf->get_ref_path());
+		return cf_guide_cnf->get_ref_path();
+	}
+
+	ch_string	get_ref2_nam(){
+		SKELETON_CK(has_cnfs());
+		SKELETON_CK(is_diff());
+		//SKELETON_CK(cf_phdat.has_ref());
+		//SKELETON_CK(cf_phdat.pd_ref2_nam == cf_guide_cnf->get_lck_path());
+		return cf_guide_cnf->get_lck_path();
+	}
+
+	ch_string	get_ref3_nam(){
+		SKELETON_CK(has_cnfs());
+		SKELETON_CK(is_diff());
+		//SKELETON_CK(cf_phdat.has_ref());
+		//SKELETON_CK(cf_phdat.pd_ref3_nam == cf_quick_find_ref);
+		return cf_quick_find_ref;
+	}
+
+	ch_string	get_vnt_nam(){
+		return get_ref1_nam();
+	}
+
+	ch_string	get_lck_nam(){
+		return get_ref2_nam();
 	}
 
 	bool	is_canon(){
@@ -843,7 +890,7 @@ public:
 		return strset_size(kg_cnf_new_paths);
 	}
 
-	void	add_comment_chars_to(brain& brn, ref_strs& pth_refs, 
+	void	add_comment_chars_to(brain& brn, canon_cnf& diff_cnf, 
 								 ch_string sv_ref_pth, row<char>& cnn);
 	
 	int		get_write_lock(ch_string lk_dir);
@@ -862,7 +909,7 @@ public:
 DEFINE_PRINT_FUNCS(canon_clause);
 DEFINE_PRINT_FUNCS(variant);
 DEFINE_PRINT_FUNCS(canon_cnf);
-DEFINE_PRINT_FUNCS(ref_strs);
+//DEFINE_PRINT_FUNCS(ref_strs);
 
 
 #endif		// SKELETON_H

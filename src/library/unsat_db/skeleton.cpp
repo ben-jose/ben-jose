@@ -1027,7 +1027,8 @@ canon_cnf::get_extreme_lits(row<long>& lits){
 
 ch_string
 canon_cnf::get_all_variant_dir_name(){
-	ch_string core_dir = cf_phdat.vnt_nam();
+	//ch_string core_dir = cf_phdat.vnt_nam();
+	ch_string core_dir = get_vnt_nam();
 
 	SKELETON_CK(! core_dir.empty());
 	SKELETON_CK(*(core_dir.begin()) == '/');
@@ -1900,8 +1901,8 @@ skeleton_glb::ref_touch(ch_string a_ref){
 	
 bool
 canon_cnf::is_new(skeleton_glb& skg){
-	ch_string pth1 = cf_phdat.pd_ref1_nam;
-	ch_string pth2 = cf_phdat.pd_ref2_nam;
+	ch_string pth1 = get_ref1_nam();
+	ch_string pth2 = get_ref2_nam();
 	
 	ch_string full_pth1 = skg.as_full_path(pth1);
 	ch_string full_pth2 = skg.as_full_path(pth2);
@@ -1920,7 +1921,6 @@ canon_cnf::prepare_cnf(skeleton_glb& skg, ch_string vpth)
 	
 	DBG_PRT(73, os << "prepare_cnf'" << sv_pth << "'" << bj_eol 
 		<< cf_sha_str << bj_eol 
-		<< cf_phdat << bj_eol 
 		<< cf_dbg_shas
 	);
 
@@ -2229,16 +2229,16 @@ print_str_long_map(bj_ostream& os, string_long_map_t& pmp){
 }
 
 void
-skeleton_glb::add_comment_chars_to(brain& brn, ref_strs& pth_refs, 
+skeleton_glb::add_comment_chars_to(brain& brn, canon_cnf& diff_cnf, 
 								   ch_string sv_ref_pth, row<char>& cnn)
 {
 	cnn.clear();
 
 	ch_string l2 = sv_ref_pth + "\n";
 
-	ch_string pth1 = pth_refs.pd_ref1_nam + "\n";
-	ch_string pth2 = pth_refs.pd_ref2_nam + "\n";
-	ch_string pth3 = pth_refs.pd_ref3_nam + "\n";
+	ch_string pth1 = diff_cnf.get_ref1_nam() + "\n";
+	ch_string pth2 = diff_cnf.get_ref2_nam() + "\n";
+	ch_string pth3 = diff_cnf.get_ref3_nam() + "\n";
 
 	ch_string l3 = kg_instance_file_nam + "\n";
 
@@ -2297,9 +2297,9 @@ void
 canon_cnf::update_diff_refs(skeleton_glb& skg, ch_string sv_vpth){
 	SKELETON_CK(is_diff());
 	SKELETON_CK(has_phase_path());
-	ch_string pth1 = cf_phdat.pd_ref1_nam;
-	ch_string pth2 = cf_phdat.pd_ref2_nam;
-	ch_string pth3 = cf_phdat.pd_ref3_nam;
+	ch_string pth1 = get_ref1_nam();
+	ch_string pth2 = get_ref2_nam();
+	ch_string pth3 = get_ref3_nam();
 
 	SKELETON_CK(pth1 != sv_vpth);
 	SKELETON_CK(pth2 != sv_vpth);
@@ -2317,7 +2317,6 @@ canon_cnf::update_diff_refs(skeleton_glb& skg, ch_string sv_vpth){
 				os << "______________\n ABORTING_DATA " << bj_eol;
 				brn.dbg_prt_margin(os);
 				os << " cnf=\n" << this << bj_eol;
-				os << " cf_phdat=" << cf_phdat << bj_eol;
 				os << " sv_name=" << sv_name << bj_eol;
 				os << " pth1=" << pth1 << bj_eol;
 				os << "END_OF_aborting_data" << bj_eol;
@@ -2363,9 +2362,9 @@ void
 canon_cnf::update_mng_verif_sys(skeleton_glb& skg, ch_string sv_vpth){
 	SKELETON_CK(is_diff());
 	SKELETON_CK(has_phase_path());
-	ch_string pth1 = cf_phdat.pd_ref1_nam;
-	ch_string pth2 = cf_phdat.pd_ref2_nam;
-	ch_string pth3 = cf_phdat.pd_ref3_nam;
+	ch_string pth1 = get_ref1_nam();
+	ch_string pth2 = get_ref2_nam();
+	ch_string pth3 = get_ref3_nam();
 
 	SKELETON_CK(pth1 != sv_vpth);
 	SKELETON_CK(pth2 != sv_vpth);

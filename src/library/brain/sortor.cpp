@@ -1053,7 +1053,6 @@ sort_glb::step_mutual_stabilize(sort_glb& srg2, step_mutual_op_t op){
 
 	SORTER_CK(! sg_step_sorsets.is_empty());
 	SORTER_DBG(
-		brain& brn = get_dbg_brain();
 		long old_ss_sz = sg_step_sorsets.size();
 		bool ss_0_hs = false;
 		bool ss_0_hi = false;
@@ -1111,6 +1110,7 @@ sort_glb::step_mutual_stabilize(sort_glb& srg2, step_mutual_op_t op){
 	if(op == sm_get_ccls){
 		sg_step_mutual_clauses.move_to(sg_cnf_clauses);
 		SORTER_CK_PRT((sg_cnf_dims.dd_tot_ccls == sg_cnf_clauses.size()), 
+			brain& brn = get_dbg_brain();
 			DBG_PRT_ABORT(brn);
 			os << " tot=" << sg_cnf_dims.dd_tot_ccls << "\n";
 			os << " sz=" << sg_cnf_clauses.size() << "\n";

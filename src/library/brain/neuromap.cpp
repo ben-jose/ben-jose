@@ -767,7 +767,7 @@ neuromap::map_oper(mem_op_t mm){
 		na_dbg_tauto_min_sha_str = tmp_tauto_cnf.cf_minisha_str;
 		na_dbg_tauto_sha_str = tmp_tauto_cnf.cf_sha_str;
 		na_dbg_guide_sha_str = tmp_guide_cnf.cf_sha_str;
-		na_dbg_quick_sha_str = tmp_diff_cnf.cf_phdat.pd_ref3_nam;
+		na_dbg_quick_sha_str = tmp_diff_cnf.get_ref3_nam();
 		na_dbg_tauto_pth = tmp_tauto_cnf.get_cnf_path();
 	);
 	
@@ -800,12 +800,9 @@ neuromap::map_oper(mem_op_t mm){
 			// force all_neus_in_vnt to be all neus of nmp ??????
 		}
 	} else {
-		ref_strs& diff_phdat = tmp_diff_cnf.cf_phdat;
-		
 		BRAIN_CK(mm == mo_save);
-		BRAIN_CK(! skg.kg_dbg_save_canon || diff_phdat.has_ref());
 
-		ch_string lk_dir = diff_phdat.lck_nam();
+		ch_string lk_dir = tmp_diff_cnf.get_lck_nam();
 		int fd_lk = skg.get_write_lock(lk_dir);
 
 		if(fd_lk != -1){
@@ -822,12 +819,8 @@ neuromap::map_oper(mem_op_t mm){
 			SKELETON_CK(! tmp_guide_cnf.has_phase_path());
 			
 			row<char>& comm_chrs = tmp_diff_cnf.cf_comment_chars;
-			skg.add_comment_chars_to(brn, tmp_diff_cnf.cf_phdat, tau_pth, comm_chrs);
+			skg.add_comment_chars_to(brn, tmp_diff_cnf, tau_pth, comm_chrs);
 			
-			tmp_tauto_cnf.cf_kind = fk_canon;
-			tmp_diff_cnf.cf_kind = fk_diff;
-			tmp_guide_cnf.cf_kind = fk_guide;
-
 			tmp_tauto_cnf.save_cnf(skg, tau_pth);
 			oper_ok = tmp_diff_cnf.save_cnf(skg, tau_pth);
 			tmp_guide_cnf.save_cnf(skg, tau_pth);
@@ -840,8 +833,8 @@ neuromap::map_oper(mem_op_t mm){
 			
 			skg.drop_write_lock(lk_dir, fd_lk);
 
-			ch_string pth1 = diff_phdat.pd_ref1_nam;
-			ch_string pth2 = diff_phdat.pd_ref2_nam;
+			ch_string pth1 = tmp_diff_cnf.get_ref1_nam();
+			ch_string pth2 = tmp_diff_cnf.get_ref2_nam();
 
 			BRAIN_DBG(bool tail_case = tmp_diff_cnf.is_empty());
 			BRAIN_CK((pth1 == "") || tail_case || skg.find_skl_path(skg.as_full_path(pth1)));
@@ -2145,7 +2138,7 @@ neuromap::map_prepare_mem_oper(mem_op_t mm){
 	canon_cnf& gui_cnf = guide_ne_srg.get_final_cnf(skg, false, false);
 
 	BRAIN_CK(gui_cnf.cf_dims.dd_tot_vars == 0);
-	BRAIN_CK(! gui_cnf.cf_phdat.has_ref());
+	//BRAIN_CK(! gui_cnf.cf_phdat.has_ref());
 	
 	ch_string quick_find_ref = "";
 	row_str_t dbg_shas;
@@ -2284,13 +2277,16 @@ neuromap::map_prepare_wrt_cnfs(mem_op_t mm, ch_string quick_find_ref, row_str_t&
 	tmp_diff_cnf.init_with_ccls(skg, tmp_diff_ccls);
 	tmp_guide_cnf.init_with_ccls(skg, tmp_guide_ccls);
 	
+	tmp_tauto_cnf.cf_kind = fk_canon;
+	tmp_diff_cnf.cf_kind = fk_diff;
+	tmp_guide_cnf.cf_kind = fk_guide;
+	
+	tmp_diff_cnf.cf_guide_cnf = &tmp_guide_cnf;
+	tmp_diff_cnf.cf_tauto_cnf = &tmp_tauto_cnf;
+	tmp_diff_cnf.cf_quick_find_ref = quick_find_ref;
+	
 	tmp_tauto_cnf.cf_diff_minisha_str = tmp_diff_cnf.cf_minisha_str;
 
-	ref_strs& nxt_diff_phdat = tmp_diff_cnf.cf_phdat;
-	nxt_diff_phdat.pd_ref1_nam = tmp_guide_cnf.get_ref_path();
-	nxt_diff_phdat.pd_ref2_nam = tmp_guide_cnf.get_lck_path();
-	nxt_diff_phdat.pd_ref3_nam = quick_find_ref;
-	
 	dbg_shas.move_to(tmp_diff_cnf.cf_dbg_shas);
 
 	BRAIN_CK(tmp_tauto_ccls.is_empty());
