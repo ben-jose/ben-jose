@@ -1086,9 +1086,10 @@ test_skl(){
 			os << "num_test=" << aa << bj_eol;
 			the_cnf.save_cnf(GSKE, cnn_base_name);
 
-			long f_idx = the_cnf.first_vnt_i_super_of(GSKE);
-			MARK_USED(f_idx);
-			BRAIN_CK(f_idx != INVALID_NATURAL);
+			bool exact = false;
+			ch_string vpth = the_cnf.first_vnt_i_super_of(GSKE, exact);
+			MARK_USED(vpth);
+			BRAIN_CK(vpth != SKG_INVALID_PTH);
 
 		} else {
 			os << bj_eol;

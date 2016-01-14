@@ -1645,16 +1645,55 @@ canon_cnf::all_nxt_vnt(skeleton_glb& skg, row<variant>& all_next, row<ch_string>
 	return has_eq;
 }
 
-long
-canon_cnf::first_vnt_i_super_of(skeleton_glb& skg, ch_string gui_sha_str, 
-								instance_info* iinfo)
-{
+bool
+canon_cnf::i_equal_to_vnt(skeleton_glb& skg, ch_string& vpth){
+	//return true;
+	
+	SKELETON_CK(is_canon());
+	SKELETON_CK(cf_clauses.is_sorted(cmp_clauses));
+	ch_string the_ref = skg.ref_vnt_name(vpth, SKG_CANON_NAME);
+	ch_string the_pth = skg.as_full_path(the_ref);
+	bool eq_to = canon_equal(skg, the_pth, cf_chars);
+	return eq_to;
+}
+
+bool
+canon_cnf::i_exact_found(skeleton_glb& skg){
+	SKELETON_CK(is_canon());
+	ch_string tau_pth = get_cnf_path();
+	if(skg.ref_exists(tau_pth)){
+		bool tau_ok = i_equal_to_vnt(skg, tau_pth);
+		SKELETON_CK(tau_ok);
+		if(tau_ok){
+			ch_string elp_nm = skg.ref_vnt_name(tau_pth, SKG_ELAPSED_NAME);
+			update_elapsed(skg.as_full_path(elp_nm));
+			return true;
+		}
+	}
+	return false;
+}
+
+ch_string
+canon_cnf::first_vnt_i_super_of(skeleton_glb& skg, bool& exact, instance_info* iinfo){
+	ch_string gui_sha_str = "";
+	exact = false;
+	if(has_cnfs()){
+		gui_sha_str = get_guide_cnf().cf_sha_str;
+
+		canon_cnf& tau_cnf = get_tauto_cnf();
+		if(tau_cnf.i_exact_found(skg)){
+			ch_string tau_pth = tau_cnf.get_cnf_path();
+			exact = true;
+			return tau_pth;
+		}
+	}
+	
 	bool verif_gui_sha = (gui_sha_str != "");
 	SKELETON_CK((iinfo == NULL) == (gui_sha_str == ""));
 	SKELETON_CK(! has_instance_info());
 	cf_inst_inf = iinfo;
 	
-	long fst_vnt = INVALID_NATURAL;
+	ch_string fst_vnt = SKG_INVALID_PTH;
 
 	bj_big_int_t num_vnts = get_num_variants(skg);
 	
@@ -1677,7 +1716,7 @@ canon_cnf::first_vnt_i_super_of(skeleton_glb& skg, ch_string gui_sha_str,
 		
 		bool supe1 = i_super_of_vnt(skg, vpth);
 		if(supe1){
-			fst_vnt = aa;
+			fst_vnt = vpth;
 			ch_string elp_nm = skg.ref_vnt_name(vpth, SKG_ELAPSED_NAME);
 			update_elapsed(skg.as_full_path(elp_nm));
 			break;
@@ -1967,7 +2006,9 @@ dbg_map_add_path(skeleton_glb& skg, ch_string sv_name){
 bool
 canon_cnf::save_cnf(skeleton_glb& skg, ch_string sv_vpth){
 	SKELETON_CK(cf_kind != fk_invalid);
-	ch_string sv_pth = sv_vpth + get_kind_name();
+	ch_string kk_nm = get_kind_name();
+	ch_string sv_pth = sv_vpth + kk_nm;
+	//ch_string sv_pth = skg.ref_vnt_name(sv_vpth, kk_nm);
 	
 	if(! skg.ref_in_skl(sv_vpth)){
 		return false;
@@ -2015,6 +2056,7 @@ canon_cnf::save_cnf(skeleton_glb& skg, ch_string sv_vpth){
 	
 	if(is_diff() && sv_ok){
 		update_diff_refs(skg, sv_vpth);
+		update_parent_variants(skg, sv_vpth);
 		if(skg.in_dbg_verif()){
 			update_mng_verif_sys(skg, sv_vpth);
 		}
@@ -2354,8 +2396,6 @@ canon_cnf::update_diff_refs(skeleton_glb& skg, ch_string sv_vpth){
 
 	ch_string elp_nm = skg.as_full_path(skg.ref_vnt_name(sv_vpth, SKG_ELAPSED_NAME));
 	update_elapsed(elp_nm);
-
-	update_parent_variants(skg, sv_vpth);
 }
 
 void

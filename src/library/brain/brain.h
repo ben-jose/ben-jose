@@ -2177,6 +2177,7 @@ class neuromap {
 	row_neuron_t		na_to_write;
 	row_neuron_t		na_not_to_write;
 	
+	bool				na_found_exact;
 	row_neuron_t		na_all_found;
 	
 	long			na_guide_tot_vars;
@@ -2248,6 +2249,7 @@ class neuromap {
 		na_to_write.clear();
 		na_not_to_write.clear();
 		
+		na_found_exact = false;
 		na_all_found.clear();
 		
 		na_guide_tot_vars = 0;

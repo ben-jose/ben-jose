@@ -62,7 +62,6 @@ class canon_clause;
 class variant;
 class canon_cnf;
 class skeleton_glb;
-//class ref_strs;
 
 
 #define SKELETON_DBG(prm) DBG(prm)
@@ -102,6 +101,7 @@ class skeleton_glb;
 
 //define SKG_APROX_SHA_PTH_SZ	70
 
+#define SKG_INVALID_PTH		"skg_invalid_pth"
 #define SKG_SKELETON_DIR	"/SKELETON"
 #define SKG_CNF_DIR		"/SKELETON/CNF"
 #define SKG_REF_DIR		"/SKELETON/REF"
@@ -137,7 +137,6 @@ class skeleton_glb;
 DECLARE_PRINT_FUNCS(canon_clause)
 DECLARE_PRINT_FUNCS(variant)
 DECLARE_PRINT_FUNCS(canon_cnf)
-//DECLARE_PRINT_FUNCS(ref_strs)
 
 //=================================================================
 // path funcs
@@ -188,58 +187,6 @@ public:
 	skeleton_exception(long the_id = 0) : top_exception(the_id)
 	{}
 };
-
-/*
-//=================================================================
-// ref_strs
-
-class ref_strs {
-public:	
-	ch_string	pd_ref1_nam;
-	ch_string	pd_ref2_nam;
-	ch_string	pd_ref3_nam;
-
-	ref_strs(){
-		init_ref_strs();
-	}
-
-	~ref_strs(){
-	}
-
-	void		init_ref_strs(){
-		pd_ref1_nam = "";
-		pd_ref2_nam = "";
-		pd_ref3_nam = "";
-	}
-
-	bool		has_ref(){
-		bool h1 = (pd_ref1_nam != "");
-		bool h2 = (pd_ref2_nam != "");
-		bool has_r = (h1 || h2);
-		SKELETON_CK(has_r == (h1 && h2));
-		return has_r;
-	}
-
-	ch_string	vnt_nam(){
-		return pd_ref1_nam;
-	}
-
-	ch_string	lck_nam(){
-		return pd_ref2_nam;
-	}
-
-	bj_ostream&	print_ref_strs(bj_ostream& os, bool from_pt = false){
-		os << "REFS=[\n";
-		os << " ref1=\n" << pd_ref1_nam << "\n";
-		os << " ref2=\n" << pd_ref2_nam << "\n";
-		os << " ref3=\n" << pd_ref3_nam << "\n";
-		os << "]\n";
-	
-		os.flush();
-		return os;
-	}
-
-};*/
 
 //=================================================================
 // canon_clause
@@ -451,7 +398,6 @@ public:
 	canon_cnf*		cf_guide_cnf;
 	canon_cnf*		cf_tauto_cnf;
 	ch_string		cf_quick_find_ref;
-	//ref_strs		cf_phdat;
 	row_str_t		cf_dbg_shas;
 	
 	instance_info* 	cf_inst_inf;
@@ -513,7 +459,6 @@ public:
 		cf_guide_cnf = NULL_PT;
 		cf_tauto_cnf = NULL_PT;
 		cf_quick_find_ref = "";
-		//cf_phdat.init_ref_strs();
 		cf_dbg_shas.clear(free_mem, free_mem);
 		
 		cf_inst_inf = NULL_PT;
@@ -587,7 +532,6 @@ public:
 	void	release_all_clauses(skeleton_glb& skg, bool free_mem = false);
 
 	bool	has_phase_path(){
-		//return cf_phdat.has_ref();
 		return has_cnfs();
 	}
 	
@@ -595,30 +539,35 @@ public:
 		bool c1 = (cf_guide_cnf != NULL_PT);
 		bool c2 = (cf_tauto_cnf != NULL_PT);
 		bool c_ok = (c1 && c2);
+		SKELETON_CK(is_diff() == c_ok);
 		return c_ok;
 	}
 
+	canon_cnf&	get_guide_cnf(){
+		SKELETON_CK(cf_guide_cnf != NULL_PT);
+		return *cf_guide_cnf;
+	}
+	
+	canon_cnf&	get_tauto_cnf(){
+		SKELETON_CK(cf_tauto_cnf != NULL_PT);
+		return *cf_tauto_cnf;
+	}
+	
 	ch_string	get_ref1_nam(){
 		SKELETON_CK(has_cnfs());
 		SKELETON_CK(is_diff());
-		//SKELETON_CK(cf_phdat.has_ref());
-		//SKELETON_CK(cf_phdat.pd_ref1_nam == cf_guide_cnf->get_ref_path());
 		return cf_guide_cnf->get_ref_path();
 	}
 
 	ch_string	get_ref2_nam(){
 		SKELETON_CK(has_cnfs());
 		SKELETON_CK(is_diff());
-		//SKELETON_CK(cf_phdat.has_ref());
-		//SKELETON_CK(cf_phdat.pd_ref2_nam == cf_guide_cnf->get_lck_path());
 		return cf_guide_cnf->get_lck_path();
 	}
 
 	ch_string	get_ref3_nam(){
 		SKELETON_CK(has_cnfs());
 		SKELETON_CK(is_diff());
-		//SKELETON_CK(cf_phdat.has_ref());
-		//SKELETON_CK(cf_phdat.pd_ref3_nam == cf_quick_find_ref);
 		return cf_quick_find_ref;
 	}
 
@@ -689,13 +638,17 @@ public:
 	bool	i_am_super_of(canon_cnf& the_cnf, bool& are_eq);
 	bool	i_sub_of_vnt(skeleton_glb& skg, ch_string& vpth, bool& are_eq);
 	bool	i_super_of_vnt(skeleton_glb& skg, ch_string& vpth);
+	bool	i_equal_to_vnt(skeleton_glb& skg, ch_string& vpth);
+	bool	i_exact_found(skeleton_glb& skg);
 
 	bj_big_int_t	get_num_variants(skeleton_glb& skg);
 	void		set_num_variants(skeleton_glb& skg, bj_big_int_t num_vnts);
 
 	bool	all_nxt_vnt(skeleton_glb& skg, row<variant>& all_next, row<ch_string>& all_del);
-	long	first_vnt_i_super_of(skeleton_glb& skg, ch_string gui_sha_str = "", 
-								 instance_info* iinfo = NULL);
+	
+	ch_string	first_vnt_i_super_of(skeleton_glb& skg, bool& exact, 
+									 instance_info* iinfo = NULL);
+	
 	bool	ck_vnts(skeleton_glb& skg);
 
 	ch_string	get_cnf_path();
@@ -909,7 +862,6 @@ public:
 DEFINE_PRINT_FUNCS(canon_clause);
 DEFINE_PRINT_FUNCS(variant);
 DEFINE_PRINT_FUNCS(canon_cnf);
-//DEFINE_PRINT_FUNCS(ref_strs);
 
 
 #endif		// SKELETON_H
