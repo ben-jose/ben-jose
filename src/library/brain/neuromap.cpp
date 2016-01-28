@@ -38,14 +38,13 @@ neuromap class.
 #include "brain.h"
 #include "solver.h"
 #include "util_funcs.h"
-#include "dbg_strings_html.h"
+#include "html_strings.h"
 
 char* neuromap::CL_NAME = as_pt_char("{neuromap}");
 
 bool
 neuromap::map_find(){
-	DBG_COMMAND(4, return false);
-	IF_NEVER_FIND(return false);
+	DBG_COMMAND(4, return false); // NEVER_FIND
 	BRAIN_CK(! is_na_mono());
 	if(na_found_in_skl != mf_invalid){
 		if(na_found_in_skl == mf_found){
@@ -75,8 +74,7 @@ dbg_aux_prt_neus(bj_ostream& os, ch_string tit, row_neuron_t& all_neus, ticket& 
 
 bool
 neuromap::map_write(bool force_full){
-	DBG_COMMAND(5, return false);
-	IF_NEVER_WRITE(return false);
+	DBG_COMMAND(5, return false); // NEVER_WRITE
 	
 	BRAIN_CK(is_ticket_eq(na_candidate_tk, na_dbg_candidate_tk));
 	nmp_reset_write();
@@ -131,8 +129,9 @@ neuromap::map_get_all_neus(row_neuron_t& all_neus, bool only_found, mem_op_t mm)
 	map_get_all_propag_ps(all_ps);
 	append_all_trace_neus(all_ps, all_neus);
 	
-	if(only_found && ! na_found_exact){
-		na_all_found.append_to(all_neus);
+	if(only_found){
+		row_neuron_t& all_found = na_found_col.co_neus;
+		all_found.append_to(all_neus);
 	} else {
 		map_get_all_cov_neus(all_neus, false, false, mm);
 	}
@@ -774,29 +773,17 @@ neuromap::map_oper(mem_op_t mm){
 	bool oper_ok = false;
 	if(mm == mo_find){
 		instance_info& iinfo = brn.get_my_inst();
-		//ch_string gui_sha_str = tmp_guide_cnf.cf_sha_str;
 
-		// This func sets cc_spot==true to tmp_diff_cnf clauses in the found vnt.
 		BRAIN_CK(tmp_diff_cnf.has_cnfs());
-		ch_string fst_vpth = tmp_diff_cnf.first_vnt_i_super_of(skg, na_found_exact, &iinfo);
+		row_neuron_t& all_found = na_found_col.co_neus;
+		ch_string fst_vpth = tmp_diff_cnf.first_vnt_i_super_of(skg, all_found, &iinfo);
 
 		na_found_in_skl = mf_not_found;
 		
 		oper_ok = (fst_vpth != SKG_INVALID_PTH);
 		if(oper_ok){
-			
 			na_found_in_skl = mf_found;
-			
-			//ch_string fst_vpth = 
-			//	tmp_diff_cnf.get_variant_path(skg, fst_idx, skg.in_dbg_verif());
-				
 			o_info.bjo_sub_cnf_hits++;
-
-			row_neuron_t& all_neus_in_vnt = na_all_found;
-			all_neus_in_vnt.clear();
-			
-			bool only_with_spot = true; // only clauses with cc_spot==true
-			ccl_row_as<neuron>(tmp_diff_cnf.cf_clauses, all_neus_in_vnt, only_with_spot);
 		}
 	} else {
 		BRAIN_CK(mm == mo_save);
@@ -1756,8 +1743,6 @@ neuromap::nmp_fill_all_upper_covs(long dbg_idx){
 		neuromap* dbg_nmp = brn.br_candidate_nxt_nmp_lvs[dbg_idx];
 		BRAIN_CK(dbg_nmp == this);
 	);
-	BRAIN_CK(na_all_qua.is_alone());
-	BRAIN_CK(na_all_neu.is_alone());
 	
 	nmp_fill_upper_covs();
 }
@@ -1843,6 +1828,7 @@ neuromap::nmp_set_neus_cand_tk(){
 	for(long aa = 0; aa < na_propag.size(); aa++){
 		neuron* neu = na_propag[aa].ps_source;
 		if(neu != NULL_PT){
+			BRAIN_CK(neu->ne_original);
 			//neu->make_ne_dominated(brn);
 			
 			BRAIN_CK(! neu->ne_candidate_tk.is_older_than(brn.get_last_cand()));
@@ -2043,7 +2029,7 @@ neuromap::map_prepare_mem_oper(mem_op_t mm){
 	brain& brn = get_brn();
 	coloring& guide_col = na_guide_col;
 	MARK_USED(guide_col);
-	BRAIN_CK(brn.br_qu_tot_note0 == 0); // deducer note
+	BRAIN_CK(brn.br_qu_tot_note0 == 0); // br_dedcer note
 	
 	//BRAIN_DBG(coloring dbg_smpl_col;);
 	//DBG_COMMAND(41, map_get_simple_coloring(dbg_smpl_col););
@@ -2115,6 +2101,7 @@ neuromap::map_prepare_mem_oper(mem_op_t mm){
 	skeleton_glb& skg = brn.get_skeleton();
 
 	//long num_var = na_guide_tot_vars;
+	BRAIN_CK(! guide_ne_srg.sg_one_ccl_per_ss);
 	canon_cnf& gui_cnf = guide_ne_srg.get_final_cnf(skg, false, false);
 
 	BRAIN_CK(gui_cnf.cf_dims.dd_tot_vars == 0);
@@ -2227,6 +2214,7 @@ neuromap::map_prepare_wrt_cnfs(mem_op_t mm, ch_string quick_find_ref, row_str_t&
 	
 	// get final tauto cnf
 	
+	BRAIN_CK(tauto_ne_srg.sg_one_ccl_per_ss);
 	canon_cnf& tauto_cnf = tauto_ne_srg.get_final_cnf(skg, true, false);
 
 	dbg_shas.push(tauto_cnf.cf_sha_str + "\n");

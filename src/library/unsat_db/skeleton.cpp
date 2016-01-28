@@ -635,6 +635,7 @@ skeleton_glb::print_paths(bj_ostream& os){
 	os << "running='" << kg_running_path << "'" << bj_eol;
 	os << "root='" << kg_root_path << "'" << bj_eol;
 	os << "verify='" << kg_verify_path << "'" << bj_eol;
+	os << "tmp_proof='" << kg_tmp_proof_path << "'" << bj_eol;
 	os << "collisions='" << kg_collisions_path << "'" << bj_eol;
 	os << "missing='" << kg_missing_path << "'" << bj_eol;
 	os << "corrupted='" << kg_corrupted_path << "'" << bj_eol;
@@ -715,6 +716,9 @@ skeleton_glb::init_paths(){
 	SKELETON_CK(! kg_root_path.empty());
 
 	kg_verify_path = as_full_path(SKG_VERIFY_NAME);
+	
+	kg_tmp_proof_path = SKG_TMP_PROOF_DIR;
+	path_create(as_full_path(kg_tmp_proof_path));
 
 	kg_collisions_path = SKG_COLLISIONS_DIR;
 	kg_missing_path = SKG_MISSING_DIR;
@@ -1674,16 +1678,19 @@ canon_cnf::i_exact_found(skeleton_glb& skg){
 }
 
 ch_string
-canon_cnf::first_vnt_i_super_of(skeleton_glb& skg, bool& exact, instance_info* iinfo){
+canon_cnf::first_vnt_i_super_of(skeleton_glb& skg, row<neuron*>& all_found, 
+								instance_info* iinfo)
+{
+	all_found.clear();
+	
 	ch_string gui_sha_str = "";
-	exact = false;
 	if(has_cnfs()){
 		gui_sha_str = get_guide_cnf().cf_sha_str;
 
 		canon_cnf& tau_cnf = get_tauto_cnf();
 		if(tau_cnf.i_exact_found(skg)){
 			ch_string tau_pth = tau_cnf.get_cnf_path();
-			exact = true;
+			ccl_row_as<neuron>(cf_clauses, all_found, false);
 			return tau_pth;
 		}
 	}
@@ -1701,6 +1708,7 @@ canon_cnf::first_vnt_i_super_of(skeleton_glb& skg, bool& exact, instance_info* i
 		get_info().ist_num_variants_stat.add_val(num_vnts);
 	}
 	
+	bool found_one = false;
 	for(long aa = 0; aa < num_vnts; aa++){
 		ch_string vpth = get_variant_path(skg, aa, skg.in_dbg_verif());
 		if(vpth == ""){
@@ -1714,8 +1722,8 @@ canon_cnf::first_vnt_i_super_of(skeleton_glb& skg, bool& exact, instance_info* i
 			}
 		}
 		
-		bool supe1 = i_super_of_vnt(skg, vpth);
-		if(supe1){
+		found_one = i_super_of_vnt(skg, vpth);
+		if(found_one){
 			fst_vnt = vpth;
 			ch_string elp_nm = skg.ref_vnt_name(vpth, SKG_ELAPSED_NAME);
 			update_elapsed(skg.as_full_path(elp_nm));
@@ -1724,6 +1732,10 @@ canon_cnf::first_vnt_i_super_of(skeleton_glb& skg, bool& exact, instance_info* i
 	}
 	
 	cf_inst_inf = NULL_PT;
+	if(found_one){
+		BRAIN_CK(fst_vnt != SKG_INVALID_PTH);
+		ccl_row_as<neuron>(cf_clauses, all_found, true);
+	}
 	return fst_vnt;
 }
 

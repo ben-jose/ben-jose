@@ -498,12 +498,6 @@ neuromap::print_subnmp(bj_ostream& os, bool only_pts){
 	os << "\t na_propag_quas=\n";
 	os << na_propag << "\n";
 
-	row_quanton_t ex_quas;
-	na_all_qua.append_all_as<quanton>(ex_quas);
-	
-	os << "\t na_all_qua=\n";
-	os << ex_quas << "\n";
-	
 	brain& brn = get_brn();
 	row_neuron_t& prp_neus = brn.br_tmp_prt_nmp_neus;
 	prp_neus.clear();
@@ -968,7 +962,7 @@ dbg_run_satex_on(brain& brn, ch_string f_nam, neuromap* dbg_nmp){
 			os << " na_idx=" << dbg_nmp->na_index;
 		}
 		os << " brn_tk=" << brn.br_curr_choice_tk << bj_eol;
-		os << " brn_dct=" << brn.br_retract_dct << bj_eol;
+		os << " brn_deduc=" << brn.br_pulse_deduc << bj_eol;
 		os << "	LV=" << brn.level() << bj_eol;
 		os << " CNF_FILE=\n" << f_nam << bj_eol;
 		os << " \nduring ff=\n" << o_ff << bj_eol;
@@ -1013,19 +1007,19 @@ brain::dbg_in_edge_of_level(){
 }
 
 bool
-brain::dbg_in_edge_of_target_lv(deduction& dct){
-	if(dct.is_dt_virgin()){ return false; }
+brain::dbg_in_edge_of_target_lv(reason& rsn){
+	if(rsn.is_rs_virgin()){ return false; }
 	long trl_lv = trail_level();
-	//bool in_tg_lv = (trl_lv < dct.dt_target_level);
-	bool in_tg_lv = (trl_lv <= dct.dt_target_level);
+	//bool in_tg_lv = (trl_lv < rsn.rs_target_level);
+	bool in_tg_lv = (trl_lv <= rsn.rs_target_level);
 	BRAIN_CK(! in_tg_lv || ((trl_lv + 1) == level()));
 	return in_tg_lv;
 }
 
 void
-deduction::dbg_set_with(brain& brn, notekeeper& nke, quanton& nxt_qua){
+reason::dbg_set_with(brain& brn, notekeeper& nke, quanton& nxt_qua){
 #ifdef FULL_DEBUG
-	if(! is_dt_virgin()){
+	if(! is_rs_virgin()){
 		return;
 	}
 
@@ -1034,20 +1028,20 @@ deduction::dbg_set_with(brain& brn, notekeeper& nke, quanton& nxt_qua){
 	BRAIN_CK(opp_nxt.qlevel() == nke.dk_note_layer);
 	BRAIN_CK(opp_nxt.get_charge() == cg_negative);
 
-	nke.dk_quas_lyrs.get_all_ordered_quantons(dt_motives);
+	nke.dk_quas_lyrs.get_all_ordered_quantons(rs_motives);
 
 	DBG_PRT(51, os << " motives_by_lv= " << nke.dk_quas_lyrs.ql_quas_by_layer);
 	DBG_PRT(52, os << "LV=" <<  nke.dk_note_layer << " motives " 
-		<< dt_motives << " opp_nxt=" << &opp_nxt);
+		<< rs_motives << " opp_nxt=" << &opp_nxt);
 
-	dt_target_level = find_max_level(dt_motives);
+	rs_target_level = find_max_level(rs_motives);
 
-	dt_forced = &opp_nxt;
-	//dt_forced_level = opp_nxt.qlevel();
+	rs_forced = &opp_nxt;
+	//rs_forced_level = opp_nxt.qlevel();
 
-	BRAIN_CK(dt_target_level < nke.dk_note_layer);
-	BRAIN_CK(ck_motives(brn, dt_motives));
-	BRAIN_CK(! is_dt_virgin());
+	BRAIN_CK(rs_target_level < nke.dk_note_layer);
+	BRAIN_CK(ck_motives(brn, rs_motives));
+	BRAIN_CK(! is_rs_virgin());
 #endif
 }
 
@@ -1070,17 +1064,17 @@ neuron::dbg_old_set_motives(brain& brn, notekeeper& nke, bool is_first){
 }
 
 bool
-brain::dbg_ck_deducs(deduction& dct1, deduction& dct2){
+brain::dbg_ck_rsns(reason& rsn1, reason& rsn2){
 #ifdef FULL_DEBUG
 	//BRAIN_CK(false);
-	long lv1 = dct1.dt_target_level;
-	long lv2 = dct2.dt_target_level;
+	long lv1 = rsn1.rs_target_level;
+	long lv2 = rsn2.rs_target_level;
 
 	if(lv1 == INVALID_LEVEL){ lv1 = ROOT_LEVEL; }
 	if(lv2 == INVALID_LEVEL){ lv2 = ROOT_LEVEL; }
 
-	bool c1 = (dct1.dt_motives.equal_to(dct2.dt_motives));
-	bool c2 = (dct1.dt_forced == dct2.dt_forced);
+	bool c1 = (rsn1.rs_motives.equal_to(rsn2.rs_motives));
+	bool c2 = (rsn1.rs_forced == rsn2.rs_forced);
 	bool c3 = (lv1 == lv2);
 
 	MARK_USED(c1);
@@ -1090,8 +1084,8 @@ brain::dbg_ck_deducs(deduction& dct1, deduction& dct2){
 	DBG_COND_COMM(! (c1 && c2 && c3) ,
 		os << "ABORTING_DATA " << bj_eol;
 		os << "  c1=" << c1 << "  c2=" << c2 << "  c3=" << c3 << bj_eol;
-		os << "dct1=" << dct1 << bj_eol;
-		os << "dct2=" << dct2 << bj_eol;
+		os << "rsn1=" << rsn1 << bj_eol;
+		os << "rsn2=" << rsn2 << bj_eol;
 		print_trail(os);
 		os << "END_OF_aborting_data" << bj_eol;
 	);
@@ -1107,22 +1101,23 @@ brain::dbg_ck_deducs(deduction& dct1, deduction& dct2){
 void
 brain::dbg_old_reverse_trail(){
 #ifdef FULL_DEBUG
-	DBG(deduction& dct2 = br_dbg.dbg_deduc);
+	reason& rsn1 = br_dbg.dbg_rsn1;
+	reason& rsn2 = br_dbg.dbg_dct.dt_rsn;
 	//long dbg_old_lv = level();
 
 	BRAIN_CK(! has_psignals());
 	brain& brn = *this;
 	notekeeper& nke0 = br_dbg_retract_nke0;
-	deduction& dct = br_retract_dct;
+	reason& rsn = rsn1;
 	long& all_notes0 = br_qu_tot_note0;
 	//row_quanton_t& all_rev = br_tmp_rever_quas;
 	//MARK_USED(all_rev);
 	MARK_USED(all_notes0);
 
-	dct.init_deduction();
+	rsn.init_reason();
 	nke0.init_notes(level());
 
-	BRAIN_CK(dct.is_dt_virgin());
+	BRAIN_CK(rsn.is_rs_virgin());
 	BRAIN_CK(nke0.dk_tot_noted == 0);
 	BRAIN_CK(level() != ROOT_LEVEL);
 	BRAIN_CK(all_notes0 == 0);
@@ -1135,11 +1130,15 @@ brain::dbg_old_reverse_trail(){
 	BRAIN_DBG(br_dbg.dbg_before_retract_lv = level());
 
 	DBG(
-		br_deducer_anlsr.set_conflicts(br_all_conflicts_found);
-		br_deducer_anlsr.deduction_analysis(br_deducer_anlsr.get_first_causes(), dct2)
+		br_dedcer.set_conflicts(br_all_conflicts_found);
+		row<neuromap*>& to_wrt = br_dbg.dbg_dct.dt_all_to_wrt;
+		to_wrt.clear();
+		row_quanton_t& causes = br_dbg.dbg_dct.dt_first_causes;
+		br_dedcer.get_first_causes(causes);
+		br_dedcer.deduce(br_dbg.dbg_dct);
 	);
-	BRAIN_CK_PRT(dct2.dt_target_level >= ROOT_LEVEL, 
-		os << recoil() << ".dct2=" << dct2
+	BRAIN_CK_PRT(rsn2.rs_target_level >= ROOT_LEVEL, 
+		os << recoil() << ".rsn2=" << rsn2
 	);
 
 	neuron& cfl = *(first_conflict().ps_source);
@@ -1150,9 +1149,9 @@ brain::dbg_old_reverse_trail(){
 	// REVERSE LOOP
 
 	while(true){
-		bool end_of_recoil = dbg_in_edge_of_target_lv(dct);
+		bool end_of_recoil = dbg_in_edge_of_target_lv(rsn);
 		if(end_of_recoil){
-			BRAIN_CK(! dct.is_dt_virgin());
+			BRAIN_CK(! rsn.is_rs_virgin());
 			BRAIN_CK((trail_level() + 1) == level());
 		}
 		
@@ -1193,7 +1192,7 @@ brain::dbg_old_reverse_trail(){
 		neuron* src = qua.get_source();
 
 		BRAIN_CK(qua.is_pos());
-		BRAIN_CK(dct.is_dt_virgin() || (level() >= dct.dt_target_level));
+		BRAIN_CK(rsn.is_rs_virgin() || (level() >= rsn.rs_target_level));
 
 		// notes
 
@@ -1212,11 +1211,11 @@ brain::dbg_old_reverse_trail(){
 			nke0.dec_notes();
 
 			if(nke0.dk_num_noted_in_layer == 0){
-				if(dct.is_dt_virgin()){
-					dct.dbg_set_with(brn, nke0, qua);
+				if(rsn.is_rs_virgin()){
+					rsn.dbg_set_with(brn, nke0, qua);
 				}
 
-				BRAIN_CK(! dct.is_dt_virgin());
+				BRAIN_CK(! rsn.is_rs_virgin());
 			}
 
 			if(src != NULL_PT){
@@ -1224,7 +1223,7 @@ brain::dbg_old_reverse_trail(){
 				BRAIN_CK(nke0.dk_num_noted_in_layer > 0);
 			} else {
 				BRAIN_CK(! qua.has_source());
-				BRAIN_CK(! dct.is_dt_virgin());
+				BRAIN_CK(! rsn.is_rs_virgin());
 				BRAIN_CK(nke0.dk_num_noted_in_layer == 0);
 			}
 
@@ -1234,7 +1233,7 @@ brain::dbg_old_reverse_trail(){
 
 		if(! qua.has_source()){
 			BRAIN_CK(nke0.dk_num_noted_in_layer == 0);
-			BRAIN_CK(! dct.is_dt_virgin());
+			BRAIN_CK(! rsn.is_rs_virgin());
 
 			//chosen_qua = &qua;
 		}
@@ -1248,12 +1247,12 @@ brain::dbg_old_reverse_trail(){
 
 	} // true
 
-	BRAIN_DBG(br_dbg.dbg_last_recoil_lv = dct.dt_target_level);
+	BRAIN_DBG(br_dbg.dbg_last_recoil_lv = rsn.rs_target_level);
 
-	BRAIN_CK(dbg_ck_deducs(dct, dct2));
+	BRAIN_CK(dbg_ck_rsns(rsn, rsn2));
 	DBG(long rr_lv = trail_level());
-	BRAIN_CK((level() == ROOT_LEVEL) || (level() == dct.dt_target_level));
-	BRAIN_CK((level() == ROOT_LEVEL) || (rr_lv == dct.dt_target_level));
+	BRAIN_CK((level() == ROOT_LEVEL) || (level() == rsn.rs_target_level));
+	BRAIN_CK((level() == ROOT_LEVEL) || (rr_lv == rsn.rs_target_level));
 
 	// update leveldat
 	
@@ -1262,14 +1261,14 @@ brain::dbg_old_reverse_trail(){
 
 	// learn motives
 
-	BRAIN_CK(dct.dt_forced != NULL_PT);
+	BRAIN_CK(rsn.rs_forced != NULL_PT);
 
-	neuron* lnd_neu = learn_mots(dct);
+	neuron* lnd_neu = learn_mots(rsn);
 	
 	// send forced learned
 
-	quanton* nxt_qua = dct.dt_forced;
-	if(! dct.dt_motives.is_empty()){
+	quanton* nxt_qua = rsn.rs_forced;
+	if(! rsn.rs_motives.is_empty()){
 		BRAIN_CK(nxt_qua != NULL_PT);
 		send_psignal(*nxt_qua, lnd_neu, tier() + 1);
 	}
@@ -1368,7 +1367,7 @@ leveldat::print_leveldat(bj_ostream& os, bool from_pt){
 }
 
 bj_ostream&	
-analyser::print_analyser(bj_ostream& os, bool from_pt){
+deducer::print_deducer(bj_ostream& os, bool from_pt){
 	row_quanton_t all_quas;
 	append_all_trace_quas(de_all_noted, all_quas);
 	

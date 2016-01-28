@@ -73,10 +73,7 @@ bj_solver_t bj_solver_create(const char* bjs_dir_path){
 	
 	bj_solver_t bjs = (bj_solver_t)nw_slv;
 
-	IF_ONLY_DEDUC(bj_out << "ONLY_DEDUC !!! (compile option)" << bj_eol);
-	IF_KEEP_LEARNED(bj_out << "KEEP_LEARNED !!! (compile option)" << bj_eol);
-	IF_NEVER_FIND(bj_out << "NEVER_FIND !!! (compile option)" << bj_eol);
-	IF_NEVER_WRITE(bj_out << "NEVER_WRITE !!! (compile option)" << bj_eol);
+	dbg_init_dbg_conf(the_slvr.slv_dbg_conf_info);
 	
 	DBG_PRT_SLV(nw_slv, bj_out, 1, true, os << "KEEP_LEARNED");
 	DBG_PRT_SLV(nw_slv, bj_out, 2, true, os << "ONLY_DEDUC");
@@ -107,11 +104,6 @@ void 		bj_solver_release(bj_solver_t bjs){
 		);
 	}
 
-	IF_ONLY_DEDUC(bj_out << "ONLY_DEDUC !!! (compile option)" << bj_eol);
-	IF_KEEP_LEARNED(bj_out << "KEEP_LEARNED !!! (compile option)" << bj_eol);
-	IF_NEVER_FIND(bj_out << "NEVER_FIND !!! (compile option)" << bj_eol);
-	IF_NEVER_WRITE(bj_out << "NEVER_WRITE !!! (compile option)" << bj_eol);
-	
 	DBG_PRT_SLV(the_slvr, bj_out, 1, true, os << "KEEP_LEARNED");
 	DBG_PRT_SLV(the_slvr, bj_out, 2, true, os << "ONLY_DEDUC");
 	DBG_PRT_SLV(the_slvr, bj_out, 3, true, os << "VERIF_WRITE");

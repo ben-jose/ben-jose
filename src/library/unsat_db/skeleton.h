@@ -58,6 +58,7 @@ class instance_info;
 
 class solver;
 class brain;
+class neuron;
 class canon_clause;
 class variant;
 class canon_cnf;
@@ -106,6 +107,7 @@ class skeleton_glb;
 #define SKG_CNF_DIR		"/SKELETON/CNF"
 #define SKG_REF_DIR		"/SKELETON/REF"
 #define SKG_LCK_DIR		"/SKELETON/LCK"
+#define SKG_TMP_PROOF_DIR	"/SKELETON/TMP/PROOF"
 #define SKG_COLLISIONS_DIR	"/SKELETON/ERR/COLLISIONS"
 #define SKG_MISSING_DIR		"/SKELETON/ERR/MISSING"
 #define SKG_CORRUPTED_DIR	"/SKELETON/ERR/CORRUPTED"
@@ -646,7 +648,7 @@ public:
 
 	bool	all_nxt_vnt(skeleton_glb& skg, row<variant>& all_next, row<ch_string>& all_del);
 	
-	ch_string	first_vnt_i_super_of(skeleton_glb& skg, bool& exact, 
+	ch_string	first_vnt_i_super_of(skeleton_glb& skg, row<neuron*>& all_found, 
 									 instance_info* iinfo = NULL);
 	
 	bool	ck_vnts(skeleton_glb& skg);
@@ -746,6 +748,8 @@ public:
 	ch_string		kg_running_path;
 
 	ch_string		kg_instance_file_nam;
+	
+	ch_string		kg_tmp_proof_path;
 
 	ch_string		kg_collisions_path;
 	ch_string		kg_missing_path;

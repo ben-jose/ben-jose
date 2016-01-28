@@ -61,6 +61,8 @@ phi_main(long num_h){
 	DBG(the_slvr.slv_skl.kg_keep_skeleton = false;)
 	the_slvr.slv_skl.init_paths();
 	
+	dbg_init_dbg_conf(the_slvr.slv_dbg_conf_info);
+	
 	BRAIN_CK((bj_out << "doing CKs (plain BRN_CKs)" << bj_eol) && true);
 	BRAIN_CK_0((bj_out << "doing BRN_CK_0s" << bj_eol) && true);
 	BRAIN_CK_1((bj_out << "doing BRN_CK_1s" << bj_eol) && true);

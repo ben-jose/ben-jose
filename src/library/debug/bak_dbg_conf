@@ -13,7 +13,7 @@
 // global
 
 //0 -1 			// 0. start, finish
-//1 -1			// 1. KEEP ALL LEARNED (use with ONLY DEDUC or dont)
+//1 -1			// 1. KEEP_ALL_LEARNED (needs ONLY DEDUC to work)
 //2 -1			// 2. ONLY_DEDUC
 3 -1			// 3. RUN_VERIF (satex) on writed cnf
 
@@ -46,7 +46,7 @@
 //22 -1			// 22. add_neuron_from_lits
 //23 -1			// 23. learn_reasons
 //24 -1			// 24. brn_dbg_compute_binary
-//25 -1			// 25. conflicts & choice
+//25 -1			// 25. conflicts & choice (bug_mini_wrt)
 //26 -1			// 26. add_neuron
 //27 -1			// 27. set_result
 //28 -1			// 28. set_result. hit_enter.
@@ -59,15 +59,15 @@
 //35 -1			// 35. num confl
 //36 -1			// 36. print check assig
 //37 -1			// 37. create/destroy brain & sort_glb
-//38 -1			// 38. analyser::calc_neuromap
-//39 -1			// 39. analyser::neuromap_find_analysis 	(phi_dbg)
-//40 -1			// 40. analysis. PRINT_TRAIL.  	(phi_dbg)
+//38 -1			// 38. deducer::calc_neuromap
+//39 -1			// 39. deducer::neuromap_find_analysis 	(phi_dbg)
+//40 -1			// 40. analysis. PRINT_TRAIL.  	(phi_dbg) 
 
 // neuromap
 
 //41 -1			// 41. neuromaps map_prepare_mem_oper
 //42 -1			// 42. neuromaps load cols
-//43 -1			// 43. neuromaps activ/deactive // dbg1
+//43 -1			// 43. neuromaps sort_all_qu_tees
 //44 -1			// 44. neuromaps (#lv > 3) activ/deactive 
 //45 -1			// 45. neuromaps update HTML nmp neuromaps activ/deactive 
 //46 -1			// 46. neuromaps dbg_prt cy col also in console 
@@ -75,10 +75,10 @@
 //48 -1			// 48. neuromaps prt cnf (guide, tauto, diff) afert prepare
 //49 -1			// 49. neuromaps map_oper found cnf
 //50 -1			// 50. setup_to_wrt 	(phi_dbg)
-//51 -1			// 51. deduction::dbg_set_with
-//52 -1			// 52. deduction::dbg_set_with
-//53 -1			// 53. analyser::neuromap_setup_analysis
-//54 -1			// 54. analyser::calc_neuromap. no_lrnd calc_nmp. calc_orig_neuromap
+//51 -1			// 51. reason::dbg_set_with
+//52 -1			// 52. reason::dbg_set_with
+//53 -1			// 53. neuromaps locate/release
+//54 -1			// 54. deducer::calc_neuromap. no_lrnd calc_nmp. calc_orig_neuromap
 //55 -1			// 55. get_candidate_to_write. add_wrt_nmp. 	(phi_dbg)
 
 // sortor
@@ -98,8 +98,8 @@
 //65 -1			// 65. setup analysis. 
 //66 -1			// 66. setup analysis. top HTML setup. (phi_dbg)
 //67 -1			// 67. coloring. not_eq_cols
-//68 -1			// 68. find choice cicles
-//69 -1			// 69. found cicle
+//68 -1			// 68. find choice cicles (cicl_bug)
+//69 -1			// 69. found cicle (cicl_bug)
 //70 -1			// 70. update_HTML nmp GRAPH (phi_dbg)
 //71 -1			// 71. REPEATED_WRITE (phi_dbg)
 //72 -1			// 72. update_HTML ic GRAPH
@@ -137,20 +137,19 @@
 // find and write dbg
 
 //101 -1 			// 101. push/pop cands
-//102 -1			// 102. NMP_TO_WRT // dbg_1
+//102 -1			// 102. NMP_TO_WRT 
 //103 -1			// 103. training during find
-//104 -1			// 104. MIN_TRAINABLE
-//105 -1			// 105. 
+104 -1			// 104. MIN_TRAINABLE
+//105 -1			// 105. nmp choices.
 //106 -1			// 106. nw push/pop cands
 //107 -1			// 107. PRT_SORTING
 //108 -1			// 108. 
 //109 -1			// 109. 
 //110 -1			// 110. 
 //111 -1			// 111. 
-
 //112 -1			// 112. 
 //113 -1			// 113. 
-//114 -1			// 114. 
+//114 -1 			// 114. 
 //115 -1			// 115. 
 //116 -1			// 116. 
 //117 -1			// 117. 

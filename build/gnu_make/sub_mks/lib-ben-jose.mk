@@ -7,14 +7,15 @@ SOURCES := \
 	$(SRC_BASE_DIR)/external/bj_mem.cpp \
 	$(SRC_BASE_DIR)/external/stack_trace.cpp \
 	$(SRC_BASE_DIR)/external/top_exception.cpp \
-	$(SRC_BASE_DIR)/library/brain/analyser.cpp \
+	$(SRC_BASE_DIR)/library/api/ben_jose.cpp \
 	$(SRC_BASE_DIR)/library/brain/brain.cpp \
+	$(SRC_BASE_DIR)/library/brain/deducer.cpp \
 	$(SRC_BASE_DIR)/library/brain/sortor.cpp \
 	$(SRC_BASE_DIR)/library/brain/neuromap.cpp \
 	$(SRC_BASE_DIR)/library/dimacs/dimacs.cpp \
-	$(SRC_BASE_DIR)/library/api/ben_jose.cpp \
 	$(SRC_BASE_DIR)/library/shuffler/shuffler.cpp \
 	$(SRC_BASE_DIR)/library/unsat_db/skeleton.cpp \
+	$(SRC_BASE_DIR)/library/unsat_db/proof.cpp \
 	$(SRC_BASE_DIR)/library/debug/dbg_config.cpp \
 	$(SRC_BASE_DIR)/library/debug/dbg_brain.cpp \
 	$(SRC_BASE_DIR)/library/debug/dbg_cy_htm.cpp \

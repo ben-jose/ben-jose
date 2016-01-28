@@ -54,48 +54,6 @@ Declarations of classes and that implement the neural network.
 #endif 
 
 //=============================================================================
-// if_defines
-
-#ifdef FULL_DEBUG
-#ifdef ONLY_DEDUC_DBG
-#undef ONLY_DEDUC_DBG
-#endif 
-#ifdef KEEP_LEARNED_DBG
-#undef KEEP_LEARNED_DBG
-#endif 
-#ifdef NEVER_FIND_DBG
-#undef NEVER_FIND_DBG
-#endif 
-#ifdef NEVER_WRITE_DBG
-#undef NEVER_WRITE_DBG
-#endif 
-#endif 
-
-#ifdef ONLY_DEDUC_DBG
-#define IF_ONLY_DEDUC(prm)	prm
-#	ifdef KEEP_LEARNED_DBG
-#	define IF_KEEP_LEARNED(prm)	prm
-#	else
-#	define IF_KEEP_LEARNED(prm)	/**/
-#	endif 
-#else
-#define IF_ONLY_DEDUC(prm)	/**/
-#define IF_KEEP_LEARNED(prm)	/**/
-#endif 
-
-#ifdef NEVER_FIND_DBG
-#define IF_NEVER_FIND(prm)	prm
-#else
-#define IF_NEVER_FIND(prm)	/**/
-#endif 
-
-#ifdef NEVER_WRITE_DBG
-#define IF_NEVER_WRITE(prm)	prm
-#else
-#define IF_NEVER_WRITE(prm)	/**/
-#endif 
-
-//=============================================================================
 // defines
 
 #define BRAIN_DBG(prm) DBG(prm)
@@ -210,16 +168,16 @@ BRAIN_DBG(class dbg_inst_info;)
 class ticket;
 class alert_rel;
 class quanton;
-class neuron;
-class deduction;
 class coloring;
-class qulayers;
-class cov_entry;
-class neuromap;
-class analyser;
-class notekeeper;
+class neuron;
 class prop_signal;
-class ps_rece;
+class reason;
+class deduction;
+class cov_entry;
+class qulayers;
+class neuromap;
+class deducer;
+class notekeeper;
 class leveldat;
 class brain;
 
@@ -238,13 +196,14 @@ DECLARE_PRINT_FUNCS(ticket)
 DECLARE_PRINT_FUNCS(alert_rel)
 DECLARE_PRINT_FUNCS(quanton)
 DECLARE_PRINT_FUNCS(neuron)
+DECLARE_PRINT_FUNCS(reason)
 DECLARE_PRINT_FUNCS(deduction)
 DECLARE_PRINT_FUNCS(prop_signal)
 DECLARE_PRINT_FUNCS(coloring)
 DECLARE_PRINT_FUNCS(qulayers)
 DECLARE_PRINT_FUNCS(cov_entry)
 DECLARE_PRINT_FUNCS(neuromap)
-DECLARE_PRINT_FUNCS(analyser)
+DECLARE_PRINT_FUNCS(deducer)
 DECLARE_PRINT_FUNCS(leveldat)
 
 //=================================================================
@@ -335,6 +294,8 @@ class ticket {
 
 	bool	is_older_than(ticket& nmp_tk);
 	bool	is_older_than(neuromap* nmp);
+	
+	ch_string	get_str();
 
 	bj_ostream&	print_ticket(bj_ostream& os, bool from_pt = false){
 		os << "[";
@@ -1227,15 +1188,15 @@ class neuron {
 	long			ne_tmp_col;
 
 	ticket			ne_candidate_tk;
-	//ticket			ne_first_candidate_tk;
 	
 	// min_wrt system
 	ticket			ne_upd_to_wrt_tk;
 	ticket			ne_to_wrt_tk;
 	
+	ticket			ne_proof_tk;
+	
 	BRAIN_DBG(
 		canon_clause	ne_dbg_ccl;
-		ticket			ne_dbg_creation_tk;
 		long			ne_dbg_drw_x_pos;
 		long			ne_dbg_drw_y_pos;
 		recoil_counter_t	ne_dbg_wrt_rc;
@@ -1295,14 +1256,14 @@ class neuron {
 		ne_tmp_col = INVALID_COLOR;
 		
 		ne_candidate_tk.init_ticket();
-		//ne_first_candidate_tk.init_ticket();
 		
 		ne_upd_to_wrt_tk.init_ticket();
 		ne_to_wrt_tk.init_ticket();
 		
+		ne_proof_tk.init_ticket();
+		
 		BRAIN_DBG(
 			ne_dbg_ccl.cc_me = this;
-			ne_dbg_creation_tk.init_ticket();
 			ne_dbg_drw_x_pos = 0;
 			ne_dbg_drw_y_pos = 0;
 			ne_dbg_wrt_rc = 0;
@@ -1425,12 +1386,6 @@ class neuron {
 	bool	is_ne_dominated(brain& brn);
 	void	make_ne_dominated(brain& brn);
 	bool	is_ne_source();
-	//void	set_ne_nxt_cand_tk(brain& brn, ticket& nmp_tk);
-	//bool	in_older_than_last_candidate(brain& brn);
-	
-	/*void	set_first_cand_tk(){
-		ne_first_candidate_tk = ne_candidate_tk;
-	}*/
 	
 	void	set_cand_tk(ticket& n_tk);
 	
@@ -1550,7 +1505,7 @@ class prop_signal {
 		return lv;
 	}
 
-	void	get_ps_cand_to_wrt(brain& brn, row_neuromap_t& to_wrt);
+	bool	get_ps_cand_to_wrt(brain& brn, row_neuromap_t& to_wrt);
 	
 	bool	is_ps_of_qua(quanton& qua, neuromap* dbg_nmp = NULL_PT);
 
@@ -1605,59 +1560,71 @@ append_all_trace_neus(row<prop_signal>& trace, row_neuron_t& all_neus)
 }
 
 //=============================================================================
-// ps_rece
+// reason
 
-typedef receptor<ps_rece> pr_rece_t;
-
-class ps_rece {
+class reason {
 	public:
-	static
-	char*	CL_NAME;
 
-	virtual
-	char*	get_cls_name(){
-		return ps_rece::CL_NAME;
+	ticket			dt_tk;
+	row_quanton_t	rs_motives;
+	quanton*		rs_forced;
+	long			rs_target_level;
+
+	reason(){
+		init_reason();
 	}
 
-	prop_signal		pr_sig;
-	pr_rece_t		pr_hand;
-
-	// methods
-
-	ps_rece(){
-		init_ps_rece();
+	~reason(){
+		init_reason();
 	}
 
-	void	init_ps_rece(){
-		pr_sig.init_prop_signal();
-		pr_hand.re_me = this;
+	void	init_reason(){
+		dt_tk.init_ticket();
+		rs_motives.clear();
+		rs_forced = NULL_PT;
+		rs_target_level = INVALID_LEVEL;
 	}
 
 	brain*	get_dbg_brn(){
-		if(pr_sig.ps_quanton != NULL_PT){
-			return pr_sig.ps_quanton->get_dbg_brn();
-		}
-		return NULL;
+		brain* the_brn = NULL;
+		BRAIN_DBG(if(rs_forced != NULL){ the_brn = rs_forced->get_dbg_brn(); });
+		return the_brn;
+	}
+
+	solver*	get_dbg_slv();
+	
+	bool	is_rs_virgin(){
+		bool c1 = (rs_motives.is_empty());
+		bool c2 = (rs_forced == NULL_PT);
+		bool c3 = (rs_target_level == INVALID_LEVEL);
+
+		bool is_vg = (c1 && c2 && c3);
+	
+		return is_vg;
 	}
 	
-	solver*	get_dbg_slv(){
-		if(pr_sig.ps_quanton != NULL_PT){
-			return pr_sig.ps_quanton->get_dbg_slv();
-		}
-		return NULL;
-	}
-		
-	bool	is_pr_virgin(){
-		bool c1 = (pr_sig.is_ps_virgin());
-		bool c2 = (pr_hand.is_alone());
+	void	copy_to_rsn(reason& rsn2){
+		BRAIN_CK(rsn2.is_rs_virgin());
+		rs_motives.copy_to(rsn2.rs_motives);
 
-		return (c1 && c2);
+		rsn2.rs_forced = rs_forced;
+		rsn2.rs_target_level = rs_target_level;
+	}
+	
+	bool	equal_to_rsn(reason& rsn2);
+
+	void	dbg_set_with(brain& brn, notekeeper& dke, quanton& nxt_qua);
+
+	bool	is_dt_singleton(){
+		return rs_motives.is_empty();
 	}
 
-	bj_ostream&	print_ps_rece(bj_ostream& os, bool from_pt = false){
-		os << "cp[";
-		os << pr_sig;
-		os << "]";
+	bj_ostream&	print_reason(bj_ostream& os, bool from_pt = false){
+		MARK_USED(from_pt);
+		os << "dt={ mots=" << rs_motives;
+		os << " qu:" << rs_forced;
+		os << " lv:" << rs_target_level;
+		os << "}";
 		os.flush();
 		return os;
 	}
@@ -1668,87 +1635,61 @@ class ps_rece {
 
 class deduction {
 	public:
+	brain*				dt_brn;
+	neuromap*			dt_last_found;
+	
+	row_quanton_t		dt_first_causes;
+	row<prop_signal>	dt_all_noted;
+	reason				dt_rsn;
 
-	row_quanton_t	dt_motives;
-	quanton*		dt_forced;
-	long			dt_target_level;
+	row_long_t			dt_all_to_wrt_idxs;
+	row_neuromap_t		dt_all_to_wrt;
+
+	// methods
 
 	deduction(){
 		init_deduction();
 	}
 
-	~deduction(){
-		init_deduction();
+	void	init_deduction(brain* the_brn = NULL_PT){
+		dt_brn = the_brn;
+		dt_last_found = NULL_PT;
+		
+		dt_first_causes.clear();
+		dt_all_noted.clear(true, true);
+		dt_rsn.init_reason();
+		
+		dt_all_to_wrt_idxs.clear();
+		dt_all_to_wrt.clear();
 	}
 
-	void	init_deduction(){
-		dt_motives.clear();
-		dt_forced = NULL_PT;
-		dt_target_level = INVALID_LEVEL;
+	void	reset_deduction(){
+		init_deduction(dt_brn);
 	}
-
+	
 	brain*	get_dbg_brn(){
-		brain* the_brn = NULL;
-		BRAIN_DBG(if(dt_forced != NULL){ the_brn = dt_forced->get_dbg_brn(); });
-		return the_brn;
+		return dt_brn;
 	}
-
+	
 	solver*	get_dbg_slv();
-	
-	long	get_deduc_lv(){
-		BRAIN_CK(dt_forced != NULL_PT);
-		long d_lv = dt_forced->qlevel();
-		return d_lv;
-	}
-	
+		
 	bool	is_dt_virgin(){
-		bool c1 = (dt_motives.is_empty());
-		bool c2 = (dt_forced == NULL_PT);
-		bool c3 = (dt_target_level == INVALID_LEVEL);
+		bool c1 = (dt_last_found == NULL_PT);
+		
+		bool c2 = (dt_first_causes.is_empty());
+		bool c3 = (dt_all_noted.is_empty());
+		bool c4 = (dt_rsn.is_rs_virgin());
 
-		bool is_vg = (c1 && c2 && c3);
-	
-		return is_vg;
+		bool c5 = (dt_all_to_wrt_idxs.is_empty());
+		bool c6 = (dt_all_to_wrt.is_empty());
+		
+		return (c1 && c2 && c3 && c4 && c5 && c6);
 	}
 	
-	void	move_to_dct(deduction& dct2){
-		BRAIN_CK(dct2.is_dt_virgin());
-		dt_motives.move_to(dct2.dt_motives);
-
-		dct2.dt_forced = dt_forced;
-		dct2.dt_target_level = dt_target_level;
-
-		init_deduction();
-		BRAIN_CK(is_dt_virgin());
-	}
-
-	void	copy_to_dct(deduction& dct2){
-		BRAIN_CK(dct2.is_dt_virgin());
-		dt_motives.copy_to(dct2.dt_motives);
-
-		dct2.dt_forced = dt_forced;
-		dct2.dt_target_level = dt_target_level;
-	}
-	
-	bool	equal_to_dct(deduction& dct2);
-
-	void	dbg_set_with(brain& brn, notekeeper& dke, quanton& nxt_qua);
-
-	quanton&	get_forced(){
-		BRAIN_CK(dt_forced != NULL_PT);
-		return *dt_forced;
-	}
-
-	bool	is_dt_singleton(){
-		return dt_motives.is_empty();
-	}
-
 	bj_ostream&	print_deduction(bj_ostream& os, bool from_pt = false){
-		MARK_USED(from_pt);
-		os << "dt={ mots=" << dt_motives;
-		os << " qu:" << dt_forced;
-		os << " lv:" << dt_target_level;
-		os << "}";
+		os << "[deduc:\n";
+		os << dt_rsn;
+		os << "\n]";
 		os.flush();
 		return os;
 	}
@@ -2177,8 +2118,8 @@ class neuromap {
 	row_neuron_t		na_to_write;
 	row_neuron_t		na_not_to_write;
 	
-	bool				na_found_exact;
-	row_neuron_t		na_all_found;
+	//row_neuron_t		na_all_found;
+	coloring		na_found_col;
 	
 	long			na_guide_tot_vars;
 	coloring		na_guide_col;
@@ -2189,11 +2130,6 @@ class neuromap {
 	// candidate system
 	ticket			na_candidate_tk;
 	quanton*		na_candidate_qua;
-	
-	// new candidate system
-	//row<prop_signal>	na_all_propag;
-	grip				na_all_neu;
-	grip				na_all_qua;
 	
 	BRAIN_DBG(
 		ticket				na_dbg_candidate_tk;
@@ -2249,8 +2185,8 @@ class neuromap {
 		na_to_write.clear();
 		na_not_to_write.clear();
 		
-		na_found_exact = false;
-		na_all_found.clear();
+		//na_all_found.clear();
+		na_found_col.init_coloring();
 		
 		na_guide_tot_vars = 0;
 		na_guide_col.init_coloring();
@@ -2261,10 +2197,6 @@ class neuromap {
 		na_candidate_tk.init_ticket();
 		na_candidate_qua = NULL_PT;
 
-		//na_all_propag.clear(true, true);
-		na_all_neu.forced_let_go();
-		na_all_qua.forced_let_go();
-		
 		DBG(
 			na_dbg_candidate_tk.init_ticket();
 			na_dbg_cand_sys = false;
@@ -2765,9 +2697,9 @@ class qlayers_ref {
 };
 
 //=============================================================================
-// analyser
+// deducer
 
-class analyser {
+class deducer {
 	public:
 
 	brain*			de_brain;
@@ -2779,15 +2711,15 @@ class analyser {
 	row<prop_signal>	de_all_confl;
 	prop_signal 	de_next_bk_psig;
 	
-	analyser(){
-		init_analyser();
+	deducer(){
+		init_deducer();
 	}
 
-	~analyser(){
-		init_analyser();
+	~deducer(){
+		init_deducer();
 	}
 
-	void	init_analyser(brain* brn = NULL_PT);
+	void	init_deducer(brain* brn = NULL_PT);
 	void	reset_deduc();
 
 	static
@@ -2806,7 +2738,7 @@ class analyser {
 	
 	brain&		get_de_brain();
 	
-	bool	is_end_of_dct(){
+	bool	is_end_of_rsn(){
 		long num_ly_notes = de_nkpr.dk_num_noted_in_layer;
 		BRAIN_CK(num_ly_notes >= 0);
 		return (num_ly_notes == 0);
@@ -2816,8 +2748,9 @@ class analyser {
 	
 	bool	ck_end_of_lrn_nmp();
 	
-	void	fill_dct(deduction& dct);
-	void	find_all_to_write(row_neuromap_t& to_wrt);
+	void	fill_rsn(reason& rsn);
+	void	find_all_to_write(row_neuromap_t& to_wrt, row_long_t& all_wrt_idxs);
+	void	write_all_proof(row_quanton_t& causes, reason& rsn, row_long_t& all_wrt_idxs);
 	
 	bool		ck_deduc_init(long deduc_lv, bool full_ck);
 	
@@ -2833,11 +2766,11 @@ class analyser {
 		return cfl;
 	}
 	
-	row_quanton_t&	get_first_causes();
+	//row_quanton_t&	get_first_causes();
+	void	get_first_causes(row_quanton_t& fst_causes);
 		
-	void		deduction_init(row_quanton_t& causes, long max_lv = INVALID_LEVEL);
-	void 		deduction_analysis(row_quanton_t& causes, deduction& dct, 
-								   long max_lv = INVALID_LEVEL);
+	void		deduce_init(row_quanton_t& causes, long max_lv = INVALID_LEVEL);
+	void 		deduce(deduction& dct, long max_lv = INVALID_LEVEL);
 	
 	void		set_nxt_noted(quanton* nxt_qua);
 	
@@ -2845,7 +2778,7 @@ class analyser {
 	bool		find_next_noted();
 	void 		set_notes_of(row_quanton_t& causes, bool is_first);
 
-	bj_ostream&	print_analyser(bj_ostream& os, bool from_pt = false);
+	bj_ostream&	print_deducer(bj_ostream& os, bool from_pt = false);
 	
 };
 
@@ -2937,7 +2870,8 @@ public:
 	long	dbg_before_retract_lv;
 	long	dbg_last_recoil_lv;
 	
-	deduction	dbg_deduc;
+	reason	dbg_rsn1;
+	deduction	dbg_dct;
 	
 	row_neuron_t	 	dbg_simple_neus;
 	row_neuron_t	 	dbg_used_neus;
@@ -3018,9 +2952,6 @@ public:
 		bool				br_dbg_skl_bug;
 		bool				br_dbg_found_top;
 	)
-	IF_KEEP_LEARNED(
-		bool				br_dbg_keeping_learned;
-	)
 	
 	solver* 		br_pt_slvr;
 		
@@ -3033,7 +2964,7 @@ public:
 	
 	// temporal attributes
 	
-	deduction 		br_tmp_find_dct;
+	reason 		br_tmp_find_rsn;
 	
 	row_long_t		br_tmp_all_sz_side1;
 	row_long_t		br_tmp_all_sz_side2;
@@ -3068,6 +2999,8 @@ public:
 	row_neuron_t	br_tmp_prt_nmp_neus;
 	row_neuron_t 	br_tmp_nmp_neus_for_upper_qu;
 	row_neuron_t 	br_tmp_upd_wrt_neus;
+
+	row_long_t		br_tmp_proof_idxs;
 	
 	// config attributes
 	ch_string		br_file_name;
@@ -3115,12 +3048,12 @@ public:
 	row<prop_signal>	br_delayed_psignals;
 	row<prop_signal>	br_all_conflicts_found;
 
-	analyser		br_deducer_anlsr;
+	deducer			br_dedcer;
 	qlayers_ref 	br_wrt_ref;
-	//analyser		br_neuromaper_anlsr;
 	
-	deduction		br_retract_dct;
-	deduction		br_mono_dct;
+	deduction	br_pulse_deduc;
+	reason		br_retract_rsn;
+	//reason		br_mono_rsn;
 
 	notekeeper		br_dbg_retract_nke0;
 	
@@ -3144,7 +3077,7 @@ public:
 	row_neuromap_t		br_candidate_nxt_nmp_lvs;
 	neuromap*			br_candidate_next;
 	recoil_counter_t	br_candidate_nxt_rc;
-	long				br_candidate_dct_lv;
+	long				br_candidate_rsn_lv;
 
 	sort_glb 		br_forced_srg;
 	sort_glb 		br_filled_srg;
@@ -3258,9 +3191,9 @@ public:
 	quanton* 	get_curr_mono();
 	bool 		ck_prev_monos();
 	quanton* 	choose_mono();
-	void		fill_mono_dct(deduction& dct, row_quanton_t& mots, quanton& mono);
+	void		fill_mono_rsn(reason& rsn, row_quanton_t& mots, quanton& mono);
 	
-	bool		dbg_ck_deducs(deduction& dct1, deduction& dct2);
+	bool		dbg_ck_rsns(reason& rsn1, reason& rsn2);
 
 	bool		ck_mono_propag();
 	long		propagate_signals();
@@ -3490,7 +3423,7 @@ public:
 	void	update_monos();
 
 	neuron&	add_neuron(row_quanton_t& quans, quanton*& forced_qua, bool orig);
-	neuron*	learn_mots(deduction& dct);
+	neuron*	learn_mots(reason& rsn);
 
 	quanton*	get_quanton(long q_id);
 	
@@ -3595,11 +3528,11 @@ public:
 	void	replace_choice(quanton& cho, quanton& nw_cho, dbg_call_id dbg_id = dbg_call_1);
 	void	retract_to(long tg_lv, bool full_reco);
 	bool	dbg_in_edge_of_level();
-	bool	dbg_in_edge_of_target_lv(deduction& dct);
+	bool	dbg_in_edge_of_target_lv(reason& rsn);
 	void	dbg_old_reverse_trail();
 	
 	bool	deduce_and_reverse_trail();
-	void	reverse_with(deduction& dct);
+	void	reverse_with(reason& rsn);
 	
 	bool 	ck_cov_flags();
 
@@ -3619,7 +3552,7 @@ public:
 	void	reset_chg_cands_update(quanton& qua);
 	void	reset_cand_next();
 	void	candidates_before_analyse();
-	void	candidates_before_reverse(deduction& dct);
+	void	candidates_before_reverse(reason& rsn);
 	void	candidates_after_reverse();
 	void	init_cand_propag(neuromap& nmp, quanton* curr_qua);
 	//void	old_init_cand_propag(neuromap& nmp, quanton* curr_qua);
@@ -3632,15 +3565,13 @@ public:
 	long		get_lst_cand_lv();
 	neuromap*	get_last_cand(dbg_call_id dbg_id = dbg_call_1);
 
-	void	 	candidate_find_analysis(bool& found_top, analyser& deducer, 
-						deduction& prv_dct, deduction& nxt_dct, 
-						row_neuromap_t& to_wrt);
+	void	 	candidate_find_analysis(bool& found_top, deducer& dedcer, deduction& dct);
 	
 	void		add_top_cands(row_neuromap_t& to_wrt);
 	
 	bool		analyse_conflicts(row<prop_signal>& all_confl, deduction& dct);
 
-	void 		write_analysis(row_quanton_t& causes, deduction& dct);
+	void 		write_analysis(row_quanton_t& causes, reason& rsn);
 	void		write_update_all_tk(row_quanton_t& causes);
 	void		write_get_tk(ticket& wrt_tk);
 	bool		ck_write_quas(row_quanton_t& wrt_quas);
@@ -3728,7 +3659,7 @@ public:
 	bool		load_brain(long num_neu, long num_var, row_long_t& load_ccls);
 	
 	bool		load_instance();
-	void		find_result();
+	void		think();
 	
 	bj_satisf_val_t 	solve_instance(bool load_it);
 
@@ -3843,7 +3774,7 @@ notekeeper::get_dk_brain(){
 
 inline
 brain&
-analyser::get_de_brain(){
+deducer::get_de_brain(){
 	BRAIN_CK(de_brain != NULL_PT);
 	return *de_brain;	
 }
@@ -3935,13 +3866,14 @@ DEFINE_PRINT_FUNCS(ticket)
 DEFINE_PRINT_FUNCS(alert_rel)
 DEFINE_PRINT_FUNCS(quanton)
 DEFINE_PRINT_FUNCS(neuron)
+DEFINE_PRINT_FUNCS(reason)
 DEFINE_PRINT_FUNCS(deduction)
 DEFINE_PRINT_FUNCS(prop_signal)
 DEFINE_PRINT_FUNCS(coloring)
 DEFINE_PRINT_FUNCS(qulayers)
 DEFINE_PRINT_FUNCS(cov_entry)
 DEFINE_PRINT_FUNCS(neuromap)
-DEFINE_PRINT_FUNCS(analyser)
+DEFINE_PRINT_FUNCS(deducer)
 DEFINE_PRINT_FUNCS(leveldat)
 
 #endif		// BRAIN_H

@@ -1086,8 +1086,8 @@ test_skl(){
 			os << "num_test=" << aa << bj_eol;
 			the_cnf.save_cnf(GSKE, cnn_base_name);
 
-			bool exact = false;
-			ch_string vpth = the_cnf.first_vnt_i_super_of(GSKE, exact);
+			row<neuron*> all_found;
+			ch_string vpth = the_cnf.first_vnt_i_super_of(GSKE, all_found);
 			MARK_USED(vpth);
 			BRAIN_CK(vpth != SKG_INVALID_PTH);
 

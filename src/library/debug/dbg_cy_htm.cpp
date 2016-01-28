@@ -40,8 +40,9 @@ dbg_cy_htm.cpp
 #include "ch_string.h"
 #include "brain.h"
 #include "solver.h"
+#include "html_strings.h"
+
 #include "dbg_prt.h"
-#include "dbg_strings_html.h"
 
 
 #ifdef FULL_DEBUG
