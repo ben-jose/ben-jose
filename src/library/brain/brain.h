@@ -1565,7 +1565,7 @@ append_all_trace_neus(row<prop_signal>& trace, row_neuron_t& all_neus)
 class reason {
 	public:
 
-	ticket			dt_tk;
+	ticket			rs_tk;
 	row_quanton_t	rs_motives;
 	quanton*		rs_forced;
 	long			rs_target_level;
@@ -1579,7 +1579,7 @@ class reason {
 	}
 
 	void	init_reason(){
-		dt_tk.init_ticket();
+		rs_tk.init_ticket();
 		rs_motives.clear();
 		rs_forced = NULL_PT;
 		rs_target_level = INVALID_LEVEL;
@@ -1673,6 +1673,11 @@ class deduction {
 	
 	solver*	get_dbg_slv();
 		
+	brain&	get_brn(){
+		BRAIN_CK(dt_brn != NULL);
+		return (*dt_brn);
+	}
+	
 	bool	is_dt_virgin(){
 		bool c1 = (dt_last_found == NULL_PT);
 		
@@ -2750,7 +2755,6 @@ class deducer {
 	
 	void	fill_rsn(reason& rsn);
 	void	find_all_to_write(row_neuromap_t& to_wrt, row_long_t& all_wrt_idxs);
-	void	write_all_proof(row_quanton_t& causes, reason& rsn, row_long_t& all_wrt_idxs);
 	
 	bool		ck_deduc_init(long deduc_lv, bool full_ck);
 	
@@ -2951,6 +2955,7 @@ public:
 		bool				br_dbg_is_watched_file;
 		bool				br_dbg_skl_bug;
 		bool				br_dbg_found_top;
+		bool				br_dbg_in_analysis;
 	)
 	
 	solver* 		br_pt_slvr;

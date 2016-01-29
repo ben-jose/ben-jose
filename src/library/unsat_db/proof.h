@@ -40,10 +40,8 @@ proof writing function declarations.
 
 #include "brain.h"
 
-void proof_write_json_file_for(brain& brn, row_quanton_t& fst_causes, long curr_idx, 
-							row<ch_string>& prv_cnf_pths, row_long_t& prv_cnf_idxs,
-							row<prop_signal>& trace, reason& deduc);
-
+void proof_write_all_json_files_for(deduction& deduc);
+void proof_write_json_file_for(deduction& deduc);
 void proof_append_ps(row<char>& json_str, prop_signal& the_sig);
 void proof_append_neu(row<char>& json_str, neuron* neu);
 void proof_append_qua(row<char>& json_str, quanton* qua);

@@ -583,6 +583,7 @@ public:
 			row_index first_ii = 0, row_index last_ii = -1,
 			bool inv = false)
 	{ 
+		TOOLS_CK(&dest != this);
 		dest.clear(true, true); 
 		append_to(dest, first_ii, last_ii, inv);
 	}
@@ -1019,6 +1020,7 @@ public:
 
 	virtual
 	bool copy_to_c(long c_arr_sz, obj_t* c_arr){ 
+		TOOLS_CK(c_arr != data);
 		if(c_arr_sz != SZ_ATTRIB){
 			return false;
 		}
@@ -1027,6 +1029,7 @@ public:
 	}
 	
 	void mem_copy_to(row<obj_t>& r_cpy){ 
+		TOOLS_CK(&r_cpy != this);
 		r_cpy.set_cap(SZ_ATTRIB);
 		bj_memcpy(r_cpy.data, data, row_data<obj_t>::sz_in_bytes());
 		r_cpy.sz = SZ_ATTRIB;

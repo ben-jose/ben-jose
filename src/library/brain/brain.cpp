@@ -445,6 +445,7 @@ brain::init_brain(solver& ss){
 		br_dbg_is_watched_file = false;
 		br_dbg_skl_bug = false;
 		br_dbg_found_top = false;
+		br_dbg_in_analysis = false;
 	);
 	br_pt_slvr = &ss;
 	
@@ -936,8 +937,8 @@ brain::learn_mots(reason& rsn){
 		neuron& added_neu = add_neuron(the_mots, f_qua, false);
 		the_neu = &added_neu;
 		
-		if(! rsn.dt_tk.is_tk_virgin()){
-			added_neu.ne_proof_tk = rsn.dt_tk;
+		if(! rsn.rs_tk.is_tk_virgin()){
+			added_neu.ne_proof_tk = rsn.rs_tk;
 		}
 		
 		data_level().ld_learned.push(the_neu);
@@ -2115,9 +2116,11 @@ brain::deduce_and_reverse_trail(){
 		write_all_canditates();
 	}*/
 	
-	candidates_before_reverse(rsn);
-	reverse_with(rsn);
-	candidates_after_reverse();
+	if(go_on){
+		candidates_before_reverse(rsn);
+		reverse_with(rsn);
+		candidates_after_reverse();
+	}
 	
 	return go_on;
 }
@@ -3455,7 +3458,6 @@ brain::candidates_before_reverse(reason& rsn){
 	BRAIN_CK(br_candidate_rsn_lv == INVALID_LEVEL);
 	BRAIN_CK(rsn.rs_forced != NULL_PT);
 	
-	//br_candidate_rsn_lv = rsn.rs_forced->qlevel();
 	br_candidate_rsn_lv = rsn.rs_target_level + 1;
 	BRAIN_CK(br_candidate_rsn_lv != INVALID_LEVEL);
 

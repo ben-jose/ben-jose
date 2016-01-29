@@ -206,6 +206,8 @@ neuromap::full_release(){
 	
 	brain& brn = get_brn();
 	brn.release_neuromap(*this);
+	
+	BRAIN_CK(! brn.br_dbg_in_analysis);
 }
 
 void

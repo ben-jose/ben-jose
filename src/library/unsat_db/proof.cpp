@@ -47,13 +47,14 @@ proof_get_file_path_for(brain& brn, ticket& pf_tk){
 }
 
 void
-proof_write_json_file_for(brain& brn, row_quanton_t& fst_causes, long curr_idx,
-						row<ch_string>& prv_cnf_pths, row_long_t& prv_cnf_idxs,
-						row<prop_signal>& trace, reason& deduc)
+proof_write_json_file_for(deduction& deduc)
 {
-	row<char> json_str;
+	brain& brn = deduc.get_brn();
+	row<prop_signal>& trace = deduc.dt_all_noted;
+	reason& rsn = deduc.dt_rsn;
 	
-	ch_string proof_f_nam = proof_get_file_path_for(brn, deduc.dt_tk);
+	row<char> json_str;	
+	ch_string proof_f_nam = proof_get_file_path_for(brn, rsn.rs_tk);
 	
 	canon_string_append(json_str, "{\n");
 	canon_string_append(json_str, "\t\"name\": \"" + proof_f_nam + "\",\n");
@@ -122,3 +123,8 @@ proof_append_qua(row<char>& json_str, quanton* qua){
 	canon_long_append(json_str, qua->qu_id);
 	canon_string_append(json_str, "\"\n");
 }
+
+void
+proof_write_all_json_files_for(deduction& deduc){
+}
+

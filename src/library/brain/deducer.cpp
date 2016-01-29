@@ -38,6 +38,7 @@ deducer class methos and funcs.
 #include "brain.h"
 #include "solver.h"
 #include "html_strings.h"
+#include "proof.h"
 
 //============================================================
 // static vars
@@ -295,7 +296,7 @@ deducer::fill_rsn(reason& rsn){
 
 	rsn.init_reason();
 	
-	brn.update_tk_charge(rsn.dt_tk);
+	brn.update_tk_charge(rsn.rs_tk);
 	
 	rsn.rs_motives.set_cap(nkpr.dk_tot_noted + 1);
 
@@ -403,6 +404,7 @@ deducer::get_first_causes(row_quanton_t& fst_causes){
 
 bool
 brain::analyse_conflicts(row<prop_signal>& all_confl, deduction& dct){
+	BRAIN_DBG(br_dbg_in_analysis = true);
 	dct.reset_deduction();
 	
 	reason& out_rsn = dct.dt_rsn;
@@ -456,6 +458,10 @@ brain::analyse_conflicts(row<prop_signal>& all_confl, deduction& dct){
 	DBG_PRT(40, os << "AFT_ana=" << bj_eol; print_trail(os);
 		os << out_rsn << bj_eol
 	);
+	
+	proof_write_all_json_files_for(dct);
+	
+	BRAIN_DBG(br_dbg_in_analysis = false);
 	return found_top;
 } // end_of_analyse
 
@@ -646,8 +652,13 @@ brain::candidate_find_analysis(bool& found_top, deducer& dedcer, deduction& dct)
 			os << ".found_nmp=" << to_find << "\n";
 			os << " out_nmp=" << out_nmp << "\n";
 		);
-		row_quanton_t& nmp_causes = br_tmp_f_analysis;
+		
+		BRAIN_CK(to_wrt.is_empty());
+		dct.reset_deduction();
+		row_quanton_t& nmp_causes = dct.dt_first_causes;
+		//row_quanton_t& nmp_causes = br_tmp_f_analysis;
 		nmp_causes.clear();
+		
 		to_find->map_get_all_upper_quas(nmp_causes);
 		
 		dct.dt_last_found = to_find;
@@ -665,8 +676,10 @@ brain::candidate_find_analysis(bool& found_top, deducer& dedcer, deduction& dct)
 		BRAIN_CK(max_lv <= nxt_lv);
 	
 		if(max_lv == ROOT_LEVEL){
-			reason nil_rsn;
-			write_analysis(nmp_causes, nil_rsn);
+			//reason nil_rsn;
+			//write_analysis(nmp_causes, nil_rsn);
+			BRAIN_CK(dct.dt_rsn.is_rs_virgin());
+			write_analysis(nmp_causes, dct.dt_rsn);
 			
 			DBG_PRT(39, os << "#f=" << ncf << "." << dbg_num_cicl << ".found_top_2");
 			found_top = true;
@@ -679,11 +692,13 @@ brain::candidate_find_analysis(bool& found_top, deducer& dedcer, deduction& dct)
 		
 		long old_lv = nxt_lv;
 		
+		/*
 		BRAIN_CK(to_wrt.is_empty());
-		dct.reset_deduction();
-		
+		dct.reset_deduction();		
 		dct.dt_last_found = to_find;
 		nmp_causes.copy_to(dct.dt_first_causes);
+		*/
+		
 		dedcer.deduce(dct, max_lv);
 		
 		BRAIN_CK(nxt_rsn.rs_target_level != INVALID_LEVEL);
@@ -879,10 +894,6 @@ brain::write_analysis(row_quanton_t& causes, reason& rsn){
 		nxt_qua->update_source_wrt_tk(brn);
 		nxt_qua = qlr.dec_curr_quanton();
 	}
-}
-
-void
-deducer::write_all_proof(row_quanton_t& causes, reason& rsn, row_long_t& all_wrt_idxs){
 }
 
 void
