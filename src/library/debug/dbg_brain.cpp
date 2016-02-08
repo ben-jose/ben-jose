@@ -1133,8 +1133,7 @@ brain::dbg_old_reverse_trail(){
 		br_dedcer.set_conflicts(br_all_conflicts_found);
 		row<neuromap*>& to_wrt = br_dbg.dbg_dct.dt_all_to_wrt;
 		to_wrt.clear();
-		row_quanton_t& causes = br_dbg.dbg_dct.dt_first_causes;
-		br_dedcer.get_first_causes(causes);
+		br_dedcer.get_first_causes(br_dbg.dbg_dct);
 		br_dedcer.deduce(br_dbg.dbg_dct);
 	);
 	BRAIN_CK_PRT(rsn2.rs_target_level >= ROOT_LEVEL, 
@@ -1478,7 +1477,7 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 		/*if(! h_src && h_chg && (pt_brn != NULL_PT)){ 
 			brain& brn = *pt_brn;
 			
-			leveldat& lv = brn.get_data_level(qlv);
+			leveldat& lv = brn.get_leveldat(qlv);
 			bool is_qu = (this == lv.ld_chosen) || (qu_tier == 1);
 			
 			if(is_qu && lv.has_learned()){ 

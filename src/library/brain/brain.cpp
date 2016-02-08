@@ -448,6 +448,9 @@ brain::init_brain(solver& ss){
 		br_dbg_in_analysis = false;
 	);
 	br_pt_slvr = &ss;
+	if(ss.slv_prms.sp_write_proofs){
+		ss.slv_skl.reset_proof_path();
+	}
 	
 	DBG_COMMAND(145, get_skeleton().kg_dbg_all_wrt_paths.clear());
 	
@@ -941,7 +944,7 @@ brain::learn_mots(reason& rsn){
 			added_neu.ne_proof_tk = rsn.rs_tk;
 		}
 		
-		data_level().ld_learned.push(the_neu);
+		get_leveldat().ld_learned.push(the_neu);
 	}
 
 	DBG_PRT(23, os << "added_forced quanton: " << forced_qua;
@@ -1442,7 +1445,7 @@ notekeeper::clear_all_quantons(long lim_lv, bool reset_notes){
 
 void
 brain::dec_level(){
-	leveldat& lv = data_level();
+	leveldat& lv = get_leveldat();
 	BRAIN_CK(lv.ld_idx == level());
 	
 	brain& brn = *this;
@@ -1596,7 +1599,7 @@ brain::ck_mono_propag(){
 		return true;
 	}
 	
-	if(! data_level().is_ld_mono()){
+	if(! get_leveldat().is_ld_mono()){
 		return true;
 	}
 	
@@ -1604,7 +1607,7 @@ brain::ck_mono_propag(){
 	
 	BRAIN_CK(l_qua != NULL_PT);
 	BRAIN_CK(l_qua->is_opp_mono());
-	//BRAIN_CK(data_level().ld_chosen == l_qua);
+	//BRAIN_CK(get_leveldat().ld_chosen == l_qua);
 #endif
 	return true;
 }
@@ -1670,7 +1673,7 @@ brain::propagate_signals(){
 			BRAIN_CK(! nw_cho->is_opp_mono());
 			BRAIN_CK(! curr_choice().is_opp_mono());
 			BRAIN_DBG(
-				dbg_cho1 = data_level().ld_chosen;
+				dbg_cho1 = get_leveldat().ld_chosen;
 				dbg_cho2 = old_cho;
 				dbg_cho3 = nw_cho;
 			);
@@ -1866,14 +1869,14 @@ brain::replace_choice(quanton& cho, quanton& nw_cho, dbg_call_id dbg_id){
 
 	// resend opp chosen
 
-	data_level().reset_monos(brn);
+	get_leveldat().reset_monos(brn);
 
 	DBG_PRT(25, os << "**NEW_CHO=" << &nw_cho << "\n";
 		print_trail(os);
 		os << "dbg_call=" << dbg_id << "\n";
 	);
 
-	data_level().ld_chosen = &nw_cho;
+	get_leveldat().ld_chosen = &nw_cho;
 
 	BRAIN_CK(! has_psignals());
 	send_psignal(nw_cho, NULL, tier() + 1);
@@ -1961,7 +1964,8 @@ brain::dbg_init_html(){
 	
 	ch_string rn_pth = path_get_running_path();
 	ch_string rn_dir = path_get_directory(rn_pth, true);
-	ch_string js_dir = rn_dir + "../" + CY_LIB_DIR;
+	//ch_string js_dir = rn_dir + "../" + CY_LIB_DIR;
+	ch_string js_dir = rn_dir + "/" + CY_LIB_DIR;
 	ch_string lk_nm = sub_dir + "/" + CY_LIB_DIR;
 	
 	os << "creating link \n js_dir=" << js_dir << "\n lk_nm=" << lk_nm;
@@ -2103,8 +2107,7 @@ brain::deduce_and_reverse_trail(){
 		
 		row<neuromap*>& to_wrt = dct.dt_all_to_wrt;
 		to_wrt.clear();
-		row_quanton_t& causes = dct.dt_first_causes;
-		ddc.get_first_causes(causes);
+		ddc.get_first_causes(dct);
 		ddc.deduce(dct);
 	}
 	
@@ -2133,7 +2136,7 @@ brain::write_all_canditates(){
 
 void
 brain::reverse_with(reason& rsn){
-	BRAIN_DBG(leveldat& tg_lv = get_data_level(rsn.rs_target_level));
+	BRAIN_DBG(leveldat& tg_lv = get_leveldat(rsn.rs_target_level));
 	BRAIN_CK_PRT((	(rsn.rs_target_level == ROOT_LEVEL) || 
 					((tg_lv.ld_chosen != NULL_PT) && ! tg_lv.is_ld_mono())), 
 		os << " \n_________________\nABORT_DATA\n";
@@ -2174,7 +2177,7 @@ brain::reverse_with(reason& rsn){
 	check_timeout();
 
 	BRAIN_CK((level() == ROOT_LEVEL) || lv_has_learned());
-	BRAIN_CK((level() == ROOT_LEVEL) || ! data_level().is_ld_mono());
+	BRAIN_CK((level() == ROOT_LEVEL) || ! get_leveldat().is_ld_mono());
 
 	reset_conflict();
 	BRAIN_CK(! found_conflict());
@@ -2545,8 +2548,8 @@ leveldat::reset_monos(brain& brn){
 		);
 	}
 
-	if(brn.data_level().ld_bak_mono_idx != INVALID_IDX){
-		brn.br_last_monocho_idx = brn.data_level().ld_bak_mono_idx;
+	if(brn.get_leveldat().ld_bak_mono_idx != INVALID_IDX){
+		brn.br_last_monocho_idx = brn.get_leveldat().ld_bak_mono_idx;
 	} else {
 		brn.br_last_monocho_idx = 0;
 	}
@@ -2621,8 +2624,8 @@ quanton*
 brain::choose_mono(){
 	//br_mono_rsn.init_reason();
 	
-	if(data_level().ld_bak_mono_idx == INVALID_IDX){
-		data_level().ld_bak_mono_idx = br_last_monocho_idx;
+	if(get_leveldat().ld_bak_mono_idx == INVALID_IDX){
+		get_leveldat().ld_bak_mono_idx = br_last_monocho_idx;
 	}
 	
 	quanton* qua = get_curr_mono();
@@ -2664,6 +2667,7 @@ void
 solver::init_solver(){
 	slv_dbg_brn = NULL_PT;
 	dbg_read_dbg_conf(slv_dbg_conf_info);
+	slv_skl.kg_pt_slv = this;
 }
 
 void			
@@ -2856,7 +2860,7 @@ brain::get_all_cicle_cho(row_quanton_t& all_cicl){
 		if(qlv == ROOT_LEVEL){
 			break;
 		}
-		leveldat& lv_dat = get_data_level(qlv);
+		leveldat& lv_dat = get_leveldat(qlv);
 		BRAIN_CK(lv_dat.ld_chosen == &qua);
 		if(lv_dat.has_learned()){
 			break;
@@ -3021,7 +3025,7 @@ quanton::qlv_dat(brain& brn){
 		return NULL_PT;
 	}
 	long lv = qlevel();
-	leveldat& lv_dat = brn.get_data_level(lv);
+	leveldat& lv_dat = brn.get_leveldat(lv);
 	return &lv_dat;
 }
 
@@ -3268,7 +3272,7 @@ quanton::get_candidate_to_fill(brain& brn){
 		return NULL_PT;
 	}
 	
-	leveldat& lv_dat = brn.get_data_level(lv);
+	leveldat& lv_dat = brn.get_leveldat(lv);
 	BRAIN_CK_PRT((lv_dat.ld_chosen != NULL_PT), 
 		os << "\n_________________\n ABORT_DATA\n";
 		brn.dbg_prt_margin(os);
@@ -4042,7 +4046,7 @@ brain::select_propag_side(bool cnfl1, long sz1, row_long_t& all_sz1,
 
 void // NEW
 brain::start_propagation(quanton& nxt_qua){ // NEW
-	BRAIN_CK(data_level().ld_idx == level());
+	BRAIN_CK(get_leveldat().ld_idx == level());
 	
 	quanton& qua = nxt_qua;
 	
@@ -4051,7 +4055,7 @@ brain::start_propagation(quanton& nxt_qua){ // NEW
 	inc_level(qua);
 
 	BRAIN_DBG(long prv_lv = level());
-	BRAIN_CK(data_level().ld_chosen == &qua);
+	BRAIN_CK(get_leveldat().ld_chosen == &qua);
 
 	BRAIN_CK(! has_psignals());
 	send_psignal(qua, NULL, tier() + 1);
@@ -4078,7 +4082,7 @@ brain::start_propagation(quanton& nxt_qua){ // NEW
 	//BRAIN_CK(ck_mono_propag());
 	BRAIN_CK(all_impl_cho.is_empty());
 	BRAIN_CK(curr_cho() == &qua);
-	BRAIN_CK(! data_level().has_learned());
+	BRAIN_CK(! get_leveldat().has_learned());
 	long sz1 = get_last_lv_all_trail_sz(all_sz1);
 	bool cnfl1 = found_conflict();
 
@@ -4090,7 +4094,7 @@ brain::start_propagation(quanton& nxt_qua){ // NEW
 	//BRAIN_CK(ck_mono_propag());
 	BRAIN_CK(all_impl_cho.is_empty());
 	BRAIN_CK(curr_cho() == &opp);
-	BRAIN_CK(! data_level().has_learned());
+	BRAIN_CK(! get_leveldat().has_learned());
 	long sz2 = get_last_lv_all_trail_sz(all_sz2);
 	bool cnfl2 = found_conflict();
 	

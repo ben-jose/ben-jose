@@ -133,6 +133,8 @@ class skeleton_glb;
 #define SKG_DBG_COLLI_DIFF	"/dbg_colli_diff.skl"
 #define SKG_DBG_COLLI_NEW	"/dbg_colli_new.skl"
 
+#define SKG_PROOF_SUBDIR	"proof"
+
 //=================================================================
 // funtion declarations
 
@@ -728,6 +730,8 @@ class skeleton_glb {
 public:
 	SKELETON_DBG(brain* 		kg_pt_brn;)
 	
+	solver*				kg_pt_slv;
+	
 	k_row<canon_clause>	kg_clauses;
 	row<canon_clause*>	kg_free_clauses;
 
@@ -784,6 +788,8 @@ public:
 
 	solver*	get_dbg_slv();
 	
+	solver&	get_solver();
+	
 	void	set_dbg_brn(brain* pt_brn){
 		SKELETON_DBG(
 			kg_pt_brn = pt_brn;
@@ -810,6 +816,8 @@ public:
 	void	init_skeleton_glb();
 	void	init_paths();
 	void	report_err(ch_string pth, ch_string err_pth);
+	
+	void	reset_proof_path();
 
 	bool	find_skl_path(ch_string the_pth, instance_info* iinfo = NULL);
 

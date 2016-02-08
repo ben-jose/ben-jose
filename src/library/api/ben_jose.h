@@ -78,6 +78,11 @@ typedef enum {
 	bje_dimacs_clause_too_long
 } bj_error_t;
 
+typedef enum {
+	bjp_invalid,
+	bjp_write_proofs
+} bj_param_t;
+
 typedef struct {
 	bj_satisf_val_t 	bjo_result;
 	
@@ -120,6 +125,10 @@ void 		bj_init_output(bj_output_t* the_out);
 
 bj_solver_t bj_solver_create(const char* bjs_dir_path);
 void 		bj_solver_release(bj_solver_t bjs);
+
+void		bj_set_param_char(bj_solver_t bjs, bj_param_t prm, char val);
+char		bj_get_param_char(bj_solver_t bjs, bj_param_t prm);
+//void		bj_set_param_str(bj_solver_t bjs, bj_param_t prm, char* val);
 
 const char* bj_get_path(bj_solver_t bjs);
 

@@ -162,7 +162,7 @@ public:
 	ch_string		version_str;
 
 	bool			op_debug_clean_code;
-	bool			op_just_read;
+	bool			op_write_proof;
 
 	mem_size 		dbg_mem_at_start;
 

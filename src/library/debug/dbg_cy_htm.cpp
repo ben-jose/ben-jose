@@ -600,7 +600,7 @@ neuromap::map_dbg_html_data_str(ch_string msg){
 	ss_msg << "tauto_sha=" << na_dbg_tauto_sha_str << "\n";
 	ss_msg << "guide_sha=" << na_dbg_guide_sha_str << "\n";
 	ss_msg << "quick_sha=" << na_dbg_quick_sha_str << "\n";
-	ss_msg << "path=\n" << na_dbg_tauto_pth << "\n";
+	ss_msg << "TAUTO_path=\n" << na_tauto_pth << "\n";
 	ss_msg << "COL=\n";
 	na_dbg_tauto_col.dbg_print_qua_ids(ss_msg);
 	ss_msg << "\n";

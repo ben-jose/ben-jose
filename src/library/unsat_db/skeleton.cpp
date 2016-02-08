@@ -43,6 +43,7 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 #include "skeleton.h"
 #include "dimacs.h"
 #include "brain.h"
+#include "solver.h"
 #include "dbg_prt.h"
 
 DEFINE_GET_DBG_SLV(canon_clause)
@@ -597,6 +598,8 @@ void
 skeleton_glb::init_skeleton_glb(){
 	SKELETON_DBG(kg_pt_brn = NULL);
 	
+	kg_pt_slv = NULL_PT;
+	
 	kg_clauses.clear(true, true);
 	kg_free_clauses.clear(true, true);;
 
@@ -628,6 +631,12 @@ skeleton_glb::init_skeleton_glb(){
 	kg_verify_mtime = time(NULL_PT);
 
 	// nit_paths(); // call it when starting
+}
+
+solver&
+skeleton_glb::get_solver(){
+	SKELETON_CK(kg_pt_slv != NULL_PT);
+	return *kg_pt_slv;
 }
 
 bj_ostream&
@@ -685,6 +694,15 @@ skeleton_glb::report_err(ch_string pth, ch_string err_pth){
 }
 
 void
+skeleton_glb::reset_proof_path(){
+	ch_string full_proof_pth = as_full_path(kg_tmp_proof_path);
+	if(get_solver().slv_prms.sp_write_proofs){
+		delete_directory(full_proof_pth);
+		path_create(full_proof_pth);
+	}
+}
+
+void
 skeleton_glb::init_paths(){
 	ch_string rn_pth = path_get_running_path();
 	kg_running_path = path_get_directory(rn_pth, false);
@@ -718,7 +736,8 @@ skeleton_glb::init_paths(){
 	kg_verify_path = as_full_path(SKG_VERIFY_NAME);
 	
 	kg_tmp_proof_path = SKG_TMP_PROOF_DIR;
-	path_create(as_full_path(kg_tmp_proof_path));
+	
+	reset_proof_path();
 
 	kg_collisions_path = SKG_COLLISIONS_DIR;
 	kg_missing_path = SKG_MISSING_DIR;

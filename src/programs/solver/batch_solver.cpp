@@ -132,6 +132,7 @@ batch_solver::init_batch_solver(){
 		;
 
 	op_debug_clean_code = false;
+	op_write_proof = false;
 
 	MEM_CTRL(using_mem_ctrl = true);
 
@@ -685,6 +686,8 @@ batch_solver::get_args(int argc, char** argv)
 			prt_paths = true;
 		} else if(the_arg == "-debug"){
 			op_debug_clean_code = true;
+		} else if(the_arg == "-proof"){
+			op_write_proof = true;
 		} else if(the_arg == "-rr"){
 			DBG(as_release = true);
 			NOT_DBG(os << "running RELEASE exe. ignoring debug op '-rr'" << bj_eol;)
@@ -767,6 +770,10 @@ int	solver_main(int argc, char** argv){
 	if(args_ok){
 		const char* pth = top_dat.bc_slvr_path.c_str();
 		top_dat.bc_solver = bj_solver_create(pth);
+		
+		if(top_dat.op_write_proof){
+			bj_set_param_char(top_dat.bc_solver, bjp_write_proofs, 1);
+		}
 
 		PRT_OUT_1( os << ".STARTING AT " << run_time() << bj_eol);
 

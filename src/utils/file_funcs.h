@@ -74,6 +74,9 @@ read_file(ch_string f_nam, row<char>& f_data);
 bool
 write_file(ch_string& the_pth, row<char>& cnn, bool write_once);
 
+bool
+rename_file(ch_string& old_pth, ch_string& nw_pth);
+
 // fnum = concurrent safe consec counter kept in file f_nam
 
 bj_big_int_t

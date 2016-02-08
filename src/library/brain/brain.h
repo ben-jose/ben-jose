@@ -1505,7 +1505,7 @@ class prop_signal {
 		return lv;
 	}
 
-	bool	get_ps_cand_to_wrt(brain& brn, row_neuromap_t& to_wrt);
+	void	get_ps_cand_to_wrt(brain& brn, row_neuromap_t& to_wrt, long trace_idx);
 	
 	bool	is_ps_of_qua(quanton& qua, neuromap* dbg_nmp = NULL_PT);
 
@@ -1618,6 +1618,8 @@ class reason {
 	bool	is_dt_singleton(){
 		return rs_motives.is_empty();
 	}
+	
+	long	calc_target_tier(brain& brn);
 
 	bj_ostream&	print_reason(bj_ostream& os, bool from_pt = false){
 		MARK_USED(from_pt);
@@ -1636,13 +1638,14 @@ class reason {
 class deduction {
 	public:
 	brain*				dt_brn;
+	
+	neuron*				dt_confl;
 	neuromap*			dt_last_found;
 	
 	row_quanton_t		dt_first_causes;
 	row<prop_signal>	dt_all_noted;
 	reason				dt_rsn;
 
-	row_long_t			dt_all_to_wrt_idxs;
 	row_neuromap_t		dt_all_to_wrt;
 
 	// methods
@@ -1653,13 +1656,14 @@ class deduction {
 
 	void	init_deduction(brain* the_brn = NULL_PT){
 		dt_brn = the_brn;
+		
+		dt_confl = NULL_PT;
 		dt_last_found = NULL_PT;
 		
 		dt_first_causes.clear();
 		dt_all_noted.clear(true, true);
 		dt_rsn.init_reason();
 		
-		dt_all_to_wrt_idxs.clear();
 		dt_all_to_wrt.clear();
 	}
 
@@ -1678,14 +1682,20 @@ class deduction {
 		return (*dt_brn);
 	}
 	
+	bool	ck_dbg_srcs(){
+		bool c1 = (dt_confl == NULL_PT);
+		bool c2 = (dt_last_found == NULL_PT);
+		return (c1 != c2);
+	}
+	
 	bool	is_dt_virgin(){
-		bool c1 = (dt_last_found == NULL_PT);
+		bool c1 = (dt_confl == NULL_PT);
+		bool c2 = (dt_last_found == NULL_PT);
 		
-		bool c2 = (dt_first_causes.is_empty());
-		bool c3 = (dt_all_noted.is_empty());
-		bool c4 = (dt_rsn.is_rs_virgin());
+		bool c3 = (dt_first_causes.is_empty());
+		bool c4 = (dt_all_noted.is_empty());
+		bool c5 = (dt_rsn.is_rs_virgin());
 
-		bool c5 = (dt_all_to_wrt_idxs.is_empty());
 		bool c6 = (dt_all_to_wrt.is_empty());
 		
 		return (c1 && c2 && c3 && c4 && c5 && c6);
@@ -2135,6 +2145,11 @@ class neuromap {
 	// candidate system
 	ticket			na_candidate_tk;
 	quanton*		na_candidate_qua;
+
+	// proof wrt system
+	long			na_to_wrt_trace_idx;
+	ch_string		na_tauto_pth;
+	bool			na_wrt_ok;
 	
 	BRAIN_DBG(
 		ticket				na_dbg_candidate_tk;
@@ -2146,7 +2161,6 @@ class neuromap {
 		ch_string			na_dbg_tauto_sha_str;
 		ch_string			na_dbg_guide_sha_str;
 		ch_string			na_dbg_quick_sha_str;
-		ch_string			na_dbg_tauto_pth;
 		
 		ch_string			na_dbg_is_no_abort_full_wrt_pth;
 		bool				na_dbg_is_no_abort_full_nmp;
@@ -2201,6 +2215,10 @@ class neuromap {
 		
 		na_candidate_tk.init_ticket();
 		na_candidate_qua = NULL_PT;
+		
+		na_to_wrt_trace_idx = INVALID_IDX;
+		na_tauto_pth = INVALID_PATH;
+		na_wrt_ok = false;
 
 		DBG(
 			na_dbg_candidate_tk.init_ticket();
@@ -2212,7 +2230,6 @@ class neuromap {
 			na_dbg_tauto_sha_str = INVALID_SHA;
 			na_dbg_guide_sha_str = INVALID_SHA;
 			na_dbg_quick_sha_str = INVALID_SHA;
-			na_dbg_tauto_pth = INVALID_PATH;
 			
 			na_dbg_is_no_abort_full_wrt_pth = INVALID_PATH;
 			na_dbg_is_no_abort_full_nmp = false;
@@ -2294,12 +2311,6 @@ class neuromap {
 		return h_s;
 	}
 	
-	/*bool	in_root(){
-		return (na_orig_lv == ROOT_LEVEL);
-	}*/
-	
-	leveldat& 	map_get_data_level();
-	
 	ch_string	map_dbg_oper_str(mem_op_t mm){
 		if(mm == mo_find){ return "FIND"; }
 		BRAIN_CK(mm == mo_save);
@@ -2347,7 +2358,7 @@ class neuromap {
 	void		nmp_update_all_to_write(ticket& nmp_wrt_tk);
 	void		nmp_reset_write();
 	
-	void		nmp_add_to_write(row_neuromap_t& to_wrt);
+	void		nmp_add_to_write(row_neuromap_t& to_wrt, long trace_idx = INVALID_IDX);
 	
 	bool 	dbg_has_simple_coloring_quas(coloring& clr);
 	void 	dbg_prt_simple_coloring(bj_ostream& os);
@@ -2754,7 +2765,7 @@ class deducer {
 	bool	ck_end_of_lrn_nmp();
 	
 	void	fill_rsn(reason& rsn);
-	void	find_all_to_write(row_neuromap_t& to_wrt, row_long_t& all_wrt_idxs);
+	void	find_all_to_write(row_neuromap_t& to_wrt);
 	
 	bool		ck_deduc_init(long deduc_lv, bool full_ck);
 	
@@ -2770,17 +2781,16 @@ class deducer {
 		return cfl;
 	}
 	
-	//row_quanton_t&	get_first_causes();
-	void	get_first_causes(row_quanton_t& fst_causes);
+	void	get_first_causes(deduction& dct);
 		
-	void		deduce_init(row_quanton_t& causes, long max_lv = INVALID_LEVEL);
-	void 		deduce(deduction& dct, long max_lv = INVALID_LEVEL);
+	void	deduce_init(row_quanton_t& causes, long max_lv = INVALID_LEVEL);
+	void 	deduce(deduction& dct, long max_lv = INVALID_LEVEL);
 	
-	void		set_nxt_noted(quanton* nxt_qua);
+	void	set_nxt_noted(quanton* nxt_qua);
 	
-	bool		find_next_source();
-	bool		find_next_noted();
-	void 		set_notes_of(row_quanton_t& causes, bool is_first);
+	bool	find_next_source();
+	bool	find_next_noted();
+	void 	set_notes_of(row_quanton_t& causes, bool is_first);
 
 	bj_ostream&	print_deducer(bj_ostream& os, bool from_pt = false);
 	
@@ -2851,6 +2861,13 @@ class leveldat {
 		BRAIN_CK(ld_chosen != NULL_PT);
 		bool is_mn = (ld_chosen->is_opp_mono());
 		return is_mn;
+	}
+	
+	long	ld_tier(){
+		BRAIN_CK(ld_chosen != NULL_PT);
+		BRAIN_CK(ld_chosen->has_charge());
+		long qti = ld_chosen->qu_tier;
+		return qti;
 	}
 	
 	long 	num_learned(){
@@ -3110,7 +3127,7 @@ public:
 	row_neuron_t	br_tmp_all_neus;
 	row_neuron_t	br_tmp_all_confl;
 
-	row_neuromap_t	br_tmp_maps_to_write;
+	row_neuromap_t	br_tmp_wrt_ok;
 	
 	row<prop_signal>	br_tmp_prt_ps;
 	row<prop_signal>	br_tmp_nmp_get_all_ps;
@@ -3445,9 +3462,15 @@ public:
 		return br_curr_choice_tk.tk_level;
 	}
 	
-	leveldat&	get_data_level(long lv){
+	leveldat&	get_leveldat(long lv = INVALID_LEVEL){
 		row<leveldat*>& all_lv = br_data_levels;
-		BRAIN_CK(all_lv.is_valid_idx(lv));
+		if(! all_lv.is_valid_idx(lv)){
+			BRAIN_CK(! all_lv.is_empty());
+			leveldat* pt_lv = all_lv.last();
+			BRAIN_CK(pt_lv != NULL);
+			return *pt_lv;
+		}
+		
 		BRAIN_CK(all_lv[lv] != NULL_PT);
 		
 		leveldat& lv_dat = *(all_lv[lv]);
@@ -3456,12 +3479,12 @@ public:
 		return lv_dat;
 	}
 	
-	leveldat&	data_level(){
+	/*leveldat&	data_level(){
 		BRAIN_CK(! br_data_levels.is_empty());
 		leveldat* pt_lv = br_data_levels.last();
 		BRAIN_CK(pt_lv != NULL);
 		return *pt_lv;
-	}
+	}*/
 
 	leveldat&	inc_data_levels(){
 		leveldat* pt_lv = leveldat::create_leveldat(this);
@@ -3523,11 +3546,11 @@ public:
 	void	update_tk_trail(ticket& nw_tk);
 	
 	bool 	lv_has_learned(){
-		return data_level().has_learned();
+		return get_leveldat().has_learned();
 	}
 
 	long 	lv_num_learned(){
-		return data_level().num_learned();
+		return get_leveldat().num_learned();
 	}
 
 	void	replace_choice(quanton& cho, quanton& nw_cho, dbg_call_id dbg_id = dbg_call_1);

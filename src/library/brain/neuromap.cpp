@@ -161,15 +161,6 @@ neuromap::map_get_all_cov_neus(row_neuron_t& all_neus, bool with_clear, bool ski
 	na_all_cov.append_to(all_neus);
 }
 
-leveldat&
-neuromap::map_get_data_level(){
-	brain& brn = get_brn();
-	BRAIN_CK(na_orig_lv != INVALID_LEVEL);
-	BRAIN_CK(brn.br_data_levels.is_valid_idx(na_orig_lv));
-	leveldat& lv_dat = brn.get_data_level(na_orig_lv);
-	return lv_dat;
-}
-
 void
 neuromap::release_candidate(){
 	BRAIN_CK(is_ticket_eq(na_candidate_tk, na_dbg_candidate_tk));
@@ -761,6 +752,8 @@ neuromap::map_oper(mem_op_t mm){
 	BRAIN_CK(tmp_diff_cnf.has_phase_path());
 	BRAIN_CK(! tmp_guide_cnf.has_phase_path());
 
+	na_tauto_pth = tmp_tauto_cnf.get_cnf_path();
+	
 	bj_output_t& o_info = brn.get_out_info();
 	
 	DBG(
@@ -769,7 +762,6 @@ neuromap::map_oper(mem_op_t mm){
 		na_dbg_tauto_sha_str = tmp_tauto_cnf.cf_sha_str;
 		na_dbg_guide_sha_str = tmp_guide_cnf.cf_sha_str;
 		na_dbg_quick_sha_str = tmp_diff_cnf.get_ref3_nam();
-		na_dbg_tauto_pth = tmp_tauto_cnf.get_cnf_path();
 	);
 	
 	bool oper_ok = false;
@@ -794,7 +786,8 @@ neuromap::map_oper(mem_op_t mm){
 		int fd_lk = skg.get_write_lock(lk_dir);
 
 		if(fd_lk != -1){
-			ch_string tau_pth = tmp_tauto_cnf.get_cnf_path();
+			ch_string& tau_pth = na_tauto_pth;
+			//ch_string tau_pth = tmp_tauto_cnf.get_cnf_path();
 			
 			BRAIN_DBG(tmp_tauto_cnf.cf_dbg_orig_nmp = ((void*)this));
 			
@@ -815,6 +808,7 @@ neuromap::map_oper(mem_op_t mm){
 
 			if(oper_ok){
 				o_info.bjo_saved_targets++;
+				na_wrt_ok = true;
 			}
 			
 			//BRAIN_CK(! oper_ok || srg_forced.base_path_exists(skg));

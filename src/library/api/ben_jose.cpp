@@ -124,6 +124,47 @@ void 		bj_solver_release(bj_solver_t bjs){
 	solver::release_solver(the_slvr);
 }
 
+void
+bj_set_param_char(bj_solver_t bjs, bj_param_t prm, char val){
+	if(bjs == NULL){
+		return;
+	}
+	solver& the_slvr = *((solver*)bjs);
+	switch(prm){
+		case bjp_write_proofs:
+			if(val == 0){
+				the_slvr.slv_prms.sp_write_proofs = false;
+			} else {
+				the_slvr.slv_prms.sp_write_proofs = true;
+			}
+			break;
+		default:
+			break;
+	}
+	DBG(bj_out << "SET_PARAM " << prm << " TO " << (int)val << "\n");
+}
+
+char
+bj_get_param_char(bj_solver_t bjs, bj_param_t prm){
+	if(bjs == NULL){
+		return 0;
+	}
+	solver& the_slvr = *((solver*)bjs);
+	char rr = 0;
+	switch(prm){
+		case bjp_write_proofs:
+			if(the_slvr.slv_prms.sp_write_proofs){
+				rr = 1;
+			} else {
+				rr = 0;
+			}
+			break;
+		default:
+			break;
+	}
+	return rr;
+}
+
 const char* bj_get_path(bj_solver_t bjs){
 	if(bjs == NULL){
 		return NULL;

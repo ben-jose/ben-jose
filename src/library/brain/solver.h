@@ -87,6 +87,22 @@ public:
 #endif
 
 //=================================================================
+// slvr_params
+
+class slvr_params {
+public:
+	bool	sp_write_proofs;
+	
+	slvr_params(){
+		init_slvr_params();
+	}
+
+	void	init_slvr_params(){
+		sp_write_proofs = false;
+	}
+};
+
+//=================================================================
 // solver
 
 class solver {
@@ -102,6 +118,8 @@ private:
 public:
 	brain*			slv_dbg_brn;
 	debug_info		slv_dbg_conf_info;
+	
+	slvr_params		slv_prms;
 	instance_info	slv_inst;
 	skeleton_glb	slv_skl;
 	DBG(dbg_slvr_info 	slv_dbg2;)

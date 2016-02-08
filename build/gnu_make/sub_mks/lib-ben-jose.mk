@@ -3,6 +3,20 @@ TARGET := libben-jose.a
 
 SRC_BASE_DIR := ../../../src
 
+POSTMK_JS_DIR := ../../src/library/javascript
+
+#	cp -r $(SRC_BASE_DIR)/library/javascript/draw_cnf_js_lib $(TARGET_DIR)/draw_cnf_js_lib
+#	cp -r $(SRC_BASE_DIR)/library/javascript/show_proof_js_lib $(TARGET_DIR)/show_proof_js_lib
+#	echo `pwd`
+
+define COPY_JS_LIBS
+	cp -r $(POSTMK_JS_DIR)/draw_cnf_js_lib $(TARGET_DIR)/draw_cnf_js_lib
+	cp -r $(POSTMK_JS_DIR)/show_proof_js_lib $(TARGET_DIR)/show_proof_js_lib
+	echo "Finished building libben-jose.a"
+endef
+
+TGT_POSTMAKE := ${COPY_JS_LIBS}
+
 SOURCES := \
 	$(SRC_BASE_DIR)/external/bj_mem.cpp \
 	$(SRC_BASE_DIR)/external/stack_trace.cpp \
