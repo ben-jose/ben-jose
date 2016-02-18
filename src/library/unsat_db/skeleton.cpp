@@ -752,6 +752,20 @@ skeleton_glb::init_paths(){
 	path_create(as_full_path(kg_overlaped_path));
 	path_create(as_full_path(kg_dead_path));
 	path_create(as_full_path(kg_broken_path));
+	
+	ch_string js_pth = SKG_JS_DIR;
+	ch_string os_js_pth = as_full_path(js_pth);
+	path_create(os_js_pth);
+	
+	ch_string os_sw_pf_js_bin_pth = kg_running_path + "/" + SKG_SHOW_PROOF_JS_SUBDIR;
+	ch_string os_sw_pf_js_skl_pth = os_js_pth + "/" + SKG_SHOW_PROOF_JS_SUBDIR;
+
+	if(! file_exists(os_sw_pf_js_skl_pth)){
+		bool lk_ok = path_create_link(os_sw_pf_js_bin_pth, os_sw_pf_js_skl_pth);
+		SKELETON_CK(lk_ok);
+	}
+	
+	kg_show_proof_js_path = js_pth + "/" + SKG_SHOW_PROOF_JS_SUBDIR;
 
 	if(file_exists(kg_verify_path)){
 		kg_dbg_verifying_skeleton_tree = true;

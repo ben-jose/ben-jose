@@ -44,6 +44,7 @@ the solver wrapper.
 #include "ben_jose.h"
 
 #define SOLVER_CK(prm) 	DBG_BJ_LIB_CK(prm)
+#define SOLVER_REL_CK(prm) if(! (prm)){ throw solver_exception(); }
 
 class brain;
 
@@ -51,6 +52,15 @@ DBG(
 	class dbg_inst_info;
 	class dbg_slvr_info;
 )
+
+//======================================================================
+// solver_exception
+
+class solver_exception : public top_exception {
+public:
+	solver_exception(long the_id = 0) : top_exception(the_id)
+	{}
+};
 
 //=================================================================
 // dbg_slvr_info
@@ -116,6 +126,14 @@ private:
 	}
 	
 public:
+	static
+	char*	CL_NAME;
+
+	virtual
+	char*	get_cls_name(){
+		return solver::CL_NAME;
+	}
+	
 	brain*			slv_dbg_brn;
 	debug_info		slv_dbg_conf_info;
 	

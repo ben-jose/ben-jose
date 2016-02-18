@@ -56,7 +56,8 @@ file funcs.
 typedef enum {
 	flx_cannot_open,
 	flx_cannot_calc_size,
-	flx_cannot_fit_in_mem
+	flx_cannot_fit_in_mem,
+	flx_path_too_long
 } fl_ex_cod_t;
 
 class file_exception : public top_exception {
@@ -154,6 +155,9 @@ path_get_name(ch_string the_pth);
 
 bool
 path_create_link(ch_string old_pth, ch_string new_pth);
+
+ch_string
+get_relative_path(ch_string pth1, ch_string pth2);
 
 #endif		// FILE_FUNCS_H
 

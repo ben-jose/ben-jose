@@ -19,6 +19,7 @@ TGT_POSTMAKE := ${COPY_JS_LIBS}
 
 SOURCES := \
 	$(SRC_BASE_DIR)/external/bj_mem.cpp \
+	$(SRC_BASE_DIR)/external/bj_stream.cpp \
 	$(SRC_BASE_DIR)/external/stack_trace.cpp \
 	$(SRC_BASE_DIR)/external/top_exception.cpp \
 	$(SRC_BASE_DIR)/library/api/ben_jose.cpp \

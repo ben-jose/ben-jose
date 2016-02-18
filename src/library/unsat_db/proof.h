@@ -40,12 +40,14 @@ proof writing function declarations.
 
 #include "brain.h"
 
-#define SHOW_PROOF_LIB_DIR "show_proof_js_lib"
+ch_string 	proof_get_unirons_path(skeleton_glb& skg);
+void		proof_create_final_unirons_path(skeleton_glb& skg, ch_string end_dir_pth);
 
 ch_string proof_add_paths(ch_string pth1, ch_string pth2);
 ch_string proof_get_nmp_proof_path(neuromap& the_nmp);
 ch_string proof_get_tk_dir_path(ch_string pth_pref, ticket& pf_tk);
 ch_string proof_get_tk_file_name(ticket& pf_tk);
+ch_string proof_get_tk_html_file_name(ticket& pf_tk);
 
 long proof_get_trace_idx_of(deduction& dct, long to_wrt_idx);
 void proof_write_all_json_files_for(deduction& dct);
@@ -56,6 +58,8 @@ void proof_append_lits(row<char>& json_str, row_quanton_t& all_quas);
 void proof_append_neu(row<char>& json_str, neuron* neu, ch_string& pth_pref, 
 			row<ch_string>& all_to_move);
 void proof_append_qua(row<char>& json_str, quanton* qua);
+
+void proof_write_html_file_for(ch_string end_dir_pth, deduction& dct);
 
 #endif		// PROOF_FUNCS_H
 

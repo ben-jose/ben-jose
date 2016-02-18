@@ -67,6 +67,7 @@ typedef enum {
 	bje_file_cannot_open,
 	bje_file_corrupted,
 	bje_file_too_big,
+	bje_path_too_long,
 	bje_invalid_root_directory,
 	bje_parse_bad_number,
 	bje_dimacs_no_cnf_declaration,

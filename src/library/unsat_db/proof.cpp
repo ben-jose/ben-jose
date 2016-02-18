@@ -36,6 +36,7 @@ proof writing funcs.
 --------------------------------------------------------------*/
 
 #include "proof.h"
+#include "html_strings.h"
 
 ch_string 
 proof_add_paths(ch_string pth1, ch_string pth2){
@@ -65,6 +66,12 @@ proof_get_tk_dir_path(ch_string pth_pref, ticket& pf_tk){
 ch_string 
 proof_get_tk_file_name(ticket& pf_tk){
 	ch_string pf_f_nm = "proof_" + pf_tk.get_str() + ".jsn";
+	return pf_f_nm;
+}
+
+ch_string 
+proof_get_tk_html_file_name(ticket& pf_tk){
+	ch_string pf_f_nm = "proof_" + pf_tk.get_str() + ".htm";
 	return pf_f_nm;
 }
 
@@ -193,16 +200,118 @@ proof_write_all_json_files_for(deduction& dct){
 }
 
 void
+proof_write_html_file_for(ch_string end_dir_pth, deduction& dct){
+	brain& brn = dct.get_brn();
+	reason& rsn = dct.dt_rsn;
+	skeleton_glb& skg = brn.get_skeleton();
+	ticket& pf_tk = rsn.rs_tk;
+	
+	ch_string os_end_dir_pth = skg.as_full_path(end_dir_pth);
+	ch_string os_htm_pth = proof_add_paths(os_end_dir_pth, 
+							proof_get_tk_html_file_name(pf_tk));
+
+	ch_string loc_sh_pf_js_pth = proof_add_paths(end_dir_pth, SKG_SHOW_PROOF_JS_SUBDIR);
+	ch_string rel_js_pth = get_relative_path(end_dir_pth, skg.kg_show_proof_js_path);
+	
+	ch_string os_js_pth = skg.as_full_path(loc_sh_pf_js_pth);
+	if(! file_exists(os_js_pth)){
+		bool lk_ok = path_create_link(rel_js_pth, os_js_pth);
+		SKELETON_CK(lk_ok);
+	}
+	
+	bj_ofstream of;
+	bj_ofstream_open(os_htm_pth, of, false);
+	
+	ch_string htm_tit = "tit_html";
+	
+	of << HTMi_html << bj_eol;
+	of << "\t" << HTMi_head << bj_eol;
+	of << "\t\t" << HTMi_title << htm_tit << HTMe_title << bj_eol;
+	
+	ch_string dir_str = SKG_SHOW_PROOF_JS_SUBDIR;
+	of << "\t\t " << HTMi_src << dir_str << "/show_proof.js" << HTMe_src << bj_eol;
+	of << "\t\t " << HTM_css(dir_str) << "\n";
+	
+	of << "\t" << HTMe_head << bj_eol;
+	of << "\t" << HTMi_body << bj_eol;
+	
+	of << "\t" << HTMi_proof_ul << "\n";
+	
+	// THE BODY
+	ch_string id_str = pf_tk.get_str();
+	ch_string pf_f_nm = proof_get_tk_file_name(pf_tk);
+	
+	ch_string nd_id = "nd_" + id_str + "_id";
+	ch_string nd_lst = "nd_" + id_str + "_lst";
+	ch_string jsn_file = id_str + "/" + pf_f_nm;
+	ch_string lbl_str = "UNSATISFABILITY PROOF";
+	of << HTM_proof_li(nd_id, nd_lst, jsn_file, lbl_str) << "\n";
+
+	of << "\t" << HTMe_proof_ul << "\n";
+	
+	of << "\t" << HTMe_body << bj_eol;
+	of << HTMe_html << bj_eol;
+	
+	of.flush();
+	of.close();
+}
+
+ch_string
+proof_get_unirons_path(skeleton_glb& skg, bool& is_tmp){
+	ch_string unirons_pth = proof_add_paths(skg.kg_tmp_proof_path, SKG_UNIRONS_SUBDIR);
+	ch_string os_unirons_pth = skg.as_full_path(unirons_pth);
+	is_tmp = true;
+	if(file_exists(os_unirons_pth)){
+		ch_string unirons_ref = proof_add_paths(skg.kg_tmp_proof_path, SKG_UNIRONS_REF_FNAM);
+		ch_string os_unirons_ref = skg.as_full_path(unirons_ref);
+		if(file_exists(os_unirons_ref)){
+			is_tmp = false;
+			unirons_pth = skg.ref_read(unirons_ref);
+		}
+	} else {
+		path_create(os_unirons_pth);
+	}
+	return unirons_pth;
+}
+
+void
+proof_create_final_unirons_path(skeleton_glb& skg, ch_string end_dir_pth){
+	ch_string unirons_pth = proof_add_paths(skg.kg_tmp_proof_path, SKG_UNIRONS_SUBDIR);
+	ch_string os_unirons_pth = skg.as_full_path(unirons_pth);
+
+	BRAIN_CK(file_exists(os_unirons_pth));
+	
+	ch_string final_unirons_pth = proof_add_paths(end_dir_pth, SKG_UNIRONS_SUBDIR);
+	ch_string os_final_unirons_pth = skg.as_full_path(final_unirons_pth);
+
+	BRAIN_CK(file_exists(skg.as_full_path(end_dir_pth)));
+	bool ok1 = rename_file(os_unirons_pth, os_final_unirons_pth); //OS_OPER
+	MARK_USED(ok1);
+	BRAIN_CK(ok1);
+	
+	bool lk_ok = path_create_link(os_final_unirons_pth, os_unirons_pth);
+	SKELETON_CK(lk_ok);
+	
+	ch_string unirons_ref = proof_add_paths(skg.kg_tmp_proof_path, SKG_UNIRONS_REF_FNAM);
+	ch_string os_unirons_ref = skg.as_full_path(unirons_ref);
+	
+	BRAIN_CK(! file_exists(os_unirons_ref));
+	skg.ref_write(unirons_ref, final_unirons_pth);
+	BRAIN_CK(file_exists(os_unirons_ref));
+}
+
+void
 proof_write_json_file_for(deduction& dct, long to_wrt_idx, long prv_wrt_idx)
 {
 	brain& brn = dct.get_brn();
 	row<prop_signal>& trace = dct.dt_all_noted;
 	reason& rsn = dct.dt_rsn;
 	row_neuromap_t& all_to_wrt = dct.dt_all_to_wrt;
-
+	
 	DBG_PRT_WITH(115, brn, 
 		os << "=================================================================\n";
 		os << "JSON_FILE_FOR wrt_idx=" << to_wrt_idx << "\n";
+		os << "learned_unirons=" << brn.br_learned_unit_neurons << "\n";
 	);
 	
 	bool has_prv = (prv_wrt_idx != INVALID_IDX);
@@ -254,11 +363,13 @@ proof_write_json_file_for(deduction& dct, long to_wrt_idx, long prv_wrt_idx)
 		canon_string_append(json_str, "{");
 		if(dct.dt_confl != NULL_PT){
 			ch_string inv_pth = SKG_INVALID_PTH;
+			BRAIN_CK(dct.dt_confl->ne_original);
 			proof_append_neu(json_str, dct.dt_confl, inv_pth, all_to_move);
+			BRAIN_CK(all_to_move.is_empty());
 		} else {
 			BRAIN_CK(dct.dt_last_found != NULL_PT);
 			proof_append_lits(json_str, dct.dt_first_causes);
-			canon_string_append(json_str, "\n");
+			canon_string_append(json_str, ",\n");
 		}
 		canon_string_append(json_str, "\"va_r\": ");
 		proof_append_qua(json_str, NULL_PT);
@@ -295,6 +406,8 @@ proof_write_json_file_for(deduction& dct, long to_wrt_idx, long prv_wrt_idx)
 	if(! has_prv && (end_trace_idx == INVALID_IDX)){
 		end_trace_idx = trace.size();
 	}
+	
+	BRAIN_CK(all_to_move.is_empty());
 	
 	if(end_trace_idx != INVALID_IDX){
 		BRAIN_CK(ini_trace_idx != INVALID_IDX);
@@ -353,10 +466,19 @@ proof_write_json_file_for(deduction& dct, long to_wrt_idx, long prv_wrt_idx)
 	write_file(os_file_pth, json_str, true); //OS_OPER
 	DBG_PRT_WITH(115, brn, os << "Wrote file=\n" << os_file_pth);
 	
+	//bool is_tmp_u = true;
+	//ch_string unirons_pth = proof_get_unirons_path(skg, is_tmp_u);
+	
 	if(end_dir_pth != SKG_INVALID_PTH){
 		ch_string os_end_dir_pth = skg.as_full_path(end_dir_pth);
 		path_create(os_end_dir_pth);
-		DBG_PRT_WITH(115, brn, os << "Created path=\n" << end_dir_pth);
+		DBG_PRT_WITH(115, brn, os << "Created_END_path=\n" << end_dir_pth);
+		
+		/*if(is_tmp_u){
+			proof_create_final_unirons_path(skg, end_dir_pth);
+		}*/
+
+		proof_write_html_file_for(end_dir_pth, dct);
 		
 		ch_string src_pth_mv = pf_dir_pth;
 		ch_string dst_pth_mv = proof_get_tk_dir_path(end_dir_pth, rsn.rs_tk);
@@ -378,5 +500,17 @@ proof_write_json_file_for(deduction& dct, long to_wrt_idx, long prv_wrt_idx)
 			os << " dst_pth=\n" << os_dst_pth_mv << "\n";
 		);
 	}
+	/*else {
+		if(rsn.rs_motives.is_empty()){
+			ch_string src_pth_mv = pf_dir_pth;
+			ch_string dst_pth_mv = proof_get_tk_dir_path(unirons_pth, rsn.rs_tk);
+			ch_string os_src_pth_mv = skg.as_full_path(src_pth_mv);
+			ch_string os_dst_pth_mv = skg.as_full_path(dst_pth_mv);
+			
+			bool ok3 = rename_file(os_src_pth_mv, os_dst_pth_mv); //OS_OPER
+			MARK_USED(ok3);
+			BRAIN_CK(ok3);
+		}
+	}*/
 }
 

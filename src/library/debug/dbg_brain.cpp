@@ -756,7 +756,8 @@ neuron::print_neu_base(bj_ostream& os, bool from_pt, bool from_tee, bool sort_fi
 		} else {
 			print_tees(os);
 		}
-		os << " w_tk=" << ne_to_wrt_tk;
+		//os << " w_tk=" << ne_to_wrt_tk;
+		os << " pf_tk=" << ne_proof_tk.get_str();
 		
 		bool in_abort_nmp = false;
 		if((pt_brn != NULL) && (pt_brn->br_dbg_abort_nmp != NULL_PT)){
@@ -1101,6 +1102,11 @@ brain::dbg_ck_rsns(reason& rsn1, reason& rsn2){
 void
 brain::dbg_old_reverse_trail(){
 #ifdef FULL_DEBUG
+	if(in_root_lv()){
+		set_result(bjr_no_satisf);
+		return;
+	}
+	
 	reason& rsn1 = br_dbg.dbg_rsn1;
 	reason& rsn2 = br_dbg.dbg_dct.dt_rsn;
 	//long dbg_old_lv = level();
@@ -1130,6 +1136,9 @@ brain::dbg_old_reverse_trail(){
 	BRAIN_DBG(br_dbg.dbg_before_retract_lv = level());
 
 	DBG(
+		br_wrt_ref.reset_curr_quanton();
+		write_get_tk(br_curr_write_tk);
+		
 		br_dedcer.set_conflicts(br_all_conflicts_found);
 		row<neuromap*>& to_wrt = br_dbg.dbg_dct.dt_all_to_wrt;
 		to_wrt.clear();

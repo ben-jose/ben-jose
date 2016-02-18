@@ -136,7 +136,7 @@ void	dbg_print_left_margin(solver* slv, bj_ostream& os, long dbg_lv)
 void
 dbg_prt_open(ch_string& path, bj_ofstream& stm, bool append){
 #ifdef FULL_DEBUG
-	const char* log_nm = path.c_str();
+	/*const char* log_nm = path.c_str();
 	if(append){
 		stm.open(log_nm, std::ios::app);
 	} else {
@@ -145,7 +145,8 @@ dbg_prt_open(ch_string& path, bj_ofstream& stm, bool append){
 	if(! stm.good() || ! stm.is_open()){
 		ch_string msg = "Could not open file " + path;
 		abort_func(1, msg.c_str());
-	}
+	}*/
+	bj_ofstream_open(path, stm, append);
 #endif
 }
 

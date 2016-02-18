@@ -690,6 +690,10 @@ path_get_running_path(){
 
 ch_string
 path_to_absolute_path(ch_string pth){
+	if(pth.size() >= (BJ_PATH_MAX - 1)){
+		throw file_exception(flx_path_too_long, pth);
+	}
+	
 	char rpath[BJ_PATH_MAX];
 
 	char* rr = realpath(pth.c_str(), rpath);
@@ -819,5 +823,34 @@ bool
 rename_file(ch_string& old_pth, ch_string& nw_pth){
 	int ok = rename(old_pth.c_str(), nw_pth.c_str());
 	return (ok == 0);
+}
+
+ch_string
+get_relative_path(ch_string pth1, ch_string pth2){
+	//ch_string abs1 = path_to_absolute_path(pth1);
+	//ch_string abs2 = path_to_absolute_path(pth2);
+	ch_string abs1 = pth1;
+	ch_string abs2 = pth2;
+	
+	size_t cm_pos = 0;
+	size_t nx_pos = 0;
+	while(abs1.compare(0, nx_pos, abs2, 0, nx_pos) == 0){
+		cm_pos = nx_pos;
+		nx_pos = abs1.find_first_of('/', nx_pos + 1);
+		if(nx_pos == std::string::npos){
+			break;
+		}
+	}
+	
+	ch_string rel = "..";
+	size_t up_pos = cm_pos;
+	while((up_pos = abs1.find_first_of('/', up_pos + 1)) != std::string::npos){
+		rel += "/..";
+	}
+	
+	ch_string rest = abs2.substr(cm_pos);
+	rel += rest;
+	
+	return rel;
 }
 

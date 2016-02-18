@@ -108,6 +108,7 @@ class skeleton_glb;
 #define SKG_REF_DIR		"/SKELETON/REF"
 #define SKG_LCK_DIR		"/SKELETON/LCK"
 #define SKG_TMP_PROOF_DIR	"/SKELETON/TMP/PROOF"
+#define SKG_JS_DIR			"/SKELETON/JS"
 #define SKG_COLLISIONS_DIR	"/SKELETON/ERR/COLLISIONS"
 #define SKG_MISSING_DIR		"/SKELETON/ERR/MISSING"
 #define SKG_CORRUPTED_DIR	"/SKELETON/ERR/CORRUPTED"
@@ -133,7 +134,10 @@ class skeleton_glb;
 #define SKG_DBG_COLLI_DIFF	"/dbg_colli_diff.skl"
 #define SKG_DBG_COLLI_NEW	"/dbg_colli_new.skl"
 
-#define SKG_PROOF_SUBDIR	"proof"
+#define SKG_PROOF_SUBDIR			"proof"
+#define SKG_UNIRONS_SUBDIR			"unirons"
+#define SKG_UNIRONS_REF_FNAM		"unirons_ref.txt"
+#define SKG_SHOW_PROOF_JS_SUBDIR	"show_proof_js_lib"
 
 //=================================================================
 // funtion declarations
@@ -761,6 +765,7 @@ public:
 	ch_string		kg_overlaped_path;
 	ch_string		kg_dead_path;
 	ch_string		kg_broken_path;
+	ch_string		kg_show_proof_js_path;
 
 	ch_string		kg_verify_path;
 	time_t			kg_verify_mtime;

@@ -38,7 +38,6 @@ deducer class methos and funcs.
 #include "brain.h"
 #include "solver.h"
 #include "html_strings.h"
-#include "proof.h"
 
 //============================================================
 // static vars
@@ -467,11 +466,6 @@ brain::analyse_conflicts(row<prop_signal>& all_confl, deduction& dct){
 		os << out_rsn << bj_eol
 	);
 	
-	solver& slv = get_solver();
-	if(slv.slv_prms.sp_write_proofs){
-		proof_write_all_json_files_for(dct);
-	}
-	
 	BRAIN_DBG(br_dbg_in_analysis = false);
 	return found_top;
 } // end_of_analyse
@@ -535,8 +529,24 @@ deducer::find_all_to_write(row<neuromap*>& to_wrt){
 	BRAIN_CK(brn.br_na_tot_na0 == 0);
 	for(long ii = 0; ii < all_noted.size(); ii++){
 		prop_signal& q_sig = all_noted[ii];
-		BRAIN_CK((q_sig.ps_source == NULL_PT) || (! q_sig.ps_source->ne_original) ||
-			is_ticket_eq(q_sig.ps_source->ne_to_wrt_tk, curr_wrt_tk));
+		BRAIN_CK_PRT(((q_sig.ps_source == NULL_PT) || (! q_sig.ps_source->ne_original) ||
+			is_ticket_eq(q_sig.ps_source->ne_to_wrt_tk, curr_wrt_tk)), 
+			DBG_PRT_ABORT(brn);
+			brn.print_trail(os);
+			neuron* nn0 = q_sig.ps_source;
+			os << " ps=" << q_sig << "\n";
+			os << " src=" << nn0 << "\n";
+			os << " w_tk=" << nn0->ne_to_wrt_tk << "\n";
+			os << " b_tk=" << curr_wrt_tk << "\n";
+			if(nn0 != NULL_PT){
+				os << " is_to_wrt=" << nn0->is_ne_to_wrt() << "\n";
+			}
+			if(q_sig.ps_quanton != NULL_PT){
+				os << " q_id=" << q_sig.ps_quanton->qu_id << "\n";
+				os << " q_upd_to_wrt_tk=" << q_sig.ps_quanton->qu_upd_to_wrt_tk << "\n";
+				os << " is_q_upd_to_w=" << q_sig.ps_quanton->is_qu_to_upd_wrt_tk() << "\n";
+			}
+		);
 		q_sig.get_ps_cand_to_wrt(brn, to_wrt, ii);
 	}
 	reset_all_na0(brn, to_wrt);
@@ -785,7 +795,7 @@ neuromap::nmp_add_to_write(row_neuromap_t& to_wrt, long trace_idx){
 	}
 }
 
-bool
+/*bool
 deducer::is_de_end_of_neuromap(){
 	brain& brn = get_de_brain();
 	qlayers_ref& qlr = de_ref;
@@ -793,7 +803,7 @@ deducer::is_de_end_of_neuromap(){
 	BRAIN_CK(nxt_qua != NULL_PT);
 	bool is_eonmp = nxt_qua->is_qu_end_of_neuromap(brn);
 	return is_eonmp;
-}
+}*/
 
 bool
 quanton::is_qu_to_upd_wrt_tk(){
@@ -933,6 +943,7 @@ deducer::deduce(deduction& dct, long max_lv)
 
 	brain& brn = get_de_brain();
 	brn.write_analysis(causes, rsn);
+	
 	find_all_to_write(to_wrt);
 	
 	de_all_noted.move_to(dct.dt_all_noted);
@@ -940,6 +951,9 @@ deducer::deduce(deduction& dct, long max_lv)
 
 long
 reason::calc_target_tier(brain& brn){
+	if(brn.in_root_lv()){
+		return INVALID_TIER;
+	}
 	BRAIN_CK(rs_target_level != INVALID_LEVEL);
 	leveldat& lvdat = brn.get_leveldat(rs_target_level + 1);
 	long lst_ti = lvdat.ld_tier() - 1;

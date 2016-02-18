@@ -1428,15 +1428,36 @@ void test_str_set(){
 	//bj_out << ss1 << "\n";
 }
 
+void test_rel_pth(int argc, char** argv){
+	bj_ostream& os = bj_out;
+	if(argc < 3){
+		os << "Faltan args" << bj_eol;
+		return;
+	}
+
+	ch_string pth1 = argv[1];
+	ch_string pth2 = argv[2];
+
+	os << "PTH1=" << pth1 << "\n";
+	os << "PTH2=" << pth2 << "\n";
+	
+	ch_string pth3 = "INVALID_PTH";
+	pth3 = get_relative_path(pth1, pth2);
+	
+	os << "REL_PTH=" << pth3 << "\n";
+}
+
 int	tests_main_(int argc, char** argv){
 	MARK_USED(argc);
 	MARK_USED(argv);
 	bj_ostream& os = bj_out;
 	
+	/*
 	os << "SIZEO_OF_row_neuron_t=" << sizeof(row_neuron_t) << "\n";
 	os << "SIZEO_OF_row_row_neuron_t=" << sizeof(row_row_neuron_t) << "\n";
 	os << "SIZEO_OF_prop_signal=" << sizeof(prop_signal) << "\n";
 	os << "SIZEO_OF_void_pt=" << sizeof(void*) << "\n";
+	*/
 	//test_str_set();
 	//test_rf_pt();
 	//test_null_str();
@@ -1458,6 +1479,8 @@ int	tests_main_(int argc, char** argv){
 	//test_thrw_obj();
 	//pru_hex_as_txt();
 	//test_minisha();
+	
+	test_rel_pth(argc, argv);
 	
 	os.flush();
 

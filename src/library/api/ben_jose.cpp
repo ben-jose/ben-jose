@@ -43,6 +43,8 @@ ben_jose interface impl.
 #include "file_funcs.h"
 #include "dbg_prt.h"
 
+char*	solver::CL_NAME = as_pt_char("{solver}");
+
 void 		bj_init_output(bj_output_t* the_out){
 	if(the_out == NULL){
 		return;
@@ -74,6 +76,9 @@ bj_solver_t bj_solver_create(const char* bjs_dir_path){
 	bj_solver_t bjs = (bj_solver_t)nw_slv;
 
 	dbg_init_dbg_conf(the_slvr.slv_dbg_conf_info);
+
+	bool wrt_proofs = nw_slv->slv_prms.sp_write_proofs;
+	DBG_PRT_SLV(nw_slv, bj_out, DBG_ALL_LVS, wrt_proofs, os << "WRITING_PROOFS");
 	
 	DBG_PRT_SLV(nw_slv, bj_out, 1, true, os << "KEEP_LEARNED");
 	DBG_PRT_SLV(nw_slv, bj_out, 2, true, os << "ONLY_DEDUC");
@@ -94,16 +99,24 @@ void 		bj_solver_release(bj_solver_t bjs){
 		return;
 	}
 	solver* the_slvr = (solver*)bjs;
-	if(the_slvr != NULL_PT){
-		BRAIN_CK(
-			(bj_out << "BATCH_DBG=\n" << "MAX_lv=" << the_slvr->slv_dbg2.dbg_max_lv
-			<< " MAX_wrt_num_subnmp=" << the_slvr->slv_dbg2.dbg_max_wrt_num_subnmp
-			<< " MAX_fnd_num_subnmp=" << the_slvr->slv_dbg2.dbg_max_fnd_num_subnmp
-			<< bj_eol) && 
-			true
-		);
+	if(the_slvr == NULL_PT){
+		return;
 	}
+	
+	SOLVER_CK(the_slvr->get_cls_name() == solver::CL_NAME);
+	SOLVER_REL_CK(the_slvr->get_cls_name() == solver::CL_NAME);
+	
+	BRAIN_CK(
+		(bj_out << "BATCH_DBG=\n" << "MAX_lv=" << the_slvr->slv_dbg2.dbg_max_lv
+		<< " MAX_wrt_num_subnmp=" << the_slvr->slv_dbg2.dbg_max_wrt_num_subnmp
+		<< " MAX_fnd_num_subnmp=" << the_slvr->slv_dbg2.dbg_max_fnd_num_subnmp
+		<< bj_eol) && 
+		true
+	);
 
+	bool wrt_proofs = the_slvr->slv_prms.sp_write_proofs;
+	DBG_PRT_SLV(the_slvr, bj_out, DBG_ALL_LVS, wrt_proofs, os << "WRITING_PROOFS");
+	
 	DBG_PRT_SLV(the_slvr, bj_out, 1, true, os << "KEEP_LEARNED");
 	DBG_PRT_SLV(the_slvr, bj_out, 2, true, os << "ONLY_DEDUC");
 	DBG_PRT_SLV(the_slvr, bj_out, 3, true, os << "VERIF_WRITE");

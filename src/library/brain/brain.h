@@ -783,6 +783,11 @@ class quanton {
 
 	long		qlevel(){ return qu_charge_tk.tk_level; }
 	leveldat*	qlv_dat(brain& brn);
+
+	bool		in_root_qlv(){
+		return (qlevel() == ROOT_LEVEL);
+	}
+	
 	
 	bool		is_lv_choice(brain& brn);
 
@@ -2760,7 +2765,7 @@ class deducer {
 		return (num_ly_notes == 0);
 	}
 	
-	bool	is_de_end_of_neuromap();
+	//bool	is_de_end_of_neuromap();
 	
 	bool	ck_end_of_lrn_nmp();
 	
@@ -3055,6 +3060,7 @@ public:
 	long 			br_num_active_neurons;
 
 	row_neuron_t		br_unit_neurons;
+	row_neuron_t		br_learned_unit_neurons;
 
 	k_row<neuromap>		br_neuromaps;	// all maps
 	row_neuromap_t		br_free_neuromaps;
@@ -3460,6 +3466,10 @@ public:
 	long		level(){
 		BRAIN_CK(br_data_levels.size() == (br_curr_choice_tk.tk_level + 1));
 		return br_curr_choice_tk.tk_level;
+	}
+	
+	bool	in_root_lv(){
+		return (level() == ROOT_LEVEL);
 	}
 	
 	leveldat&	get_leveldat(long lv = INVALID_LEVEL){

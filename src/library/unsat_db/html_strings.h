@@ -80,11 +80,34 @@ some strings for html printing.
 // end_of_define
 
 #define JS_inner_htm(div_txt, var_htm_txt) "document.getElementById('" + \
-	div_txt + "').innerHTML = " + var_htm_txt + ";"
+	div_txt + "').innerHTML = " + var_htm_txt + ";" \
 	
 // end_of_define
 
 #define HTM_br "<br>\n"
+
+#define HTM_css(dir) \
+	"<link rel='stylesheet' type='text/css' \n\t\t\t href='./" + dir \
+		+ "/sw_proof.css' media='screen' />" \
+	
+// end_of_define
+
+#define HTMi_proof_ul "<ul class='collapsibleList'>"
+#define HTMe_proof_ul "</ul>"
+
+#define HTM_proof_li(nd_id, nd_lst, jsn_file, lbl_str) \
+	"\t\t <li>\n" \
+	"\t\t <label for='" + nd_id + "' \n" + \
+	"\t\t\t onclick=\"populate_ul('" + nd_lst + "', './"+ jsn_file + "')\">\n" + \
+	"\t\t\t " + lbl_str + "\n" + \
+	"\t\t </label> \n" + \
+	"\t\t <input type='checkbox' id='" + nd_id + "' />\n" + \
+	"\t\t <ul id='" + nd_lst + "'>\n" + \
+	"\t\t </ul>\n" \
+	"\t\t </li>\n" \
+	
+// end_of_define
+	
 
 #endif		// STR_HTML_H
 
