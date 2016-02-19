@@ -639,6 +639,8 @@ class quanton {
 	//row_neuron_t	qu_full_charged;
 	//row_long_t		qu_full_chg_min_ti;
 
+	ticket			qu_proof_tk;
+	
 	// dbg attributes
 	DBG(
 		long			qu_dbg_choice_idx;
@@ -735,6 +737,8 @@ class quanton {
 		qu_candidate_nmp = NULL_PT;
 		
 		qu_upd_to_wrt_tk.init_ticket();
+		
+		qu_proof_tk.init_ticket();
 		
 		BRAIN_DBG(
 			qu_dbg_choice_idx = INVALID_IDX;
@@ -1500,6 +1504,18 @@ class prop_signal {
 		bool c3 = (ps_tier == INVALID_TIER);
 
 		return (c1 && c2 && c3);
+	}
+	
+	bool	is_uniron(){
+		if(ps_quanton == NULL_PT){
+			return false;
+		}
+		if(! ps_quanton->in_root_qlv()){
+			return false;
+		}
+		bool is_u = ! ps_quanton->qu_proof_tk.is_tk_virgin();
+		BRAIN_CK(! is_u || (ps_source == NULL_PT));
+		return is_u;
 	}
 	
 	long get_level() const {
@@ -2759,11 +2775,7 @@ class deducer {
 	
 	brain&		get_de_brain();
 	
-	bool	is_end_of_rsn(){
-		long num_ly_notes = de_nkpr.dk_num_noted_in_layer;
-		BRAIN_CK(num_ly_notes >= 0);
-		return (num_ly_notes == 0);
-	}
+	bool	is_end_of_rsn(bool in_roo);
 	
 	//bool	is_de_end_of_neuromap();
 	
@@ -2915,6 +2927,7 @@ public:
 	
 	bool	dbg_just_read;
 	bool	dbg_clean_code;
+	bool	dbg_old_deduc;
 	
 	bool	dbg_periodic_prt;
 

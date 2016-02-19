@@ -922,6 +922,7 @@ brain::init_loading(long num_qua, long num_neu){
 
 neuron*
 brain::learn_mots(reason& rsn){
+	BRAIN_CK(rsn.rs_forced != NULL_PT);
 	
 	row_quanton_t& the_mots = rsn.rs_motives;
 	quanton& forced_qua = *rsn.rs_forced;
@@ -954,6 +955,8 @@ brain::learn_mots(reason& rsn){
 	);
 
 	if(the_mots.is_empty()){
+		forced_qua.qu_proof_tk = rsn.rs_tk;
+		
 		//long nxt_tir = 0;
 		long nxt_tir = tier() + 1;
 		BRAIN_CK(level() == ROOT_LEVEL);
@@ -1354,11 +1357,12 @@ notekeeper::set_motive_notes(row_quanton_t& rr_qua, long from, long until){
 	brain& brn = get_dk_brain();
 
 	DBG_PRT(33, os << "making notes " << rr_qua);
+	//DBG_PRT(115, os << "making notes " << rr_qua);
 
 	if(from < 0){ from = 0; }
 	if(until > rr_qua.size()){ until = rr_qua.size(); }
 	
-	bool br_in_root = (brn.level() == ROOT_LEVEL);
+	bool br_in_root = brn.in_root_lv();
 
 	long ii = from;
 	for(; ii < until; ii++){
@@ -1369,12 +1373,12 @@ notekeeper::set_motive_notes(row_quanton_t& rr_qua, long from, long until){
 		bool qu_in_root = (qua.qlevel() == ROOT_LEVEL);
 		
 		bool to_note = (! qu_in_root || br_in_root);
-		//to_note = true;
 		
-		bool has_note = (qua.*dk_has_note_fn)();
+		bool has_note = nk_has_note(qua);
 		if(! has_note && to_note){
 			dk_tot_noted++;
-			(qua.*dk_set_note_fn)(brn);
+			//(qua.*dk_set_note_fn)(brn);
+			nk_set_note(qua);
 
 			BRAIN_CK(dk_note_layer != INVALID_LEVEL);
 			BRAIN_DBG(ch_string dbg_msg = "");
@@ -1791,7 +1795,7 @@ brain::pulsate(){
 	
 		br_last_retract = (level() == ROOT_LEVEL);
 		
-		//dbg_old_reverse_trail();
+		//dbg_old_reverse_trail(); // change br_dbg.dbg_old_deduc to use.
 		
 		BRAIN_DBG(bool should_stop = in_root_lv());
 		bool go_on = deduce_and_reverse_trail();
@@ -2004,6 +2008,8 @@ bj_satisf_val_t
 brain::solve_instance(bool load_it){
 	brain& brn = *this;
 	MARK_USED(brn);
+	
+	//br_dbg.dbg_old_deduc = true; // comment in normal use. only for old_deduc.
 
 	DBG_COMMAND(1, br_dbg_keeping_learned = true); // KEEP_LEARNED KEEP_ALL_LEARNED
 	
@@ -2086,6 +2092,7 @@ brain::solve_instance(bool load_it){
 
 bool
 brain::deduce_and_reverse_trail(){
+	BRAIN_CK(! br_dbg.dbg_old_deduc);
 	BRAIN_CK(! has_psignals());
 	
 	//BRAIN_CK(level() != ROOT_LEVEL);
@@ -3412,6 +3419,9 @@ bool operator != (const prop_signal& ps1, const prop_signal& ps2){
 
 void
 brain::reset_chg_cands_update(quanton& qua){
+	BRAIN_DBG(if(br_dbg.dbg_old_deduc){ return; })
+	BRAIN_CK(! br_dbg.dbg_old_deduc);
+	
 	brain& brn = *this;
 	
 	if(! qua.has_candidate(brn)){
@@ -3628,6 +3638,9 @@ brain::dbg_prt_cand_info(bj_ostream& os, neuron& neu){
 
 void
 brain::set_chg_cands_update(quanton& qua){
+	BRAIN_DBG(if(br_dbg.dbg_old_deduc){ return; })
+	BRAIN_CK(! br_dbg.dbg_old_deduc);
+	
 	brain& brn = *this;
 	BRAIN_CK(qua.is_pos());
 	BRAIN_DBG(ticket& q_tk = qua.qu_candidate_tk);

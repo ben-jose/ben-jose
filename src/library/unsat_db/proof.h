@@ -40,6 +40,8 @@ proof writing function declarations.
 
 #include "brain.h"
 
+class json_dat;
+
 ch_string 	proof_get_unirons_path(skeleton_glb& skg);
 void		proof_create_final_unirons_path(skeleton_glb& skg, ch_string end_dir_pth);
 
@@ -52,8 +54,10 @@ ch_string proof_get_tk_html_file_name(ticket& pf_tk);
 long proof_get_trace_idx_of(deduction& dct, long to_wrt_idx);
 void proof_write_all_json_files_for(deduction& dct);
 void proof_write_json_file_for(deduction& dct, long to_wrt_idx, long prv_wrt_idx);
-void proof_append_ps(row<char>& json_str, prop_signal& the_sig, ch_string& pth_pref, 
-			row<ch_string>& all_to_move);
+void proof_append_ps(row<char>& json_str, prop_signal& the_sig, bool& is_fst_ps, 
+			ch_string& pth_pref, row<ch_string>& all_to_move);
+void proof_append_uniron(row<char>& json_str, prop_signal& the_sig, bool& is_fst_ps, 
+			ch_string& pth_pref, row<ch_string>& all_to_move);
 void proof_append_lits(row<char>& json_str, row_quanton_t& all_quas);
 void proof_append_neu(row<char>& json_str, neuron* neu, ch_string& pth_pref, 
 			row<ch_string>& all_to_move);

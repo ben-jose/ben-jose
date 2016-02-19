@@ -261,6 +261,7 @@ dbg_inst_info::init_dbg_inst_info(){
 	
 	dbg_just_read = false;
 	dbg_clean_code = false;
+	dbg_old_deduc = false;
 	
 	dbg_periodic_prt = true;
 	
@@ -1102,6 +1103,7 @@ brain::dbg_ck_rsns(reason& rsn1, reason& rsn2){
 void
 brain::dbg_old_reverse_trail(){
 #ifdef FULL_DEBUG
+	BRAIN_CK(br_dbg.dbg_old_deduc);
 	if(in_root_lv()){
 		set_result(bjr_no_satisf);
 		return;
