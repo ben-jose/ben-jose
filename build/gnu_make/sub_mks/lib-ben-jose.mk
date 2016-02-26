@@ -3,7 +3,8 @@ TARGET := libben-jose.a
 
 SRC_BASE_DIR := ../../../src
 
-POSTMK_JS_DIR := ../../src/library/javascript
+POSTMK_JS_DIR := ../../src/library/unsat_db/javascript
+POSTMK_HTM_DIR := ../../src/library/unsat_db/html
 
 #	du -a $(TARGET_DIR)/draw_cnf_js_lib
 #	du -a $(TARGET_DIR)/show_proof_js_lib
@@ -11,8 +12,10 @@ POSTMK_JS_DIR := ../../src/library/javascript
 define COPY_JS_LIBS
 	rm -rf $(TARGET_DIR)/draw_cnf_js_lib
 	rm -rf $(TARGET_DIR)/show_proof_js_lib
+	rm -rf $(TARGET_DIR)/html
 	cp -r $(POSTMK_JS_DIR)/draw_cnf_js_lib $(TARGET_DIR)/draw_cnf_js_lib
 	cp -r $(POSTMK_JS_DIR)/show_proof_js_lib $(TARGET_DIR)/show_proof_js_lib
+	cp -r $(POSTMK_HTM_DIR) $(TARGET_DIR)/html
 	echo "Finished building libben-jose.a"
 endef
 

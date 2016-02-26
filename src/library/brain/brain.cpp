@@ -781,7 +781,7 @@ brain::brn_tunnel_signals(bool only_orig, row_quanton_t& all_impl_cho){
 	BRAIN_DBG(
 		ticket tk2;
 		brn.update_tk_charge(tk2);
-		BRAIN_CK_0(is_ticket_eq(tk1, tk2));
+		BRAIN_CK_0(is_tk_equal(tk1, tk2));
 	);
 	
 	update_monos();
@@ -1373,6 +1373,7 @@ notekeeper::set_motive_notes(row_quanton_t& rr_qua, long from, long until){
 		bool qu_in_root = (qua.qlevel() == ROOT_LEVEL);
 		
 		bool to_note = (! qu_in_root || br_in_root);
+		to_note = true;
 		
 		bool has_note = nk_has_note(qua);
 		if(! has_note && to_note){
@@ -2251,14 +2252,14 @@ brain::dbg_prt_full_stab(){
 	
 	//bj_out << "ALL_CCL=\n";
 	
-	canon_cnf& the_cnf = neus_srg.get_final_cnf(skg, true, true);
+	canon_cnf& the_cnf = neus_srg.get_final_cnf(skg, true);
 
 	bj_out << "THE_CNF=" << bj_eol;
 	bj_out << the_cnf;
 	bj_out << "END_of_cnf=" << bj_eol;
 	
 	coloring finl_col;
-	finl_col.save_colors_from(neus_srg, quas_srg, tid_tee_consec);
+	finl_col.save_colors_from(neus_srg, quas_srg, tid_tee_consec, true);
 	
 	BRAIN_CK(finl_col.co_quas.size() == full_col.co_quas.size());
 	BRAIN_CK(finl_col.co_neus.size() == full_col.co_neus.size());
@@ -2734,7 +2735,7 @@ brain::get_bineu_sources(quanton& cho, quanton& qua, row_quanton_t& all_biqus)
 	BRAIN_CK(cho.is_pos());
 	BRAIN_CK(qua.is_pos());
 
-	if(! is_ticket_eq(qua.qu_cicle_tk, br_curr_choice_tk)){
+	if(! is_tk_equal(qua.qu_cicle_tk, br_curr_choice_tk)){
 		DBG_PRT(68, 
 			os << " RESET CICLES qua=" << &qua << "\n";
 			os << " clc_tk=" << qua.qu_cicle_tk << "\n";
@@ -2910,7 +2911,7 @@ brain::get_all_cicle_cho(row_quanton_t& all_cicl){
 void
 quanton::update_cicle_srcs(brain& brn, neuron* neu){
 	if(is_cicle_choice() && (neu != NULL_PT) && is_pos()){
-		if(! is_ticket_eq(qu_cicle_tk, brn.br_curr_choice_tk)){
+		if(! is_tk_equal(qu_cicle_tk, brn.br_curr_choice_tk)){
 			reset_cicle_src();
 		}
 		if(qu_cicle_tk.is_tk_virgin()){

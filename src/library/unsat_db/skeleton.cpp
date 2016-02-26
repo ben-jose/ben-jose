@@ -45,6 +45,7 @@ Classes for skeleton and directory management in canon_cnf DIMACS format.
 #include "brain.h"
 #include "solver.h"
 #include "dbg_prt.h"
+#include "proof.h"
 
 DEFINE_GET_DBG_SLV(canon_clause)
 DEFINE_GET_DBG_SLV(canon_cnf)
@@ -645,6 +646,7 @@ skeleton_glb::print_paths(bj_ostream& os){
 	os << "root='" << kg_root_path << "'" << bj_eol;
 	os << "verify='" << kg_verify_path << "'" << bj_eol;
 	os << "tmp_proof='" << kg_tmp_proof_path << "'" << bj_eol;
+	os << "cnfs='" << kg_cnfs_path << "'" << bj_eol;
 	os << "collisions='" << kg_collisions_path << "'" << bj_eol;
 	os << "missing='" << kg_missing_path << "'" << bj_eol;
 	os << "corrupted='" << kg_corrupted_path << "'" << bj_eol;
@@ -739,6 +741,7 @@ skeleton_glb::init_paths(){
 	
 	reset_proof_path();
 
+	kg_cnfs_path = SKG_CNF_DIR;
 	kg_collisions_path = SKG_COLLISIONS_DIR;
 	kg_missing_path = SKG_MISSING_DIR;
 	kg_corrupted_path = SKG_CORRUPTED_DIR;
@@ -746,6 +749,7 @@ skeleton_glb::init_paths(){
 	kg_dead_path = SKG_DEAD_DIR;
 	kg_broken_path = SKG_BROKEN_DIR;
 
+	path_create(as_full_path(kg_cnfs_path));
 	path_create(as_full_path(kg_collisions_path));
 	path_create(as_full_path(kg_missing_path));
 	path_create(as_full_path(kg_corrupted_path));
@@ -758,11 +762,23 @@ skeleton_glb::init_paths(){
 	path_create(os_js_pth);
 	
 	ch_string os_sw_pf_js_bin_pth = kg_running_path + "/" + SKG_SHOW_PROOF_JS_SUBDIR;
+	
 	ch_string os_sw_pf_js_skl_pth = os_js_pth + "/" + SKG_SHOW_PROOF_JS_SUBDIR;
-
 	if(! file_exists(os_sw_pf_js_skl_pth)){
 		bool lk_ok = path_create_link(os_sw_pf_js_bin_pth, os_sw_pf_js_skl_pth);
 		SKELETON_CK(lk_ok);
+	}
+
+	ch_string os_cnfs_pth = as_full_path(kg_cnfs_path);
+	ch_string os_sw_pf_js_cnfs_pth = os_cnfs_pth + "/" + SKG_SHOW_PROOF_JS_SUBDIR;
+	if(! file_exists(os_sw_pf_js_cnfs_pth)){
+		bool lk_ok = path_create_link(os_sw_pf_js_bin_pth, os_sw_pf_js_cnfs_pth);
+		SKELETON_CK(lk_ok);
+	}
+	
+	ch_string os_top_htm_pth = os_cnfs_pth + "/" + SKG_SHOW_PROOF_TOP_HTM_NAME;
+	if(! file_exists(os_top_htm_pth)){
+		proof_write_top_html_file(os_top_htm_pth);
 	}
 	
 	kg_show_proof_js_path = js_pth + "/" + SKG_SHOW_PROOF_JS_SUBDIR;

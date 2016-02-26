@@ -138,6 +138,8 @@ class skeleton_glb;
 #define SKG_UNIRONS_SUBDIR			"unirons"
 #define SKG_UNIRONS_REF_FNAM		"unirons_ref.txt"
 #define SKG_SHOW_PROOF_JS_SUBDIR	"show_proof_js_lib"
+#define SKG_SHOW_PROOF_TOP_HTM_NAME	"Show_Proof.htm"
+#define SKG_END_JSN_NAME			"cnf_proof.jsn"
 
 //=================================================================
 // funtion declarations
@@ -759,6 +761,7 @@ public:
 	
 	ch_string		kg_tmp_proof_path;
 
+	ch_string		kg_cnfs_path;
 	ch_string		kg_collisions_path;
 	ch_string		kg_missing_path;
 	ch_string		kg_corrupted_path;

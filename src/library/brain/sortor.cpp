@@ -1329,12 +1329,11 @@ sort_glb::stab_mutual_unique(sort_glb& srg2, neuromap* dbg_nmp){
 }
 
 canon_cnf&
-sort_glb::get_final_cnf(skeleton_glb& skg, bool sorted_cnf, bool one_ccl_per_ss,
-					long precalc_tot_vars)
+sort_glb::get_final_cnf(skeleton_glb& skg, bool sorted_cnf, long precalc_tot_vars)
 {
 	// after any stab_mutual
 	SORTER_CK(! sg_cnf_clauses.is_empty());
-	if(sg_cnf_clauses.is_empty()){
+	/*if(sg_cnf_clauses.is_empty()){
 		sort_glb& srg1 = *this;
 		
 		sg_one_ccl_per_ss = one_ccl_per_ss;
@@ -1342,7 +1341,7 @@ sort_glb::get_final_cnf(skeleton_glb& skg, bool sorted_cnf, bool one_ccl_per_ss,
 
 		//SORTER_CK(precalc_tot_vars != 0);
 		sg_cnf_dims.dd_tot_vars = precalc_tot_vars;
-	}
+	}*/
 	SORTER_CK(! sg_cnf_clauses.is_empty());
 	DBG_PRT(64, os << " get_cnf=" << this << "\n";
 		sg_cnf_clauses.print_row_data(os, true, "\n");
@@ -1352,7 +1351,6 @@ sort_glb::get_final_cnf(skeleton_glb& skg, bool sorted_cnf, bool one_ccl_per_ss,
 	SORTER_CK_PRT((sg_one_ccl_per_ss || (sg_step_sortees.size() == sg_cnf_clauses.size())),
 		brain& brn = get_dbg_brain();
 		DBG_PRT_ABORT(brn);
-		os << " one_ccl_per_ss=" << sg_one_ccl_per_ss << "\n";
 		os << " tee_sz=" << sg_step_sortees.size() << "\n";
 		os << " cnf_sz=" << sg_cnf_clauses.size() << "\n";
 		os << " sg_got_ccls=" << sg_got_ccls << "\n";

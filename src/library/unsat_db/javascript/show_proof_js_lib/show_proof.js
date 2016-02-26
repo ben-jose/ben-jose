@@ -1,12 +1,19 @@
 
 
+var MAX_REPL_VAL = 10000;
+
+var CNF_JSN_DATA = null;
+var CNF_CCLS_REPL_ARR = null;
+var CNF_VARS_REPL_ARR = null;
+
 var ul_templ = "<ul id={ul_id}></ul>";
 
 var li_1_templ = "<li>{lb_txt}</li>\n";
 
 var li_2_templ = `
 	<li>
-		<label for="{lb_id}" onclick="populate_ul('{ul_id}', '{jsn_rel_pth}')">
+		<label title="{lb_tit}" for="{lb_id}" 
+			onclick="populate_ul('{ul_id}', '{jsn_rel_pth}')">
 			{lb_txt}
 		</label>
 		<input type="checkbox" id="{lb_id}" />
@@ -14,6 +21,11 @@ var li_2_templ = `
 		</ul>
 	</li>
 `;
+
+function get_dir(full_pth){
+	var dir_pth = full_pth.substring(0, full_pth.lastIndexOf("/")+1);
+	return dir_pth;
+}
 
 function get_URL_parameter(name) {
 	return decodeURIComponent(
@@ -25,11 +37,18 @@ function get_URL_parameter(name) {
 function get_repl_val(val_in, repl_arr){
 	idx_repl = Math.abs(val_in);
 	val_out = repl_arr[idx_repl];
-	if(val_out === undefined){
-		return "ERROR in cnf proof. Undefined replace for " + idx_repl;
+	if(val_out == null){
+		return 0;
 	}
-	if(! (typeof val_out === 'number')){
-		return "ERROR in cnf proof. Not a number replace for " + idx_repl;
+	if(val_out === undefined){
+		alert('ERR1. val_in' + val_in + '\n idx_repl=' + idx_repl + 
+				'\n repl_arr=' + repl_arr);
+		return "ERROR-in-cnf-proof. Undefined-replace-for " + idx_repl;
+	}
+	if(isNaN(val_in)){
+		alert('ERR2. val_in' + val_in + '\n idx_repl=' + idx_repl + 
+				'\n repl_arr=' + repl_arr + '\n val_out=' + val_out);
+		return "ERROR-in-cnf-proof. Not-a-number-replace-for " + idx_repl;
 	}
 	if(val_in < 0){
 		val_out = -val_out;
@@ -49,7 +68,7 @@ function replace_vals(orig_arr, repl_arr){
 	for (aa = 0; aa < orig_arr.length; aa++) {
 		val_in = orig_arr[aa];
 		val_out = get_repl_val(val_in, repl_arr);
-		if(! (typeof val_out === 'number')){
+		if(isNaN(val_out)){
 			err_str = val_out;
 			break;
 		}
@@ -109,6 +128,10 @@ function set_literal_str(elem_id, lit_val, repl_arr){
 
 function load_JSON_func(file_nm, callback, is_async) {
 	var xobj = new XMLHttpRequest();
+	
+	//var dir_pth = get_dir(file_nm);
+	//xobj.location = dir_pth;
+	
 	xobj.overrideMimeType("application/json");
 	// Replace 'my_data' with the path to your file
 	xobj.open('GET', file_nm, is_async); 
@@ -118,6 +141,8 @@ function load_JSON_func(file_nm, callback, is_async) {
 			// as .open will NOT return a value but simply 
 			// returns undefined in asynchronous mode
 			callback(xobj.responseText);
+		} else {
+			alert("ERROR. loading-file " + file_nm + ". status=" + xobj.status);
 		}
 	};
 	xobj.send(null);  
@@ -174,10 +199,10 @@ function half_resolution(neu, all_chgs, va_r, out_arr){
 
 function calc_resolution(neu1, all_chgs, neu2, va_r){
 	if(all_chgs == null){
-		alert("ERROR. NULL all_chgs");
+		alert("ERROR. NULL-all_chgs");
 	}
 	if(all_chgs === undefined){
-		alert("ERROR. UNDEF all_chgs");
+		alert("ERROR. UNDEF-all_chgs");
 	}
 	var va_r = Math.abs(va_r);
 	var all_chgs1 = null;
@@ -194,13 +219,21 @@ function calc_resolution(neu1, all_chgs, neu2, va_r){
 	return out_arr;
 }
 
+function populate_main_ul(ul_id, jsn_pth_id){
+	var jsn_txt_area = document.getElementById(jsn_pth_id);
+	var jsn_pth = jsn_txt_area.value.trim();
+	populate_ul(ul_id, jsn_pth);
+}
+
 function populate_ul(ul_id, jsn_pth){
 	var the_ul = document.getElementById(ul_id);
 	var all_lis = the_ul.getElementsByTagName('li');
 	if(all_lis.length == 0){
 		
-		var dir_pth = jsn_pth.substring(0, jsn_pth.lastIndexOf("/")+1);
-		alert('Loading file ' + jsn_pth + '\n in dir=' + dir_pth);
+		var dir_pth = get_dir(jsn_pth);
+		alert('Loading-file ' + jsn_pth + '\n in dir=' + dir_pth);
+		
+		//document.location = dir_pth;
 		
 		var jsn_obj = load_json_file(jsn_pth);
 		if(jsn_obj != null){
@@ -208,54 +241,148 @@ function populate_ul(ul_id, jsn_pth){
 			var res_neu = null;
 			var the_chain = jsn_obj.chain;
 			var htm_str = [];
+
+			alert('CHAIN_LENGTH= ' + the_chain.length);
+			
 			for (var ii = 0; ii < the_chain.length; ii++){
 				var ch_stp = the_chain[ii];
+				
+				var s_lits = replace_vals(ch_stp.neu_lits, CNF_VARS_REPL_ARR);
+				if(! is_array(s_lits)){
+					alert(s_lits);
+					return;
+				}
+				sort_nums(s_lits);
 	
-				var neu_lits_str = "[" + ch_stp.neu_lits + "]";
+				var the_lits_str = "[" + s_lits + "]";
 				var neu_jsn = ch_stp.neu_jsn;
 				if(neu_jsn === undefined){
-					var li_elem_2 = li_1_templ.supplant({lb_txt: neu_lits_str});
+					var li_elem_2 = li_1_templ.supplant({lb_txt: the_lits_str});
 					htm_str.push(li_elem_2);
 				} else {
 					var full_pth = dir_pth + neu_jsn;
 					var sub_ul_id = ul_id + '_' + ii;
 					var sub_lb_id = 'lb_' + sub_ul_id;
+					var sub_lb_txt = the_lits_str;
 					var repl = {
+						lb_tit: full_pth,
 						lb_id: sub_lb_id,
 						ul_id: sub_ul_id,
 						jsn_rel_pth: full_pth,
-						lb_txt: neu_lits_str
+						lb_txt: sub_lb_txt
 					};
 					var li_elem_2 = li_2_templ.supplant(repl);
 					htm_str.push(li_elem_2);
 				}
 				
-				if((res_neu != null) && (ch_stp.va_r != 0)){
-					var va_r_str = "RES " + ch_stp.va_r;
+				//var res_var = ch_stp.va_r;
+				var res_var = get_repl_val(ch_stp.va_r, CNF_VARS_REPL_ARR);
+				
+				if((res_neu != null) && (res_var != 0)){
+					var va_r_str = "RES " + res_var;
 					var li_elem_3 = li_1_templ.supplant({lb_txt: va_r_str});
 					htm_str.push(li_elem_3);
 					
 					htm_str.push('<hr>\n');
 					
 					res_neu = calc_resolution(res_neu, all_chgs, 
-											  ch_stp.neu_lits, ch_stp.va_r);
+											  s_lits, res_var);
 					var cl_res_str = "[" + res_neu + "]";
 					var li_elem_res = li_1_templ.supplant({lb_txt: cl_res_str});
 					htm_str.push(li_elem_res);
 				} else {
-					res_neu = ch_stp.neu_lits; 
+					res_neu = s_lits; 
 				}
 			}
 			htm_str = htm_str.join("");
 			//alert(htm_str);
 			the_ul.innerHTML = htm_str;
 		} else {
-			alert('Cannot parse json file ' + jsn_pth);
+			alert('ERROR. Cannot-parse-json-file ' + jsn_pth);
 		}
 	}
-	//for (var index = 0; index < uls.length; index ++){
-	//alert(li_2_templ);
-	//alert('populating ' + ul_id + " curr_size=" + all_lis.length);
-	//alert('populating ' + ul_id);
+}
+
+function is_array_ok(arr1){
+	if(arr1 === undefined){
+		return false;
+	}
+	if(arr1 == null){
+		return false;
+	}
+	if(! is_array(arr1)){
+		return false;
+	}
+	return true;
+}
+
+function calc_repl_arr(subst_arr){
+	if(! is_array_ok(subst_arr)){
+		alert('ERROR. subst_arr-is-not-array.');
+		return null;
+	}
+	var repl_arr = [];
+	for (aa = 0; aa < subst_arr.length; aa++) {
+		repl_pair = subst_arr[aa];
+		if(! is_array_ok(repl_pair)){
+			alert('ERROR. subst_arr-is-not-array.');
+			return null;
+		}
+		if(repl_pair.length != 2){
+			alert('ERROR. subst_arr-is-not-pair.');
+			return null;
+		}
+		var vv0 = repl_pair[0];
+		if(isNaN(vv0)){
+			continue;
+		}
+		var vv1 = repl_pair[1];
+		if(isNaN(vv1)){
+			continue;
+		}
+		if(vv0 < 0){
+			alert('ERROR. invalid-negative-value-in-replace-pair [' + repl_pair + ']');
+			return null;
+		}
+		if(vv0 > MAX_REPL_VAL){
+			alert('ERROR. replace-value-bigger-than-MAX_REPL_VAL(' + MAX_REPL_VAL + ')');
+			return null;
+		}
+		repl_arr[vv0] = vv1;
+	}
+	return repl_arr;
+}
+
+function populate_main_ul_2(ul_id, jsn_pth_id){
+	if(CNF_JSN_DATA != null){
+		//alert('To change the proof refresh (F5) the page.');
+	}
+	if(CNF_JSN_DATA == null){
+		var jsn_txt_area = document.getElementById(jsn_pth_id);
+		var jsn_pth = jsn_txt_area.value.trim();
+		
+		CNF_JSN_DATA = load_json_file(jsn_pth);
+		if(CNF_JSN_DATA == null){
+			alert('ERROR. Cannot-load-file ' + jsn_pth);
+			return;
+		}
+		
+		var bj_proof_nm = CNF_JSN_DATA.ben_jose_proof;
+		if(bj_proof_nm === undefined){
+			alert('ERROR. Cannot-find-ben_jose_proof-in-cnf-json-data');
+			return;
+		}
+		var dir_pth = get_dir(jsn_pth);
+		var bj_proof_pth = dir_pth + bj_proof_nm;
+		
+		//alert('v_perm=' +  JSON.stringify(CNF_JSN_DATA.vars_permutation, null, 2));
+
+		CNF_VARS_REPL_ARR = calc_repl_arr(CNF_JSN_DATA.vars_permutation);
+		CNF_CCLS_REPL_ARR = calc_repl_arr(CNF_JSN_DATA.ccls_permutation);
+
+		//alert('v_repl=' +  JSON.stringify(CNF_VARS_REPL_ARR, null, 2));
+		
+		populate_ul(ul_id, bj_proof_pth);
+	}
 }
 

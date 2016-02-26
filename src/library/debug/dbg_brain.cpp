@@ -1440,6 +1440,8 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 	long qti = ps_ti;
 	
 	bool h_cand = (qu_candidate_nmp != NULL_PT);
+
+	bool is_uron = is_qu_uniron();
 	
 	quanton& opp = opposite();
 	
@@ -1474,6 +1476,9 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 		if(qlv == 0){ os << "#"; }
 		if(is_end_nmp){ os << "E"; }
 		if(! h_src && h_chg){ os << "L" << qlv; }
+		if(is_uron){
+			os << "U"; 
+		}
 		if(h_cand){ 
 			os << "C"; 
 			os << qu_candidate_nmp->na_index;

@@ -189,7 +189,7 @@ deducer::find_next_source()
 		set_notes_of(nxt_src->ne_fibres, false);
 	}
 
-	BRAIN_CK_PRT((nkpr.dk_tot_noted > 0), 
+	BRAIN_CK_PRT(get_de_brain().in_root_lv() || (nkpr.dk_tot_noted > 0), 
 				 os << "________"  << bj_eol;
 				 os << "tot_no=" << nkpr.dk_tot_noted << bj_eol;
 				 os << "cur_qu=" << de_ref.get_curr_quanton() << bj_eol;
@@ -278,28 +278,30 @@ deducer::fill_rsn(reason& rsn){
 	notekeeper& nkpr = de_nkpr;
 	brain& brn = get_de_brain();
 	
-	quanton* pt_qua = qlr.get_curr_quanton();
-	BRAIN_CK(pt_qua != NULL_PT);
-	
-	quanton& qua = *pt_qua;
-	quanton& opp = qua.opposite(); 
-
-	BRAIN_CK(is_end_of_rsn(brn.in_root_lv()));
-	BRAIN_CK(opp.qlevel() == nkpr.dk_note_layer);
-	BRAIN_CK(opp.get_charge() == cg_negative);
+	bool br_in_root = (brn.in_root_lv());
+	BRAIN_CK(is_end_of_rsn(br_in_root));
 
 	rsn.init_reason();
 	
-	rsn.rs_motives.set_cap(nkpr.dk_tot_noted + 1);
+	if(! br_in_root){
+		quanton* pt_qua = qlr.get_curr_quanton();
+		BRAIN_CK(pt_qua != NULL_PT);
+		
+		quanton& qua = *pt_qua;
+		quanton& opp = qua.opposite(); 
 
+		BRAIN_CK(opp.qlevel() == nkpr.dk_note_layer);
+		BRAIN_CK(opp.get_charge() == cg_negative);
+		
+		BRAIN_CK(! nkpr.nk_has_note(opp));
+		rsn.rs_forced = &opp;
+	}
+	
+	rsn.rs_motives.set_cap(nkpr.dk_tot_noted + 1);
 	nkpr.dk_quas_lyrs.get_all_ordered_quantons(rsn.rs_motives);
 
 	rsn.rs_target_level = find_max_level(rsn.rs_motives);
 
-	BRAIN_CK(! nkpr.nk_has_note(opp));
-	rsn.rs_forced = &opp;
-	
-	bool br_in_root = (brn.in_root_lv());
 
 	BRAIN_CK(br_in_root || (rsn.rs_target_level < nkpr.dk_note_layer));
 	BRAIN_CK(ck_motives(brn, rsn.rs_motives));
@@ -312,7 +314,7 @@ deducer::fill_rsn(reason& rsn){
 	
 	if(br_in_root){
 		BRAIN_CK(rsn.rs_target_level == ROOT_LEVEL);
-		BRAIN_CK(rsn.rs_motives.is_empty());
+		//BRAIN_CK(rsn.rs_motives.is_empty());
 		rsn.rs_target_level = INVALID_LEVEL;
 	}
 }
@@ -523,7 +525,7 @@ deducer::find_all_to_write(row<neuromap*>& to_wrt){
 	for(long ii = 0; ii < all_noted.size(); ii++){
 		prop_signal& q_sig = all_noted[ii];
 		BRAIN_CK_PRT(((q_sig.ps_source == NULL_PT) || (! q_sig.ps_source->ne_original) ||
-			is_ticket_eq(q_sig.ps_source->ne_to_wrt_tk, curr_wrt_tk)), 
+			is_tk_equal(q_sig.ps_source->ne_to_wrt_tk, curr_wrt_tk)), 
 			DBG_PRT_ABORT(brn);
 			brn.print_trail(os);
 			neuron* nn0 = q_sig.ps_source;
@@ -790,14 +792,14 @@ deducer::is_de_end_of_neuromap(){
 
 bool
 quanton::is_qu_to_upd_wrt_tk(){
-	bool is_e = is_ticket_eq(qu_upd_to_wrt_tk, qu_charge_tk);
+	bool is_e = is_tk_equal(qu_upd_to_wrt_tk, qu_charge_tk);
 	return is_e;
 }
 
 bool
 neuron::is_ne_to_wrt(){
 	BRAIN_CK(ck_wrt_qu0(false));
-	bool is_e = is_ticket_eq(ne_upd_to_wrt_tk, ne_fibres[0]->qu_charge_tk);
+	bool is_e = is_tk_equal(ne_upd_to_wrt_tk, ne_fibres[0]->qu_charge_tk);
 	return is_e;
 }
 
@@ -903,9 +905,18 @@ deducer::is_end_of_rsn(bool in_roo){
 	BRAIN_CK(num_ly_notes >= 0);
 	bool is_end = (num_ly_notes == 0);
 	if(in_roo){
+		/*
 		quanton* pt_qua = de_ref.get_curr_quanton();
 		BRAIN_CK(pt_qua != NULL_PT);
 		is_end = ! pt_qua->qu_proof_tk.is_tk_virgin();
+		
+		qlayers_ref tst_rf = de_ref;
+		quanton* nx_qua = tst_rf.dec_curr_quanton();
+		is_end = (nx_qua == NULL_PT);
+		*/
+		
+		is_end = ! de_ref.has_curr_quanton();
+		//BRAIN_CK(de_ref.has_curr_quanton());
 	}
 	return is_end;
 }
@@ -931,7 +942,7 @@ deducer::deduce(deduction& dct, long max_lv)
 		BRAIN_CK(qlr.has_curr_quanton());
 		find_next_source();
 	}
-	BRAIN_CK(qlr.has_curr_quanton());
+	BRAIN_CK(roo || qlr.has_curr_quanton());
 	
 	fill_rsn(rsn);
 

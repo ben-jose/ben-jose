@@ -232,7 +232,7 @@ void	dbg_get_all_positons(row_quanton_t& all_quas, row_quanton_t& all_pos,
 
 bool		ck_motives(brain& brn, row_quanton_t& mots);
 
-bool 		is_ticket_eq(ticket& x, ticket& y);
+bool 		is_tk_equal(ticket& x, ticket& y);
 
 charge_t 	negate_trinary(charge_t val);
 
@@ -309,7 +309,7 @@ class ticket {
 
 inline
 bool
-is_ticket_eq(ticket& x, ticket& y){
+is_tk_equal(ticket& x, ticket& y){
 	if(x.tk_recoil != y.tk_recoil){ return false; }
 	if(x.tk_level != y.tk_level){ return false; }
 	return true;
@@ -874,6 +874,14 @@ class quanton {
 	
 	bool		is_qu_to_upd_wrt_tk();
 	
+	bool		is_qu_uniron(){
+		if(! in_root_qlv()){
+			return false;
+		}
+		bool is_u = ! qu_proof_tk.is_tk_virgin();
+		return is_u;
+	}
+	
 	cy_quk_t	get_cy_kind();
 	
 	bj_ostream&		dbg_qu_print_col_cy_edge(bj_ostream& os, long& consec, long neu_idx);
@@ -896,11 +904,11 @@ class coloring {
 	brain*			co_brn;
 		
 	row_quanton_t	co_quas;
-	row<long>		co_qua_colors;
+	row_long_t		co_qua_colors;
 	bool			co_all_qua_consec;
 
 	row_neuron_t	co_neus;
-	row<long>		co_neu_colors;
+	row_long_t		co_neu_colors;
 	bool			co_all_neu_consec;
 
 	coloring(brain* pt_brn = NULL_PT){
@@ -953,7 +961,7 @@ class coloring {
 	void	dbg_set_brain_coloring();
 	
 	void	save_colors_from(sort_glb& neus_srg, sort_glb& quas_srg, tee_id_t consec_kk, 
-								bool unique_ccls = true);
+								bool unique_ccls);
 	
 	void	load_colors_into(sort_glb& neus_srg, sort_glb& quas_srg, 
 				dbg_call_id dbg_id, neuromap* nmp = NULL_PT, bool calc_phi_id = false);
@@ -1506,14 +1514,11 @@ class prop_signal {
 		return (c1 && c2 && c3);
 	}
 	
-	bool	is_uniron(){
+	bool	is_ps_uniron(){
 		if(ps_quanton == NULL_PT){
 			return false;
 		}
-		if(! ps_quanton->in_root_qlv()){
-			return false;
-		}
-		bool is_u = ! ps_quanton->qu_proof_tk.is_tk_virgin();
+		bool is_u = ps_quanton->is_qu_uniron();
 		BRAIN_CK(! is_u || (ps_source == NULL_PT));
 		return is_u;
 	}
@@ -2171,6 +2176,7 @@ class neuromap {
 	long			na_to_wrt_trace_idx;
 	ch_string		na_tauto_pth;
 	bool			na_wrt_ok;
+	coloring		na_wrt_col;
 	
 	BRAIN_DBG(
 		ticket				na_dbg_candidate_tk;
@@ -2240,6 +2246,7 @@ class neuromap {
 		na_to_wrt_trace_idx = INVALID_IDX;
 		na_tauto_pth = INVALID_PATH;
 		na_wrt_ok = false;
+		na_wrt_col.init_coloring();
 
 		DBG(
 			na_dbg_candidate_tk.init_ticket();

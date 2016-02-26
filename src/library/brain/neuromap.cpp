@@ -76,7 +76,7 @@ bool
 neuromap::map_write(bool force_full){
 	DBG_COMMAND(5, return false); // NEVER_WRITE
 	
-	BRAIN_CK(is_ticket_eq(na_candidate_tk, na_dbg_candidate_tk));
+	BRAIN_CK(is_tk_equal(na_candidate_tk, na_dbg_candidate_tk));
 	nmp_reset_write();
 	//force_full = true; // when debugging
 	if(! force_full){
@@ -163,7 +163,7 @@ neuromap::map_get_all_cov_neus(row_neuron_t& all_neus, bool with_clear, bool ski
 
 void
 neuromap::release_candidate(){
-	BRAIN_CK(is_ticket_eq(na_candidate_tk, na_dbg_candidate_tk));
+	BRAIN_CK(is_tk_equal(na_candidate_tk, na_dbg_candidate_tk));
 	BRAIN_CK(na_candidate_qua != NULL_PT);
 	BRAIN_CK(na_candidate_qua->qu_candidate_nmp == this);
 	
@@ -183,7 +183,7 @@ neuromap::release_candidate(){
 
 void
 neuromap::full_release(){
-	BRAIN_CK(is_ticket_eq(na_candidate_tk, na_dbg_candidate_tk));
+	BRAIN_CK(is_tk_equal(na_candidate_tk, na_dbg_candidate_tk));
 	BRAIN_CK(! nmp_is_cand(false));
 
 	DBG_PRT(53, os << " RELEASED nmp=" << dbg_na_id() << "\n";
@@ -212,11 +212,18 @@ coloring::save_colors_from(sort_glb& neus_srg, sort_glb& quas_srg, tee_id_t cons
 		quas_srg.stab_mutual_walk();
 	}
 
-	if(consec_kk != tid_qua_id){
-		co_all_neu_consec = srt_row_as_colors<neuron>(neus_srg, neus_srg.sg_step_sortees, 
-												co_neus, co_neu_colors, consec_kk, 
-												unique_ccls);
+	//bool do_neus = true;
+	tee_id_t neu_kk = consec_kk;
+	if(consec_kk == tid_qua_id){
+		//do_neus = false;
+		neu_kk = tid_tee_consec;
+		unique_ccls = true;
 	}
+	//if(do_neus){
+		co_all_neu_consec = srt_row_as_colors<neuron>(neus_srg, neus_srg.sg_step_sortees, 
+												co_neus, co_neu_colors, neu_kk, 
+												unique_ccls);
+	//}
 	co_all_qua_consec = srt_row_as_colors<quanton>(quas_srg, quas_srg.sg_step_sortees, 
 												   co_quas, co_qua_colors, consec_kk, false);
 
@@ -1994,7 +2001,7 @@ neuromap::dbg_is_watched(){
 #ifdef FULL_DEBUG
 	brain& brn = get_brn();
 	bool is_w_1 = (brn.br_dbg_watched_nmp_idx == na_index);
-	bool is_w_2 = is_ticket_eq(brn.br_dbg_watched_nmp_tk, na_candidate_tk);
+	bool is_w_2 = is_tk_equal(brn.br_dbg_watched_nmp_tk, na_candidate_tk);
 	is_w = (is_w_1 && is_w_2);
 #endif
 	return is_w;
@@ -2098,7 +2105,7 @@ neuromap::map_prepare_mem_oper(mem_op_t mm){
 
 	//long num_var = na_guide_tot_vars;
 	BRAIN_CK(! guide_ne_srg.sg_one_ccl_per_ss);
-	canon_cnf& gui_cnf = guide_ne_srg.get_final_cnf(skg, false, false);
+	canon_cnf& gui_cnf = guide_ne_srg.get_final_cnf(skg, false);
 
 	BRAIN_CK(gui_cnf.cf_dims.dd_tot_vars == 0);
 	//BRAIN_CK(! gui_cnf.cf_phdat.has_ref());
@@ -2151,14 +2158,22 @@ neuromap::map_prepare_mem_oper(mem_op_t mm){
 
 	tauto_ne_srg.stab_mutual_unique(tauto_qu_srg, this);
 	
+	solver& slv = brn.get_solver();
+	if((mm == mo_save) && slv.slv_prms.sp_write_proofs){
+		na_wrt_col.save_colors_from(tauto_ne_srg, tauto_qu_srg, tid_qua_id, true);
+		
+		//BRAIN_CK(na_dbg_tauto_col.co_quas.equal_to(na_wrt_col.co_quas));
+		//BRAIN_CK(na_dbg_tauto_col.co_qua_colors.equal_to(na_wrt_col.co_qua_colors));
+	}
+
 	DBG(
-		na_dbg_tauto_col.save_colors_from(tauto_ne_srg, tauto_qu_srg, tid_qua_id);
+		na_dbg_tauto_col.save_colors_from(tauto_ne_srg, tauto_qu_srg, tid_qua_id, true);
 		coloring pos_tau_col(&brn);
-		pos_tau_col.save_colors_from(tauto_ne_srg, tauto_qu_srg, tid_tee_consec);
+		pos_tau_col.save_colors_from(tauto_ne_srg, tauto_qu_srg, tid_tee_consec, true);
 		bool tau_consc = dbg_all_consec(pos_tau_col.co_qua_colors);
 	);
 	BRAIN_CK(tau_consc); 
-
+	
 	BRAIN_CK_PRT((tauto_qu_srg.sg_step_all_consec), 
 		brn.dbg_prt_margin(os);
 		os << "______________ \n ABORT_DATA \n"; 
@@ -2202,6 +2217,7 @@ neuromap::map_prepare_wrt_cnfs(mem_op_t mm, ch_string quick_find_ref, row_str_t&
 	skeleton_glb& skg = brn.get_skeleton();
 	sort_glb& guide_ne_srg = brn.br_guide_neus_srg;
 	sort_glb& tauto_ne_srg = brn.br_tauto_neus_srg;
+	//sort_glb& tauto_qu_srg = brn.br_tauto_quas_srg;
 	
 	// init guide tees
 	
@@ -2211,8 +2227,8 @@ neuromap::map_prepare_wrt_cnfs(mem_op_t mm, ch_string quick_find_ref, row_str_t&
 	// get final tauto cnf
 	
 	BRAIN_CK(tauto_ne_srg.sg_one_ccl_per_ss);
-	canon_cnf& tauto_cnf = tauto_ne_srg.get_final_cnf(skg, true, false);
-
+	canon_cnf& tauto_cnf = tauto_ne_srg.get_final_cnf(skg, true);
+	
 	dbg_shas.push(tauto_cnf.cf_sha_str + "\n");
 
 	// init tauto tees

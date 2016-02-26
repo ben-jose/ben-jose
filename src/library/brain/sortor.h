@@ -793,7 +793,7 @@ public:
 	void		stab_mutual_end(sort_glb& mates_srg, bool unique_ccls);
 	void		stab_mutual_walk();
 	
-	canon_cnf&	get_final_cnf(skeleton_glb& skg, bool sorted_cnf, bool one_ccl_per_ss, 
+	canon_cnf&	get_final_cnf(skeleton_glb& skg, bool sorted_cnf, 
 					long precalc_tot_vars = 0);
 
 	bool		base_path_exists(skeleton_glb& skg);

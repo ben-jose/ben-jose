@@ -51,19 +51,28 @@ ch_string proof_get_tk_dir_path(ch_string pth_pref, ticket& pf_tk);
 ch_string proof_get_tk_file_name(ticket& pf_tk);
 ch_string proof_get_tk_html_file_name(ticket& pf_tk);
 
+void proof_do_res_step(brain& brn, row_quanton_t& curr_res, prop_signal& curr_ps);
+
 long proof_get_trace_idx_of(deduction& dct, long to_wrt_idx);
 void proof_write_all_json_files_for(deduction& dct);
 void proof_write_json_file_for(deduction& dct, long to_wrt_idx, long prv_wrt_idx);
-void proof_append_ps(row<char>& json_str, prop_signal& the_sig, bool& is_fst_ps, 
-			ch_string& pth_pref, row<ch_string>& all_to_move);
+void proof_append_ps(brain& brn, row<char>& json_str, prop_signal& the_sig, bool& is_fst_ps, 
+			ch_string& pth_pref, ticket& pf_tk, row<ch_string>& all_to_move);
 void proof_append_uniron(row<char>& json_str, prop_signal& the_sig, bool& is_fst_ps, 
-			ch_string& pth_pref, row<ch_string>& all_to_move);
-void proof_append_lits(row<char>& json_str, row_quanton_t& all_quas);
-void proof_append_neu(row<char>& json_str, neuron* neu, ch_string& pth_pref, 
-			row<ch_string>& all_to_move);
+			ch_string& pth_pref, ticket& pf_tk, row<ch_string>& all_to_move);
+void proof_append_neu_lits(brain& brn, row<char>& json_str, row_quanton_t& all_quas);
+void proof_append_lits(brain& brn, row<char>& json_str, row_quanton_t& all_quas);
+void proof_append_neu(brain& brn, row<char>& json_str, neuron* neu, 
+			ch_string& pth_pref, ticket& pf_tk, row<ch_string>& all_to_move);
 void proof_append_qua(row<char>& json_str, quanton* qua);
 
-void proof_write_html_file_for(ch_string end_dir_pth, deduction& dct);
+//void proof_write_html_file_for(ch_string end_dir_pth, deduction& dct, ticket& pf_tk);
+
+void proof_write_proof_json_file_for(neuromap& nmp, ch_string os_end_jsn_pth, ticket& pf_tk);
+
+void proof_move_all_to_mv(deduction& dct, ch_string& pf_dir_pth, row<ch_string>& all_to_move);
+
+void proof_write_top_html_file(ch_string the_pth);
 
 #endif		// PROOF_FUNCS_H
 
