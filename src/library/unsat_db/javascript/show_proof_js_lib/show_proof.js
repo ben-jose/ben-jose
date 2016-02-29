@@ -22,6 +22,10 @@ var li_2_templ = `
 	</li>
 `;
 
+var a_lit_templ = "<a class='{vr_id}'>{lit}</a>";
+var a_ref_main_cla_templ = "<li><a href='#{cla_id}'>{all_lits}</a></li>";
+var a_main_cla_templ = "<a name='{cla_id}'>[{all_lits}]</a>";
+
 function get_dir(full_pth){
 	var dir_pth = full_pth.substring(0, full_pth.lastIndexOf("/")+1);
 	return dir_pth;
@@ -56,7 +60,7 @@ function get_repl_val(val_in, repl_arr){
 	return val_out;
 }
 
-function replace_vals(orig_arr, repl_arr){
+function replace_vals(orig_arr, repl_arr, out_pairs){
 	if(repl_arr === undefined){
 		return orig_arr;
 	}
@@ -74,10 +78,21 @@ function replace_vals(orig_arr, repl_arr){
 		}
 		if(val_out != 0){
 			out_arr.push(val_out);
+			if(! (out_pairs === undefined)){
+				var id_repl = Math.abs(val_in);
+				var pp = [val_out, id_repl];
+				out_pairs.push(pp);
+			}
 		}
 	}
 	if(err_str != null){
+		if(! (out_pairs === undefined)){
+			out_pairs = [];
+		}
 		return err_str;
+	}
+	if(is_array(out_arr)){
+		sort_nums(out_arr);
 	}
 	return out_arr;
 }   
@@ -100,15 +115,16 @@ function set_elem_html(elem_id, htm_str){
 	fi1.innerHTML = htm_str;
 }
 
-function sort_nums(neu){
-	neu.sort(function(a, b){return a-b});
+function sort_nums(arr_nums){
+	arr_nums.sort(function(aa, bb){return aa-bb});
+}
+
+function sort_pairs(arr_pairs){
+	arr_pairs.sort(function(pp1, pp2){return pp1[0]-pp2[0]});
 }
 
 function set_neu_str(elem_id, neu_arr, repl_arr){
 	rr = replace_vals(neu_arr, repl_arr);
-	if(is_array(rr)){
-		sort_nums(rr);
-	}
 	var fi1 = document.getElementById(elem_id);
 	fi1.innerHTML = "[" + rr + "]";
 }   
@@ -252,12 +268,16 @@ function populate_ul(ul_id, jsn_pth){
 					alert(s_lits);
 					return;
 				}
-				sort_nums(s_lits);
+				
+				var cla_id_str = '' + get_repl_val(ch_stp.neu_idx, CNF_CCLS_REPL_ARR);
 	
 				var the_lits_str = "[" + s_lits + "]";
 				var neu_jsn = ch_stp.neu_jsn;
 				if(neu_jsn === undefined){
-					var li_elem_2 = li_1_templ.supplant({lb_txt: the_lits_str});
+					//var li_elem_2 = li_1_templ.supplant({lb_txt: the_lits_str});
+					var li_elem_2 = a_ref_main_cla_templ.supplant(
+						{all_lits: the_lits_str, cla_id: cla_id_str});
+					
 					htm_str.push(li_elem_2);
 				} else {
 					var full_pth = dir_pth + neu_jsn;
@@ -381,8 +401,52 @@ function populate_main_ul_2(ul_id, jsn_pth_id){
 		CNF_CCLS_REPL_ARR = calc_repl_arr(CNF_JSN_DATA.ccls_permutation);
 
 		//alert('v_repl=' +  JSON.stringify(CNF_VARS_REPL_ARR, null, 2));
+
+		var cnf_txt = document.createTextNode("DIMACS CNF");
+		document.body.appendChild(cnf_txt);
+		
+		var cnf_tit = document.getElementById('main_cnf_title');
+		cnf_tit.innerHTML = 'The CNF';
+		
+		var cnf_cont = document.getElementById('main_cnf_cont');
+		var cnf_tb = create_cnf_table();
+		cnf_cont.appendChild(cnf_tb);
+
+		var main_lb = document.getElementById('proof_label');
+		main_lb.innerHTML = 'The Proof';
 		
 		populate_ul(ul_id, bj_proof_pth);
 	}
+}
+
+function create_cnf_table(){
+	var bj_cnf = CNF_JSN_DATA.cnf;
+		
+	var tbl  = document.createElement('table');
+	//tbl.style.width  = '100px';
+	tbl.style.border = '1px solid black';
+
+	var num_rr = bj_cnf.length;
+	var num_cl = 1;
+	for(var ii = 0; ii < num_rr; ii++){
+		var tr = tbl.insertRow();
+		for(var jj = 0; jj < num_cl; jj++){
+			var td = tr.insertCell();
+			
+			var the_lits = bj_cnf[ii];
+			var s_lits = replace_vals(the_lits, CNF_VARS_REPL_ARR);
+			if(! is_array(s_lits)){
+				alert(s_lits);
+				return;
+			}
+			var the_lits_str = a_main_cla_templ.supplant(
+				{cla_id: '' + ii, all_lits: '' + s_lits}
+			);
+			
+			td.innerHTML = the_lits_str;
+			td.style.border = '1px solid black';
+		}
+	}
+	return tbl;
 }
 
