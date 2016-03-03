@@ -49,9 +49,9 @@ ch_string top_show_proof_html_code =
 "	<body> \n"
 "		<h1>Show proof</h1> \n"
 "		<textarea id='main_jsn_file' rows='3' \n"
-"		cols='70'>../CNF/replace/this/with/a/path/to/a/file/cnf_proof.jsn \n"
+"		cols='70'>/SKELETON/CNF/replace/this/with/a/path/to/a/file/cnf_proof.jsn \n"
 "		</textarea><br> \n"
-"		(the path must start with '../CNF/' and end with 'cnf_proof.jsn').<br> \n"
+"		(the path must start with '/SKELETON/CNF/' and end with 'cnf_proof.jsn').<br> \n"
 "		<ul class='collapsibleList'> \n"
 "			<li> \n"
 "				<label for='pru_lb'><a id='main_cnf_title'></a></label> \n"
@@ -125,7 +125,7 @@ proof_get_nmp_proof_path(neuromap& the_nmp){
 }
 
 ch_string 
-proof_get_tk_dir_path(ch_string pth_pref, ticket& pf_tk){
+proof_get_tk_dir_path(ch_string pth_pref, proof_tk& pf_tk){
 	ch_string tk_str = pf_tk.get_str();
 	if(pth_pref == SKG_INVALID_PTH){
 		return tk_str;
@@ -135,13 +135,13 @@ proof_get_tk_dir_path(ch_string pth_pref, ticket& pf_tk){
 }
 
 ch_string 
-proof_get_tk_file_name(ticket& pf_tk){
+proof_get_tk_file_name(proof_tk& pf_tk){
 	ch_string pf_f_nm = "proof_" + pf_tk.get_str() + ".jsn";
 	return pf_f_nm;
 }
 
 ch_string 
-proof_get_tk_html_file_name(ticket& pf_tk){
+proof_get_tk_html_file_name(proof_tk& pf_tk){
 	ch_string pf_f_nm = "proof_" + pf_tk.get_str() + ".htm";
 	return pf_f_nm;
 }
@@ -191,7 +191,7 @@ proof_get_trace_idx_of(deduction& dct, long to_wrt_idx){
 
 void
 proof_append_ps(brain& brn, row<char>& json_str, prop_signal& the_sig, bool& is_fst_ps, 
-				ch_string& pth_pref, ticket& pf_tk, row<ch_string>& all_to_move)
+				ch_string& prv_pf_pth, proof_tk& pf_tk, row<ch_string>& all_to_move)
 {
 	if(is_fst_ps){
 		is_fst_ps = false;
@@ -200,7 +200,7 @@ proof_append_ps(brain& brn, row<char>& json_str, prop_signal& the_sig, bool& is_
 	}
 			
 	canon_string_append(json_str, "{");
-	proof_append_neu(brn, json_str, the_sig.ps_source, pth_pref, pf_tk, all_to_move);
+	proof_append_neu(brn, json_str, the_sig.ps_source, prv_pf_pth, pf_tk, all_to_move);
 	canon_string_append(json_str, "\"va_r\": ");
 	proof_append_qua(json_str, the_sig.ps_quanton);
 	canon_string_append(json_str, "}\n");
@@ -243,18 +243,45 @@ proof_append_lits(brain& brn, row<char>& json_str, row_quanton_t& all_quas)
 }
 
 void 
-proof_append_neu(brain& brn, row<char>& json_str, neuron* neu, ch_string& pth_pref, 
-				 ticket& pf_tk, row<ch_string>& all_to_move)
+proof_append_neu(brain& brn, row<char>& json_str, neuron* neu, ch_string& prv_pf_pth, 
+				 proof_tk& pf_tk, row<ch_string>& all_to_move)
 {
+	ch_string invalid_pth = SKG_INVALID_PTH;
+	
 	if(neu == NULL_PT){
 		canon_string_append(json_str, "\"neu_lits\": ");
 		canon_string_append(json_str, "[],\n");
 		canon_string_append(json_str, "\"neu_idx\": \"0\",");
+		
+		bool has_pf = ! pf_tk.is_ptk_virgin();
+		bool has_prv_pth = (prv_pf_pth != invalid_pth);
+		//BRAIN_CK(! has_pf);
+		//BRAIN_CK(! has_prv_pth);
+		BRAIN_CK(has_pf == has_prv_pth);
+		if(has_prv_pth){
+			ch_string neu_full_file_pth = proof_add_paths(pf_tk.get_str(), 
+						proof_get_tk_file_name(pf_tk));
+			
+			DBG_PRT_WITH(115, brn, os << "LEARNING_PRV_NEU=\n";
+				os << " neu_full_jsn_pth=\n" << prv_pf_pth << "\n";
+				os << " neu_js_pth=" << neu_full_file_pth << "\n";
+				os << " pf_tk=" << pf_tk.get_str() << "\n";
+			);
+			
+			canon_string_append(json_str, "\"neu_type\": \"full\", \n");
+			canon_string_append(json_str, "\"neu_full_jsn_pth\": ");
+			canon_string_append(json_str, "\"");
+			canon_string_append(json_str, prv_pf_pth);
+			canon_string_append(json_str, "\",\n");
+
+			canon_string_append(json_str, "\"neu_jsn_pth\": ");
+			canon_string_append(json_str, "\"");
+			canon_string_append(json_str, neu_full_file_pth);
+			canon_string_append(json_str, "\",\n");
+			
+		}
 		return;
 	}
-	//BRAIN_DBG(brain* pt_brn = neu->get_dbg_brn());
-	//BRAIN_CK(pt_brn != NULL_PT);
-	//BRAIN_DBG(brain& brn = *pt_brn);
 			
 	proof_append_neu_lits(brn, json_str, neu->ne_fibres);
 	
@@ -263,32 +290,33 @@ proof_append_neu(brain& brn, row<char>& json_str, neuron* neu, ch_string& pth_pr
 	canon_long_append(json_str, neu->ne_index);
 	canon_string_append(json_str, "\",\n");
 	
-	ch_string invalid_pth = SKG_INVALID_PTH;
-	
 	if(! neu->ne_original){
-		ticket sub_pf_tk = neu->ne_proof_tk;
-		
-		if(! pf_tk.is_tk_virgin()){
-			sub_pf_tk = pf_tk;
-		}
-		
-		canon_string_append(json_str, "\"neu_jsn\": ");
-		canon_string_append(json_str, "\"");
-		//ch_string neu_full_dir_pth = proof_get_tk_dir_path(pth_pref, sub_pf_tk); 
+		proof_tk sub_pf_tk;
+		sub_pf_tk.init_with(neu->ne_proof_tk, INVALID_IDX);
 		ch_string neu_full_dir_pth = sub_pf_tk.get_str(); 
 		ch_string neu_full_file_pth = proof_add_paths(neu_full_dir_pth, 
 					proof_get_tk_file_name(sub_pf_tk));
+		
+		BRAIN_CK(! sub_pf_tk.is_ptk_virgin());
+		BRAIN_CK(pf_tk.is_ptk_virgin());
+		BRAIN_CK(prv_pf_pth == invalid_pth);
+		BRAIN_CK(! is_ptk_equal(pf_tk, sub_pf_tk));
+		
+		canon_string_append(json_str, "\"neu_type\": \"norm\", \n");
+		canon_string_append(json_str, "\"neu_jsn_pth\": ");
+		canon_string_append(json_str, "\"");
 		canon_string_append(json_str, neu_full_file_pth);
 		canon_string_append(json_str, "\",\n");
+
+		all_to_move.push(neu_full_dir_pth);
 		
-		if(! is_tk_equal(pf_tk, sub_pf_tk)){
-			all_to_move.push(neu_full_dir_pth);
-		}
-		
-		DBG_PRT_WITH(115, brn, os << "LEARNED_neu_in=\n";
-			os << neu_full_file_pth << "\n";
+		DBG_PRT_WITH(115, brn, os << "LEARNED_neu=";
+			os << " neu=" << neu << "\n";
+			os << " neu_js_pth=" << neu_full_file_pth << "\n";
 			os << " pf_tk=" << pf_tk.get_str() << "\n";
 			os << " sub_pf_tk=" << sub_pf_tk.get_str() << "\n";
+			os << " ne_proof_tk=" << neu->ne_proof_tk.get_str() << "\n";
+			os << " ne_candidate_tk=" << neu->ne_candidate_tk.get_str() << "\n";
 		);
 	}
 }
@@ -326,13 +354,11 @@ proof_write_all_json_files_for(deduction& dct){
 		);
 	}
 	proof_write_json_file_for(dct, INVALID_IDX, pp);
-	
-	//br_charge_trail.get_qu_layer(
 }
 
 void
 proof_append_uniron(row<char>& json_str, prop_signal& the_sig, bool& is_fst_ps, 
-				ch_string& pth_pref, ticket& pf_tk, row<ch_string>& all_to_move)
+				row<ch_string>& all_to_move)
 {
 	if(is_fst_ps){
 		is_fst_ps = false;
@@ -345,8 +371,10 @@ proof_append_uniron(row<char>& json_str, prop_signal& the_sig, bool& is_fst_ps,
 	quanton* uqu = the_sig.ps_quanton;
 	BRAIN_CK(uqu != NULL_PT);
 	
-	BRAIN_CK(! uqu->qu_proof_tk.is_tk_virgin());	
-	ticket& sub_pf_tk = uqu->qu_proof_tk;
+	proof_tk sub_pf_tk;
+	sub_pf_tk.init_with(uqu->qu_proof_tk, INVALID_IDX);
+	
+	BRAIN_CK(! sub_pf_tk.is_ptk_virgin());	
 	
 	canon_string_append(json_str, "\"neu_lits\": [\"");
 	canon_long_append(json_str, uqu->qu_id);
@@ -354,9 +382,11 @@ proof_append_uniron(row<char>& json_str, prop_signal& the_sig, bool& is_fst_ps,
 	
 	canon_string_append(json_str, "\"neu_idx\": \"0\", \n");
 	
-	canon_string_append(json_str, "\"neu_jsn\": ");
+	canon_string_append(json_str, "\"neu_type\": \"uniron\", \n");
+	
+	canon_string_append(json_str, "\"neu_jsn_pth\": ");
 	canon_string_append(json_str, "\"");
-	//ch_string neu_full_dir_pth = proof_get_tk_dir_path(pth_pref, sub_pf_tk); 
+	
 	ch_string neu_full_dir_pth = sub_pf_tk.get_str(); 
 	ch_string neu_full_file_pth = proof_add_paths(neu_full_dir_pth, 
 				proof_get_tk_file_name(sub_pf_tk));
@@ -367,115 +397,122 @@ proof_append_uniron(row<char>& json_str, prop_signal& the_sig, bool& is_fst_ps,
 	proof_append_qua(json_str, uqu);
 	canon_string_append(json_str, "}\n");
 
-	if(! is_tk_equal(pf_tk, sub_pf_tk)){
-		all_to_move.push(neu_full_dir_pth);
-	}
+	all_to_move.push(neu_full_dir_pth);
 }
 
-/*
+void proof_write_permutation(row<char>& json_str, neuromap& nmp)
+{
+	brain& brn = nmp.get_brn();
+	coloring& col = nmp.na_wrt_col;
+	BRAIN_CK(col.ck_cols());
+	
+	row_quanton_t& all_qua = col.co_quas;
+	row_long_t& all_qu_col = col.co_qua_colors;
+	
+	row_neuron_t& all_neu = col.co_neus;
+	
+	canon_string_append(json_str, "\t\"neuromap_ccls\" : [\n");
+	for(long aa = 0; aa < all_neu.size(); aa++){
+		BRAIN_CK(all_neu[aa] != NULL_PT);
+		neuron& neu = *(all_neu[aa]);
+		canon_string_append(json_str, "\t\t");
+		if(aa > 0){
+			canon_string_append(json_str, ",");
+		}
+		proof_append_lits(brn, json_str, neu.ne_fibres);
+		canon_string_append(json_str, "\n");
+	}
+	canon_string_append(json_str, "\t],\n");
+	
+	ch_string var_perm_fld = "\t\"vars_permutation\" : [\n";
+	canon_string_append(json_str, var_perm_fld);
+	bool is_fst_qu = true;
+	for(long aa = 0; aa < all_qua.size(); aa++){
+		long q_col = all_qu_col[aa];
+		if(q_col <= 0){
+			continue;
+		}
+		BRAIN_CK(all_qua[aa] != NULL_PT);
+		quanton& qua = *(all_qua[aa]);
+		
+		long qu_id = qua.qu_id;
+		BRAIN_CK(qu_id != 0);
+		if(qu_id < 0){
+			qu_id = -qu_id;
+			q_col = -q_col;
+		}
+		
+		canon_string_append(json_str, "\t\t");
+		if(! is_fst_qu){
+			canon_string_append(json_str, ",");
+		}
+		if(is_fst_qu){ is_fst_qu = false; }
+		
+		canon_string_append(json_str, "[\"");
+		canon_long_append(json_str, qu_id);
+		canon_string_append(json_str, "\", \"");
+		canon_long_append(json_str, q_col);
+		canon_string_append(json_str, "\"]\n");
+	}
+	canon_string_append(json_str, "\t],\n");
+	
+	ch_string cla_perm_fld = "\t\"ccls_permutation\" : [\n";
+	canon_string_append(json_str, cla_perm_fld);
+	bool is_fst_ne = true;
+	for(long aa = 0; aa < all_neu.size(); aa++){
+		BRAIN_CK(all_neu[aa] != NULL_PT);
+		neuron& neu = *(all_neu[aa]);
+		
+		long ne_id = neu.ne_index;
+		//long n_col = all_ne_col[aa];
+
+		canon_string_append(json_str, "\t\t");
+		if(! is_fst_ne){
+			canon_string_append(json_str, ",");
+		}
+		if(is_fst_ne){ is_fst_ne = false; }
+		
+		canon_string_append(json_str, "[\"");
+		canon_long_append(json_str, ne_id);
+		canon_string_append(json_str, "\", \"");
+		canon_long_append(json_str, aa);
+		canon_string_append(json_str, "\"]\n");
+	}
+	canon_string_append(json_str, "\t]\n");
+}
+
 void
-proof_write_html_file_for(ch_string end_dir_pth, deduction& dct, ticket& pf_tk){
-	brain& brn = dct.get_brn();
+proof_write_bj_proof_for(neuromap& nmp, proof_tk& pf_tk)
+{
+	brain& brn = nmp.get_brn();
 	skeleton_glb& skg = brn.get_skeleton();
 	
-	ch_string os_end_dir_pth = skg.as_full_path(end_dir_pth);
-	ch_string os_htm_pth = proof_add_paths(os_end_dir_pth, 
-							proof_get_tk_html_file_name(pf_tk));
+	ch_string rel_pf_dir_pth = pf_tk.get_str();
+	ch_string rel_pf_pth = proof_add_paths(rel_pf_dir_pth, proof_get_tk_file_name(pf_tk));
+	
+	row<char> json_str;
+	canon_string_append(json_str, "{\n");
+	
+	canon_string_append(json_str, "\t\"neuromap_proof\" : \"");
+	canon_string_append(json_str, rel_pf_pth);
+	canon_string_append(json_str, "\",\n");
 
-	ch_string loc_sh_pf_js_pth = proof_add_paths(end_dir_pth, SKG_SHOW_PROOF_JS_SUBDIR);
-	ch_string rel_js_pth = get_relative_path(end_dir_pth, skg.kg_show_proof_js_path);
+	proof_write_permutation(json_str, nmp);
 	
-	ch_string os_js_pth = skg.as_full_path(loc_sh_pf_js_pth);
-	if(! file_exists(os_js_pth)){
-		bool lk_ok = path_create_link(rel_js_pth, os_js_pth);
-		SKELETON_CK(lk_ok);
-	}
-	
-	bj_ofstream of;
-	bj_ofstream_open(os_htm_pth, of, false);
-	
-	ch_string htm_tit = "tit_html";
-	
-	of << HTMi_html << bj_eol;
-	of << "\t" << HTMi_head << bj_eol;
-	of << "\t\t" << HTMi_title << htm_tit << HTMe_title << bj_eol;
-	
-	ch_string dir_str = SKG_SHOW_PROOF_JS_SUBDIR;
-	of << "\t\t " << HTMi_src << dir_str << "/show_proof.js" << HTMe_src << bj_eol;
-	of << "\t\t " << HTM_css(dir_str) << "\n";
-	
-	of << "\t" << HTMe_head << bj_eol;
-	of << "\t" << HTMi_body << bj_eol;
-	
-	of << "\t" << HTMi_proof_ul << "\n";
-	
-	// THE BODY
-	ch_string id_str = pf_tk.get_str();
-	ch_string pf_f_nm = proof_get_tk_file_name(pf_tk);
-	
-	ch_string nd_id = "nd_" + id_str + "_id";
-	ch_string nd_lst = "nd_" + id_str + "_lst";
-	ch_string jsn_file = id_str + "/" + pf_f_nm;
-	ch_string lbl_str = "UNSATISFABILITY PROOF";
-	of << HTM_proof_li(nd_id, nd_lst, jsn_file, lbl_str) << "\n";
+	canon_string_append(json_str, "}\n\n");
 
-	of << "\t" << HTMe_proof_ul << "\n";
+	ch_string os_bj_nmp_pf_dir_pth = skg.as_full_path(proof_get_nmp_proof_path(nmp));
+	ch_string os_bj_nmp_pf_pth = proof_add_paths(os_bj_nmp_pf_dir_pth, SKG_END_JSN_NAME);
 	
-	of << "\t" << HTMe_body << bj_eol;
-	of << HTMe_html << bj_eol;
+	write_file(os_bj_nmp_pf_pth, json_str, true); //OS_OPER
 	
-	of.flush();
-	of.close();
-
-	DBG_PRT_WITH(115, brn, os << "Wrote_htm_file=\n" << os_htm_pth);
-}
- 
-ch_string
-proof_get_unirons_path(skeleton_glb& skg, bool& is_tmp){
-	ch_string unirons_pth = proof_add_paths(skg.kg_tmp_proof_path, SKG_UNIRONS_SUBDIR);
-	ch_string os_unirons_pth = skg.as_full_path(unirons_pth);
-	is_tmp = true;
-	if(file_exists(os_unirons_pth)){
-		ch_string unirons_ref = proof_add_paths(skg.kg_tmp_proof_path, SKG_UNIRONS_REF_FNAM);
-		ch_string os_unirons_ref = skg.as_full_path(unirons_ref);
-		if(file_exists(os_unirons_ref)){
-			is_tmp = false;
-			unirons_pth = skg.ref_read(unirons_ref);
-		}
-	} else {
-		path_create(os_unirons_pth);
-	}
-	return unirons_pth;
+	DBG_PRT_WITH(115, brn, os << "Wrote FINAL_PROOF_JSN=\n" << os_bj_nmp_pf_pth);
 }
 
 void
-proof_create_final_unirons_path(skeleton_glb& skg, ch_string end_dir_pth){
-	ch_string unirons_pth = proof_add_paths(skg.kg_tmp_proof_path, SKG_UNIRONS_SUBDIR);
-	ch_string os_unirons_pth = skg.as_full_path(unirons_pth);
-
-	BRAIN_CK(file_exists(os_unirons_pth));
-	
-	ch_string final_unirons_pth = proof_add_paths(end_dir_pth, SKG_UNIRONS_SUBDIR);
-	ch_string os_final_unirons_pth = skg.as_full_path(final_unirons_pth);
-
-	BRAIN_CK(file_exists(skg.as_full_path(end_dir_pth)));
-	bool ok1 = rename_file(os_unirons_pth, os_final_unirons_pth); //OS_OPER
-	MARK_USED(ok1);
-	BRAIN_CK(ok1);
-	
-	bool lk_ok = path_create_link(os_final_unirons_pth, os_unirons_pth);
-	SKELETON_CK(lk_ok);
-	
-	ch_string unirons_ref = proof_add_paths(skg.kg_tmp_proof_path, SKG_UNIRONS_REF_FNAM);
-	ch_string os_unirons_ref = skg.as_full_path(unirons_ref);
-	
-	BRAIN_CK(! file_exists(os_unirons_ref));
-	skg.ref_write(unirons_ref, final_unirons_pth);
-	BRAIN_CK(file_exists(os_unirons_ref));
-}*/
-
-void
-proof_move_all_to_mv(deduction& dct, ch_string& pf_dir_pth, row<ch_string>& all_to_move){
+proof_move_all_to_mv(deduction& dct, ch_string& pf_dir_pth, 
+					 row<ch_string>& all_to_move, proof_tk& pf_tk)
+{
 	brain& brn = dct.get_brn();
 	skeleton_glb& skg = brn.get_skeleton();
 
@@ -494,6 +531,7 @@ proof_move_all_to_mv(deduction& dct, ch_string& pf_dir_pth, row<ch_string>& all_
 	);
 	
 	if(! exted){
+		BRAIN_CK(brn.recoil() == pf_tk.pt_brn_tk.tk_recoil);
 		path_create(os_dir_pth); //OS_OPER
 		DBG_PRT_WITH(115, brn, os << "Created_path=\n" << os_dir_pth << "\n";
 			os << " pf_dir_pth=" << pf_dir_pth << "\n";
@@ -563,11 +601,11 @@ proof_write_json_file_for(deduction& dct, long to_wrt_idx, long prv_wrt_idx)
 	);
 	
 	long end_trace_idx = trace.size() - 1;
-	if(brn.in_root_lv()){ end_trace_idx++; }
+	if(brn.in_root_lv()){ end_trace_idx = trace.size(); }
 	
-	//end_trace_idx = trace.size();
-	ticket invalid_tk;
-	ticket pf_tk = rsn.rs_tk;
+	proof_tk invalid_tk;
+	proof_tk pf_tk;
+	pf_tk.init_with(rsn.rs_tk, to_wrt_idx);
 	
 	ch_string end_dir_pth = SKG_INVALID_PTH;
 	if(all_to_wrt.is_valid_idx(to_wrt_idx)){
@@ -588,9 +626,9 @@ proof_write_json_file_for(deduction& dct, long to_wrt_idx, long prv_wrt_idx)
 			quanton* nmp_cand_qu = the_nmp.na_candidate_qua;
 			os << " CAND_QUA=" << nmp_cand_qu << "\n";
 			if(nmp_cand_qu != NULL_PT){
-				ticket& cand_pf_tk = nmp_cand_qu->qu_proof_tk;
+				proof_tk cand_pf_tk(nmp_cand_qu->qu_proof_tk);
 				ch_string cand_pth = proof_get_tk_dir_path(skg.kg_tmp_proof_path, cand_pf_tk);
-				os << " CAND_QUA_pf_tk=" << cand_pf_tk << "\n";
+				os << " CAND_QUA_pf_tk=" << cand_pf_tk.get_str() << "\n";
 				os << " CAND_QUA_pf_pth=" << cand_pth << "\n";
 				os << " end_trace_idx=" << end_trace_idx << "\n";
 				if(trace.is_valid_idx(end_trace_idx)){
@@ -609,19 +647,6 @@ proof_write_json_file_for(deduction& dct, long to_wrt_idx, long prv_wrt_idx)
 	}
 	
 	if(brn.in_root_lv() && (to_wrt_idx == INVALID_IDX)){
-	}
-	
-	long ini_trace_idx = 0;
-	ch_string ini_dir_pth = SKG_INVALID_PTH;
-	if(has_prv){
-		ini_trace_idx = proof_get_trace_idx_of(dct, prv_wrt_idx);
-		neuromap& the_nmp = *(all_to_wrt[prv_wrt_idx]);
-		BRAIN_CK(the_nmp.na_wrt_ok);
-		ini_dir_pth = proof_get_nmp_proof_path(the_nmp);
-
-		if((ini_trace_idx != INVALID_IDX) && (end_trace_idx == INVALID_IDX)){
-			end_trace_idx = trace.size();
-		}
 	}
 	
 	row<ch_string> all_to_move;
@@ -645,8 +670,7 @@ proof_write_json_file_for(deduction& dct, long to_wrt_idx, long prv_wrt_idx)
 							 invalid_pth, invalid_tk, all_to_move);
 			BRAIN_CK(all_to_move.is_empty());
 		} else {
-			BRAIN_CK(dct.dt_last_found != NULL_PT);
-			proof_append_neu_lits(brn, json_str, dct.dt_first_causes);
+			proof_write_ref_bj_proof_for(json_str, dct);
 		}
 		canon_string_append(json_str, "\"va_r\": ");
 		proof_append_qua(json_str, NULL_PT);
@@ -654,7 +678,12 @@ proof_write_json_file_for(deduction& dct, long to_wrt_idx, long prv_wrt_idx)
 		is_fst_ps = false;
 	}
 	
+	long ini_trace_idx = 0;
 	if(has_prv){
+		ini_trace_idx = proof_get_trace_idx_of(dct, prv_wrt_idx);
+		if((ini_trace_idx != INVALID_IDX) && (end_trace_idx == INVALID_IDX)){
+			end_trace_idx = trace.size();
+		}
 		if(ini_trace_idx == INVALID_IDX){
 			BRAIN_CK_PRT((end_trace_idx == INVALID_IDX) || (end_trace_idx == trace.size()), 
 				DBG_PRT_ABORT(brn);
@@ -663,21 +692,23 @@ proof_write_json_file_for(deduction& dct, long to_wrt_idx, long prv_wrt_idx)
 			);
 			ini_trace_idx = trace.size();
 		}
-		long prv_lst_idx = ini_trace_idx - 1;
-		if(trace.is_valid_idx(prv_lst_idx)){
-			BRAIN_CK_PRT((trace.is_valid_idx(prv_lst_idx)), 
-				DBG_PRT_ABORT(brn);
-				os << " prv_lst_idx=" << prv_lst_idx << "\n";
-				os << " ini_trace_idx=" << ini_trace_idx << "\n";
-				os << " to_wrt_sz=" << all_to_wrt.size() << "\n";
-				os << " trace_sz=" << trace.size() << "\n";
-			);
-			prop_signal& prv_lst = trace[prv_lst_idx];
-			BRAIN_CK(ini_dir_pth != SKG_INVALID_PTH);
-			proof_append_ps(brn, json_str, prv_lst, is_fst_ps, 
-							ini_dir_pth, pf_tk, all_to_move);
-			//BRAIN_CK(all_to_move.is_empty());
-		}
+		
+		BRAIN_CK(all_to_wrt.is_valid_idx(prv_wrt_idx));
+		neuromap* pt_prv_nmp = all_to_wrt[prv_wrt_idx];
+		BRAIN_CK(pt_prv_nmp != NULL_PT);
+		
+		neuromap& prv_nmp = *pt_prv_nmp;
+		BRAIN_CK(prv_nmp.nmp_is_cand());
+		BRAIN_CK(prv_nmp.na_wrt_ok);
+		ch_string end_prv_dir_pth = proof_get_nmp_proof_path(prv_nmp);
+
+		proof_tk pf_prv_tk;
+		pf_prv_tk.init_with(rsn.rs_tk, prv_wrt_idx);
+
+		BRAIN_CK(is_fst_ps);
+		prop_signal invalid_ps;
+		proof_append_ps(brn, json_str, invalid_ps, is_fst_ps, 
+						end_prv_dir_pth, pf_prv_tk, all_to_move);
 	}
 
 	if(! has_prv && (end_trace_idx == INVALID_IDX)){
@@ -698,13 +729,14 @@ proof_write_json_file_for(deduction& dct, long to_wrt_idx, long prv_wrt_idx)
 		DBG_PRT_WITH(115, brn,
 			os << " APPENDING_TRACE\n";
 			os << " ini_trace_idx=" << ini_trace_idx << "\n";
-			if(trace.is_valid_idx(end_trace_idx)){
-				os << " ini_trace_idx=" << trace[ini_trace_idx] << "\n";
+			if(trace.is_valid_idx(ini_trace_idx)){
+				os << " ini_trace_idx_ps=" << trace[ini_trace_idx] << "\n";
 			}
 			os << " end_trace_idx=" << end_trace_idx << "\n";
 			if(trace.is_valid_idx(end_trace_idx)){
-				os << " end_trace_ps=" << trace[end_trace_idx] << "\n";
+				os << " end_trace_idx_ps=" << trace[end_trace_idx] << "\n";
 			}
+			os << " trace_sz=" << trace.size() << "\n";
 		);
 		
 		// APPEND_THE_TRACE
@@ -717,14 +749,13 @@ proof_write_json_file_for(deduction& dct, long to_wrt_idx, long prv_wrt_idx)
 				DBG_PRT_WITH(115, brn, 
 					ticket& sub_pf_tk = nxt_sig.ps_quanton->qu_proof_tk;
 					os << " UNIRON=" << nxt_sig;
-					os << " q_pf_tk=" << sub_pf_tk << "\n";
+					os << " q_pf_tk=" << sub_pf_tk.get_str() << "\n";
 					os << " trc_sz=" << trace.size() << "\n";
 					os << " end_idx=" << end_trace_idx << "\n";
-					os << " pf_tk=" << pf_tk << "\n";
-					os << " sub_pf_tk=" << sub_pf_tk << "\n";
+					os << " pf_tk=" << pf_tk.get_str() << "\n";
+					os << " sub_pf_tk=" << sub_pf_tk.get_str() << "\n";
 				);
-				proof_append_uniron(json_str, nxt_sig, is_fst_ps, 
-								invalid_pth, invalid_tk, all_to_move);
+				proof_append_uniron(json_str, nxt_sig, is_fst_ps, all_to_move);
 			} else {
 				proof_append_ps(brn, json_str, nxt_sig, is_fst_ps, 
 								invalid_pth, invalid_tk, all_to_move);
@@ -736,7 +767,7 @@ proof_write_json_file_for(deduction& dct, long to_wrt_idx, long prv_wrt_idx)
 	canon_string_append(json_str, "}\n");
 	
 	ch_string pf_dir_pth = proof_get_tk_dir_path(skg.kg_tmp_proof_path, pf_tk);
-	proof_move_all_to_mv(dct, pf_dir_pth, all_to_move);
+	proof_move_all_to_mv(dct, pf_dir_pth, all_to_move, pf_tk);
 
 	ch_string os_dir_pth = skg.as_full_path(pf_dir_pth);
 	ch_string os_file_pth = proof_add_paths(os_dir_pth, proof_get_tk_file_name(pf_tk));
@@ -750,12 +781,10 @@ proof_write_json_file_for(deduction& dct, long to_wrt_idx, long prv_wrt_idx)
 			os << "Final_htm for dct=" << dct << " wrt_idx=" << to_wrt_idx;
 			os << " prv_idx=" << prv_wrt_idx << ". END_PTH=\n";
 			os << end_dir_pth;
-			os << " pk_tk=" << pf_tk << "\n";
+			os << " pk_tk=" << pf_tk.get_str() << "\n";
 			os << " trc_sz=" << trace.size() << "\n";
 			os << " end_idx=" << end_trace_idx << "\n";
 		);
-		
-		//proof_write_html_file_for(end_dir_pth, dct, pf_tk);
 		
 		ch_string src_pth_mv = pf_dir_pth;
 		ch_string dst_pth_mv = proof_get_tk_dir_path(end_dir_pth, pf_tk);
@@ -777,117 +806,62 @@ proof_write_json_file_for(deduction& dct, long to_wrt_idx, long prv_wrt_idx)
 			os << " dst_pth=\n" << os_dst_pth_mv << "\n";
 		);
 
-		BRAIN_CK(! file_exists(os_src_pth_mv));
-		bool lk2_ok = path_create_link(os_dst_pth_mv, os_src_pth_mv);
-		SKELETON_CK(lk2_ok);
-		BRAIN_CK(file_exists(os_src_pth_mv));
-		
 		BRAIN_CK(pt_nmp != NULL_PT);
 		neuromap& the_nmp = *pt_nmp;
 		
 		ch_string os_end_jsn_pth = proof_add_paths(os_dst_pth_mv, SKG_END_JSN_NAME);
-		ch_string os_end_file_pth = proof_add_paths(os_dst_pth_mv,
-													proof_get_tk_file_name(pf_tk));
 	
-		/*BRAIN_CK(! file_exists(os_end_jsn_pth));
-		bool lk1_ok = path_create_link(os_end_file_pth, os_end_jsn_pth);
-		SKELETON_CK(lk1_ok);*/
-		
-		proof_write_proof_json_file_for(the_nmp, os_end_jsn_pth, pf_tk);
+		proof_write_bj_proof_for(the_nmp, pf_tk);
 	}
 }
 
 void
-proof_write_proof_json_file_for(neuromap& nmp, ch_string os_end_jsn_pth, ticket& pf_tk)
-{
-	brain& brn = nmp.get_brn();
-	coloring& col = nmp.na_wrt_col;
-	row_neuron_t& all_neu = col.co_neus;
+proof_write_ref_bj_proof_for(row<char>& json_str, deduction& dct){
+	brain& brn = dct.get_brn();
 	
-	BRAIN_CK(col.ck_cols());
+	BRAIN_CK(dct.dt_last_found != NULL_PT);
+	DBG_PRT_WITH(115, brn, os << "PROVED_CNF nmp=\n" << dct.dt_last_found);
 	
-	row<char> json_str;
-	canon_string_append(json_str, "{\n");
-	canon_string_append(json_str, "\t\"cnf\" : [\n");
-	for(long aa = 0; aa < all_neu.size(); aa++){
-		BRAIN_CK(all_neu[aa] != NULL_PT);
-		neuron& neu = *(all_neu[aa]);
-		canon_string_append(json_str, "\t\t");
-		if(aa > 0){
-			canon_string_append(json_str, ",");
-		}
-		proof_append_lits(brn, json_str, neu.ne_fibres);
-		canon_string_append(json_str, "\n");
-	}
-	canon_string_append(json_str, "\t],\n");
+	neuromap& nmp = *(dct.dt_last_found);
+
+	ch_string nmp_pf_dir_pth = proof_get_nmp_proof_path(nmp);
 	
-	canon_string_append(json_str, "\t\"ben_jose_proof\" : \"");
-	ch_string pf_nm = proof_get_tk_file_name(pf_tk);
+	canon_string_append(json_str, "\t\"ref_bj_proof\" : \"");
+	ch_string pf_nm = "lnk_bj_proof/" SKG_END_JSN_NAME;
 	canon_string_append(json_str, pf_nm);
 	canon_string_append(json_str, "\",\n");
 
-	row_quanton_t& all_qua = col.co_quas;
-	row_long_t& all_qu_col = col.co_qua_colors;
+	proof_write_permutation(json_str, nmp);
 	
-	canon_string_append(json_str, "\t\"vars_permutation\" : [\n");
-	bool is_fst_qu = true;
-	for(long aa = 0; aa < all_qua.size(); aa++){
-		long q_col = all_qu_col[aa];
-		if(q_col <= 0){
-			continue;
-		}
-		BRAIN_CK(all_qua[aa] != NULL_PT);
-		quanton& qua = *(all_qua[aa]);
-		
-		long qu_id = qua.qu_id;
-		BRAIN_CK(qu_id != 0);
-		if(qu_id < 0){
-			qu_id = -qu_id;
-			q_col = -q_col;
-		}
-		
-		canon_string_append(json_str, "\t\t");
-		if(! is_fst_qu){
-			canon_string_append(json_str, ",");
-		}
-		if(is_fst_qu){ is_fst_qu = false; }
-		
-		canon_string_append(json_str, "[\"");
-		canon_long_append(json_str, qu_id);
-		canon_string_append(json_str, "\", \"");
-		canon_long_append(json_str, q_col);
-		canon_string_append(json_str, "\"]\n");
-	}
-	canon_string_append(json_str, "\t],\n");
+	canon_string_append(json_str, ", \n");
 	
-	//row_long_t& all_ne_col = col.co_neu_colors;
-	
-	canon_string_append(json_str, "\t\"ccls_permutation\" : [\n");
-	bool is_fst_ne = true;
-	for(long aa = 0; aa < all_neu.size(); aa++){
-		BRAIN_CK(all_neu[aa] != NULL_PT);
-		neuron& neu = *(all_neu[aa]);
-		
-		long ne_id = neu.ne_index;
-		//long n_col = all_ne_col[aa];
-
-		canon_string_append(json_str, "\t\t");
-		if(! is_fst_ne){
-			canon_string_append(json_str, ",");
-		}
-		if(is_fst_ne){ is_fst_ne = false; }
-		
-		canon_string_append(json_str, "[\"");
-		canon_long_append(json_str, ne_id);
-		canon_string_append(json_str, "\", \"");
-		canon_long_append(json_str, aa);
-		canon_string_append(json_str, "\"]\n");
-	}
-	canon_string_append(json_str, "\t]\n");
-	
-	canon_string_append(json_str, "}\n\n");
-	write_file(os_end_jsn_pth, json_str, true); //OS_OPER
-	
-	DBG_PRT_WITH(115, brn, os << "Wrote FINAL_PROOF_JSN=\n" << os_end_jsn_pth);
+	proof_append_neu_lits(brn, json_str, dct.dt_first_causes);
 }
 
+ch_string
+proof_tk::get_str(){
+	bj_ostr_stream the_str;
+	BRAIN_CK(pt_brn_tk.tk_recoil >= 0);
+	
+	long lv_val = pt_brn_tk.tk_level;
+	ch_string inv_val = "";
+	if(lv_val < 0){
+		BRAIN_CK(lv_val == INVALID_LEVEL);
+		lv_val = 0;
+		inv_val = "IL";
+	}
+	
+	the_str << "rc_" << pt_brn_tk.tk_recoil << "_lv_" << inv_val << lv_val;
+	
+	if(pt_wrt_idx != INVALID_IDX){
+		the_str << "_" << pt_wrt_idx;
+	}
+	return the_str.str();
+}
+
+bool
+is_ptk_equal(proof_tk& tk1, proof_tk& tk2){
+	bool c1 = is_tk_equal(tk1.pt_brn_tk, tk2.pt_brn_tk);
+	bool c2 = (tk1.pt_wrt_idx == tk2.pt_wrt_idx);
+	return (c1 && c2);
+}

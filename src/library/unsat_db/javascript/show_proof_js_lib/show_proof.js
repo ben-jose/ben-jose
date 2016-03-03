@@ -2,6 +2,8 @@
 
 var MAX_REPL_VAL = 10000;
 
+var SKL_PARENT = "../..";
+
 var CNF_JSN_DATA = null;
 var CNF_CCLS_REPL_ARR = null;
 var CNF_VARS_REPL_ARR = null;
@@ -39,6 +41,12 @@ function get_URL_parameter(name) {
 }
 
 function get_repl_val(val_in, repl_arr){
+	if(repl_arr === undefined){
+		return val_in;
+	}
+	if(repl_arr == null){
+		return val_in;
+	}
 	idx_repl = Math.abs(val_in);
 	val_out = repl_arr[idx_repl];
 	if(val_out == null){
@@ -62,9 +70,15 @@ function get_repl_val(val_in, repl_arr){
 
 function replace_vals(orig_arr, repl_arr, out_pairs){
 	if(repl_arr === undefined){
+		if(is_array(orig_arr)){
+			sort_nums(orig_arr);
+		}
 		return orig_arr;
 	}
 	if(repl_arr == null){
+		if(is_array(orig_arr)){
+			sort_nums(orig_arr);
+		}
 		return orig_arr;
 	}
 	var out_arr = [];
@@ -142,14 +156,24 @@ function set_literal_str(elem_id, lit_val, repl_arr){
 	fi1.innerHTML = out_val;
 }   
 
+function check_url(url)
+{
+    var http = new XMLHttpRequest();
+    http.open('HEAD', url, false);
+    http.send();
+    return http.status!=404;
+}
+
 function load_JSON_func(file_nm, callback, is_async) {
 	var xobj = new XMLHttpRequest();
 	
-	//var dir_pth = get_dir(file_nm);
-	//xobj.location = dir_pth;
+	var result = null;
+	/*xobj.onerror = function(data) { 
+		result = null;
+		//alert('ERROR. Cannot_load_file ' + file_nm);
+    };*/
 	
 	xobj.overrideMimeType("application/json");
-	// Replace 'my_data' with the path to your file
 	xobj.open('GET', file_nm, is_async); 
 	xobj.onreadystatechange = function () {
 		if (xobj.readyState == 4 && xobj.status == "200") {
@@ -157,10 +181,11 @@ function load_JSON_func(file_nm, callback, is_async) {
 			// as .open will NOT return a value but simply 
 			// returns undefined in asynchronous mode
 			callback(xobj.responseText);
-		} else {
-			alert("ERROR. loading-file " + file_nm + ". status=" + xobj.status);
+			//result = xobj.responseText;
+			//setTimeout(function() { callback(result); }, 100);
 		}
 	};
+
 	xobj.send(null);  
 }
 
@@ -168,7 +193,13 @@ function load_json_file(file_nm) {
 	var the_json_data = null;
 	load_JSON_func(file_nm, function(response) {
 		// Parse JSON string into object
-		the_json_data = JSON.parse(response);
+		if(response === undefined){
+			alert('ERROR. 1_Cannot_load_file ' + file_nm);
+		} else if(response == null){
+			alert('ERROR. 2_Cannot_load_file ' + file_nm);
+		} else {
+			the_json_data = JSON.parse(response);
+		}
 	}, false);
 	if(the_json_data === undefined){
 		the_json_data = null;
@@ -272,20 +303,33 @@ function populate_ul(ul_id, jsn_pth){
 				var cla_id_str = '' + get_repl_val(ch_stp.neu_idx, CNF_CCLS_REPL_ARR);
 	
 				var the_lits_str = "[" + s_lits + "]";
-				var neu_jsn = ch_stp.neu_jsn;
-				if(neu_jsn === undefined){
+				var ne_ty = ch_stp.neu_type;
+				var ext_pth = null;
+				if((! (ne_ty === undefined)) && (ne_ty == "full")){
+					the_lits_str += " F";
+					ext_pth = ch_stp.neu_full_jsn_pth;
+					dir_pth = SKL_PARENT + ext_pth + '/';
+				}
+				
+				var ne_jsn = ch_stp.neu_jsn_pth;
+				if(ne_jsn === undefined){
 					//var li_elem_2 = li_1_templ.supplant({lb_txt: the_lits_str});
 					var li_elem_2 = a_ref_main_cla_templ.supplant(
 						{all_lits: the_lits_str, cla_id: cla_id_str});
 					
 					htm_str.push(li_elem_2);
 				} else {
-					var full_pth = dir_pth + neu_jsn;
+					var full_pth = dir_pth + ne_jsn;
+					var tit_str = ne_jsn;
+					if(ext_pth != null){
+						tit_str = full_pth;
+					}
+					
 					var sub_ul_id = ul_id + '_' + ii;
 					var sub_lb_id = 'lb_' + sub_ul_id;
 					var sub_lb_txt = the_lits_str;
 					var repl = {
-						lb_tit: full_pth,
+						lb_tit: tit_str,
 						lb_id: sub_lb_id,
 						ul_id: sub_ul_id,
 						jsn_rel_pth: full_pth,
@@ -379,22 +423,41 @@ function populate_main_ul_2(ul_id, jsn_pth_id){
 	}
 	if(CNF_JSN_DATA == null){
 		var jsn_txt_area = document.getElementById(jsn_pth_id);
-		var jsn_pth = jsn_txt_area.value.trim();
+		//var jsn_pth = jsn_txt_area.value.trim();
+		var val_txt_area = jsn_txt_area.value.trim();
+		var beg = val_txt_area.substring(0, 9);
+		if(beg != '/SKELETON'){
+			alert('Path must start with "/SKELETON"');
+			return;
+		}
+		
+		var jsn_pth = SKL_PARENT + val_txt_area;
 		
 		CNF_JSN_DATA = load_json_file(jsn_pth);
+		if(CNF_JSN_DATA === undefined){
+			alert('ERROR. Cannot-load-file ' + jsn_pth);
+			return;
+		}
 		if(CNF_JSN_DATA == null){
 			alert('ERROR. Cannot-load-file ' + jsn_pth);
 			return;
 		}
 		
-		var bj_proof_nm = CNF_JSN_DATA.ben_jose_proof;
+		var bj_proof_nm = CNF_JSN_DATA.neuromap_proof;
 		if(bj_proof_nm === undefined){
-			alert('ERROR. Cannot-find-ben_jose_proof-in-cnf-json-data');
+			alert('ERROR. Cannot-find-neuromap_proof-in-cnf-json-data');
 			return;
 		}
+		
+		//alert('FLAG_2');
+		
 		var dir_pth = get_dir(jsn_pth);
+		/*if(! dir_pth.startswith('/SKELETON')){
+			alert('PATH_DOES_NOT_START_WITH_SKELETON !!!');
+		}*/
 		var bj_proof_pth = dir_pth + bj_proof_nm;
 		
+		alert(bj_proof_pth);
 		//alert('v_perm=' +  JSON.stringify(CNF_JSN_DATA.vars_permutation, null, 2));
 
 		CNF_VARS_REPL_ARR = calc_repl_arr(CNF_JSN_DATA.vars_permutation);
@@ -420,7 +483,7 @@ function populate_main_ul_2(ul_id, jsn_pth_id){
 }
 
 function create_cnf_table(){
-	var bj_cnf = CNF_JSN_DATA.cnf;
+	var bj_cnf = CNF_JSN_DATA.neuromap_ccls;
 		
 	var tbl  = document.createElement('table');
 	//tbl.style.width  = '100px';

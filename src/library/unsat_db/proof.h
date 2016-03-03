@@ -40,16 +40,17 @@ proof writing function declarations.
 
 #include "brain.h"
 
-class json_dat;
+class proof_tk;
+
 
 ch_string 	proof_get_unirons_path(skeleton_glb& skg);
 void		proof_create_final_unirons_path(skeleton_glb& skg, ch_string end_dir_pth);
 
 ch_string proof_add_paths(ch_string pth1, ch_string pth2);
 ch_string proof_get_nmp_proof_path(neuromap& the_nmp);
-ch_string proof_get_tk_dir_path(ch_string pth_pref, ticket& pf_tk);
-ch_string proof_get_tk_file_name(ticket& pf_tk);
-ch_string proof_get_tk_html_file_name(ticket& pf_tk);
+ch_string proof_get_tk_dir_path(ch_string pth_pref, proof_tk& pf_tk);
+ch_string proof_get_tk_file_name(proof_tk& pf_tk);
+ch_string proof_get_tk_html_file_name(proof_tk& pf_tk);
 
 void proof_do_res_step(brain& brn, row_quanton_t& curr_res, prop_signal& curr_ps);
 
@@ -57,22 +58,75 @@ long proof_get_trace_idx_of(deduction& dct, long to_wrt_idx);
 void proof_write_all_json_files_for(deduction& dct);
 void proof_write_json_file_for(deduction& dct, long to_wrt_idx, long prv_wrt_idx);
 void proof_append_ps(brain& brn, row<char>& json_str, prop_signal& the_sig, bool& is_fst_ps, 
-			ch_string& pth_pref, ticket& pf_tk, row<ch_string>& all_to_move);
+			ch_string& pth_pref, proof_tk& pf_tk, row<ch_string>& all_to_move);
 void proof_append_uniron(row<char>& json_str, prop_signal& the_sig, bool& is_fst_ps, 
-			ch_string& pth_pref, ticket& pf_tk, row<ch_string>& all_to_move);
+			row<ch_string>& all_to_move);
 void proof_append_neu_lits(brain& brn, row<char>& json_str, row_quanton_t& all_quas);
 void proof_append_lits(brain& brn, row<char>& json_str, row_quanton_t& all_quas);
 void proof_append_neu(brain& brn, row<char>& json_str, neuron* neu, 
-			ch_string& pth_pref, ticket& pf_tk, row<ch_string>& all_to_move);
+			ch_string& pth_pref, proof_tk& pf_tk, row<ch_string>& all_to_move);
 void proof_append_qua(row<char>& json_str, quanton* qua);
 
-//void proof_write_html_file_for(ch_string end_dir_pth, deduction& dct, ticket& pf_tk);
+//void proof_write_html_file_for(ch_string end_dir_pth, deduction& dct, proof_tk& pf_tk);
 
-void proof_write_proof_json_file_for(neuromap& nmp, ch_string os_end_jsn_pth, ticket& pf_tk);
+void proof_write_permutation(row<char>& json_str, neuromap& nmp);
+void proof_write_ref_bj_proof_for(row<char>& json_str, deduction& dct);
+void proof_write_bj_proof_for(neuromap& nmp, proof_tk& pf_tk);
 
-void proof_move_all_to_mv(deduction& dct, ch_string& pf_dir_pth, row<ch_string>& all_to_move);
+void proof_move_all_to_mv(deduction& dct, ch_string& pf_dir_pth, 
+						  row<ch_string>& all_to_move, proof_tk& pf_tk);
 
 void proof_write_top_html_file(ch_string the_pth);
+
+bool is_ptk_equal(proof_tk& tk1, proof_tk& tk2);
+
+//=============================================================================
+// proof_tk
+
+class proof_tk {
+	public:
+	ticket	pt_brn_tk;
+	long	pt_wrt_idx;
+
+	// methods
+
+	proof_tk(){
+		init_proof_tk();
+	}
+
+	proof_tk(ticket& tk, long w_idx = INVALID_IDX){
+		init_with(tk, w_idx);
+	}
+
+	void	init_with(ticket& tk, long w_idx = INVALID_IDX){
+		pt_brn_tk = tk;
+		pt_wrt_idx = w_idx;
+	}
+	
+	void	init_proof_tk(){
+		pt_brn_tk.init_ticket();
+		pt_wrt_idx = INVALID_IDX;
+	}
+
+	brain*	get_dbg_brn(){
+		return NULL;
+	}
+	
+	solver*	get_dbg_slv(){
+		return NULL;
+	}
+		
+	bool	is_ptk_virgin(){
+		bool c1 = pt_brn_tk.is_tk_virgin();
+		bool c2 = (pt_wrt_idx == INVALID_IDX);
+
+		return (c1 && c2);
+	}
+	
+	ch_string	get_str();
+
+};
+
 
 #endif		// PROOF_FUNCS_H
 
