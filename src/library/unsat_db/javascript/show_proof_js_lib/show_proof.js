@@ -190,6 +190,8 @@ function load_JSON_func(file_nm, callback, is_async) {
 }
 
 function load_json_file(file_nm) {
+	alert('Loading-file ' + file_nm);
+	
 	var the_json_data = null;
 	load_JSON_func(file_nm, function(response) {
 		// Parse JSON string into object
@@ -266,107 +268,6 @@ function calc_resolution(neu1, all_chgs, neu2, va_r){
 	return out_arr;
 }
 
-function populate_main_ul(ul_id, jsn_pth_id){
-	var jsn_txt_area = document.getElementById(jsn_pth_id);
-	var jsn_pth = jsn_txt_area.value.trim();
-	populate_ul(ul_id, jsn_pth);
-}
-
-function populate_ul(ul_id, jsn_pth){
-	var the_ul = document.getElementById(ul_id);
-	var all_lis = the_ul.getElementsByTagName('li');
-	if(all_lis.length == 0){
-		
-		var dir_pth = get_dir(jsn_pth);
-		alert('Loading-file ' + jsn_pth + '\n in dir=' + dir_pth);
-		
-		//document.location = dir_pth;
-		
-		var jsn_obj = load_json_file(jsn_pth);
-		if(jsn_obj != null){
-			var all_chgs = [];
-			var res_neu = null;
-			var the_chain = jsn_obj.chain;
-			var htm_str = [];
-
-			alert('CHAIN_LENGTH= ' + the_chain.length);
-			
-			for (var ii = 0; ii < the_chain.length; ii++){
-				var ch_stp = the_chain[ii];
-				
-				var s_lits = replace_vals(ch_stp.neu_lits, CNF_VARS_REPL_ARR);
-				if(! is_array(s_lits)){
-					alert(s_lits);
-					return;
-				}
-				
-				var cla_id_str = '' + get_repl_val(ch_stp.neu_idx, CNF_CCLS_REPL_ARR);
-	
-				var the_lits_str = "[" + s_lits + "]";
-				var ne_ty = ch_stp.neu_type;
-				var ext_pth = null;
-				if((! (ne_ty === undefined)) && (ne_ty == "full")){
-					the_lits_str += " F";
-					ext_pth = ch_stp.neu_full_jsn_pth;
-					dir_pth = SKL_PARENT + ext_pth + '/';
-				}
-				
-				var ne_jsn = ch_stp.neu_jsn_pth;
-				if(ne_jsn === undefined){
-					//var li_elem_2 = li_1_templ.supplant({lb_txt: the_lits_str});
-					var li_elem_2 = a_ref_main_cla_templ.supplant(
-						{all_lits: the_lits_str, cla_id: cla_id_str});
-					
-					htm_str.push(li_elem_2);
-				} else {
-					var full_pth = dir_pth + ne_jsn;
-					var tit_str = ne_jsn;
-					if(ext_pth != null){
-						tit_str = full_pth;
-					}
-					
-					var sub_ul_id = ul_id + '_' + ii;
-					var sub_lb_id = 'lb_' + sub_ul_id;
-					var sub_lb_txt = the_lits_str;
-					var repl = {
-						lb_tit: tit_str,
-						lb_id: sub_lb_id,
-						ul_id: sub_ul_id,
-						jsn_rel_pth: full_pth,
-						lb_txt: sub_lb_txt
-					};
-					var li_elem_2 = li_2_templ.supplant(repl);
-					htm_str.push(li_elem_2);
-				}
-				
-				//var res_var = ch_stp.va_r;
-				var res_var = get_repl_val(ch_stp.va_r, CNF_VARS_REPL_ARR);
-				
-				if((res_neu != null) && (res_var != 0)){
-					var va_r_str = "RES " + res_var;
-					var li_elem_3 = li_1_templ.supplant({lb_txt: va_r_str});
-					htm_str.push(li_elem_3);
-					
-					htm_str.push('<hr>\n');
-					
-					res_neu = calc_resolution(res_neu, all_chgs, 
-											  s_lits, res_var);
-					var cl_res_str = "[" + res_neu + "]";
-					var li_elem_res = li_1_templ.supplant({lb_txt: cl_res_str});
-					htm_str.push(li_elem_res);
-				} else {
-					res_neu = s_lits; 
-				}
-			}
-			htm_str = htm_str.join("");
-			//alert(htm_str);
-			the_ul.innerHTML = htm_str;
-		} else {
-			alert('ERROR. Cannot-parse-json-file ' + jsn_pth);
-		}
-	}
-}
-
 function is_array_ok(arr1){
 	if(arr1 === undefined){
 		return false;
@@ -417,10 +318,7 @@ function calc_repl_arr(subst_arr){
 	return repl_arr;
 }
 
-function populate_main_ul_2(ul_id, jsn_pth_id){
-	if(CNF_JSN_DATA != null){
-		//alert('To change the proof refresh (F5) the page.');
-	}
+function populate_main_ul(ul_elem_id, jsn_pth_id){
 	if(CNF_JSN_DATA == null){
 		var jsn_txt_area = document.getElementById(jsn_pth_id);
 		//var jsn_pth = jsn_txt_area.value.trim();
@@ -449,17 +347,10 @@ function populate_main_ul_2(ul_id, jsn_pth_id){
 			return;
 		}
 		
-		//alert('FLAG_2');
-		
 		var dir_pth = get_dir(jsn_pth);
-		/*if(! dir_pth.startswith('/SKELETON')){
-			alert('PATH_DOES_NOT_START_WITH_SKELETON !!!');
-		}*/
 		var bj_proof_pth = dir_pth + bj_proof_nm;
 		
-		alert(bj_proof_pth);
-		//alert('v_perm=' +  JSON.stringify(CNF_JSN_DATA.vars_permutation, null, 2));
-
+		//alert(bj_proof_pth);
 		CNF_VARS_REPL_ARR = calc_repl_arr(CNF_JSN_DATA.vars_permutation);
 		CNF_CCLS_REPL_ARR = calc_repl_arr(CNF_JSN_DATA.ccls_permutation);
 
@@ -478,7 +369,7 @@ function populate_main_ul_2(ul_id, jsn_pth_id){
 		var main_lb = document.getElementById('proof_label');
 		main_lb.innerHTML = 'The Proof';
 		
-		populate_ul(ul_id, bj_proof_pth);
+		populate_ul(ul_elem_id, bj_proof_pth);
 	}
 }
 
@@ -511,5 +402,160 @@ function create_cnf_table(){
 		}
 	}
 	return tbl;
+}
+
+function populate_ul(ul_elem_id, jsn_pth){
+	var the_ul = document.getElementById(ul_elem_id);
+	var all_lis = the_ul.getElementsByTagName('li');
+	if(all_lis.length != 0){
+		return;
+	}
+	var all_chgs = [];
+	var res_neu = null;
+	var htm_str = [];
+	
+	var all_jsn = [];
+	load_all_json(jsn_pth, all_jsn);
+	
+	for (var jj = all_jsn.length - 1; jj >= 0; jj--){
+		//var jsn_obj = load_json_file(jsn_pth);
+		var jsn_obj = all_jsn[jj];
+		if(jsn_obj === undefined){
+			alert('ERROR. Undefined-json-object-in ' + jsn_pth);
+			return;
+		}
+		if(jsn_obj == null){
+			alert('ERROR. Null-json-object-in ' + jsn_pth);
+			return;
+		}
+		
+		//var dir_pth = get_dir(jsn_pth);
+		var dir_pth = get_dir(jsn_obj.loaded_pth);
+		
+		var the_chain = jsn_obj.chain;
+
+		alert('CHAIN_LENGTH= ' + the_chain.length);
+		
+		for (var ii = 0; ii < the_chain.length; ii++){
+			var ch_stp = the_chain[ii];
+			
+			var ne_ty = ch_stp.neu_type;
+			var ext_pth = null;
+			if((! (ne_ty === undefined)) && (ne_ty == "full")){
+				ext_pth = ch_stp.neu_full_jsn_pth;
+				dir_pth = SKL_PARENT + ext_pth + '/';
+				continue;
+			}
+			
+			var s_lits = replace_vals(ch_stp.neu_lits, CNF_VARS_REPL_ARR);
+			if(! is_array(s_lits)){
+				alert(s_lits);
+				return;
+			}
+			
+			var cla_id_str = '' + get_repl_val(ch_stp.neu_idx, CNF_CCLS_REPL_ARR);
+
+			var the_lits_str = "[" + s_lits + "]";
+			
+			var ne_jsn = ch_stp.neu_jsn_pth;
+			if(ne_jsn === undefined){
+				//var li_elem_2 = li_1_templ.supplant({lb_txt: the_lits_str});
+				var li_elem_2 = a_ref_main_cla_templ.supplant(
+					{all_lits: the_lits_str, cla_id: cla_id_str});
+				
+				htm_str.push(li_elem_2);
+			} else {
+				var full_pth = dir_pth + ne_jsn;
+				var tit_str = ne_jsn;
+				if(ext_pth != null){
+					tit_str = full_pth;
+				}
+				
+				var sub_ul_id = ul_elem_id + '_r' + jj + '_' + ii;
+				var sub_lb_id = 'lb_' + sub_ul_id;
+				var sub_lb_txt = the_lits_str;
+				
+				tit_str = '(' + sub_ul_id + ') ' + tit_str;
+				
+				var repl = {
+					lb_tit: tit_str,
+					lb_id: sub_lb_id,
+					ul_id: sub_ul_id,
+					jsn_rel_pth: full_pth,
+					lb_txt: sub_lb_txt
+				};
+				var li_elem_2 = li_2_templ.supplant(repl);
+				htm_str.push(li_elem_2);
+			}
+			
+			//var res_var = ch_stp.va_r;
+			var res_var = get_repl_val(ch_stp.va_r, CNF_VARS_REPL_ARR);
+			
+			if((res_neu != null) && (res_var != 0)){
+				var va_r_str = "RES " + res_var;
+				var li_elem_3 = li_1_templ.supplant({lb_txt: va_r_str});
+				htm_str.push(li_elem_3);
+				
+				htm_str.push('<hr>\n');
+				
+				res_neu = calc_resolution(res_neu, all_chgs, 
+											s_lits, res_var);
+				var cl_res_str = "[" + res_neu + "]";
+				var li_elem_res = li_1_templ.supplant({lb_txt: cl_res_str});
+				htm_str.push(li_elem_res);
+			} else {
+				res_neu = s_lits; 
+			}
+		}
+	}
+		
+	var htm_full_str = htm_str.join("");
+	//alert('Loaded_ok');
+	the_ul.innerHTML = htm_full_str;
+}
+
+function load_all_json(jsn_pth, jsn_obj_arr){
+	if(! is_array_ok(jsn_obj_arr)){
+		alert('ERROR. Bad-array-in-load_all_json');
+		return;
+	}
+	while(true){
+		var jsn_obj = load_json_file(jsn_pth);
+		if(jsn_obj == null){
+			alert('ERROR. Cannot-parse-json-file ' + jsn_pth);
+			return;
+		}
+		jsn_obj.loaded_pth = jsn_pth;
+		jsn_obj_arr.push(jsn_obj);
+		
+		var the_chain = jsn_obj.chain;
+		
+		if(the_chain.length <= 0){
+			alert('ERROR. Empty-chain-in-json-file ' + jsn_pth);
+			return;
+		}
+		
+		var ch_stp = the_chain[0];
+		
+		var ne_ty = ch_stp.neu_type;
+		var is_trace_top = ((ne_ty === undefined) || (ne_ty != "full"));
+		if(is_trace_top){
+			break;
+		}
+		
+		var ext_pth = ch_stp.neu_full_jsn_pth;
+		if(ext_pth === undefined){
+			alert('ERROR. Undefined-previous-path-dir-in-json-file ' + jsn_pth);
+			return;
+		}
+		var dir_pth = SKL_PARENT + ext_pth + '/';
+
+		var ne_jsn = ch_stp.neu_jsn_pth;
+		if(ne_jsn === undefined){
+			alert('ERROR. Undefined-previous-path-name-in-json-file ' + jsn_pth);
+			return;
+		}
+		jsn_pth = dir_pth + ne_jsn;
+	}
 }
 

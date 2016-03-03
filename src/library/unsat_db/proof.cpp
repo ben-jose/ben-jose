@@ -62,7 +62,7 @@ ch_string top_show_proof_html_code =
 "		<ul class='collapsibleList'> \n"
 "			<li> \n"
 "				<label for='main_proof_lb' \n"
-"						onclick=\"populate_main_ul_2('main_proof_ul', 'main_jsn_file')\"> \n"
+"						onclick=\"populate_main_ul('main_proof_ul', 'main_jsn_file')\"> \n"
 "					<a id='proof_label'>LOAD FILE</a> \n"
 "				</label> \n"
 "				<input type='checkbox' id='main_proof_lb' /> \n"
