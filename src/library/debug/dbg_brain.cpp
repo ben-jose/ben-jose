@@ -1663,7 +1663,7 @@ neuromap::map_ck_contained_in(coloring& colr, dbg_call_id dbg_id){
 }
 
 void
-brain::dbg_prt_all_nmps(bj_ostream& os){
+brain::dbg_prt_br_neuromaps(bj_ostream& os){
 #ifdef FULL_DEBUG
 	os << "ALL_NMPS=\n";
 	for(long aa = 0; aa < br_neuromaps.size(); aa++){
@@ -1675,7 +1675,7 @@ brain::dbg_prt_all_nmps(bj_ostream& os){
 }
 
 void
-brain::dbg_prt_all_candidates(bj_ostream& os, row_neuromap_t& all_cand, bool just_ids){
+brain::dbg_prt_all_nmp(bj_ostream& os, row_neuromap_t& all_cand, bool just_ids){
 #ifdef FULL_DEBUG
 	os << "[[\n";
 	for(long aa = 0; aa < all_cand.size(); aa++){
@@ -1699,7 +1699,7 @@ void
 brain::dbg_prt_all_cands(bj_ostream& os, bool just_ids){
 #ifdef FULL_DEBUG
 	os << "ALL_CANDS=\n";
-	dbg_prt_all_candidates(os, br_candidate_nmp_lvs, just_ids);
+	dbg_prt_all_nmp(os, br_candidate_nmp_lvs, just_ids);
 #endif
 }
 
@@ -1707,7 +1707,7 @@ void
 brain::dbg_prt_all_nxt_cands(bj_ostream& os, bool just_ids){
 #ifdef FULL_DEBUG
 	os << "ALL_NXT_CANDS=\n";
-	dbg_prt_all_candidates(os, br_candidate_nxt_nmp_lvs, just_ids);
+	dbg_prt_all_nmp(os, br_candidate_nxt_nmp_lvs, just_ids);
 #endif
 }
 

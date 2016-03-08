@@ -3,6 +3,7 @@
 var MAX_REPL_VAL = 10000;
 
 var SKL_PARENT = "../..";
+var SHOW_PROOF_HTML_PAGE = SKL_PARENT + '/SKELETON/CNF/Show_Proof.htm';
 
 var CNF_JSN_DATA = null;
 var CNF_CCLS_REPL_ARR = null;
@@ -10,12 +11,13 @@ var CNF_VARS_REPL_ARR = null;
 
 var ul_templ = "<ul id={ul_id}></ul>";
 
-var li_1_templ = "<li>{lb_txt}</li>\n";
+var li_1_templ = "<li title=\"{lb_tit}\">{lb_txt}</li>\n";
 
 var li_2_templ = `
 	<li>
 		<label title="{lb_tit}" for="{lb_id}" 
-			onclick="populate_ul('{ul_id}', '{jsn_rel_pth}')">
+			oncontextmenu="got_rclick('{jsn_rel_pth}')" 
+			onclick="{func_to_call}('{ul_id}', '{jsn_rel_pth}')">
 			{lb_txt}
 		</label>
 		<input type="checkbox" id="{lb_id}" />
@@ -24,9 +26,38 @@ var li_2_templ = `
 	</li>
 `;
 
+var li_3_templ = "<li><a href='#{cla_id}'>{all_lits}</a></li>";
+
+var li_4_templ = `
+	<li>
+		<label title="unsat-cnf-permutation-resulting-neuron" for="{lb_id}">
+			{lb_txt}
+		</label>
+		<input type="checkbox" id="{lb_id}" />
+		<ul>
+			<li>
+				{subst_table_html}
+			</li>
+			<li>
+				<label title="{lb_tit}" 
+					oncontextmenu="got_rclick('{jsn_rel_pth}')" 
+					onclick="{func_to_call}('{ul_id}_proof', '{jsn_rel_pth}')">
+					"Show Proof in new window"
+				</label>
+			</li>
+		</ul>
+	</li>
+`;
+
 var a_lit_templ = "<a class='{vr_id}'>{lit}</a>";
-var a_ref_main_cla_templ = "<li><a href='#{cla_id}'>{all_lits}</a></li>";
 var a_main_cla_templ = "<a name='{cla_id}'>[{all_lits}]</a>";
+
+//			onclick="populate_ul('{ul_id}', '{jsn_rel_pth}')">
+
+function got_rclick(the_pth){
+	window.prompt("To copy to clipboard do: Ctrl+C, Enter", the_pth);
+	return false;
+}
 
 function get_dir(full_pth){
 	var dir_pth = full_pth.substring(0, full_pth.lastIndexOf("/")+1);
@@ -164,7 +195,7 @@ function check_url(url)
     return http.status!=404;
 }
 
-function load_JSON_func(file_nm, callback, is_async) {
+function load_http_url(file_nm, callback, is_async) {
 	var xobj = new XMLHttpRequest();
 	
 	var result = null;
@@ -190,24 +221,33 @@ function load_JSON_func(file_nm, callback, is_async) {
 }
 
 function load_json_file(file_nm) {
-	alert('Loading-file ' + file_nm);
+	//alert('Loading-file ' + file_nm);
+	window.prompt("Loading-file", file_nm);
 	
-	var the_json_data = null;
-	load_JSON_func(file_nm, function(response) {
+	var fl_data = null;
+	load_http_url(file_nm, function(response) {
 		// Parse JSON string into object
 		if(response === undefined){
 			alert('ERROR. 1_Cannot_load_file ' + file_nm);
 		} else if(response == null){
 			alert('ERROR. 2_Cannot_load_file ' + file_nm);
 		} else {
-			the_json_data = JSON.parse(response);
+			fl_data = JSON.parse(response);
 		}
 	}, false);
-	if(the_json_data === undefined){
-		the_json_data = null;
+	if(fl_data === undefined){
+		fl_data = null;
+	}
+	return fl_data;
+}
+
+/*function load_json_file(file_nm) {
+	var f_data = load_sync_url(file_nm);
+	if(the_json_data != null){
+		the_json_data = JSON.parse(f_data);
 	}
 	return the_json_data;
-}
+}*/
 
 String.prototype.supplant = function (oo) {
 	return this.replace(/{([^{}]*)}/g,
@@ -318,18 +358,39 @@ function calc_repl_arr(subst_arr){
 	return repl_arr;
 }
 
-function populate_main_ul(ul_elem_id, jsn_pth_id){
+function is_skl_path(pth){
+	if(pth === undefined){
+		return false;
+	}
+	if(pth == null){
+		return false;
+	}
+	var beg = pth.substring(0, 9);
+	if(beg != '/SKELETON'){
+		return false;
+	}
+	return true;
+}
+
+function populate_main_ul_with_txt_area(){
 	if(CNF_JSN_DATA == null){
-		var jsn_txt_area = document.getElementById(jsn_pth_id);
+		var jsn_file_to_load = null;
+		
+		var jsn_txt_area = document.getElementById('main_jsn_file');
 		//var jsn_pth = jsn_txt_area.value.trim();
-		var val_txt_area = jsn_txt_area.value.trim();
-		var beg = val_txt_area.substring(0, 9);
-		if(beg != '/SKELETON'){
+		jsn_file_to_load = jsn_txt_area.value.trim();
+		var beg = jsn_file_to_load.substring(0, 9);
+		if(! is_skl_path(jsn_file_to_load)){
 			alert('Path must start with "/SKELETON"');
 			return;
 		}
-		
-		var jsn_pth = SKL_PARENT + val_txt_area;
+		populate_main_ul(jsn_file_to_load);
+	}
+}
+
+function populate_main_ul(jsn_file_to_load){
+	if(CNF_JSN_DATA == null){
+		var jsn_pth = SKL_PARENT + jsn_file_to_load;
 		
 		CNF_JSN_DATA = load_json_file(jsn_pth);
 		if(CNF_JSN_DATA === undefined){
@@ -368,7 +429,8 @@ function populate_main_ul(ul_elem_id, jsn_pth_id){
 
 		var main_lb = document.getElementById('proof_label');
 		main_lb.innerHTML = 'The Proof';
-		
+
+		var ul_elem_id = 'main_proof_ul';
 		populate_ul(ul_elem_id, bj_proof_pth);
 	}
 }
@@ -404,114 +466,29 @@ function create_cnf_table(){
 	return tbl;
 }
 
-function populate_ul(ul_elem_id, jsn_pth){
-	var the_ul = document.getElementById(ul_elem_id);
-	var all_lis = the_ul.getElementsByTagName('li');
-	if(all_lis.length != 0){
-		return;
+function is_last_jsn(jsn_obj){
+	var jsn_pth = jsn_obj.loaded_pth;
+	if(jsn_pth === undefined){
+		alert('ERROR. Undefined-jsn_obj.loaded_pth.');
+		return true;
 	}
-	var all_chgs = [];
-	var res_neu = null;
-	var htm_str = [];
 	
-	var all_jsn = [];
-	load_all_json(jsn_pth, all_jsn);
-	
-	for (var jj = all_jsn.length - 1; jj >= 0; jj--){
-		//var jsn_obj = load_json_file(jsn_pth);
-		var jsn_obj = all_jsn[jj];
-		if(jsn_obj === undefined){
-			alert('ERROR. Undefined-json-object-in ' + jsn_pth);
-			return;
-		}
-		if(jsn_obj == null){
-			alert('ERROR. Null-json-object-in ' + jsn_pth);
-			return;
-		}
-		
-		//var dir_pth = get_dir(jsn_pth);
-		var dir_pth = get_dir(jsn_obj.loaded_pth);
-		
-		var the_chain = jsn_obj.chain;
-
-		alert('CHAIN_LENGTH= ' + the_chain.length);
-		
-		for (var ii = 0; ii < the_chain.length; ii++){
-			var ch_stp = the_chain[ii];
-			
-			var ne_ty = ch_stp.neu_type;
-			var ext_pth = null;
-			if((! (ne_ty === undefined)) && (ne_ty == "full")){
-				ext_pth = ch_stp.neu_full_jsn_pth;
-				dir_pth = SKL_PARENT + ext_pth + '/';
-				continue;
-			}
-			
-			var s_lits = replace_vals(ch_stp.neu_lits, CNF_VARS_REPL_ARR);
-			if(! is_array(s_lits)){
-				alert(s_lits);
-				return;
-			}
-			
-			var cla_id_str = '' + get_repl_val(ch_stp.neu_idx, CNF_CCLS_REPL_ARR);
-
-			var the_lits_str = "[" + s_lits + "]";
-			
-			var ne_jsn = ch_stp.neu_jsn_pth;
-			if(ne_jsn === undefined){
-				//var li_elem_2 = li_1_templ.supplant({lb_txt: the_lits_str});
-				var li_elem_2 = a_ref_main_cla_templ.supplant(
-					{all_lits: the_lits_str, cla_id: cla_id_str});
-				
-				htm_str.push(li_elem_2);
-			} else {
-				var full_pth = dir_pth + ne_jsn;
-				var tit_str = ne_jsn;
-				if(ext_pth != null){
-					tit_str = full_pth;
-				}
-				
-				var sub_ul_id = ul_elem_id + '_r' + jj + '_' + ii;
-				var sub_lb_id = 'lb_' + sub_ul_id;
-				var sub_lb_txt = the_lits_str;
-				
-				tit_str = '(' + sub_ul_id + ') ' + tit_str;
-				
-				var repl = {
-					lb_tit: tit_str,
-					lb_id: sub_lb_id,
-					ul_id: sub_ul_id,
-					jsn_rel_pth: full_pth,
-					lb_txt: sub_lb_txt
-				};
-				var li_elem_2 = li_2_templ.supplant(repl);
-				htm_str.push(li_elem_2);
-			}
-			
-			//var res_var = ch_stp.va_r;
-			var res_var = get_repl_val(ch_stp.va_r, CNF_VARS_REPL_ARR);
-			
-			if((res_neu != null) && (res_var != 0)){
-				var va_r_str = "RES " + res_var;
-				var li_elem_3 = li_1_templ.supplant({lb_txt: va_r_str});
-				htm_str.push(li_elem_3);
-				
-				htm_str.push('<hr>\n');
-				
-				res_neu = calc_resolution(res_neu, all_chgs, 
-											s_lits, res_var);
-				var cl_res_str = "[" + res_neu + "]";
-				var li_elem_res = li_1_templ.supplant({lb_txt: cl_res_str});
-				htm_str.push(li_elem_res);
-			} else {
-				res_neu = s_lits; 
-			}
-		}
+	var the_chain = jsn_obj.chain;
+	if(the_chain.length <= 0){
+		alert('ERROR. Empty-chain-in-json-file ' + jsn_pth);
+		return true;
 	}
-		
-	var htm_full_str = htm_str.join("");
-	//alert('Loaded_ok');
-	the_ul.innerHTML = htm_full_str;
+	
+	var ch_stp = the_chain[0];
+	var ne_ty = ch_stp.neu_type;
+	
+	if(ne_ty === undefined){
+		alert('ERROR. neu_type-in-json-file ' + jsn_pth);
+		return true;
+	}
+	
+	var is_lst = (ne_ty != "full");
+	return is_lst;
 }
 
 function load_all_json(jsn_pth, jsn_obj_arr){
@@ -558,4 +535,183 @@ function load_all_json(jsn_pth, jsn_obj_arr){
 		jsn_pth = dir_pth + ne_jsn;
 	}
 }
+
+function populate_ul(ul_elem_id, jsn_pth){
+	var the_ul = document.getElementById(ul_elem_id);
+	var all_lis = the_ul.getElementsByTagName('li');
+	if(all_lis.length != 0){
+		return;
+	}
+	var all_chgs = [];
+	var res_neu = null;
+	var htm_str = [];
+	
+	var all_jsn = [];
+	load_all_json(jsn_pth, all_jsn);
+	
+	var tot_sec = all_jsn.length;
+	for (var jj = all_jsn.length - 1; jj >= 0; jj--){
+		//var jsn_obj = load_json_file(jsn_pth);
+		var jsn_obj = all_jsn[jj];
+		if(jsn_obj === undefined){
+			alert('ERROR. Undefined-json-object-in ' + jsn_pth);
+			return;
+		}
+		if(jsn_obj == null){
+			alert('ERROR. Null-json-object-in ' + jsn_pth);
+			return;
+		}
+		
+		//var dir_pth = get_dir(jsn_pth);
+		var dir_pth = get_dir(jsn_obj.loaded_pth);
+		var the_chain = jsn_obj.chain;
+		
+		var chn_sz = the_chain.length - 1;
+		var num_sec = jj + 1;
+		var sec_nm = 'Section ' + num_sec + ' size=' + chn_sz;
+		var li_pth_elem = li_1_templ.supplant({lb_tit: dir_pth, lb_txt: sec_nm});
+		htm_str.push('<hr>\n');
+		htm_str.push(li_pth_elem);
+		htm_str.push('<hr>\n');
+
+		alert('3.CHAIN_LENGTH= ' + the_chain.length);
+		
+		for (var ii = 0; ii < the_chain.length; ii++){
+			var fnm_to_call = 'populate_ul';
+			var sub_htm_templ = li_2_templ;
+			var subst_htm = 'THE_SUBST_HTML';
+			
+			var ch_stp = the_chain[ii];
+			var stp_str = JSON.stringify(ch_stp, null, 2);
+			
+			var ne_ty = ch_stp.neu_type;
+			if(ne_ty === undefined){
+				alert('ERROR. no-neuron-type-found-in ' + stp_str);
+				return;
+			}
+			
+			var ext_pth = null;
+			if(ne_ty == "full"){
+				ext_pth = ch_stp.neu_full_jsn_pth;
+				dir_pth = SKL_PARENT + ext_pth + '/';
+				continue;
+			}
+			if(ne_ty == "subst"){
+				alert('GOT-subst-neuron ' + stp_str);
+				ext_pth = ch_stp.neu_full_jsn_pth;
+				//dir_pth = SKL_PARENT + ext_pth + '/';
+				dir_pth = ext_pth + '/';
+				fnm_to_call = 'open_new_proof';
+				sub_htm_templ = li_4_templ;
+				subst_htm = get_html_for_subst(ch_stp);
+			}
+			
+			var s_lits = replace_vals(ch_stp.neu_lits, CNF_VARS_REPL_ARR);
+			if(! is_array(s_lits)){
+				alert(s_lits);
+				return;
+			}
+			
+			var cla_id_str = '' + get_repl_val(ch_stp.neu_idx, CNF_CCLS_REPL_ARR);
+
+			var the_lits_str = "[" + s_lits + "]";
+			
+			var ne_jsn = ch_stp.neu_jsn_pth;
+			if(ne_jsn === undefined){
+				var li_elem_2 = li_3_templ.supplant(
+					{all_lits: the_lits_str, cla_id: cla_id_str});
+				
+				htm_str.push(li_elem_2);
+			} else {
+				var full_pth = dir_pth + ne_jsn;
+				var tit_str = ne_jsn;
+				if(ext_pth != null){
+					tit_str = full_pth;
+				}
+				
+				var sub_ul_id = ul_elem_id + '_r' + jj + '_' + ii;
+				var sub_lb_id = 'lb_' + sub_ul_id;
+				var sub_lb_txt = the_lits_str;
+				
+				tit_str = '(' + sub_ul_id + ') ' + tit_str;
+				
+				var repl = {
+					func_to_call: fnm_to_call,
+					subst_table_html: subst_htm,
+					lb_tit: tit_str,
+					lb_id: sub_lb_id,
+					ul_id: sub_ul_id,
+					jsn_rel_pth: full_pth,
+					lb_txt: sub_lb_txt
+				};
+				//var li_elem_2 = li_2_templ.supplant(repl);
+				var li_elem_2 = sub_htm_templ.supplant(repl);
+				htm_str.push(li_elem_2);
+			}
+			
+			//var res_var = ch_stp.va_r;
+			var res_var = get_repl_val(ch_stp.va_r, CNF_VARS_REPL_ARR);
+			
+			if((res_neu != null) && (res_var != 0)){
+				var stp_tit = 'Step ' + ii;
+				var va_r_str = "RES " + res_var;
+				var li_elem_3 = li_1_templ.supplant({lb_tit: stp_tit, lb_txt: va_r_str});
+				htm_str.push(li_elem_3);
+				
+				htm_str.push('<hr>\n');
+				
+				res_neu = calc_resolution(res_neu, all_chgs, 
+											s_lits, res_var);
+				var cl_res_str = "[" + res_neu + "]";
+				var li_elem_res = li_1_templ.supplant({lb_tit: stp_tit, lb_txt: cl_res_str});
+				htm_str.push(li_elem_res);
+			} else {
+				res_neu = s_lits; 
+			}
+		}
+	}
+		
+	var htm_full_str = htm_str.join("");
+	//alert('Loaded_ok');
+	the_ul.innerHTML = htm_full_str;
+}
+
+function open_new_proof(ul_elem_id, jsn_pth){
+	localStorage.setItem(ul_elem_id, jsn_pth);
+	var ulr = SHOW_PROOF_HTML_PAGE + '?pth_var=' + ul_elem_id;
+	// window.location.href
+	window.open(ulr);
+}
+
+function populate_main_ul_with_param(){
+	var jsn_file_to_load = null;
+	
+	var pth_param = get_URL_parameter('pth_var');
+	if(pth_param != null){
+		jsn_file_to_load = localStorage.getItem(pth_param);
+		if(! is_skl_path(jsn_file_to_load)){
+			alert('BAD-path-in-parameter ' + jsn_file_to_load);
+			jsn_file_to_load = null;
+		}
+		if(jsn_file_to_load != null){
+			alert("GOT-path-to-load=\n'" + jsn_file_to_load + "'");
+			document.getElementById('main_jsn_file').value = jsn_file_to_load;
+		}
+		populate_main_ul(jsn_file_to_load);
+	}
+}
+
+function get_html_for_subst(subst_ch_stp){
+	// neuromap_ccls
+	// vars_permutation
+	// ccls_permutation
+	var ccls_str = JSON.stringify(subst_ch_stp.neuromap_ccls, null, 2);
+	//alert('ALL_CCLS=\n' + ccls_str);
+	var htm_str = '<code>' + ccls_str + '</code>';
+	return htm_str;
+	//return 'CALCULATED_HTML_FOR_SUBST';
+}
+
+//var uri_enc = encodeURIComponent(uri);
+//var uri_dec = decodeURIComponent(uri_enc);
 

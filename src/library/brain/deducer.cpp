@@ -446,6 +446,10 @@ brain::analyse_conflicts(row<prop_signal>& all_confl, deduction& dct){
 	
 	row_neuromap_t& to_wrt = dct.dt_all_to_wrt;
 	DBG_PRT(102, os << "NUM_TO_WRT=" << to_wrt.size());
+	DBG_PRT(115, os << " 1.NUM_TO_WRT=" << to_wrt.size() << "\n";
+		dbg_prt_all_nmp(os, to_wrt, true);
+		os << "\n";
+	);
 	write_all_nmps(to_wrt);
 	
 	BRAIN_CK(ck_cov_flags());
@@ -679,6 +683,7 @@ brain::candidate_find_analysis(bool& found_top, deducer& dedcer, deduction& dct)
 		if(nmp_causes.is_empty()){
 			DBG_PRT(39, os << "#f=" << ncf << "." << dbg_num_cicl << ".found_top_1");
 			found_top = true;
+			dct.dt_found_top = true;
 			break;
 		}
 		DBG_PRT(39, os << "#f=" << ncf << "." << dbg_num_cicl;
@@ -694,6 +699,7 @@ brain::candidate_find_analysis(bool& found_top, deducer& dedcer, deduction& dct)
 			
 			DBG_PRT(39, os << "#f=" << ncf << "." << dbg_num_cicl << ".found_top_2");
 			found_top = true;
+			dct.dt_found_top = true;
 			brn.add_top_cands(to_wrt);
 			break;
 		}
@@ -776,7 +782,14 @@ neuromap::nmp_add_to_write(row_neuromap_t& to_wrt, long trace_idx){
 	if(na_num_submap >= min_sub){
 		BRAIN_CK(! is_na_virgin());
 		to_wrt.push(&the_nmp);
+		
+		// proof sys data
 		the_nmp.na_to_wrt_trace_idx = trace_idx;
+		BRAIN_DBG(na_dbg_real_cand = &the_nmp);
+		
+		neuromap& wt_nmp = the_nmp.map_to_write();
+		wt_nmp.na_to_wrt_trace_idx = trace_idx;
+		BRAIN_DBG(wt_nmp.na_dbg_real_cand = &the_nmp);
 	}
 }
 
@@ -971,5 +984,18 @@ reason::calc_target_tier(brain& brn){
 	leveldat& lvdat = brn.get_leveldat(rs_target_level + 1);
 	long lst_ti = lvdat.ld_tier() - 1;
 	return lst_ti;
+}
+
+void
+deduction::update_all_to_wrt_for_proof(){
+	row_neuromap_t all_wt_nmp;
+	row_neuromap_t& all_w_nmp = dt_all_to_wrt;
+	
+	for(long aa = 0; aa < all_w_nmp.size(); aa++){
+		BRAIN_CK(all_w_nmp[aa] != NULL_PT);
+		neuromap& wt_nmp = all_w_nmp[aa]->map_to_write();
+		all_wt_nmp.push(&wt_nmp);
+	}
+	all_wt_nmp.move_to(dt_all_to_wrt);
 }
 

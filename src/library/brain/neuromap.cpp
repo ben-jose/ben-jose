@@ -83,14 +83,18 @@ neuromap::map_write(bool force_full){
 		nmp_update_all_to_write(na_candidate_tk);
 		BRAIN_CK(na_upd_to_write);
 	}
-	bool w_ok = false;
+	bool w_ok = map_to_write().map_oper(mo_save);
+	return w_ok;
+}
+
+neuromap&
+neuromap::map_to_write(){
+	neuromap* nmp = this;
 	if(is_na_mono()){ 
 		BRAIN_CK(has_submap());
-		w_ok = na_submap->map_oper(mo_save);
-	} else {
-		w_ok = map_oper(mo_save);
+		nmp = na_submap;
 	}
-	return w_ok;
+	return *nmp;
 }
 
 void
@@ -769,6 +773,8 @@ neuromap::map_oper(mem_op_t mm){
 		na_dbg_tauto_sha_str = tmp_tauto_cnf.cf_sha_str;
 		na_dbg_guide_sha_str = tmp_guide_cnf.cf_sha_str;
 		na_dbg_quick_sha_str = tmp_diff_cnf.get_ref3_nam();
+		na_dbg_diff_min_sha_str = tmp_diff_cnf.cf_minisha_str;
+		ch_string tg_minisha_str = "6aa80ae677";
 	);
 	
 	bool oper_ok = false;
@@ -815,7 +821,6 @@ neuromap::map_oper(mem_op_t mm){
 
 			if(oper_ok){
 				o_info.bjo_saved_targets++;
-				na_wrt_ok = true;
 			}
 			
 			//BRAIN_CK(! oper_ok || srg_forced.base_path_exists(skg));
@@ -842,6 +847,18 @@ neuromap::map_oper(mem_op_t mm){
 			);			
 		}
 	}
+
+	DBG_PRT_COND(115, (na_dbg_diff_min_sha_str == tg_minisha_str),
+		os << "TG_NMP_MAP_OPER " << map_dbg_oper_str(mm);
+		os << " oper_ok=" << oper_ok;
+		os << " minisha=" << na_dbg_diff_min_sha_str;
+		os << " nmp=\n" << this
+	); // 6aa80ae677
+	
+	if(oper_ok){
+		na_tauto_oper_ok = true;
+	}
+
 	
 	DBG_PRT(102, 
 		if(brn.br_dbg_found_top){ os << STACK_STR << "\n"; }
@@ -2159,11 +2176,8 @@ neuromap::map_prepare_mem_oper(mem_op_t mm){
 	tauto_ne_srg.stab_mutual_unique(tauto_qu_srg, this);
 	
 	solver& slv = brn.get_solver();
-	if((mm == mo_save) && slv.slv_prms.sp_write_proofs){
-		na_wrt_col.save_colors_from(tauto_ne_srg, tauto_qu_srg, tid_qua_id, true);
-		
-		//BRAIN_CK(na_dbg_tauto_col.co_quas.equal_to(na_wrt_col.co_quas));
-		//BRAIN_CK(na_dbg_tauto_col.co_qua_colors.equal_to(na_wrt_col.co_qua_colors));
+	if(slv.slv_prms.sp_write_proofs){
+		na_tauto_col.save_colors_from(tauto_ne_srg, tauto_qu_srg, tid_qua_id, true);
 	}
 
 	DBG(

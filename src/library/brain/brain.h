@@ -1671,6 +1671,8 @@ class deduction {
 	row_quanton_t		dt_first_causes;
 	row<prop_signal>	dt_all_noted;
 	reason				dt_rsn;
+	
+	bool				dt_found_top;
 
 	row_neuromap_t		dt_all_to_wrt;
 
@@ -1690,12 +1692,16 @@ class deduction {
 		dt_all_noted.clear(true, true);
 		dt_rsn.init_reason();
 		
+		dt_found_top = false;
+		
 		dt_all_to_wrt.clear();
 	}
 
 	void	reset_deduction(){
 		init_deduction(dt_brn);
 	}
+	
+	void	update_all_to_wrt_for_proof();
 	
 	brain*	get_dbg_brn(){
 		return dt_brn;
@@ -2175,8 +2181,8 @@ class neuromap {
 	// proof wrt system
 	long			na_to_wrt_trace_idx;
 	ch_string		na_tauto_pth;
-	bool			na_wrt_ok;
-	coloring		na_wrt_col;
+	bool			na_tauto_oper_ok;
+	coloring		na_tauto_col;
 	
 	BRAIN_DBG(
 		ticket				na_dbg_candidate_tk;
@@ -2188,12 +2194,15 @@ class neuromap {
 		ch_string			na_dbg_tauto_sha_str;
 		ch_string			na_dbg_guide_sha_str;
 		ch_string			na_dbg_quick_sha_str;
+		ch_string			na_dbg_diff_min_sha_str;
 		
 		ch_string			na_dbg_is_no_abort_full_wrt_pth;
 		bool				na_dbg_is_no_abort_full_nmp;
 		
 		coloring			na_dbg_tauto_col;
 		row_long_t 			na_dbg_phi_id;
+		
+		neuromap*			na_dbg_real_cand;
 	);
 	
 	neuromap(brain* pt_brn = NULL) {
@@ -2245,8 +2254,8 @@ class neuromap {
 		
 		na_to_wrt_trace_idx = INVALID_IDX;
 		na_tauto_pth = INVALID_PATH;
-		na_wrt_ok = false;
-		na_wrt_col.init_coloring();
+		na_tauto_oper_ok = false;
+		na_tauto_col.init_coloring();
 
 		DBG(
 			na_dbg_candidate_tk.init_ticket();
@@ -2264,6 +2273,8 @@ class neuromap {
 			
 			na_dbg_tauto_col.init_coloring();
 			na_dbg_phi_id.clear();
+			
+			na_dbg_real_cand = NULL_PT;
 		);
 	}
 	
@@ -2352,6 +2363,9 @@ class neuromap {
 
 	bool 	map_find();
 	bool 	map_write(bool force_full = false);
+	
+	neuromap&	map_to_write();
+	
 	bool 	map_oper(mem_op_t mm);
 	bool 	map_prepare_mem_oper(mem_op_t mm);
 	void 	map_prepare_wrt_cnfs(mem_op_t mm, ch_string quick_find_ref, row_str_t& dbg_shas);
@@ -3734,11 +3748,11 @@ public:
 	void	dbg_lv_on(long lv_idx);
 	void	dbg_lv_off(long lv_idx);
 
-	void	dbg_prt_all_candidates(bj_ostream& os, row_neuromap_t& all_cand, bool just_ids);
+	void	dbg_prt_all_nmp(bj_ostream& os, row_neuromap_t& all_cand, bool just_ids);
 	void	dbg_prt_all_cands(bj_ostream& os, bool just_ids = false);
 	void	dbg_prt_all_nxt_cands(bj_ostream& os, bool just_ids = false);
 	
-	void 	dbg_prt_all_nmps(bj_ostream& os);
+	void 	dbg_prt_br_neuromaps(bj_ostream& os);
 	
 	void 	dbg_prt_lvs_have_learned(bj_ostream& os);
 	void 	dbg_prt_lvs_cho(bj_ostream& os);
