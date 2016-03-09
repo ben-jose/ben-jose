@@ -1,0 +1,249 @@
+% easychair.tex,v 3.4 2015/12/10
+
+\documentclass{easychair}
+%\documentclass[EPiC]{easychair}
+%\documentclass[debug]{easychair}
+%\documentclass[verbose]{easychair}
+%\documentclass[notimes]{easychair}
+%\documentclass[withtimes]{easychair}
+%\documentclass[a4paper]{easychair}
+%\documentclass[letterpaper]{easychair}
+
+\usepackage{doc}
+
+% use this if you have a long article and want to create an index
+% \usepackage{makeidx}
+
+% In order to save space or manage large tables or figures in a
+% landcape-like text, you can use the rotating and pdflscape
+% packages. Uncomment the desired from the below.
+%
+% \usepackage{rotating}
+% \usepackage{pdflscape}
+
+% Some of our commands for this guide.
+%
+\newcommand{\easychair}{\textsf{easychair}}
+\newcommand{\miktex}{MiK{\TeX}}
+\newcommand{\texniccenter}{{\TeX}nicCenter}
+\newcommand{\makefile}{\texttt{Makefile}}
+\newcommand{\latexeditor}{LEd}
+
+%\makeindex
+
+%% Front Matter
+%%
+% Regular title as in the article class.
+%
+\title{Ben-Jose SAT Solving Software Library\\
+       Tool Paper%
+\thanks{Espetial thanks to our heavenly Father, his anointed King, Magda Beltran de Quiroga and Federman Quiroga.}}
+
+% Authors are joined by \and. Their affiliations are given by \inst, which indexes
+% into the list defined using \institute
+%
+\author{
+Jose Luis Quiroga Beltran
+}
+
+% Institutes for affiliations are also joined by \and,
+\institute{
+	Independant Researcher\\
+	\email{joseluisquiroga@yahoo.com}\\
+	March 2016
+ }
+
+%  \authorrunning{} has to be set for the shorter version of the authors' names;
+% otherwise a warning will be rendered in the running heads. When processed by
+% EasyChair, this command is mandatory: a document without \authorrunning
+% will be rejected by EasyChair
+
+\authorrunning{Jose.Luis.Quiroga}
+
+% \titlerunning{} has to be set to either the main title or its shorter
+% version for the running heads. When processed by
+% EasyChair, this command is mandatory: a document without \titlerunning
+% will be rejected by EasyChair
+\titlerunning{Ben-Jose SAT Solving Software Library}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+The software library Ben-Jose (\url{https://github.com/joseluisquiroga/ben-jose}) for solving instances of the satisfiability problem in CNF form is presented. Ben-Jose implements a trainable strategy that extends the traditional DPLL+BCP+CDCL resolution based approach, first introduced by Joao Marquez da Silva ~\cite{silva-95} and latter refined by others ~\cite{moskewicz-01} ~\cite{een-04}, with an original technique to check if the structure of a sub-formula of the solving SAT instance has previously been found to be unsatisfiable, in order to skip the search on it whenever found again. The technique introduces an original stabilization procedure (as in ~\cite{bastert-02}) for the structure of the sub-formulas that is tightly coupled with the work done by BPC (each BCP step groups some variables) and has linear complexity.
+\end{abstract}
+
+% The table of contents below is added for your convenience. Please do not use
+% the table of contents if you are preparing your paper for publication in the
+% EPiC series
+
+\setcounter{tocdepth}{2}
+{\small
+\tableofcontents}
+
+%\section{To mention}
+%
+%Processing in EasyChair - number of pages.
+%
+%Examples of how EasyChair processes papers. Caveats (replacement of EC
+%class, errors).
+
+\pagestyle{empty}
+
+%------------------------------------------------------------------------------
+\section{Introduction}
+\label{sect:introduction}
+
+The SAT problem is the canonical decision problem by excellence ~\cite{biere-09} ~\cite{kroening-08} ~\cite{marek-09}. It lays at the heart of the P vs NP question and its importance cannot be overstated ~\cite{cook-09}. People have proved both that “NP != P” and that “NP==P” ~\cite{woeginger-16} ~\cite{muller-13}, and filed patent applications for optimal SAT solvers based on resolution ~\cite{quiroga-01}. 
+
+The practical limitations of human verification of long and complex proofs, even under the peer-review system, highlights the importance of automated proof checking. This and the practical applications of automated theorem proving highlights the importance of the SAT problem.
+
+Exponential lower bounds of resolution (RES) proof size for the pigeon hole principle (PHP) have been proven ~\cite{haken-85} ~\cite{buss-88}, and polynomial size proofs for extended resolution (ER) have also been proven for the PHP  ~\cite{cook-76} ~\cite{cook-79} ~\cite{jarvisalo-07} instances of the SAT problem. That work suggests that solvers based on RES ~\cite{silva-95} ~\cite{moskewicz-01} ~\cite{een-04} need ''something else'' in order to be ''faster'' ~\cite{dixon-04} ~\cite{audemard-10}. 
+
+Based on the notion that theorems are proved with lemmas and the observation that the structure of PHP(n+1, n) can be matched with several substructures of PHP(n+2, n+1), the software library presented in this work (Ben-Jose) extends RES by learning the structure of unsatisfiable sub-formulas (proved unsatisfiable during its execution) and matching them against future structures of sub-formulas found during its execution, in order to skip the search, and directly backtrack on them, when ever a match (subsumed isomorphism) is found. 
+
+This technique is here after called Backtrack Driven by Unsatisfiable Substructure Training (BDUST). BDUST introduces an original stabilization procedure (as in ~\cite{bastert-02}) for the unsatisfiable sub-formulas found, uses the work done by BPC (each BCP step groups some variables), and has linear complexity with respect to the size of the sub-formulas. The structures learned with BDUST have the advantage that can be used also with different instances than the one they were found on. That is why BDUST is ''training'' and not ''learning''.
+
+This form of extending RES is not ER, as the system presented by Tseitin ~\cite{tseitin-83}, because the subsumed isomorphism detection technique is not RES based, and the power and complexity of the resulting proof system has not been formally studied. The empirical results on the classical problems of PHP and isPrime (based on the Braun multiplier) are presented here. 
+
+%------------------------------------------------------------------------------
+\section{Objectives}
+\label{sect:objectives}
+
+(Describe here the objectives)
+
+%------------------------------------------------------------------------------
+\section{Functionality}
+\label{sect:funtionality}
+
+(Describe here the functionality)
+
+%------------------------------------------------------------------------------
+\section{Architecture}
+\label{sect:architecture}
+
+(Describe here the architecture)
+
+%------------------------------------------------------------------------------
+\subsection{The Library}
+
+The following classes and names for attributes are the most important to explain how the solver works. They are explained in terms used in ~\cite{silva-95}, ~\cite{moskewicz-01} and  ~\cite{bastert-02}.
+
+\subsubsection{DPLL+BCP+CDCL classes}
+
+To explain the most important parts of  DPLL+BCP+CDCL, the following classes will be used.
+
+neuron. class for CNF clause behavior. So there is one neuron per clause.
+quanton: class for CNF variables (each variable has a positon and a negaton). There are two quantons per variable. Neurons hold references to quantons called fibres. They are used for BCP.
+
+prop\_signal: class for representing BCP propagation data: which quanton fired by which neuron (which clause forced a given variable). BCP in done with the two watched literals technique (two watched fibres in the library's terminology).
+
+deduction: class for holds the result of analyzing (doing resolution) of a conflict. It has the data for learning new neurons (clauses).
+
+brain: class that holds all data used to solve a particular CNF instance. So there is one brain per CNF instance.
+
+deducer: class that holds the data used to analyze a conflict.
+
+leveldat: A level is all that happens between choices during BCP. So there is one level per choice. This class holds level relevant data.
+
+\subsubsection{Stabilization classes}
+
+The following classes will be used to explain the most important aspects of CNF  stabilization:
+
+sort\_glb: holds all global data used to stabilize (kind of sorting) a group of items (neurons and quantons representing a sub-formula of a CNF).
+
+sortee: an item to be stabilized. Neurons and quantons contain sortees that are used to stabilize CNF sub-formulas. 
+
+sorset: in  order to stabilize a group of items the sort\_glb class (or sortor) needs to group items (neurons and quantons in our case) in several iterations. This class is used for such iterated sub grouping.
+
+sortrel: class used to establish the relations between the sortees to be stabilized. They must be properly initiated before each stabilization. They define the sub-formula in partucular to be stabilized by defining the relations between a particular sub set (sub-formula) of neuron sortees and quanton sortees.
+
+\subsubsection{Matching classses}
+
+The following classes will be used to explain the most important aspects of CNF  matching:
+
+coloring: The initial and final state for an stabilization is a coloring: a grouping of sortees where each colors identifies a group of sortees. A complete coloring is one in which there is one color for each sortee, so that each group has exactly one item (one sortee). This class is used to specify only the input to the stabilization process (the initial state). The class canon\_cnf is used for the output (it is the result of applying the output coloring to the stabilized sub-formula ordered by color). To initialize the sortor, it “loads” the initial coloring into the sort\_glb instance that will stabilize the CNF sub-formula.
+
+canon\_cnf: This class is used to represent the output of an stabilization process: the stabilized CNF sub-formula. It is the interface class to the database class that handles all disk operations (the skeleton class). This class contains some disk handling related information (paths and sha info). A canon\_cnf basically is a set of canon\_clauses (which are basically arrays of numbers).
+
+memap: This class represents a CNF sub-formula. It is the pivot class to do all stabilization. It is matained during BCP and used during backtracking in order to know what CNF sub-formulas are to be stabilized and searched for in the database (skeleton class). There is one memap per leveldat and they are either active or inactive. Active when they are condidates for stabilization, matching and search in database (or saving), at backtrak time. When a CNF  sub-formaula, during search, is found to be unsatisfiable, is not trivial (BCP could not figure it out), and both search branches had the same variables (so that it can latter be searched only with one of them), it is saved, stored in the database (skeleton class). Every time an still active memap has done its first branch of BCP, it is stabilized and searched for in the database (skeleton class). Trivial sub-formulas are called anchors in the code because they serve as a start point for stabilizing not trivial ones. 
+
+\subsubsection{Database classes}
+
+The skeleton class handles all disk related functions and management. The database is basically a directory in disk. In that directory unsatisfiable canon\_cnf are saved and searched by the SHA function of their content. They are saved in a path that is constructed with the SHA and other relevant search info. 
+Since an unsatisfiable sub-formaula might not be minimal (have some unnecessary clauses for unsatisfiability), each unsatisfiable CNF sub-formula has three relevant canon\_cnf: 
+
+The guide. It is the canon\_cnf resulting of stabilizing the CNF sub-formula covered by first search branch variables. So it is a satisfiable part of the unsatisfiable CNF sub-formula that is a “guide” for the search.
+The tauto. It is the full unsatisfiable CNF sub-formula. It is the canon\_cnf resulting of stabilizing the CNF sub-formula covered by both search branches charged quantons (used variables). 
+The diff. This canon\_cnf contains all canon\_clauses in tauto but not in guide. Each diff is saved in a path called 'variant' in the skeleton. So one guide can have several variants. 
+
+A search of a target CNF sub-formula is conducted in two phases: the search for the guide of the target and the search for the variant that is a sub-formula of the target diff. Once the guide is stabilized the search for it is a simple: “see if its path exists” (remember that its path contains the SHA of its content). If the target canon\_cnf is not equal to a variant (the path does not exist), the second phase is more time consuming because it involves reading each variant and comparing it to the target diff to see if the the variant is a sub-formula of the target diff (which would mean that the target is unsatisfiable and therefore can be backtracked).
+
+
+
+%------------------------------------------------------------------------------
+\section{Use case}
+\label{sect:use-case}
+
+(Describe here the use case)
+
+
+%------------------------------------------------------------------------------
+\section{Installation}
+\label{sect:installation}
+
+(Describe here the installation)
+
+%------------------------------------------------------------------------------
+\subsection{Required Packages}
+
+
+%------------------------------------------------------------------------------
+\section{Comparison with other tools}
+\label{sect:comparison}
+
+(Describe here the comparison with other tools)
+
+%------------------------------------------------------------------------------
+\section{Future Work}
+\label{sect:future-work}
+
+(Describe here future work)
+
+%------------------------------------------------------------------------------
+\section{Acknowledgments}
+\label{sect:acknowledgments}
+
+\begin{enumerate}
+\item
+Our heavenly Father YHWH (Yahweh).
+
+\item
+Our Lord Yashua (Jesus Christ).
+
+\item
+Magda Beltran de Quiroga (my mother).
+
+\item
+Federman Quiroga Rios (my father).
+
+\item
+Joao Marquez da Silva for his work on the SAT problem.
+
+\item
+All the authors in the bibliography.
+
+\end{enumerate}
+
+%------------------------------------------------------------------------------
+\label{sect:bib}
+\bibliographystyle{plain}
+%\bibliographystyle{alpha}
+%\bibliographystyle{unsrt}
+%\bibliographystyle{abbrv}
+\bibliography{ben-jose}
+
+%------------------------------------------------------------------------------
+\end{document}
+

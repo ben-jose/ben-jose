@@ -1,0 +1,9 @@
+
+find . -name "*~" -type f | xargs rm
+rm *.bbl
+rm *.toc
+rm *.out
+rm *.log
+rm *.aux
+rm *.blg
+rm $1.pdf
