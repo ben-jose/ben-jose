@@ -52,6 +52,8 @@ var li_4_templ = `
 var a_lit_templ = "<a class='{vr_id}'>{lit}</a>";
 var a_main_cla_templ = "<a name='{cla_id}'>[{all_lits}]</a>";
 
+var a_main_cla_ref = "<a href='#{cla_id}'>{all_lits}</a>";
+
 //			onclick="populate_ul('{ul_id}', '{jsn_rel_pth}')">
 
 function got_rclick(the_pth){
@@ -424,7 +426,7 @@ function populate_main_ul(jsn_file_to_load){
 		cnf_tit.innerHTML = 'The CNF';
 		
 		var cnf_cont = document.getElementById('main_cnf_cont');
-		var cnf_tb = create_cnf_table();
+		var cnf_tb = create_main_cnf_table();
 		cnf_cont.appendChild(cnf_tb);
 
 		var main_lb = document.getElementById('proof_label');
@@ -435,7 +437,7 @@ function populate_main_ul(jsn_file_to_load){
 	}
 }
 
-function create_cnf_table(){
+function create_main_cnf_table(){
 	var bj_cnf = CNF_JSN_DATA.neuromap_ccls;
 		
 	var tbl  = document.createElement('table');
@@ -573,7 +575,7 @@ function populate_ul(ul_elem_id, jsn_pth){
 		htm_str.push(li_pth_elem);
 		htm_str.push('<hr>\n');
 
-		alert('3.CHAIN_LENGTH= ' + the_chain.length);
+		alert('1.CHAIN_LENGTH= ' + the_chain.length);
 		
 		for (var ii = 0; ii < the_chain.length; ii++){
 			var fnm_to_call = 'populate_ul';
@@ -706,17 +708,143 @@ function populate_main_ul_with_param(){
 	}
 }
 
+//var uri_enc = encodeURIComponent(uri);
+//var uri_dec = decodeURIComponent(uri_enc);
+
+function create_tab_tables(tab1, tab2){
+	var s_stl = '1px solid black';
+	var tbl  = document.createElement('table');
+	tbl.style.border = s_stl;
+	var tr = tbl.insertRow();
+	var td1 = tr.insertCell();
+	td1.appendChild(tab1);
+	td1.style.border = s_stl;
+	var td2 = tr.insertCell();
+	td2.appendChild(tab2);
+	td2.style.border = s_stl;
+	
+	return tbl;
+}
+
+function create_subst_tab(subst_ch_stp, vars_repl_arr, ccls_repl_arr){
+	var all_ccls = subst_ch_stp.neuromap_ccls;
+	var all_ccls_idx = subst_ch_stp.ccls_permutation;
+	
+	if(all_ccls.length != all_ccls_idx.length){
+		alert('ERROR. Internal-error-diferent-sizes-in-subst-ccl-data');
+		return;
+	}
+	
+	var tbl  = document.createElement('table');
+	//tbl.style.width  = '100px';
+	tbl.style.border = '1px solid black';
+
+	var num_rr = all_ccls.length;
+	var num_cl = 1;
+	for(var ii = 0; ii < num_rr; ii++){
+		var tr = tbl.insertRow();
+		for(var jj = 0; jj < num_cl; jj++){
+			var td = tr.insertCell();
+			
+			var the_lits = all_ccls[ii];
+			var s_lits = replace_vals(the_lits, vars_repl_arr);
+			if(! is_array(s_lits)){
+				alert(s_lits);
+				return;
+			}
+			
+			var the_idx_rel = all_ccls_idx[ii];
+			if(the_idx_rel.length != 2){
+				alert('ERROR. Internal-error-bad-idx-rel.');
+				return;
+			}
+			var ccl_idx = the_idx_rel[0];
+			
+			var cla_id_str = '' + get_repl_val(ccl_idx, CNF_CCLS_REPL_ARR);
+			var s_lits_str = '' + s_lits;
+			var the_lits_str = a_main_cla_ref.supplant(
+				{all_lits: s_lits_str, cla_id: cla_id_str});
+			
+			td.innerHTML = the_lits_str;
+			td.style.border = '1px solid black';
+		}
+	}
+	return tbl;
+}
+
+function calc_subst_perm_arr(perm_arr, in_repl_arr){
+	if(! is_array_ok(perm_arr)){
+		alert('ERROR. calc_subst_perm_arr-perm_arr-is-not-array.');
+		return null;
+	}
+	if(! is_array_ok(in_repl_arr)){
+		alert('ERROR. calc_subst_perm_arr-in_repl_arr-is-not-array.');
+		return null;
+	}
+	var s_pm__arr = [];
+	for (aa = 0; aa < perm_arr.length; aa++) {
+		perm_pair = perm_arr[aa];
+		if(! is_array_ok(perm_pair)){
+			alert('ERROR. calc_subst_perm_arr-perm_pair-is-not-array.');
+			return null;
+		}
+		if(perm_pair.length != 2){
+			alert('ERROR. calc_subst_perm_arr-perm_pair-is-not-pair.');
+			return null;
+		}
+		var vv0 = perm_pair[0];
+		if(isNaN(vv0)){
+			continue;
+		}
+		var vv1 = perm_pair[1];
+		if(isNaN(vv1)){
+			continue;
+		}
+		var vv2 = get_repl_val(vv0, in_repl_arr);
+		var s_pm_pair = [vv2, vv1];
+		s_pm__arr.push(s_pm_pair);
+	}
+	return s_pm__arr;
+}
+
 function get_html_for_subst(subst_ch_stp){
+	//return 'CALCULATED_HTML_FOR_SUBST';
+	
 	// neuromap_ccls
 	// vars_permutation
 	// ccls_permutation
-	var ccls_str = JSON.stringify(subst_ch_stp.neuromap_ccls, null, 2);
-	//alert('ALL_CCLS=\n' + ccls_str);
-	var htm_str = '<code>' + ccls_str + '</code>';
-	return htm_str;
-	//return 'CALCULATED_HTML_FOR_SUBST';
+	var vars_perm = subst_ch_stp.vars_permutation;
+	var ccls_perm = subst_ch_stp.ccls_permutation;
+	
+	var subst_vars_repl_arr = calc_repl_arr(vars_perm);
+	var subst_ccls_repl_arr = calc_repl_arr(ccls_perm);
+	
+	var htm_str = []
+	
+	//var subst_tbl_2 = create_subst_tab(subst_ch_stp, subst_vars_repl_arr);
+	var subst_tbl_1 = create_subst_tab(subst_ch_stp, CNF_VARS_REPL_ARR);
+	var subst_tbl_2 = create_subst_tab(subst_ch_stp, subst_vars_repl_arr);
+	
+	var tbls = create_tab_tables(subst_tbl_1, subst_tbl_2);
+	var tbls_htm = tbls.outerHTML;
+	htm_str.push(tbls_htm);
+	htm_str.push('<hr>\n');
+	
+	var s_pm_arr = calc_subst_perm_arr(vars_perm, CNF_VARS_REPL_ARR);
+	var ccls_str = JSON.stringify(s_pm_arr, null, 2);
+	var c_per_htm_str = '<code>' + ccls_str + '</code>';
+	
+	htm_str.push('VARS_PERMUTATION<br>');
+	htm_str.push(c_per_htm_str);
+	htm_str.push('<hr>\n');
+	
+	var ccls_str_2 = JSON.stringify(CNF_VARS_REPL_ARR, null, 2);
+	var c_per_htm_str_2 = '<code>' + ccls_str_2 + '</code>';
+	
+	htm_str.push(c_per_htm_str_2);
+	
+	var htm_full_str = htm_str.join("");
+	
+	return htm_full_str;
 }
-
-//var uri_enc = encodeURIComponent(uri);
-//var uri_dec = decodeURIComponent(uri_enc);
 
