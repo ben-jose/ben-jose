@@ -60,6 +60,7 @@ neuromap::map_find(){
 
 void
 dbg_aux_prt_neus(bj_ostream& os, ch_string tit, row_neuron_t& all_neus, ticket& nmp_tk){
+#ifdef FULL_DEBUG
 	os << "\n" << tit << "=\n";
 	os << "[";
 	for(long aa = 0; aa < all_neus.size(); aa++){
@@ -70,6 +71,7 @@ dbg_aux_prt_neus(bj_ostream& os, ch_string tit, row_neuron_t& all_neus, ticket& 
 		if(to_wrt){ os << "|"; } else { os << "."; }
 	}
 	os << "]";
+#endif
 }
 
 bool
@@ -774,7 +776,6 @@ neuromap::map_oper(mem_op_t mm){
 		na_dbg_guide_sha_str = tmp_guide_cnf.cf_sha_str;
 		na_dbg_quick_sha_str = tmp_diff_cnf.get_ref3_nam();
 		na_dbg_diff_min_sha_str = tmp_diff_cnf.cf_minisha_str;
-		ch_string tg_minisha_str = "6aa80ae677";
 	);
 	
 	bool oper_ok = false;
@@ -848,6 +849,7 @@ neuromap::map_oper(mem_op_t mm){
 		}
 	}
 
+	BRAIN_DBG(ch_string tg_minisha_str = "6aa80ae677");
 	DBG_PRT_COND(115, (na_dbg_diff_min_sha_str == tg_minisha_str),
 		os << "TG_NMP_MAP_OPER " << map_dbg_oper_str(mm);
 		os << " oper_ok=" << oper_ok;
@@ -855,20 +857,32 @@ neuromap::map_oper(mem_op_t mm){
 		os << " nmp=\n" << this
 	); // 6aa80ae677
 	
+	DBG_PRT_COND(115, oper_ok, os << "TAUTO_TEES=\n";
+		brn.br_tmp_wrt_tauto_tees.print_row_data(os, true, "\n");
+	);
+	
 	if(oper_ok){
 		na_tauto_oper_ok = true;
 	}
 
 	
 	DBG_PRT(102, 
-		if(brn.br_dbg_found_top){ os << STACK_STR << "\n"; }
+		if(brn.br_dbg_found_top){
+			os << "---dbg_call_dbg_call_dbg_call---\n"; 
+			os << STACK_STR << "\n"; 
+			os << "\n---dbg_call_dbg_call_dbg_call---\n"; 
+		}
 		ch_string op_ok_str = (oper_ok)?("YES"):("no");
 		ch_string op_str = (na_dbg_nmp_mem_op == mo_find)?("Find"):("Write");
 		op_str += op_ok_str;
 		os << op_str << " na_idx=" << na_index << "\n";
 	);
 	DBG_PRT(70,
-		if(brn.br_dbg_found_top){ os << STACK_STR << "\n"; }
+		if(brn.br_dbg_found_top){ 
+			os << "---dbg_call_dbg_call_dbg_call---\n"; 
+			os << STACK_STR;
+			os << "\n---dbg_call_dbg_call_dbg_call---\n"; 
+		}
 		ch_string op_ok_str = (oper_ok)?("YES"):("no");
 		ch_string op_str = (na_dbg_nmp_mem_op == mo_find)?("Find"):("Write");
 		op_str += op_ok_str;

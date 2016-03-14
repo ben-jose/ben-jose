@@ -47,7 +47,7 @@ bool
 load_phi_by_hole_brain(brain& brn, long holes);
 
 solver*
-phi_main(long num_h){
+phi_main(long num_h, bool wrt_proof){
 	ch_string root_pth = ".";
 	
 	solver* nw_slv = solver::create_solver();
@@ -56,7 +56,9 @@ phi_main(long num_h){
 		return NULL_PT;
 	}
 	solver& the_slvr = *nw_slv;
-	the_slvr.slv_skl.kg_root_path = root_pth;	
+	the_slvr.slv_skl.kg_root_path = root_pth;
+	
+	the_slvr.slv_prms.sp_write_proofs = wrt_proof;
 
 	DBG(the_slvr.slv_skl.kg_keep_skeleton = false;)
 	the_slvr.slv_skl.init_paths();
@@ -102,13 +104,20 @@ int	main(int argc, char** argv){
 
 	os << "THIS IS THE PHI TEST PROG \n";
 	
+	bool wrt_proof = false;
 	if(argc < 2){
-		os << "args: <num_holes>";
+		os << "args: <num_holes> [-proof]";
 		return 0;
 	}
 	long num_h = atol(argv[1]); 
+	if(argc > 2){
+		ch_string the_arg = argv[2];
+		if(the_arg == "-proof"){
+			wrt_proof = true;
+		}
+	}
 	
-	solver* nw_slv = phi_main(num_h);
+	solver* nw_slv = phi_main(num_h, wrt_proof);
 
 	if(nw_slv != NULL_PT){
 		solver::release_solver(nw_slv);

@@ -42,9 +42,10 @@ proof writing function declarations.
 
 class proof_tk;
 
-
 ch_string 	proof_get_unirons_path(skeleton_glb& skg);
 void		proof_create_final_unirons_path(skeleton_glb& skg, ch_string end_dir_pth);
+
+long 		proof_max_end_idx(deduction& dct);
 
 ch_string proof_add_paths(ch_string pth1, ch_string pth2);
 ch_string proof_get_nmp_proof_path(neuromap& the_nmp);

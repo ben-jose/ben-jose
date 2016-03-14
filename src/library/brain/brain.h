@@ -2803,9 +2803,9 @@ class deducer {
 	bool	ck_end_of_lrn_nmp();
 	
 	void	fill_rsn(reason& rsn);
-	void	find_all_to_write(row_neuromap_t& to_wrt);
+	void	find_all_to_write(row_neuromap_t& to_wrt, reason& dbg_rsn);
 	
-	bool		ck_deduc_init(long deduc_lv, bool full_ck);
+	bool		ck_deduc_init(long deduc_lv, bool full_ck, row_quanton_t& causes);
 	
 	void		set_conflicts(row<prop_signal>& all_confl){
 		de_all_confl.clear(true, true);
@@ -2821,7 +2821,7 @@ class deducer {
 	
 	void	get_first_causes(deduction& dct);
 		
-	void	deduce_init(row_quanton_t& causes, long max_lv = INVALID_LEVEL);
+	long	deduce_init(row_quanton_t& causes, long max_lv = INVALID_LEVEL);
 	void 	deduce(deduction& dct, long max_lv = INVALID_LEVEL);
 	
 	void	set_nxt_noted(quanton* nxt_qua);
@@ -3167,7 +3167,7 @@ public:
 	row_neuron_t	br_tmp_all_neus;
 	row_neuron_t	br_tmp_all_confl;
 
-	row_neuromap_t	br_tmp_wrt_ok;
+	row_neuromap_t	br_tmp_wrt_root;
 	
 	row<prop_signal>	br_tmp_prt_ps;
 	row<prop_signal>	br_tmp_nmp_get_all_ps;
@@ -3643,10 +3643,10 @@ public:
 	
 	bool		analyse_conflicts(row<prop_signal>& all_confl, deduction& dct);
 
-	void 		write_analysis(row_quanton_t& causes, reason& rsn);
+	void 		write_analysis(row_quanton_t& causes, long deduc_lv, reason& rsn);
 	void		write_update_all_tk(row_quanton_t& causes);
 	void		write_get_tk(ticket& wrt_tk);
-	bool		ck_write_quas(row_quanton_t& wrt_quas);
+	bool		ck_write_quas(reason& rsn);
 
 	long		get_min_trainable_num_sub();
 	

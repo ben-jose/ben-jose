@@ -2185,7 +2185,7 @@ brain::reverse_with(reason& rsn){
 	
 	// retract
 	retract_to(rsn.rs_target_level, false);
-	BRAIN_CK(ck_write_quas(rsn.rs_motives));
+	BRAIN_CK(ck_write_quas(rsn));
 	
 	// some checks
 
@@ -3827,14 +3827,22 @@ neuron::is_ne_source(){
 }
 
 bool
-brain::ck_write_quas(row_quanton_t& wrt_quas){
+brain::ck_write_quas(reason& rsn){
 #ifdef FULL_DEBUG
-	//brain& brn = *this;
+	row_quanton_t& wrt_quas = rsn.rs_motives;
+	brain& brn = *this;
 	for(long aa = 0; aa < wrt_quas.size(); aa++){
 		quanton* qua = wrt_quas[aa];
 		BRAIN_CK(qua != NULL_PT);
 		BRAIN_CK(qua->has_charge());
-		BRAIN_CK(! qua->has_source() || ! qua->get_source()->is_ne_to_wrt());
+		BRAIN_CK_PRT((! qua->has_source() || ! qua->get_source()->is_ne_to_wrt()), 
+			DBG_PRT_ABORT(brn);
+			os << " qua=" << qua << "\n";
+			os << " src=" << qua->get_source() << "\n";
+			os << " qu_lv=" << qua->qlevel() << "\n";
+			os << " br_lv=" << level() << "\n";
+			os << " rsn=" << rsn << "\n";
+		);
 		BRAIN_CK(qua->is_qu_to_upd_wrt_tk());
 	}
 #endif

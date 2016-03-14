@@ -212,13 +212,13 @@ deducer::set_notes_of(row_quanton_t& causes, bool is_first){
 }
 
 bool
-deducer::ck_deduc_init(long deduc_lv, bool full_ck){
+deducer::ck_deduc_init(long deduc_lv, bool full_ck, row_quanton_t& causes){
 #ifdef FULL_DEBUG
 	BRAIN_DBG(
 		qlayers_ref& qlr = de_ref;
 		notekeeper& nkpr = de_nkpr;
-		brain& brn = get_de_brain();
-		bool in_root = (brn.in_root_lv());
+		//brain& brn = get_de_brain();
+		//bool in_root = (brn.in_root_lv());
 	)
 	BRAIN_CK(nkpr.nk_get_counter() == 0);
 	
@@ -228,7 +228,8 @@ deducer::ck_deduc_init(long deduc_lv, bool full_ck){
 	BRAIN_CK(de_nkpr.nk_get_counter() == 0);
 	BRAIN_CK(de_all_noted.size() == 0); 
 	
-	BRAIN_CK_PRT((! full_ck || in_root || (nkpr.dk_note_layer > 0)),
+	// full_find
+	/*BRAIN_CK_PRT((! full_ck || in_root || (nkpr.dk_note_layer > 0)),
 		DBG_PRT_ABORT(brn);
 		brn.print_trail(os);
 		os << " br_lv=" << brn.level() << "\n";
@@ -236,7 +237,8 @@ deducer::ck_deduc_init(long deduc_lv, bool full_ck){
 		os << " full_ck=" << full_ck << "\n";
 		os << " in_root=" << in_root << "\n";
 		os << " nt_lyr=" << nkpr.dk_note_layer << "\n";
-	);
+		os << " causes=" << causes << "\n";
+	);*/
 	BRAIN_CK(! full_ck || (deduc_lv != INVALID_LEVEL));
 	BRAIN_CK(! full_ck || (nkpr.dk_note_layer == deduc_lv));
 	BRAIN_CK(! full_ck || (qlr.has_curr_quanton()));
@@ -244,7 +246,7 @@ deducer::ck_deduc_init(long deduc_lv, bool full_ck){
 	return true;
 }
 
-void	
+long
 deducer::deduce_init(row_quanton_t& causes, long max_lv){
 	qlayers_ref& qlr = de_ref;
 	notekeeper& nkpr = de_nkpr;
@@ -252,7 +254,7 @@ deducer::deduce_init(row_quanton_t& causes, long max_lv){
 	BRAIN_CK(causes.size() > 0);
 
 	reset_deduc();
-	BRAIN_CK(ck_deduc_init(INVALID_LEVEL, false));
+	BRAIN_CK(ck_deduc_init(INVALID_LEVEL, false, causes));
 	
 	long deduc_lv = max_lv;
 	if(deduc_lv == INVALID_LEVEL){
@@ -263,13 +265,15 @@ deducer::deduce_init(row_quanton_t& causes, long max_lv){
 	nkpr.init_notes(deduc_lv);
 	qlr.reset_curr_quanton();
 	
-	BRAIN_CK(ck_deduc_init(deduc_lv, true));
+	BRAIN_CK(ck_deduc_init(deduc_lv, true, causes));
 	
 	set_notes_of(causes, true);
 	
 	BRAIN_CK_PRT((nkpr.dk_tot_noted > 0), get_de_brain().dbg_prt_margin(os));
 	
 	find_next_noted();
+	
+	return deduc_lv;
 }
 
 void
@@ -303,7 +307,9 @@ deducer::fill_rsn(reason& rsn){
 	rsn.rs_target_level = find_max_level(rsn.rs_motives);
 
 
-	BRAIN_CK(br_in_root || (rsn.rs_target_level < nkpr.dk_note_layer));
+	BRAIN_CK((rsn.rs_target_level == ROOT_LEVEL) || 
+				(rsn.rs_target_level < nkpr.dk_note_layer)
+	);
 	BRAIN_CK(ck_motives(brn, rsn.rs_motives));
 
 	DBG_PRT(20, os << "find_rsn of reason=" << rsn);
@@ -508,9 +514,10 @@ quanton::get_candidate_to_write(brain& brn){
 }
 
 void
-deducer::find_all_to_write(row<neuromap*>& to_wrt){
+deducer::find_all_to_write(row<neuromap*>& to_wrt, reason& rsn){
 	brain& brn = get_de_brain();
 	row<prop_signal>& all_noted = de_all_noted;
+	long tg_lv = rsn.rs_target_level;
 	
 	BRAIN_CK(to_wrt.is_empty());
 	
@@ -521,24 +528,38 @@ deducer::find_all_to_write(row<neuromap*>& to_wrt){
 	);
 
 	BRAIN_DBG(
-		ticket curr_wrt_tk;
-		brn.write_get_tk(curr_wrt_tk);
+		ticket curr_br_wrt_tk;
+		brn.write_get_tk(curr_br_wrt_tk);
 	);
 	
 	BRAIN_CK(brn.br_na_tot_na0 == 0);
 	for(long ii = 0; ii < all_noted.size(); ii++){
 		prop_signal& q_sig = all_noted[ii];
-		BRAIN_CK_PRT(((q_sig.ps_source == NULL_PT) || (! q_sig.ps_source->ne_original) ||
-			is_tk_equal(q_sig.ps_source->ne_to_wrt_tk, curr_wrt_tk)), 
+		
+		quanton* qua = q_sig.ps_quanton;
+		if((qua != NULL_PT) && (qua->qlevel() == tg_lv)){
+			/*BRAIN_CK_PRT((false), 
+				DBG_PRT_ABORT(brn);
+				brn.print_trail(os);
+				os << " all_noted=" << all_noted << "\n";
+			);*/
+			break;
+		} // added full_find
+		
+		BRAIN_DBG(neuron* ps_src = q_sig.ps_source);
+		BRAIN_CK_PRT(
+			((ps_src == NULL_PT) || (! ps_src->ne_original) ||
+				is_tk_equal(ps_src->ne_to_wrt_tk, curr_br_wrt_tk)
+			), 
 			DBG_PRT_ABORT(brn);
 			brn.print_trail(os);
-			neuron* nn0 = q_sig.ps_source;
 			os << " ps=" << q_sig << "\n";
-			os << " src=" << nn0 << "\n";
-			os << " w_tk=" << nn0->ne_to_wrt_tk << "\n";
-			os << " b_tk=" << curr_wrt_tk << "\n";
-			if(nn0 != NULL_PT){
-				os << " is_to_wrt=" << nn0->is_ne_to_wrt() << "\n";
+			os << " src=" << ps_src << "\n";
+			os << " ne_to_wrt_tk=" << ps_src->ne_to_wrt_tk << "\n";
+			os << " curr_br_wrt_tk=" << curr_br_wrt_tk << "\n";
+			os << " rs_target_level=" << rsn.rs_target_level << "\n";
+			if(ps_src != NULL_PT){
+				os << " is_to_wrt=" << ps_src->is_ne_to_wrt() << "\n";
 			}
 			if(q_sig.ps_quanton != NULL_PT){
 				os << " q_id=" << q_sig.ps_quanton->qu_id << "\n";
@@ -557,7 +578,7 @@ brain::candidate_find_analysis(bool& found_top, deducer& dedcer, deduction& dct)
 {
 	reason& nxt_rsn = dct.dt_rsn;
 	row_neuromap_t& to_wrt = dct.dt_all_to_wrt;
-	brain& brn = *this;
+	//brain& brn = *this;
 	BRAIN_DBG(
 		bj_big_int_t& ncf = br_dbg_num_find_anal;
 		ncf++;
@@ -570,7 +591,9 @@ brain::candidate_find_analysis(bool& found_top, deducer& dedcer, deduction& dct)
 	found_top = false;
 	
 	if(in_root_lv()){
-		DBG_PRT(39, os << "#f=" << ncf << "." << dbg_num_cicl << ".find.NULL_NMP root level");
+		DBG_PRT(39, os << "#f=" << ncf << "." << dbg_num_cicl;
+			os << ".find.NULL_NMP root level"
+		);
 		return;
 	}
 	
@@ -675,17 +698,19 @@ brain::candidate_find_analysis(bool& found_top, deducer& dedcer, deduction& dct)
 		dct.reset_deduction();
 		row_quanton_t& nmp_causes = dct.dt_first_causes;
 		nmp_causes.clear();
-		
-		to_find->map_get_all_upper_quas(nmp_causes);
-		
+
 		dct.dt_last_found = to_find;
 		
-		if(nmp_causes.is_empty()){
-			DBG_PRT(39, os << "#f=" << ncf << "." << dbg_num_cicl << ".found_top_1");
-			found_top = true;
-			dct.dt_found_top = true;
-			break;
-		}
+		to_find->map_get_all_upper_quas(nmp_causes);
+
+		// full_find
+		/*
+		//if(nmp_causes.is_empty()){
+		//	DBG_PRT(39, os << "#f=" << ncf << "." << dbg_num_cicl << ".found_top_1");
+		//	found_top = true;
+		//	dct.dt_found_top = true;
+		//	break;
+		//}
 		DBG_PRT(39, os << "#f=" << ncf << "." << dbg_num_cicl;
 			os << ".upper_quas=" << nmp_causes
 		);
@@ -695,7 +720,7 @@ brain::candidate_find_analysis(bool& found_top, deducer& dedcer, deduction& dct)
 	
 		if(max_lv == ROOT_LEVEL){
 			BRAIN_CK(dct.dt_rsn.is_rs_virgin());
-			write_analysis(nmp_causes, dct.dt_rsn);
+			write_analysis(nmp_causes, nxt_lv, dct.dt_rsn);
 			
 			DBG_PRT(39, os << "#f=" << ncf << "." << dbg_num_cicl << ".found_top_2");
 			found_top = true;
@@ -706,24 +731,34 @@ brain::candidate_find_analysis(bool& found_top, deducer& dedcer, deduction& dct)
 		
 		BRAIN_CK(nxt_lv > 0);
 		BRAIN_REL_CK(nxt_lv > 0);
+		*/
+		// full_find
 		
 		long old_lv = nxt_lv;
 		
-		dedcer.deduce(dct, max_lv);
+		dedcer.deduce(dct);
+		//dedcer.deduce(dct, max_lv);
+
+		nxt_lv = nxt_rsn.rs_target_level;
 		
-		BRAIN_CK(nxt_rsn.rs_target_level != INVALID_LEVEL);
-		BRAIN_CK(nxt_rsn.rs_target_level < old_lv);
-		BRAIN_REL_CK(nxt_rsn.rs_target_level < old_lv);
+		BRAIN_CK(nxt_lv != INVALID_LEVEL);
+		
+		bool cond1_nxt_lv = ((nxt_lv < old_lv) || (old_lv == ROOT_LEVEL));
+		BRAIN_CK(cond1_nxt_lv);
+		BRAIN_REL_CK(cond1_nxt_lv);
 		
 		DBG_PRT_COND(103, was_e && ! to_wrt.is_empty(), 
 					 os << "\n\nTRAINING_DURING_FIND\n\n");
 		
-		nxt_lv = nxt_rsn.rs_target_level;
 		
 		BRAIN_CK(nxt_lv < out_nmp->na_orig_lv);
-		BRAIN_CK(nxt_lv < old_lv);
-		BRAIN_REL_CK(nxt_lv < old_lv);
 
+		if(old_lv == ROOT_LEVEL){
+			found_top = true;
+			dct.dt_found_top = true;
+			break;
+		}
+		
 		if(! to_wrt.is_empty()){
 			DBG_PRT(39, os << "#f=" << ncf << "." << dbg_num_cicl << ".find_stop_3.";
 				os << " has_to_wrt && has_stup. nmp=" << out_nmp;
@@ -735,25 +770,6 @@ brain::candidate_find_analysis(bool& found_top, deducer& dedcer, deduction& dct)
 	
 	//return out_nmp;
 } // end_of_candidate_fnd_analysis
-
-void
-brain::add_top_cands(row_neuromap_t& to_wrt){
-	row_neuromap_t& all_cand = br_candidate_nmp_lvs;
-	for(long aa = 0; aa < all_cand.size(); aa++){
-		neuromap* nmp = all_cand[aa];
-		BRAIN_CK(nmp != NULL_PT);
-		BRAIN_CK(nmp->nmp_is_cand());
-		
-		quanton& qua = *(nmp->na_candidate_qua);
-		BRAIN_CK(qua.is_pos());
-		
-		long q_lv = qua.qlevel();
-		if(q_lv != ROOT_LEVEL){
-			break;
-		}
-		nmp->nmp_add_to_write(to_wrt);
-	}
-}
 
 void
 prop_signal::get_ps_cand_to_wrt(brain& brn, row<neuromap*>& to_wrt, long trace_idx){
@@ -773,9 +789,7 @@ neuromap::nmp_add_to_write(row_neuromap_t& to_wrt, long trace_idx){
 	brain& brn = get_brn();
 	neuromap& the_nmp = *this;
 	BRAIN_CK(na_dbg_cand_sys);
-	DBG_PRT(102, os << "ADDING_CAND_to_wrt ";
-		os << "ps=" << this << "\n\n CAND_TO_WRT=\n" << this
-	);
+	DBG_PRT(102, os << "ADDING_CAND_to_wrt=" << the_nmp.dbg_na_id());
 	
 	BRAIN_CK(na_num_submap != INVALID_NUM_SUB);
 	long min_sub = brn.get_min_trainable_num_sub();
@@ -893,25 +907,6 @@ quanton::update_source_wrt_tk(brain& brn){
 	}
 }
 
-void
-brain::write_analysis(row_quanton_t& causes, reason& rsn){
-	brain& brn = *this;
-	qlayers_ref& qlr = br_wrt_ref;
-	long tg_lv = rsn.rs_target_level;
-	
-	write_update_all_tk(causes);
-	
-	quanton* nxt_qua = qlr.get_curr_quanton();
-	while(nxt_qua != NULL_PT){
-		BRAIN_CK(nxt_qua->is_pos());
-		if(nxt_qua->qlevel() == tg_lv){
-			break;
-		}
-		nxt_qua->update_source_wrt_tk(brn);
-		nxt_qua = qlr.dec_curr_quanton();
-	}
-}
-
 bool
 deducer::is_end_of_rsn(bool in_roo){
 	long num_ly_notes = de_nkpr.dk_num_noted_in_layer;
@@ -939,6 +934,13 @@ deducer::deduce(deduction& dct, long max_lv)
 {
 	row_quanton_t& causes = dct.dt_first_causes;
 	reason& rsn = dct.dt_rsn;
+	
+	if(causes.is_empty()){
+		rsn.init_reason();
+		rsn.rs_target_level = ROOT_LEVEL;
+		return;
+	}
+	
 	row<neuromap*>& to_wrt = dct.dt_all_to_wrt;
 	brain& brn = get_de_brain();
 	
@@ -950,7 +952,7 @@ deducer::deduce(deduction& dct, long max_lv)
 	MARK_USED(qlr);
 	notekeeper& nkpr = de_nkpr;
 	
-	deduce_init(causes, max_lv);
+	long deduc_lv = deduce_init(causes, max_lv);
 	while(! is_end_of_rsn(roo)){
 		BRAIN_CK(qlr.has_curr_quanton());
 		find_next_source();
@@ -964,11 +966,13 @@ deducer::deduce(deduction& dct, long max_lv)
 	BRAIN_CK(nkpr.dk_quas_lyrs.is_ql_empty());
 	BRAIN_CK(nkpr.nk_get_counter() == 0);
 
-	brn.write_analysis(causes, rsn);
+	brn.write_analysis(causes, deduc_lv, rsn);
 	
-	find_all_to_write(to_wrt);
+	find_all_to_write(to_wrt, rsn);
 	
-	if(brn.in_root_lv() && to_wrt.is_empty()){
+	// full_find
+	//if(brn.in_root_lv() && to_wrt.is_empty()){
+	if((deduc_lv == ROOT_LEVEL) && to_wrt.is_empty()){
 		brn.add_top_cands(to_wrt);
 	}
 	
@@ -997,5 +1001,51 @@ deduction::update_all_to_wrt_for_proof(){
 		all_wt_nmp.push(&wt_nmp);
 	}
 	all_wt_nmp.move_to(dt_all_to_wrt);
+}
+
+void
+brain::add_top_cands(row_neuromap_t& to_wrt){
+	row_neuromap_t& all_cand = br_candidate_nmp_lvs;
+	
+	row_neuromap_t& tmp_to_wrt = br_tmp_wrt_root;
+	
+	for(long aa = 0; aa < all_cand.size(); aa++){
+		neuromap* nmp = all_cand[aa];
+		BRAIN_CK(nmp != NULL_PT);
+		BRAIN_CK(nmp->nmp_is_cand());
+		
+		quanton& qua = *(nmp->na_candidate_qua);
+		BRAIN_CK(qua.is_pos());
+		
+		long q_lv = qua.qlevel();
+		if(q_lv != ROOT_LEVEL){
+			break;
+		}
+		nmp->nmp_add_to_write(tmp_to_wrt);
+	}
+	tmp_to_wrt.append_to(to_wrt, 0, -1, true);
+}
+
+void
+brain::write_analysis(row_quanton_t& causes, long deduc_lv, reason& rsn){
+	brain& brn = *this;
+	qlayers_ref& qlr = br_wrt_ref;
+	long tg_lv = rsn.rs_target_level;
+	
+	write_update_all_tk(causes);
+	
+	quanton* nxt_qua = qlr.get_curr_quanton();
+	while(nxt_qua != NULL_PT){
+		BRAIN_CK(nxt_qua->is_pos());
+		//if(! brn.in_root_lv() && (nxt_qua->qlevel() == tg_lv)){
+		//if((deduc_lv != ROOT_LEVEL) && (nxt_qua->qlevel() == tg_lv)){
+		//if((tg_lv != ROOT_LEVEL) && (nxt_qua->qlevel() == tg_lv)){
+		//if(nxt_qua->qlevel() == tg_lv){
+		if((deduc_lv != ROOT_LEVEL) && (nxt_qua->qlevel() == tg_lv)){
+			break;
+		}
+		nxt_qua->update_source_wrt_tk(brn);
+		nxt_qua = qlr.dec_curr_quanton();
+	}
 }
 

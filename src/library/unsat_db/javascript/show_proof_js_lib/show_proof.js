@@ -562,14 +562,13 @@ function populate_ul(ul_elem_id, jsn_pth){
 			return;
 		}
 		
-		//var dir_pth = get_dir(jsn_pth);
-		var dir_pth = get_dir(jsn_obj.loaded_pth);
+		var lded_pth = get_dir(jsn_obj.loaded_pth);
 		var the_chain = jsn_obj.chain;
-		
+
 		var chn_sz = the_chain.length - 1;
 		var num_sec = jj + 1;
 		var sec_nm = 'Section ' + num_sec + ' size=' + chn_sz;
-		var li_pth_elem = li_1_templ.supplant({lb_tit: dir_pth, lb_txt: sec_nm});
+		var li_pth_elem = li_1_templ.supplant({lb_tit: lded_pth, lb_txt: sec_nm});
 		htm_str.push('<hr>\n');
 		htm_str.push(li_pth_elem);
 		htm_str.push('<hr>\n');
@@ -580,6 +579,7 @@ function populate_ul(ul_elem_id, jsn_pth){
 			var fnm_to_call = 'populate_ul';
 			var sub_htm_templ = li_2_templ;
 			var subst_htm = 'THE_SUBST_HTML';
+			var dir_pth = lded_pth;
 			
 			var ch_stp = the_chain[ii];
 			var stp_str = JSON.stringify(ch_stp, null, 2);
@@ -592,8 +592,9 @@ function populate_ul(ul_elem_id, jsn_pth){
 			
 			var ext_pth = null;
 			if(ne_ty == "full"){
-				ext_pth = ch_stp.neu_full_jsn_pth;
-				dir_pth = SKL_PARENT + ext_pth + '/';
+				//ext_pth = ch_stp.neu_full_jsn_pth;
+				//dir_pth = SKL_PARENT + ext_pth + '/';
+				//alert('DEBUG. changed-1-dir_pth-to \n' + dir_pth);
 				continue;
 			}
 			if(ne_ty == "subst"){
@@ -601,6 +602,7 @@ function populate_ul(ul_elem_id, jsn_pth){
 				ext_pth = ch_stp.neu_full_jsn_pth;
 				//dir_pth = SKL_PARENT + ext_pth + '/';
 				dir_pth = ext_pth + '/';
+				//alert('DEBUG. changed-2-dir_pth-to \n' + dir_pth);
 				fnm_to_call = 'open_new_proof';
 				sub_htm_templ = li_4_templ;
 				subst_htm = get_html_for_subst(ch_stp);
@@ -647,6 +649,9 @@ function populate_ul(ul_elem_id, jsn_pth){
 				//var li_elem_2 = li_2_templ.supplant(repl);
 				var li_elem_2 = sub_htm_templ.supplant(repl);
 				htm_str.push(li_elem_2);
+				
+				//alert('DEBUG. added-item \n' + li_elem_2);
+				
 			}
 			
 			//var res_var = ch_stp.va_r;

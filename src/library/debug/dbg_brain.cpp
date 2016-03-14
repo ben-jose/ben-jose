@@ -969,9 +969,9 @@ dbg_run_satex_on(brain& brn, ch_string f_nam, neuromap* dbg_nmp){
 		os << " CNF_FILE=\n" << f_nam << bj_eol;
 		os << " \nduring ff=\n" << o_ff << bj_eol;
 		
-		os << "END_OF_aborting_data";
 		if(is_min_wrt){
 			os << "(MINIMAL_WRITE)";
+			os << "END_OF_minimal_write_abort_data";
 		}
 		os << "\n";
 		
@@ -990,6 +990,11 @@ dbg_run_satex_on(brain& brn, ch_string f_nam, neuromap* dbg_nmp){
 			os << " \nduring ff=\n" << o_ff2 << "\n";
 			os << "FULL_WRITE_OK !!!!\n\n";
 		}
+		
+		if(dbg_nmp != NULL_PT){
+			os << "NMP_ID=" << dbg_nmp->dbg_na_id() << "\n";
+		}
+		os << "\n\nEND_OF_aborting_data";
 	}
 	
 	

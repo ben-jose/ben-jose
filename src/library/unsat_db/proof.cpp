@@ -130,6 +130,15 @@ proof_write_top_html_file(ch_string os_htm_pth){
 	set_fstr(os_htm_pth, top_show_proof_html_code);
 }
 
+long
+proof_max_end_idx(deduction& dct){
+	brain& brn = dct.get_brn();
+	row<prop_signal>& trace = dct.dt_all_noted;
+	long end_idx = trace.size() - 1;
+	if(brn.in_root_lv()){ end_idx = trace.size(); }
+	return end_idx;
+}
+
 ch_string 
 proof_add_paths(ch_string pth1, ch_string pth2){
 	BRAIN_CK(*(pth1.rbegin()) != '/');
@@ -557,7 +566,10 @@ proof_write_bj_proof_for(neuromap& nmp, proof_tk& pf_tk)
 	
 	write_file(os_bj_nmp_pf_pth, json_str, true); //OS_OPER
 	
-	DBG_PRT_WITH(115, brn, os << "Wrote FINAL_PROOF_JSN=\n" << os_bj_nmp_pf_pth);
+	DBG_PRT_WITH(115, brn, os << "Wrote FINAL_PROOF_JSN=\n" << os_bj_nmp_pf_pth << "\n";
+		os << " FOR_TAUTO=\n" << brn.br_tmp_wrt_tauto_cnf << "\n";
+		//os << " FOR_NMP=\n" << nmp << "\n";
+	);
 }
 
 void
@@ -652,17 +664,19 @@ proof_write_json_file_for(deduction& dct, long to_wrt_idx, long prv_wrt_idx)
 		os << " has_prv=" << has_prv;
 		os << " in_root=" << brn.in_root_lv() << "\n";
 		brn.print_trail(os);
-		os << " ALL_CONF=\n";
+		os << "\n ALL_CONF=\n";
 		brn.br_all_conflicts_found.print_row_data(os, true, "\n");
-		os << " ALL_NOTED=\n";
+		os << "\n LAST_NMP_FOUND=\n" << dct.dt_last_found << "\n";
+		os << "\n FIRST_CAUSES=\n";
+		os << dct.dt_first_causes << "\n";
+		os << "\n ALL_NOTED=\n";
 		trace.print_row_data(os, true, "\n");
-		os << " REASON=\n";
+		os << "\n REASON=\n";
 		os << rsn << "\n";
 		os << "learned_unirons=" << brn.br_learned_unit_neurons << "\n";
 	);
 	
-	long end_trace_idx = trace.size() - 1;
-	if(brn.in_root_lv()){ end_trace_idx = trace.size(); }
+	long end_trace_idx = proof_max_end_idx(dct);
 	
 	proof_tk invalid_tk;
 	proof_tk pf_tk;
@@ -741,13 +755,17 @@ proof_write_json_file_for(deduction& dct, long to_wrt_idx, long prv_wrt_idx)
 	if(has_prv){
 		ini_trace_idx = proof_get_trace_idx_of(dct, prv_wrt_idx);
 		if((ini_trace_idx != INVALID_IDX) && (end_trace_idx == INVALID_IDX)){
-			end_trace_idx = trace.size();
+			end_trace_idx = proof_max_end_idx(dct);
+			//end_trace_idx = trace.size();
 		}
 		if(ini_trace_idx == INVALID_IDX){
-			BRAIN_CK_PRT((end_trace_idx == INVALID_IDX) || (end_trace_idx == trace.size()), 
+			BRAIN_CK_PRT((	(end_trace_idx == INVALID_IDX) || 
+							(end_trace_idx == proof_max_end_idx(dct))
+						 ), 
 				DBG_PRT_ABORT(brn);
 				os << " to_wrt_sz=" << all_to_wrt.size() << "\n";
 				os << " end_trace_idx=" << end_trace_idx << "\n";
+				os << " max_end=" << proof_max_end_idx(dct) << "\n";
 			);
 			ini_trace_idx = trace.size();
 		}
@@ -774,7 +792,8 @@ proof_write_json_file_for(deduction& dct, long to_wrt_idx, long prv_wrt_idx)
 	}
 
 	if(! has_prv && (end_trace_idx == INVALID_IDX)){
-		end_trace_idx = trace.size();
+		end_trace_idx = proof_max_end_idx(dct);
+		//end_trace_idx = trace.size();
 	}
 	
 	//BRAIN_CK(all_to_move.is_empty());
