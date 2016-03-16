@@ -132,10 +132,17 @@ proof_write_top_html_file(ch_string os_htm_pth){
 
 long
 proof_max_end_idx(deduction& dct){
-	brain& brn = dct.get_brn();
+	//brain& brn = dct.get_brn();
 	row<prop_signal>& trace = dct.dt_all_noted;
 	long end_idx = trace.size() - 1;
-	if(brn.in_root_lv()){ end_idx = trace.size(); }
+	
+	if(! trace.is_empty()){
+		quanton* end_qua = trace.last().ps_quanton;
+		if((end_qua != NULL_PT) && end_qua->in_root_qlv()){
+			end_idx = trace.size();
+		}
+	}
+	//if(brn.in_root_lv()){ end_idx = trace.size(); }
 	return end_idx;
 }
 
