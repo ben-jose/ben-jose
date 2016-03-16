@@ -26,7 +26,8 @@ var li_2_templ = `
 	</li>
 `;
 
-var li_3_templ = "<li><a href='#{cla_id}'>{all_lits}</a></li>";
+//var li_3_templ = "<li><a href='#{cla_id}'>{all_lits}</a></li>";
+var li_3_templ = "<li><i onclick=\"location.href='#{cla_id}'\">{all_lits}</i></li>";
 
 var li_4_templ = `
 	<li>
@@ -51,11 +52,11 @@ var li_4_templ = `
 
 var a_main_cla_templ = "<a title='{lb_tit}' name='{cla_id}'>[{all_lits}]</a>";
 
-var a_main_cla_ref = "<a href='#{cla_id}'>{all_lits}</a>";
+//var a_main_cla_ref = "<a href='#{cla_id}'>{all_lits}</a>";
+var a_main_cla_ref = "<i onclick=\"location.href='#{cla_id}'\">{all_lits}</i>";
 
-var a_lit_templ = "<em title='{lit_tit}'>{lit_val}</em>";
-
-//			onclick="populate_ul('{ul_id}', '{jsn_rel_pth}')">
+var a_lit_templ = "<i title='{lit_tit}'>{lit_val}</i>";
+var a_big_lit_templ = "<i title='ZERO for subst'>({lit_val})</i>";
 
 function got_rclick(the_pth){
 	window.prompt("To copy to clipboard do: Ctrl+C, Enter", the_pth);
@@ -147,6 +148,13 @@ function replace_vals(orig_arr, repl_arr, out_pairs){
 
 function is_array(someVar){
 	if( Object.prototype.toString.call( someVar ) === '[object Array]' ) {
+		return true;
+	}
+	return false;
+}
+
+function is_map(someVar){
+	if((typeof someVar === "object") && (someVar !== null)){
 		return true;
 	}
 	return false;
@@ -319,6 +327,19 @@ function is_array_ok(arr1){
 		return false;
 	}
 	if(! is_array(arr1)){
+		return false;
+	}
+	return true;
+}
+
+function is_map_ok(map1){
+	if(map1 === undefined){
+		return false;
+	}
+	if(map1 == null){
+		return false;
+	}
+	if(! is_map(map1)){
 		return false;
 	}
 	return true;
@@ -580,7 +601,7 @@ function populate_ul(ul_elem_id, jsn_pth){
 		htm_str.push(li_pth_elem);
 		htm_str.push('<hr>\n');
 
-		alert('2.CHAIN_LENGTH= ' + the_chain.length);
+		alert('3.CHAIN_LENGTH= ' + the_chain.length);
 		
 		for (var ii = 0; ii < the_chain.length; ii++){
 			var fnm_to_call = 'populate_ul';
@@ -604,6 +625,14 @@ function populate_ul(ul_elem_id, jsn_pth){
 				//alert('DEBUG. changed-1-dir_pth-to \n' + dir_pth);
 				continue;
 			}
+			
+			var orig_lits = ch_stp.neu_lits;
+			var s_lits = replace_vals(orig_lits, CNF_VARS_REPL_ARR);
+			if(! is_array(s_lits)){
+				alert(s_lits);
+				return;
+			}
+			
 			if(ne_ty == "subst"){
 				alert('GOT-subst-neuron ' + stp_str);
 				ext_pth = ch_stp.neu_full_jsn_pth;
@@ -612,18 +641,9 @@ function populate_ul(ul_elem_id, jsn_pth){
 				//alert('DEBUG. changed-2-dir_pth-to \n' + dir_pth);
 				fnm_to_call = 'open_new_proof';
 				sub_htm_templ = li_4_templ;
-				subst_htm = get_html_for_subst(ch_stp);
+				subst_htm = get_html_for_subst(ch_stp, s_lits);
 			}
 
-			var orig_lits = ch_stp.neu_lits;
-			//var orig_lits_str = "[" + orig_lits + "]";
-			
-			var s_lits = replace_vals(orig_lits, CNF_VARS_REPL_ARR);
-			if(! is_array(s_lits)){
-				alert(s_lits);
-				return;
-			}
-			
 			var cla_id_str = '' + get_repl_val(ch_stp.neu_idx, CNF_CCLS_REPL_ARR);
 
 			var the_lits_str = "[" + s_lits + "]";
@@ -740,7 +760,7 @@ function create_tab_tables(tab1, tab2){
 	return tbl;
 }
 
-function create_subst_tab(subst_ch_stp, vars_repl_arr, bi_repl_arr){
+function create_subst_tab(subst_ch_stp, vars_repl_arr, bi_repl_arr, subst_zeros){
 	var all_ccls = subst_ch_stp.neuromap_ccls;
 	var all_ccls_idx = subst_ch_stp.ccls_permutation;
 	
@@ -774,10 +794,8 @@ function create_subst_tab(subst_ch_stp, vars_repl_arr, bi_repl_arr){
 			}
 			var ccl_idx = the_idx_rel[0];
 			
-			var s_lits_str = '[' + s_lits + ']';
-			if(is_array_ok(bi_repl_arr)){
-				s_lits_str = get_titled_lits_str(s_lits, bi_repl_arr);
-			}
+			//var s_lits_str = '[' + s_lits + ']';
+			var s_lits_str = get_titled_lits_str(s_lits, bi_repl_arr, subst_zeros);
 			
 			var cla_id_str = '' + get_repl_val(ccl_idx, CNF_CCLS_REPL_ARR);
 			var the_lits_str = a_main_cla_ref.supplant(
@@ -790,7 +808,7 @@ function create_subst_tab(subst_ch_stp, vars_repl_arr, bi_repl_arr){
 	return tbl;
 }
 
-function calc_subst_perm_arr(perm_arr, in_repl_arr, bi_repl_arr){
+function calc_subst_perm_arr(perm_arr, in_repl_arr, bi_lft_repl_arr, bi_rgt_repl_arr){
 	if(! is_array_ok(perm_arr)){
 		alert('ERROR. calc-subst_perm_arr-perm_arr-is-not-array.');
 		return null;
@@ -843,39 +861,55 @@ function calc_subst_perm_arr(perm_arr, in_repl_arr, bi_repl_arr){
 			return null;
 		}
 		
-		if(is_array_ok(bi_repl_arr)){
-			bi_repl_arr[pm1] = pm0;
+		if(is_array_ok(bi_lft_repl_arr)){
+			bi_lft_repl_arr[pp0] = pp1;
+		}
+		if(is_array_ok(bi_rgt_repl_arr)){
+			bi_rgt_repl_arr[pm1] = pm0;
 		}
 		
 	}
 	return s_pm__arr;
 }
 
-function get_html_for_subst(subst_ch_stp){
+function get_html_for_subst(subst_ch_stp, zeros_s_lits){
 	//return 'CALCULATED_HTML_FOR_SUBST';
 	
-	// neuromap_ccls
-	// vars_permutation
-	// ccls_permutation
 	var vars_perm = subst_ch_stp.vars_permutation;
 	var ccls_perm = subst_ch_stp.ccls_permutation;
+	
+	var all_zeros = zeros_s_lits.slice();
+	var all_subst_zeros = all_zeros.map(Math.abs);
+	
+	var subst_zeros = calc_ccl_map(zeros_s_lits);
 
-	var bi_repl_arr = [];
-	var s_pm_arr = calc_subst_perm_arr(vars_perm, CNF_VARS_REPL_ARR, bi_repl_arr);
+	var bi_lft_repl_arr = [];
+	var bi_rgt_repl_arr = [];
+	var s_pm_arr = calc_subst_perm_arr(vars_perm, CNF_VARS_REPL_ARR, 
+									   bi_lft_repl_arr, bi_rgt_repl_arr);
 	
 	var subst_vars_repl_arr = calc_repl_arr(vars_perm);
 	var subst_ccls_repl_arr = calc_repl_arr(ccls_perm);
 	
 	var htm_str = []
 	
-	//var subst_tbl_2 = create_subst_tab(subst_ch_stp, subst_vars_repl_arr);
-	var subst_tbl_1 = create_subst_tab(subst_ch_stp, CNF_VARS_REPL_ARR);
-	var subst_tbl_2 = create_subst_tab(subst_ch_stp, subst_vars_repl_arr, bi_repl_arr);
+	var zeros_str = get_titled_lits_str(all_subst_zeros, null, subst_zeros);
+	htm_str.push('SUBST_ZEROS<br>');
+	htm_str.push(zeros_str);
+	htm_str.push('<hr>\n');
+	
+	
+	var subst_tbl_1 = create_subst_tab(subst_ch_stp, CNF_VARS_REPL_ARR, 
+									   bi_lft_repl_arr, subst_zeros);
+	var subst_tbl_2 = create_subst_tab(subst_ch_stp, subst_vars_repl_arr, 
+									   bi_rgt_repl_arr);
 	
 	var tbls = create_tab_tables(subst_tbl_1, subst_tbl_2);
 	var tbls_htm = tbls.outerHTML;
 	htm_str.push(tbls_htm);
 	htm_str.push('<hr>\n');
+
+	sort_pairs(s_pm_arr);
 	
 	var ccls_str = JSON.stringify(s_pm_arr, null, 2);
 	var c_per_htm_str = '<code>' + ccls_str + '</code>';
@@ -894,7 +928,9 @@ function get_html_for_subst(subst_ch_stp){
 	return htm_full_str;
 }
 
-function get_titled_lits_str(s_lits, bi_repl_arr){
+function get_titled_lits_str(s_lits, bi_repl_arr, subst_zeros){
+	var with_tt = is_array_ok(bi_repl_arr);
+	var with_zz = is_map_ok(subst_zeros);
 	var all_lits_str = [];
 	all_lits_str.push('[');
 	
@@ -904,17 +940,48 @@ function get_titled_lits_str(s_lits, bi_repl_arr){
 			all_lits_str.push(', ');
 		}
 		var ll = s_lits[aa];
-		var tt = get_repl_val(ll, bi_repl_arr);
-		var the_lit_str = a_lit_templ.supplant(
-			{	lit_val: '' + ll, 
-				lit_tit: '' + tt
+		var tt = 'click to go to orig clause';
+		if(with_tt){
+			tt = get_repl_val(ll, bi_repl_arr);
+		}
+		var is_zz = false;
+		if(with_zz){
+			var vv = Math.abs(ll);
+			var vv_str = ''+vv;
+			if(vv_str in subst_zeros){
+				is_zz = true;
 			}
-		);
+		}
+		var the_lit_str = 'error-with-lit';
+		if(is_zz){
+			the_lit_str = a_big_lit_templ.supplant({lit_val: '' + ll});
+		} else {
+			the_lit_str = a_lit_templ.supplant(
+				{	lit_val: '' + ll, 
+					lit_tit: ' corresponds to lit "' + tt + '"'
+				}
+			);
+		}
+		
 		all_lits_str.push(the_lit_str);
 	}
 	all_lits_str.push(']');
 	
 	var full_lits_str = all_lits_str.join("");
 	return full_lits_str;
+}
+
+function calc_ccl_map(all_lits){
+	if(! is_array_ok(all_lits)){
+		alert('ERROR. all_lits-is-not-array.');
+		return null;
+	}
+	var ccl_map = {};
+	for (aa = 0; aa < all_lits.length; aa++) {
+		the_lit = all_lits[aa];
+		the_var = Math.abs(the_lit);
+		ccl_map[''+the_var] = "in";
+	}
+	return ccl_map;
 }
 
