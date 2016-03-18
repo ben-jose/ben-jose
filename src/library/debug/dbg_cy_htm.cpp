@@ -123,6 +123,13 @@ brain::dbg_start_html(){
 	of << htm_tit << "\n";
 	of << HTMe_h1 << "\n";
 	
+	of << "<button onclick='export_all_gphs()'>Freeze for printing</button>\n";
+	of << "<select id='gph_theme' onclick='change_theme()'>\n";
+	of << "\t <option value='white_nodes' selected='selected'>White_nodes_graph_theme\n";
+	of << "\t <option value='black_nodes'>Black_nodes_graph_theme\n";
+	of << "</select>\n";
+	of << "\n\n";
+ 
 	of.flush();
 
 	DBG_PRT(147, os << "Appended to file: '" << pth << "'\n");
@@ -231,6 +238,15 @@ brain::dbg_update_html_cy_graph(ch_string cy_kk, coloring* the_col, ch_string ht
 	ch_string div_nm = "cnf_graph_" + stp_aa_str;
 	ch_string div_str = HTM_cy_div(div_nm);
 	of << "\t\t " << div_str << bj_eol;
+
+	of << "\t\t <button onclick=\"no_labels('" + stp_aa_str + "')\">No labels</button>";
+	of << "<button onclick=\"update_png('" + stp_aa_str + "')\">Update PNG</button>";
+	of << "<button onclick=\"switch_theme('" + stp_aa_str + "')\">Switch theme</button>";
+	of << "\n\n";
+	
+	ch_string div_png_nm = "png_" + div_nm;
+	ch_string div_png_str = HTM_cy_hidden_div(div_png_nm);
+	of << "\t\t " << div_png_str << bj_eol;
 	
 	ch_string rel_aa_pth = get_cy_rel_path(brn, cy_kk, aa);
 	of << "\t\t " << HTMi_src << rel_aa_pth << HTMe_src << bj_eol;
@@ -242,7 +258,7 @@ brain::dbg_update_html_cy_graph(ch_string cy_kk, coloring* the_col, ch_string ht
 	of << ", " << js_grph_var_aa_nm << ", " << layo_str;
 	of << ", " << js_plays_var_aa_nm;
 	of << ");" << bj_eol;
-	
+
 	of << "\t\t " << HTMe_script << bj_eol << bj_eol << bj_eol;
 	
 	of.flush();

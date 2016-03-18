@@ -79,6 +79,11 @@ some strings for html printing.
 	
 // end_of_define
 
+#define HTM_cy_hidden_div(nm_dv) "<div id='" + nm_dv + \
+	"' style='height:600px;width:800px;border:1px solid #777;display: none;'></div>" \
+	
+// end_of_define
+
 #define JS_inner_htm(div_txt, var_htm_txt) "document.getElementById('" + \
 	div_txt + "').innerHTML = " + var_htm_txt + ";" \
 	

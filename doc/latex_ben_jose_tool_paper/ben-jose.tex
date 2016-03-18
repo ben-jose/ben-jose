@@ -1,33 +1,28 @@
-% easychair.tex,v 3.4 2015/12/10
 
 \documentclass{easychair}
-%\documentclass[EPiC]{easychair}
-%\documentclass[debug]{easychair}
-%\documentclass[verbose]{easychair}
-%\documentclass[notimes]{easychair}
-%\documentclass[withtimes]{easychair}
-%\documentclass[a4paper]{easychair}
-%\documentclass[letterpaper]{easychair}
 
 \usepackage{doc}
 
-% use this if you have a long article and want to create an index
-% \usepackage{makeidx}
-
-% In order to save space or manage large tables or figures in a
-% landcape-like text, you can use the rotating and pdflscape
-% packages. Uncomment the desired from the below.
+% commands for this file.
 %
-% \usepackage{rotating}
-% \usepackage{pdflscape}
-
-% Some of our commands for this guide.
-%
-\newcommand{\easychair}{\textsf{easychair}}
-\newcommand{\miktex}{MiK{\TeX}}
-\newcommand{\texniccenter}{{\TeX}nicCenter}
 \newcommand{\makefile}{\texttt{Makefile}}
-\newcommand{\latexeditor}{LEd}
+\newcommand{\neuron}{\textsf{neuron}}
+\newcommand{\quanton}{\textsf{quanton}}
+\newcommand{\propsignal}{\textsf{prop\_signal}}
+\newcommand{\deduction}{\textsf{deduction}}
+\newcommand{\brain}{\textsf{brain}}
+\newcommand{\deducer}{\textsf{deducer}}
+\newcommand{\leveldat}{\textsf{leveldat}}
+\newcommand{\sortglb}{\textsf{sort\_glb}}
+\newcommand{\sortee}{\textsf{sortee}}
+\newcommand{\sorset}{\textsf{sorset}}
+\newcommand{\sortrel}{\textsf{sortrel}}
+\newcommand{\coloring}{\textsf{coloring}}
+\newcommand{\canoncnf}{\textsf{canon\_cnf}}
+\newcommand{\canonclause}{\textsf{canon\_clause}}
+\newcommand{\neuromap}{\textsf{neuromap}}
+\newcommand{\skeleton}{\textsf{skeleton}}
+
 
 %\makeindex
 
@@ -37,7 +32,7 @@
 %
 \title{Ben-Jose SAT Solving Software Library\\
        Tool Paper%
-\thanks{Espetial thanks to our heavenly Father, his anointed King, Magda Beltran de Quiroga and Federman Quiroga.}}
+\thanks{Especial thanks to our heavenly Father, his anointed King, Magda Beltran de Quiroga and Federman Quiroga.}}
 
 % Authors are joined by \and. Their affiliations are given by \inst, which indexes
 % into the list defined using \institute
@@ -48,7 +43,7 @@ Jose Luis Quiroga Beltran
 
 % Institutes for affiliations are also joined by \and,
 \institute{
-	Independant Researcher\\
+	Independent Researcher\\
 	\email{joseluisquiroga@yahoo.com}\\
 	March 2016
  }
@@ -71,7 +66,7 @@ Jose Luis Quiroga Beltran
 \maketitle
 
 \begin{abstract}
-The software library Ben-Jose (\url{https://github.com/joseluisquiroga/ben-jose}) for solving instances of the satisfiability problem in CNF form is presented. Ben-Jose implements a trainable strategy that extends the traditional DPLL+BCP+CDCL resolution based approach, first introduced by Joao Marquez da Silva ~\cite{silva-95} and latter refined by others ~\cite{moskewicz-01} ~\cite{een-04}, with an original technique to check if the structure of a sub-formula of the solving SAT instance has previously been found to be unsatisfiable, in order to skip the search on it whenever found again. The technique introduces an original stabilization procedure (as in ~\cite{bastert-02}) for the structure of the sub-formulas that is tightly coupled with the work done by BPC (each BCP step groups some variables) and has linear complexity.
+The software library Ben-Jose (\url{https://github.com/joseluisquiroga/ben-jose}) for solving instances (formulas) of the satisfiability problem (SAT) in CNF form (DIMACS format) is presented. Ben-Jose implements a trainable strategy that extends the traditional DPLL+BCP+CDCL resolution based approach, first introduced by Joao Marquez da Silva ~\cite{silva-95} and latter refined by others ~\cite{moskewicz-01} ~\cite{een-04}. Ben-Jose has an original technique (BDUST) to check during search if, for a given partial assignation of the solving formula variables, the resulting current sub-formula has been previously found unsatisfiable. It does that by finding the current sub-formula permutation to its ''BDUST canonical form formula'' (BCFF) and checking the BCFF existence in a database of unsatisfiable BCFFs. That in order to entirely skip the search on the current sub-formula. The calculation of a BCFF introduces an original stabilization procedure (as in ~\cite{bastert-02}) for the structure of CNF formulas. The calculation has linear complexity and is tightly coupled with the work done by BCP.
 \end{abstract}
 
 % The table of contents below is added for your convenience. Please do not use
@@ -86,8 +81,6 @@ The software library Ben-Jose (\url{https://github.com/joseluisquiroga/ben-jose}
 %
 %Processing in EasyChair - number of pages.
 %
-%Examples of how EasyChair processes papers. Caveats (replacement of EC
-%class, errors).
 
 \pagestyle{empty}
 
@@ -95,17 +88,17 @@ The software library Ben-Jose (\url{https://github.com/joseluisquiroga/ben-jose}
 \section{Introduction}
 \label{sect:introduction}
 
-The SAT problem is the canonical decision problem by excellence ~\cite{biere-09} ~\cite{kroening-08} ~\cite{marek-09}. It lays at the heart of the P vs NP question and its importance cannot be overstated ~\cite{cook-09}. People have proved both that “NP != P” and that “NP==P” ~\cite{woeginger-16} ~\cite{muller-13}, and filed patent applications for optimal SAT solvers based on resolution ~\cite{quiroga-01}. 
+The satisfiability problem (SAT) is the canonical decision problem by excellence ~\cite{biere-09} ~\cite{kroening-08} ~\cite{marek-09}. It lays at the heart of the P vs NP question and its importance cannot be overstated ~\cite{cook-09}. People have proved both that ''NP != P'' and that ''NP==P'' ~\cite{woeginger-16} ~\cite{muller-13}, and filed patent applications for optimal SAT solvers based on resolution ~\cite{quiroga-01}. 
 
-The practical limitations of human verification of long and complex proofs, even under the peer-review system, highlights the importance of automated proof checking. This and the practical applications of automated theorem proving highlights the importance of the SAT problem.
+The practical limitations of human verification of long and complex proofs, even under the peer-review system, highlights the importance of automated proof checking. This and the practical applications of automated theorem proving highlights the importance of SAT.
 
 Exponential lower bounds of resolution (RES) proof size for the pigeon hole principle (PHP) have been proven ~\cite{haken-85} ~\cite{buss-88}, and polynomial size proofs for extended resolution (ER) have also been proven for the PHP  ~\cite{cook-76} ~\cite{cook-79} ~\cite{jarvisalo-07} instances of the SAT problem. That work suggests that solvers based on RES ~\cite{silva-95} ~\cite{moskewicz-01} ~\cite{een-04} need ''something else'' in order to be ''faster'' ~\cite{dixon-04} ~\cite{audemard-10}. 
 
 Based on the notion that theorems are proved with lemmas and the observation that the structure of PHP(n+1, n) can be matched with several substructures of PHP(n+2, n+1), the software library presented in this work (Ben-Jose) extends RES by learning the structure of unsatisfiable sub-formulas (proved unsatisfiable during its execution) and matching them against future structures of sub-formulas found during its execution, in order to skip the search, and directly backtrack on them, when ever a match (subsumed isomorphism) is found. 
 
-This technique is here after called Backtrack Driven by Unsatisfiable Substructure Training (BDUST). BDUST introduces an original stabilization procedure (as in ~\cite{bastert-02}) for the unsatisfiable sub-formulas found, uses the work done by BPC (each BCP step groups some variables), and has linear complexity with respect to the size of the sub-formulas. The structures learned with BDUST have the advantage that can be used also with different instances than the one they were found on. That is why BDUST is ''training'' and not ''learning''.
+This technique is here after called Backtrack Driven by Unsatisfiable Sub-formula Training (BDUST). BDUST introduces an original stabilization procedure (as in ~\cite{bastert-02}) for the unsatisfiable sub-formulas found, uses the work done by BCP (each BCP step groups some variables), and has linear complexity with respect to the size of the sub-formulas. The structures learned with BDUST have the advantage that can be used also with different instances than the one they were found on. That is why BDUST is ''training'' and not ''learning''.
 
-This form of extending RES is not ER, as the system presented by Tseitin ~\cite{tseitin-83}, because the subsumed isomorphism detection technique is not RES based, and the power and complexity of the resulting proof system has not been formally studied. The empirical results on the classical problems of PHP and isPrime (based on the Braun multiplier) are presented here. 
+This form of extending RES is not ER, as the system presented by Tseitin ~\cite{tseitin-83}, because the subsumed isomorphism detection technique is not RES based, and the power and complexity of the resulting proof system has not been formally studied. The empirical results on the classical problems of PHP and is-Prime (based on the Braun multiplier) are presented here. 
 
 %------------------------------------------------------------------------------
 \section{Objectives}
@@ -134,51 +127,64 @@ The following classes and names for attributes are the most important to explain
 
 To explain the most important parts of  DPLL+BCP+CDCL, the following classes will be used.
 
-neuron. class for CNF clause behavior. So there is one neuron per clause.
-quanton: class for CNF variables (each variable has a positon and a negaton). There are two quantons per variable. Neurons hold references to quantons called fibres. They are used for BCP.
+{\neuron}. class for CNF clause behavior. So there is one {\neuron} per clause.
 
-prop\_signal: class for representing BCP propagation data: which quanton fired by which neuron (which clause forced a given variable). BCP in done with the two watched literals technique (two watched fibres in the library's terminology).
+{\quanton}: class for CNF variables (each variable has a positon and a negaton). There are two {\quanton}s per variable. {\neuron}s hold references to {\quanton}s called fibres. They are used for BCP.
 
-deduction: class for holds the result of analyzing (doing resolution) of a conflict. It has the data for learning new neurons (clauses).
+{\propsignal}: class for representing BCP propagation data: which {\quanton} fired by which {\neuron} (which clause forced a given variable). BCP is done with the two watched literals technique (two watched fibres in the library's terminology).
 
-brain: class that holds all data used to solve a particular CNF instance. So there is one brain per CNF instance.
+{\deduction}: class for holds the result of analyzing (doing resolution) of a conflict. It has the data for learning new {\neuron}s (clauses).
 
-deducer: class that holds the data used to analyze a conflict.
+{\brain}: class that holds all data used to solve a particular CNF instance. So there is one {\brain} per CNF instance. It is created to solve an instance, and destroyed after solving that particular instance.
 
-leveldat: A level is all that happens between choices during BCP. So there is one level per choice. This class holds level relevant data.
+{\deducer}: class that holds the data used to analyze a conflict.
+
+{\leveldat}: A level is all that happens between choices during BCP. So there is one level per choice. This class holds level relevant data.
 
 \subsubsection{Stabilization classes}
 
-The following classes will be used to explain the most important aspects of CNF  stabilization:
+The process of calculating a BDUST canonical form formula (BCFF) is called stabilization. The following classes will be used to explain the most important aspects of CNF stabilization:
 
-sort\_glb: holds all global data used to stabilize (kind of sorting) a group of items (neurons and quantons representing a sub-formula of a CNF).
+{\sortglb}: It holds all global data used to stabilize a group of items ({\neuron}s and {\quanton}s representing a sub-formula of a CNF). It does not handle {\neuron}s and {\quanton}s, instead it handles {\sortee}s.
 
-sortee: an item to be stabilized. Neurons and quantons contain sortees that are used to stabilize CNF sub-formulas. 
+{\sortee}: It is an item to be stabilized. Each {\neuron}s contains one {\sortee} and each {\quanton}s contains one {\sortee}. Each {\sortee} ''knows'' (void pointer) which {\neuron} or {\quanton} contains it. It is a one-to-one relation that is used to stabilize CNF sub-formulas. During stabilization, the {\sortglb} handles the {\sortee}s not the {\neuron}s and {\quanton}s containing them.
 
-sorset: in  order to stabilize a group of items the sort\_glb class (or sortor) needs to group items (neurons and quantons in our case) in several iterations. This class is used for such iterated sub grouping.
+{\sorset}: It is a group of {\sortee}s. In  order to stabilize a group of {\sortee}s the {\sortglb} class (or sortor) groups {\sortee}s (representing {\neuron}s and {\quanton}s in our case) into {\sorset}s. A sub-formula is represented within stabilization by a group of {\sorset}s. Each step of stabilization refines the group of {\sorset}s that represent the stabilizing sub-formula, so that every step there are more {\sorset}s, each one having less {\sortee}s, until the process cannot refine each {\sorset} anymore. The ideal stabilization ends with each {\sorset} containing only one {\sortee}. Since stabilization handles only {\sortee}s. This class is used for such iterated sub-grouping.
 
-sortrel: class used to establish the relations between the sortees to be stabilized. They must be properly initiated before each stabilization. They define the sub-formula in partucular to be stabilized by defining the relations between a particular sub set (sub-formula) of neuron sortees and quanton sortees.
+{\sortrel}: It represents a relation between two {\sortee}s. In our case every {\sortee} representing a {\neuron} holds one {\sortrel} per fiber (literal), and each {\sortee} representing a {\quanton} holds one {\sortrel} per {\neuron} in wick the {\quanton} is found. They must be properly initiated before each stabilization. They define the stabilizing sub-formula's relations between it's {\neuron}s and {\quanton}s by relating their respective {\sortee}s. They represent relations between a particular sub group (sub-formula) of {\neuron}'s {\sortee}s and {\quanton}'s {\sortee}s.
 
-\subsubsection{Matching classses}
+\subsubsection{Matching classes}
 
-The following classes will be used to explain the most important aspects of CNF  matching:
+Matching consists basically of two steps. Stabilization and finding the resulting BCFF in the database of BCFFs. The following classes will be used to explain the most important aspects of CNF matching:
 
-coloring: The initial and final state for an stabilization is a coloring: a grouping of sortees where each colors identifies a group of sortees. A complete coloring is one in which there is one color for each sortee, so that each group has exactly one item (one sortee). This class is used to specify only the input to the stabilization process (the initial state). The class canon\_cnf is used for the output (it is the result of applying the output coloring to the stabilized sub-formula ordered by color). To initialize the sortor, it “loads” the initial coloring into the sort\_glb instance that will stabilize the CNF sub-formula.
+{\coloring}: The initial and final state for an stabilization is a {\coloring}. A color is just an integer. A {\coloring} of a sub-formula is an assignation of an integer ({\neuron}-color) to each {\neuron} and an integer ({\quanton}-color) to each {\quanton} of the sub-formula. An stabilization may start with all {\neuron}s having the same {\neuron}-color and all {\quanton}s having the same {\quanton}-color and finalize with each {\neuron} having a unique {\neuron}-color and each {\quanton} having a unique {\quanton}-color, called a complete {\coloring}. 
 
-canon\_cnf: This class is used to represent the output of an stabilization process: the stabilized CNF sub-formula. It is the interface class to the database class that handles all disk operations (the skeleton class). This class contains some disk handling related information (paths and sha info). A canon\_cnf basically is a set of canon\_clauses (which are basically arrays of numbers).
+{\coloring}s are ''loaded'' into the {\sortglb} class in order to start stabilization. After stabilization the final {\coloring} may be ''saved''. Each color in a coloring will correspond to one {\sorset} during stabilization.
 
-memap: This class represents a CNF sub-formula. It is the pivot class to do all stabilization. It is matained during BCP and used during backtracking in order to know what CNF sub-formulas are to be stabilized and searched for in the database (skeleton class). There is one memap per leveldat and they are either active or inactive. Active when they are condidates for stabilization, matching and search in database (or saving), at backtrak time. When a CNF  sub-formaula, during search, is found to be unsatisfiable, is not trivial (BCP could not figure it out), and both search branches had the same variables (so that it can latter be searched only with one of them), it is saved, stored in the database (skeleton class). Every time an still active memap has done its first branch of BCP, it is stabilized and searched for in the database (skeleton class). Trivial sub-formulas are called anchors in the code because they serve as a start point for stabilizing not trivial ones. 
+This class is used to specify only the input to the stabilization process (the initial state). The class {\canoncnf} is used for the output (it is the result of applying the output {\coloring} (stabilized {\coloring}) to the sub-formula it defines: {\neuron}s and {\quanton}s in the {\coloring}. To initialize the sortor, it ''loads'' the initial {\coloring} into the {\sortglb} instance that will stabilize the CNF sub-formula.
+
+{\canoncnf}: It is a BCFF. It represents the output of an stabilization process: the stabilized CNF sub-formula. It is the interface class to the database class that handles all disk operations (the {\skeleton} class). This class contains some disk handling related information (paths and sha info). A {\canoncnf} basically is a set of {\canonclause}s (which are basically arrays of numbers).
+
+{\neuromap}: This class represents a CNF sub-formula. It is the pivot class to do all stabilization. It is maintained during BCP and used during backtracking in order to know what CNF sub-formulas are to be stabilized and searched for in the database ({\skeleton} class). There is one {\neuromap} per {\leveldat} and they are either active or inactive. Active when they are candidates for stabilization, matching and search in database (or saving), at backtrack time. When a CNF  sub-formula, during search, is found to be unsatisfiable, is not trivial (BCP could not figure it out), and both search branches had the same variables (so that it can latter be searched only with one of them), it is saved, stored in the database ({\skeleton} class). Every time an still active {\neuromap} has done its first branch of BCP, it is stabilized and searched for in the database ({\skeleton} class). Trivial sub-formulas are called anchors in the code because they serve as a start point for stabilizing not trivial ones. 
 
 \subsubsection{Database classes}
 
-The skeleton class handles all disk related functions and management. The database is basically a directory in disk. In that directory unsatisfiable canon\_cnf are saved and searched by the SHA function of their content. They are saved in a path that is constructed with the SHA and other relevant search info. 
-Since an unsatisfiable sub-formaula might not be minimal (have some unnecessary clauses for unsatisfiability), each unsatisfiable CNF sub-formula has three relevant canon\_cnf: 
+The {\skeleton} class handles all disk related functions and management. The database is basically a directory and all its sub-directories in disk. The directory ({\skeleton}) is seen as a group of (''key'',''value'') pairs. Just like a common database ''index'', a ''dictionary'' class, or a ''map'' class. A path within the {\skeleton} is a ''key'' and the files in the path are the ''value''. To see if a ''key'' exists is to see if a path exists within the {\skeleton}. Unsatisfiable {\canoncnf}s are saved and searched by the SHA function of their content. They are saved in a path (''key'') that is constructed with the SHA and other relevant search info. 
 
-The guide. It is the canon\_cnf resulting of stabilizing the CNF sub-formula covered by first search branch variables. So it is a satisfiable part of the unsatisfiable CNF sub-formula that is a “guide” for the search.
-The tauto. It is the full unsatisfiable CNF sub-formula. It is the canon\_cnf resulting of stabilizing the CNF sub-formula covered by both search branches charged quantons (used variables). 
-The diff. This canon\_cnf contains all canon\_clauses in tauto but not in guide. Each diff is saved in a path called 'variant' in the skeleton. So one guide can have several variants. 
+Since an unsatisfiable sub-formula might not be minimal (have some unnecessary clauses for unsatisfiability), each unsatisfiable CNF sub-formula has three relevant {\canoncnf}: 
 
-A search of a target CNF sub-formula is conducted in two phases: the search for the guide of the target and the search for the variant that is a sub-formula of the target diff. Once the guide is stabilized the search for it is a simple: “see if its path exists” (remember that its path contains the SHA of its content). If the target canon\_cnf is not equal to a variant (the path does not exist), the second phase is more time consuming because it involves reading each variant and comparing it to the target diff to see if the the variant is a sub-formula of the target diff (which would mean that the target is unsatisfiable and therefore can be backtracked).
+\begin{enumerate}
+\item
+The guide. It is the {\canoncnf} resulting of stabilizing the CNF sub-formula covered by first search branch variables. So it is a satisfiable part of the unsatisfiable CNF sub-formula that is a ''guide'' for the search.
+
+\item
+The tauto. It is the full unsatisfiable CNF sub-formula. It is the {\canoncnf} resulting of stabilizing the CNF sub-formula covered by both search branches charged {\quanton}s (used variables). 
+
+\item
+The diff. This {\canoncnf} contains all {\canonclause}s in tauto but not in guide. Each diff is saved in a path called 'variant' in the {\skeleton}. So one guide can have several variants. 
+\end{enumerate}
+
+A search of a target CNF sub-formula is conducted in two phases: the search for the guide of the target and the search for the variant that is a sub-formula of the target diff. Once the guide is stabilized the search for it is a simple: ''see if its path exists'' (remember that its path contains the SHA of its content). If the target {\canoncnf} is not equal to a variant (the path does not exist), the second phase is more time consuming because it involves reading each variant and comparing it to the target diff to see if the the variant is a sub-formula of the target diff (which would mean that the target is unsatisfiable and therefore can be backtracked).
 
 
 
@@ -210,6 +216,7 @@ A search of a target CNF sub-formula is conducted in two phases: the search for 
 \label{sect:future-work}
 
 (Describe here future work)
+\includegraphics[width=0.5\textwidth]{img01.png}
 
 %------------------------------------------------------------------------------
 \section{Acknowledgments}
@@ -239,9 +246,6 @@ All the authors in the bibliography.
 %------------------------------------------------------------------------------
 \label{sect:bib}
 \bibliographystyle{plain}
-%\bibliographystyle{alpha}
-%\bibliographystyle{unsrt}
-%\bibliographystyle{abbrv}
 \bibliography{ben-jose}
 
 %------------------------------------------------------------------------------

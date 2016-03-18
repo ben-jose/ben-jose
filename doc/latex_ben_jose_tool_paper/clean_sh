@@ -1,5 +1,6 @@
 
 find . -name "*~" -type f | xargs rm
+rm *.bak
 rm *.bbl
 rm *.toc
 rm *.out
