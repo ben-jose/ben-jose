@@ -1,0 +1,8 @@
+
+# BJ_LIB_PTH=/the/directory/where/libben-jose.a/can/be/found
+
+BJ_LIB_PTH=../../../build/gnu_make/bin
+
+cc -o bj-hello-world.o -c -MD -Wall -std=c99 -I../../library/api bj-hello-world.c
+cc -o bj-hello-world -rdynamic -L${BJ_LIB_PTH} bj-hello-world.o -lben-jose -lstdc++ -lgmpxx -lgmp
+ 

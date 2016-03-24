@@ -2,6 +2,18 @@
 \documentclass{easychair}
 
 \usepackage{doc}
+\usepackage{listings}
+
+\lstset{
+	language=C,
+	numbers=left, 
+	tabsize=2,
+	breaklines=true,
+	frame=tb,
+	numberstyle=\tiny,
+	xleftmargin=\parindent,
+	basicstyle=\small,
+}
 
 % commands for this file.
 %
@@ -98,19 +110,127 @@ Based on the notion that theorems are proved with lemmas and the observation tha
 
 This technique is here after called Backtrack Driven by Unsatisfiable Sub-formula Training (BDUST). BDUST introduces an original stabilization procedure (as in ~\cite{bastert-02}) for the unsatisfiable sub-formulas found, uses the work done by BCP (each BCP step groups some variables), and has linear complexity with respect to the size of the sub-formulas. The structures learned with BDUST have the advantage that can be used also with different instances than the one they were found on. That is why BDUST is ''training'' and not ''learning''.
 
-This form of extending RES is not ER, as the system presented by Tseitin ~\cite{tseitin-83}, because the subsumed isomorphism detection technique is not RES based, and the power and complexity of the resulting proof system has not been formally studied. The empirical results on the classical problems of PHP and is-Prime (based on the Braun multiplier) are presented here. 
+This form of extending RES is not ER, as the system presented by Tseitin ~\cite{tseitin-83}, because the subsumed isomorphism detection technique is not RES based, and the power and complexity of the resulting proof system has not been formally studied. The empirical results on the classical theoretical problem of PHP are presented here. 
 
 %------------------------------------------------------------------------------
 \section{Objectives}
 \label{sect:objectives}
 
-(Describe here the objectives)
+Ben-jose is designed to be used as a support library for applications or libraries that need to solve both theoretical and practical instances of SAT. The expected user is a C/C++ programmer. In order to achieve that it has the following sub-objectives:
+
+User objectives:
+\begin{enumerate}
+\item
+To be easy to use for the C/C++ programmer.
+\item
+To isolate the user from all difficulties of SAT solving.
+\item
+To do be the world most used trainable SAT solving programming library. ;)
+\end{enumerate}
+
+Formal objectives:
+\begin{enumerate}
+\item
+To present an original, general, and practical alternative strategy to SAT solving.
+\item
+To use other known SAT solving techniques as much as possible.
+\item
+To have a solid empirically checked algorithmic soundness and correctness.
+\end{enumerate}
+
+Technical objectives:
+\begin{enumerate}
+\item
+To do the less possible number of steps assuming unsatisfiability.
+\item
+To do about the same number of steps for any permutation of the given instance.
+\item
+To reuse as much information as possible during solving.
+\item
+To use visualization techniques to debug target theoretical cases.
+\item
+To optionally write proofs for unsatisfiable cases.
+\end{enumerate}
 
 %------------------------------------------------------------------------------
 \section{Functionality}
 \label{sect:funtionality}
 
-(Describe here the functionality)
+\subsection{Basic functionality}
+\label{sect:dimacs}
+
+The basic functionality of the library is best shown by the bj-hello-world.c program:
+
+\begin{lstlisting}[label=hello-prog, caption=bj-hello-world.c program,]
+#include <stdio.h>
+#include "ben_jose.h"
+
+int main(int argc, char** argv)
+{
+	if(argc < 2){
+		printf("args: <cnf_file_path>\n");
+		return 1;
+	}
+	char* ff = argv[1];
+	
+	bj_solver_t ss = bj_solver_create("");
+	
+	bj_satisf_val_t  vv = bj_solve_file(ss, ff);
+	switch(vv){
+		case bjr_yes_satisf:
+			printf("%s is SAT instance\n", ff);
+			break;
+		case bjr_no_satisf:
+			printf("%s is UNS instance\n", ff);
+			break;
+		case bjr_error:
+			printf("ERROR ! in %s\n", ff);
+			break;
+		default:
+			printf("FATAL ERROR ! in %s\n", ff);
+			break;
+	}
+	
+	// more info with this functions
+	//bj_output_t oo = bj_get_output(ss);
+	//const long* aa = bj_get_assig(ss);
+	
+	bj_solver_release(ss);
+	return 0;
+}
+\end{lstlisting}
+
+This program finds the solution to the SAT instance defined by the file ''ff''. The file must be in the simlified DIMCAS format as described in \url{http://www.satcompetition.org/2009/format-benchmarks2009.html}.
+
+
+\subsection{Simplified DIMACS format}
+\label{sect:dimacs}
+
+The simplified DIMACS format is just that:
+
+\begin{lstlisting}[label=dimacs-format, caption=Simplified DIMACS CNF format example,]
+c
+c start with comments
+c
+c 
+p cnf 5 3
+1 -5 4 0
+-1 5 3 4 0
+-3 -4 0
+\end{lstlisting}
+
+\begin{enumerate}
+\item
+The file can start with comments, that is lines begining with the character c.
+
+\item
+Right after the comments, there is the line p cnf nbvar nbclauses indicating that the instance is in CNF format; nbvar is the exact number of variables appearing in the file; nbclauses is the exact number of clauses contained in the file.
+
+\item
+Then the clauses follow. Each clause is a sequence of distinct non-null numbers between -nbvar and nbvar ending with 0 on the same line; it cannot contain the opposite literals i and -i simultaneously. Positive numbers denote the corresponding variables. Negative numbers denote the negations of the corresponding variables.
+\end{enumerate}
+
+
 
 %------------------------------------------------------------------------------
 \section{Architecture}

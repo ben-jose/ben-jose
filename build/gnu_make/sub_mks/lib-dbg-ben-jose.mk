@@ -1,19 +1,11 @@
 
-TARGET := libben-jose.a
+TARGET := libdbg-ben-jose.a
 
 SRC_BASE_DIR := ../../../src
 
-POSTMK_JS_DIR := ../../src/library/unsat_db/javascript
+TGT_CXXFLAGS := $(NORMAL_DBG_FLAGS) 
 
-define COPY_JS_LIBS
-	rm -rf $(TARGET_DIR)/draw_cnf_js_lib
-	rm -rf $(TARGET_DIR)/show_proof_js_lib
-	cp -r $(POSTMK_JS_DIR)/draw_cnf_js_lib $(TARGET_DIR)/draw_cnf_js_lib
-	cp -r $(POSTMK_JS_DIR)/show_proof_js_lib $(TARGET_DIR)/show_proof_js_lib
-	echo "Finished building library libben-jose.a"
-endef
-
-TGT_POSTMAKE := ${COPY_JS_LIBS}
+TGT_POSTMAKE := echo "Finished building DEBUG library libdbg-ben-jose.a"
 
 SOURCES := \
 	$(SRC_BASE_DIR)/external/bj_mem.cpp \

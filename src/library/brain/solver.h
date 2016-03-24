@@ -77,6 +77,8 @@ public:
 	avg_stat	dbg_avg_neu_sz;
 	
 	ch_string	dbg_html_out_path;
+
+	bool	dbg_as_release;
 	
 	dbg_slvr_info(){
 		init_dbg_slvr_info();
@@ -91,6 +93,8 @@ public:
 		dbg_avg_neu_sz.vs_nam = "NEU_SZ";
 		
 		dbg_html_out_path = ".";
+		
+		dbg_as_release = false;
 	}
 };
 
@@ -101,6 +105,7 @@ public:
 
 class slvr_params {
 public:
+	bool	sp_as_release;
 	bool	sp_write_proofs;
 	
 	slvr_params(){
@@ -108,6 +113,7 @@ public:
 	}
 
 	void	init_slvr_params(){
+		sp_as_release = false;
 		sp_write_proofs = false;
 	}
 };

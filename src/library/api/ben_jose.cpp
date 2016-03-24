@@ -78,6 +78,7 @@ bj_solver_t bj_solver_create(const char* bjs_dir_path){
 	dbg_init_dbg_conf(the_slvr.slv_dbg_conf_info);
 
 	bool wrt_proofs = nw_slv->slv_prms.sp_write_proofs;
+	MARK_USED(wrt_proofs);
 	DBG_PRT_SLV(nw_slv, bj_out, DBG_ALL_LVS, wrt_proofs, os << "WRITING_PROOFS");
 	
 	DBG_PRT_SLV(nw_slv, bj_out, 1, true, os << "KEEP_LEARNED");
@@ -115,6 +116,7 @@ void 		bj_solver_release(bj_solver_t bjs){
 	);
 
 	bool wrt_proofs = the_slvr->slv_prms.sp_write_proofs;
+	MARK_USED(wrt_proofs);
 	DBG_PRT_SLV(the_slvr, bj_out, DBG_ALL_LVS, wrt_proofs, os << "WRITING_PROOFS");
 	
 	DBG_PRT_SLV(the_slvr, bj_out, 1, true, os << "KEEP_LEARNED");
@@ -144,6 +146,13 @@ bj_set_param_char(bj_solver_t bjs, bj_param_t prm, char val){
 	}
 	solver& the_slvr = *((solver*)bjs);
 	switch(prm){
+		case bjp_as_release:
+			if(val == 0){
+				the_slvr.slv_prms.sp_as_release = false;
+			} else {
+				the_slvr.slv_prms.sp_as_release = true;
+			}
+			break;
 		case bjp_write_proofs:
 			if(val == 0){
 				the_slvr.slv_prms.sp_write_proofs = false;
@@ -255,6 +264,24 @@ const long* bj_get_assig(bj_solver_t bjs){
 	return assig_arr;
 }
 
+const char* bj_get_error_stack_str(bj_solver_t bjs){
+	if(bjs == NULL){
+		return NULL;
+	}
+	solver& the_slvr = *((solver*)bjs);
+	const char* assrt_str = the_slvr.slv_inst.ist_err_assrt_str.c_str();
+	return assrt_str;
+}
+
+const char* bj_get_error_assert_str(bj_solver_t bjs){
+	if(bjs == NULL){
+		return NULL;
+	}
+	solver& the_slvr = *((solver*)bjs);
+	const char* stck_str = the_slvr.slv_inst.ist_err_stack_str.c_str();
+	return stck_str;
+}
+
 void				bj_restart(bj_solver_t bjs){
 	if(bjs == NULL){
 		return;
@@ -276,3 +303,66 @@ void		bj_print_paths(bj_solver_t bjs){
 	the_slvr.slv_skl.print_paths(bj_out);
 }
 
+const char* bj_error_str(bj_error_t bje){
+	const char* e_str = "Invalid_bj_error_string !!!";
+	switch(bje){
+		case bje_no_error:
+			e_str = "bje_no_error";
+			break;
+		case bje_internal:
+			e_str = "bje_internal";
+			break;
+		case bje_internal_ex:
+			e_str = "bje_internal_ex";
+			break;
+		case bje_memout:
+			e_str = "bje_memout";
+			break;
+		case bje_timeout:
+			e_str = "bje_timeout";
+			break;
+		case bje_instance_cannot_load:
+			e_str = "bje_instance_cannot_load";
+			break;
+		case bje_file_cannot_open:
+			e_str = "bje_file_cannot_open";
+			break;
+		case bje_file_corrupted:
+			e_str = "bje_file_corrupted";
+			break;
+		case bje_file_too_big:
+			e_str = "bje_file_too_big";
+			break;
+		case bje_path_too_long:
+			e_str = "bje_path_too_long";
+			break;
+		case bje_invalid_root_directory:
+			e_str = "bje_invalid_root_directory";
+			break;
+		case bje_parse_bad_number:
+			e_str = "bje_parse_bad_number";
+			break;
+		case bje_dimacs_no_cnf_declaration:
+			e_str = "bje_dimacs_no_cnf_declaration";
+			break;
+		case bje_dimacs_bad_cls_num:
+			e_str = "bje_dimacs_bad_cls_num";
+			break;
+		case bje_dimacs_format_err:
+			e_str = "bje_dimacs_format_err";
+			break;
+		case bje_dimacs_zero_vars:
+			e_str = "bje_dimacs_zero_vars";
+			break;
+		case bje_dimacs_zero_clauses:
+			e_str = "bje_dimacs_zero_clauses";
+			break;
+		case bje_dimacs_bad_literal:
+			e_str = "bje_dimacs_bad_literal";
+			break;
+		case bje_dimacs_clause_too_long:
+			e_str = "bje_dimacs_clause_too_long";
+			break;
+	}
+	return e_str;
+}

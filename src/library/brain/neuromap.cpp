@@ -44,13 +44,23 @@ char* neuromap::CL_NAME = as_pt_char("{neuromap}");
 
 bool
 neuromap::map_find(){
-	DBG_COMMAND(4, return false); // NEVER_FIND
+	DBG_COMMAND(4, // NEVER_FIND
+		if(! get_brn().dbg_as_release()){
+			return false;
+		}
+	); 
 	BRAIN_CK(! is_na_mono());
 	if(na_found_in_skl != mf_invalid){
 		if(na_found_in_skl == mf_found){
+			REL_PRT(NULL_BRN_PT, 
+				os << "map_find TRUE (na_found_in_skl == mf_found) NMP=" << dbg_na_id()
+			);
 			return true;
 		}
 		BRAIN_CK(na_found_in_skl == mf_not_found);
+		REL_PRT(NULL_BRN_PT, 
+			os << "map_find FALSE (na_found_in_skl == mf_not_found) NMP=" << dbg_na_id()
+		);
 		return false;
 	}
 	bool op_resp = map_oper(mo_find);
@@ -76,7 +86,11 @@ dbg_aux_prt_neus(bj_ostream& os, ch_string tit, row_neuron_t& all_neus, ticket& 
 
 bool
 neuromap::map_write(bool force_full){
-	DBG_COMMAND(5, return false); // NEVER_WRITE
+	DBG_COMMAND(5, // NEVER_WRITE
+		if(! get_brn().dbg_as_release()){
+			return false;
+		}
+	); 
 	
 	BRAIN_CK(is_tk_equal(na_candidate_tk, na_dbg_candidate_tk));
 	nmp_reset_write();
@@ -736,6 +750,7 @@ neuromap::map_oper(mem_op_t mm){
 	brain& brn = get_brn();
 	
 	BRAIN_CK(! is_na_mono());
+	REL_PRT((&brn), os << "Starting map_oper NMP=" << dbg_na_id());
 
 	brn.init_mem_tmps();
 
@@ -743,9 +758,11 @@ neuromap::map_oper(mem_op_t mm){
 
 	if(! prep_ok){
 		DBG_PRT(47, os << "map_oper skip (prepare == false) nmp=" << dbg_na_id());
+		REL_PRT((&brn), os << "map_oper skip (prepare == false) nmp=" << dbg_na_id());
 		return false;
 	}
 	DBG_PRT(47, os << "map_oper_go nmp=" << dbg_na_id());
+	REL_PRT((&brn), os << "map_oper_go nmp=" << dbg_na_id());
 
 	skeleton_glb& skg = brn.get_skeleton();
 
@@ -835,15 +852,17 @@ neuromap::map_oper(mem_op_t mm){
 			BRAIN_CK((pth1 == "") || tail_case || skg.find_skl_path(skg.as_full_path(pth1)));
 			BRAIN_CK((pth2 == "") || tail_case || skg.find_skl_path(skg.as_full_path(pth2)));
 
-			DBG_COMMAND(3, 
-				ch_string sv_tau_pth1 = tau_pth + tmp_tauto_cnf.get_kind_name();
-				ch_string sv1_name = skg.as_full_path(sv_tau_pth1);
-				if(na_dbg_is_no_abort_full_nmp){
-					na_dbg_is_no_abort_full_wrt_pth = sv1_name;
-				}
-				
-				if(oper_ok){
-					dbg_run_satex_on(brn, sv1_name, this);
+			DBG_COMMAND(3, // RUN_VERIF 
+				if(! brn.dbg_as_release()){
+					ch_string sv_tau_pth1 = tau_pth + tmp_tauto_cnf.get_kind_name();
+					ch_string sv1_name = skg.as_full_path(sv_tau_pth1);
+					if(na_dbg_is_no_abort_full_nmp){
+						na_dbg_is_no_abort_full_wrt_pth = sv1_name;
+					}
+					
+					if(oper_ok){
+						dbg_run_satex_on(brn, sv1_name, this);
+					}
 				}
 			);			
 		}
@@ -1976,7 +1995,7 @@ neuromap::map_get_simple_guide_col(coloring& clr){
 
 void
 neuromap::nmp_update_all_to_write(ticket& nmp_wrt_tk){
-	brain& brn = get_brn();
+	BRAIN_DBG(brain& brn = get_brn());
 	
 	if(has_submap()){
 		na_submap->nmp_update_all_to_write(nmp_wrt_tk);

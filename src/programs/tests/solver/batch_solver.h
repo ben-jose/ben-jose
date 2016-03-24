@@ -215,6 +215,7 @@ public:
 
 	ch_string		gg_file_name;
 
+	bool			bc_as_release;
 	ch_string 		bc_slvr_path;
 	bj_solver_t 	bc_solver;
 

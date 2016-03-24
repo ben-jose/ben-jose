@@ -81,6 +81,7 @@ typedef enum {
 
 typedef enum {
 	bjp_invalid,
+	bjp_as_release,
 	bjp_write_proofs
 } bj_param_t;
 
@@ -141,12 +142,16 @@ bj_satisf_val_t 	bj_solve_literals(bj_solver_t bjs, long num_vars, long num_cls,
 bj_satisf_val_t 	bj_get_result(bj_solver_t bjs);
 bj_output_t 		bj_get_output(bj_solver_t bjs);
 const long* 		bj_get_assig(bj_solver_t bjs);
+const char* 		bj_get_error_stack_str(bj_solver_t bjs);
+const char* 		bj_get_error_assert_str(bj_solver_t bjs);
 
 void			bj_restart(bj_solver_t bjs);
 
 int 		bj_update(bj_solver_t dest, bj_solver_t src);
 
 void		bj_print_paths(bj_solver_t bjs);
+
+const char* bj_error_str(bj_error_t bje);
 
 #ifdef __cplusplus
 }

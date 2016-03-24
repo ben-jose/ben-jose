@@ -122,8 +122,9 @@ DEFINE_NA_FLAG_ALL_FUNCS(na1);
 
 char*	alert_rel::CL_NAME = as_pt_char("{alert_rel}");
 char*	quanton::CL_NAME = as_pt_char("{quanton}");
-//char*	ps_rece::CL_NAME = as_pt_char("{ps_rece}");
 char*	neuron::CL_NAME = as_pt_char("{neuron}");
+
+brain* NULL_BRN_PT = NULL_PT;
 
 //============================================================
 // random generator
@@ -402,6 +403,11 @@ brain::~brain(){
 	release_brain();
 
 	DBG_PRT(37, os << "RELEASING brain 1");
+}
+
+bool
+brain::dbg_as_release(){
+	return get_solver().slv_prms.sp_as_release;
 }
 
 solver&
@@ -927,9 +933,12 @@ brain::learn_mots(reason& rsn){
 	row_quanton_t& the_mots = rsn.rs_motives;
 	quanton& forced_qua = *rsn.rs_forced;
 	
-	DBG_PRT(23, os << "**LEARNING** mots=" << the_mots << " forced=" 
-		<< &forced_qua);
-
+	DBG_PRT(23, os << "**LEARNING** mots=" << the_mots << " forced=" << &forced_qua;
+		if(the_mots.is_empty()){ os << " IS_SINGLETON"; } 
+		os << "\n";
+		print_trail(os);
+	);
+	
 	neuron* the_neu = NULL_PT;
 
 	BRAIN_CK(! the_mots.is_empty() || (level() == ROOT_LEVEL));
@@ -950,12 +959,21 @@ brain::learn_mots(reason& rsn){
 		get_leveldat().ld_learned.push(the_neu);
 	}
 
-	DBG_PRT(23, os << "added_forced quanton: " << forced_qua;
+	DBG_PRT(23, os << "added_forced quanton: " << &forced_qua;
 		if(the_neu == NULL_PT){ os << " IS_SINGLETON"; } 
 	);
 
 	if(the_mots.is_empty()){
 		forced_qua.qu_proof_tk = rsn.rs_tk;
+		
+		BRAIN_REL_CK_PRT((! forced_qua.has_charge() || (the_neu != NULL_PT)), 
+			os << "_________________ABORT\n";
+			dbg_prt_margin(os);
+			os << "\n";
+			print_trail(os);
+			os << "lv=" << level() << "\n";
+			os << "in_root=" << in_root_lv();
+		);
 		
 		//long nxt_tir = 0;
 		long nxt_tir = tier() + 1;
@@ -1258,10 +1276,10 @@ brain::think(){
 	BRAIN_DBG(
 		bool just_read = false; // ONLY_READ
 		DBG_COMMAND(6, just_read = true);
-		DBG_COMMAND(12, just_read = true);
+		DBG_COMMAND(13, just_read = true);
 		if(just_read){
 			set_result(bjr_error);
-			DBG_PRT(12, os << "____\nFULL_BRAIN_STAB=\n"; dbg_prt_full_stab());
+			DBG_PRT(13, os << "____\nFULL_BRAIN_STAB=\n"; dbg_prt_full_stab());
 			return;
 		} 
 	)
@@ -1278,8 +1296,6 @@ brain::think(){
 		pulsate();
 	}
 	
-	bj_satisf_val_t resp_solv = get_result();
-
 	br_tmp_assig_quantons.clear();
 
 	if(inst_info.ist_with_assig){
@@ -1290,6 +1306,8 @@ brain::think(){
 	}
 	
 	BRAIN_DBG(
+		bj_satisf_val_t resp_solv = get_result();
+	
 		DBG_PRT(34, dbg_prt_all_cho(*this));
 		DBG_PRT(29, os << "BRAIN=" << bj_eol;
 			print_brain(os); 
@@ -1530,6 +1548,31 @@ brain::retract_to(long tg_lv, bool full_reco)
 	BRAIN_CK(! full_reco || (tg_lv == INVALID_LEVEL) || ((trail_level() + 1) == tg_lv));
 }
 
+void
+brain::put_psignal(quanton& qua, neuron* src, long max_tier){
+	BRAIN_CK(br_first_psignal <= br_last_psignal);
+	if(br_psignals.is_empty()){
+		br_psignals.inc_sz();
+	}
+	br_last_psignal++;
+	if(br_last_psignal == br_psignals.size()){
+		br_psignals.inc_sz();
+	}
+	BRAIN_CK(br_psignals.is_valid_idx(br_last_psignal));
+	
+	/*BRAIN_REL_CK_PRT((! qua.has_charge() || (src != NULL_PT)), 
+		os << "_________________ABORT\n";
+		dbg_prt_margin(os);
+		os << "\n";
+		print_trail(os);
+		os << "lv=" << level() << "\n";
+		os << "in_root=" << in_root_lv();
+	);*/
+	
+	prop_signal& sgnl = br_psignals[br_last_psignal];
+	sgnl.init_prop_signal(&qua, src, max_tier);
+}
+	
 quanton*
 brain::receive_psignal(bool only_orig){
 	BRAIN_CK(has_psignals());
@@ -1555,7 +1598,13 @@ brain::receive_psignal(bool only_orig){
 	qua.update_cicle_srcs(brn, neu);
 
 	if(qua.has_charge()){
-		BRAIN_REL_CK(neu != NULL_PT);
+		BRAIN_REL_CK_PRT((neu != NULL_PT), 
+			os << "_________________ABORT\n";
+			brn.dbg_prt_margin(os);
+			os << "\n";
+			brn.print_trail(os);
+			os << "lv=" << brn.level() << "\n";
+		);
 		BRAIN_CK(neu != NULL_PT);
 		if(qua.is_smaller_source(*neu, sg_tier)){
 			qua.update_source(brn, *neu);
@@ -2012,7 +2061,11 @@ brain::solve_instance(bool load_it){
 	
 	//br_dbg.dbg_old_deduc = true; // comment in normal use. only for old_deduc.
 
-	DBG_COMMAND(1, br_dbg_keeping_learned = true); // KEEP_LEARNED KEEP_ALL_LEARNED
+	DBG_COMMAND(1, // KEEP_LEARNED KEEP_ALL_LEARNED
+		if(! dbg_as_release()){
+			br_dbg_keeping_learned = true;
+		}
+	); 
 	
 	BRAIN_DBG(bool init_htm = false);
 	DBG_COMMAND(45, init_htm = true);
@@ -2022,6 +2075,7 @@ brain::solve_instance(bool load_it){
 
 	DBG_PRT(71, os << "FINDING_PHI_REPE");
 	
+	instance_info& inst_info = get_my_inst();
 	bj_output_t& o_info = get_out_info();
 	try{
 		if(load_it){
@@ -2035,30 +2089,42 @@ brain::solve_instance(bool load_it){
 		print_ex(ex1);
 		o_info.bjo_result = bjr_error;
 		o_info.bjo_error = bje_invalid_root_directory;
+		inst_info.ist_err_stack_str = ex1.ex_stk;
 	} catch (file_exception& ex1){
 		print_ex(ex1);
 		o_info.bjo_result = bjr_error;
 		set_file_err(ex1, o_info);
+		inst_info.ist_err_stack_str = ex1.ex_stk;
 	} catch (parse_exception& ex1){
 		print_ex(ex1);
 		o_info.bjo_result = bjr_error;
 		o_info.bjo_error = bje_parse_bad_number;
+		inst_info.ist_err_stack_str = ex1.ex_stk;
 	} catch (dimacs_exception& ex1){
 		print_ex(ex1);
 		o_info.bjo_result = bjr_error;
 		set_dimacs_err(ex1, o_info);
+		inst_info.ist_err_stack_str = ex1.ex_stk;
 	} catch (instance_exception& ex1){
 		print_ex(ex1);
 		o_info.bjo_result = bjr_error;
 		o_info.bjo_error = bje_instance_cannot_load;
+		inst_info.ist_err_stack_str = ex1.ex_stk;
 	} catch (mem_exception& ex1){
 		print_ex(ex1);
 		o_info.bjo_result = bjr_error;
 		o_info.bjo_error = bje_memout;
+		inst_info.ist_err_stack_str = ex1.ex_stk;
 	} catch (top_exception& ex1){
 		print_ex(ex1);
 		o_info.bjo_result = bjr_error;
 		o_info.bjo_error = bje_internal_ex;
+		inst_info.ist_err_stack_str = ex1.ex_stk;
+		
+		inst_info.ist_err_assrt_str = ex1.ex_assrt;
+		
+		bj_err << "ASSERT=" << ex1.ex_assrt << bj_eol;
+		bj_err << ex1.ex_stk << bj_eol;
 	}
 	catch (...) {
 		BRAIN_DBG(
@@ -2116,7 +2182,11 @@ brain::deduce_and_reverse_trail(){
 	
 	bool found_top = false;
 	bool in_full_anls = true;
-	DBG_COMMAND(2, in_full_anls = false); // ONLY_DEDUC
+	DBG_COMMAND(2, // ONLY_DEDUC
+		if(! dbg_as_release()){
+			in_full_anls = false;
+		}
+	); 
 	if(in_full_anls){
 		found_top = analyse_conflicts(br_all_conflicts_found, dct);
 	} else {
@@ -2153,6 +2223,17 @@ brain::deduce_and_reverse_trail(){
 	}*/
 	
 	if(go_on){
+		//BRAIN_REL_CK_PRT(((rsn.rs_forced == NULL_PT) || 
+		//			! rsn.rs_forced->has_charge() || ! rsn.rs_motives.is_empty()), 
+		BRAIN_REL_CK_PRT(! in_root_lv(), 
+			os << "_________________ABORT\n";
+			dbg_prt_margin(os);
+			os << "\n";
+			print_trail(os);
+			os << "lv=" << level();
+			os << "in_root=" << in_root_lv();
+		);
+		
 		candidates_before_reverse(rsn);
 		reverse_with(rsn);
 		candidates_after_reverse();
@@ -3346,7 +3427,7 @@ neuromap::nmp_init_with(quanton& qua){
 	brain& brn = get_brn();
 	neuromap* nxt_nmp = this;
 	
-	na_dbg_cand_sys = true;
+	BRAIN_DBG(na_dbg_cand_sys = true);
 	
 	BRAIN_CK(! na_dbg_creating);
 	BRAIN_DBG(na_dbg_creating = true);
@@ -3852,7 +3933,11 @@ brain::ck_write_quas(reason& rsn){
 long
 brain::get_min_trainable_num_sub(){
 	long min_sub = MIN_TRAINABLE_NUM_SUB;
-	DBG_COMMAND(104, min_sub = br_dbg_min_trainable_num_sub);
+	DBG_COMMAND(7, 
+		if(! dbg_as_release()){
+			min_sub = br_dbg_min_trainable_num_sub;
+		}
+	);
 	return min_sub;
 }
 

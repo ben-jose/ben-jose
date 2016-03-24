@@ -714,7 +714,9 @@ skeleton_glb::init_paths(){
 
 	if(kg_root_path.size() == 0){
 		kg_root_path = kg_running_path;
-		if(! kg_keep_skeleton){
+		
+		bool as_rel = get_solver().slv_prms.sp_as_release;
+		if(! as_rel && ! kg_keep_skeleton){
 			ch_string skl_pth = kg_root_path + SKG_SKELETON_DIR;
 			
 			SKELETON_DBG(bj_out << "DELETING_SKELETON" << bj_eol);
@@ -766,6 +768,7 @@ skeleton_glb::init_paths(){
 	ch_string os_sw_pf_js_skl_pth = os_js_pth + "/" + SKG_SHOW_PROOF_JS_SUBDIR;
 	if(! file_exists(os_sw_pf_js_skl_pth)){
 		bool lk_ok = path_create_link(os_sw_pf_js_bin_pth, os_sw_pf_js_skl_pth);
+		MARK_USED(lk_ok);
 		SKELETON_CK(lk_ok);
 	}
 
@@ -773,6 +776,7 @@ skeleton_glb::init_paths(){
 	ch_string os_sw_pf_js_cnfs_pth = os_cnfs_pth + "/" + SKG_SHOW_PROOF_JS_SUBDIR;
 	if(! file_exists(os_sw_pf_js_cnfs_pth)){
 		bool lk_ok = path_create_link(os_sw_pf_js_bin_pth, os_sw_pf_js_cnfs_pth);
+		MARK_USED(lk_ok);
 		SKELETON_CK(lk_ok);
 	}
 	

@@ -46,8 +46,9 @@ void abort_func(long val, const char* msg){
 	exit(val);
 }
 
-top_exception::top_exception(long the_id){
+top_exception::top_exception(long the_id, ch_string assrt_str){
 	ex_id = the_id;
-	DBG(ex_stk = STACK_STR);
+	ex_stk = STACK_STR;
+	ex_assrt = assrt_str;
 }
 

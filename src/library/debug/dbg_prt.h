@@ -49,6 +49,26 @@ bj_ostream&	dbg_get_out_stm(solver* slv);
 
 
 //=================================================================
+// release dbg defs
+
+//define REL_PRT(dummy, comms1) {bj_eol << "change_all_REL_PRT_for_DBG_PRT_and_recomplie !";}
+
+#define REL_PRT(dummy, comms1) /**/
+
+/*define REL_PRT(pt_brn, comms1) \
+	{ \
+		bj_ostream& os = bj_dbg; \
+		if(pt_brn != NULL_PT){ pt_brn->dbg_prt_margin(os); } \
+		comms1; \
+		os << bj_eol; \
+		os.flush(); \
+	} \
+	
+//--end_of_def
+*/
+
+
+//=================================================================
 // debug defs
 
 #define DBG_ALL_LVS -1

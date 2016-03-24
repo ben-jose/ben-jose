@@ -72,7 +72,7 @@ quanton::ck_charge(brain& brn){
 ch_string
 brain::dbg_prt_margin(bj_ostream& os, bool is_ck){
 	ch_string f_nam = "INVALID_FILE_NAME";
-#ifdef FULL_DEBUG
+//ifdef FULL_DEBUG
 	instance_info& inst_info = get_my_inst();
 	if(inst_info.ist_id >= 0){
 		os << "#" << inst_info.ist_id << ".";
@@ -86,7 +86,7 @@ brain::dbg_prt_margin(bj_ostream& os, bool is_ck){
 		if(is_ck){ os << "LAP="; }
 		os << the_rnd << "." << the_rec << ".";
 	}
-#endif
+//endif
 	return f_nam;
 }
 
@@ -627,7 +627,7 @@ neuromap::print_neuromap(bj_ostream& os, bool from_pt){
 	
 void
 brain::print_trail(bj_ostream& os, bool no_src_only){
-#ifdef FULL_DEBUG
+//ifdef FULL_DEBUG
 	row_quanton_t& the_trl = br_tmp_trail;
 	br_charge_trail.get_all_ordered_quantons(the_trl);
 	os << "TRAIL=[";
@@ -646,7 +646,7 @@ brain::print_trail(bj_ostream& os, bool no_src_only){
 	os << "]";
 	os << bj_eol;
 	os.flush();
-#endif
+//endif
 }
 
 bj_ostream& 
@@ -1408,7 +1408,7 @@ bj_ostream&
 quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps_src, 
 							bool from_tee)
 {
-#ifdef FULL_DEBUG
+//ifdef FULL_DEBUG
 	MARK_USED(from_pt);
 
 	brain* pt_brn = get_dbg_brn();
@@ -1459,7 +1459,7 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 	bool is_end_nmp = false;
 	
 	if(pt_brn != NULL_PT){
-		is_end_nmp = is_qu_end_of_neuromap(*pt_brn);
+		//is_end_nmp = is_qu_end_of_neuromap(*pt_brn);
 	}
 
 	/*if(from_pt){
@@ -1547,7 +1547,7 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 	os << "CHG " << dbg_trinary_to_str(qu_charge) << " ";
 	os << "chtk{" << qu_charge_tk << "} ";
 	os << "sp_" << dbg_trinary_to_str(qu_spin) << " ";
-	os << "st_" << qu_dbg_choice_idx << " ";
+	//os << "st_" << qu_dbg_choice_idx << " ";
 	os << "ps_src ";
 		os << neu;
 	os << "current_src ";
@@ -1560,7 +1560,7 @@ quanton::print_quanton_base(bj_ostream& os, bool from_pt, long ps_ti, neuron* ps
 	os << "ne_tnn_" << qu_tunnels << "\n";
 	os << "\n";
 	os.flush();
-#endif
+//endif
 	return os;
 }
 
@@ -1737,7 +1737,7 @@ neuromap::map_dbg_ck_ord(row<prop_signal>& all_ps){
 ch_string
 neuromap::dbg_na_id(){
 	ch_string i_s = "INVALID_NA_ID";
-#ifdef FULL_DEBUG
+//ifdef FULL_DEBUG
 	bool is_mono = is_na_mono();
 	bj_ostr_stream os;
 	os << "{";
@@ -1751,7 +1751,7 @@ neuromap::dbg_na_id(){
 	os << "}";
 	
 	i_s = os.str();
-#endif
+//endif
 	return i_s;
 }
 

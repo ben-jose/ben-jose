@@ -116,6 +116,9 @@ public:
 
 	avg_stat		ist_num_variants_stat;
 	row<long> 		ist_assig;
+
+	ch_string 		ist_err_assrt_str;
+	ch_string 		ist_err_stack_str;
 	
 	instance_info(){
 		init_instance_info(true);
@@ -142,6 +145,9 @@ public:
 		init_output(ist_out);
 
 		ist_assig.clear(free_mem, free_mem);
+		
+		ist_err_assrt_str = "no_assert_string_found";
+		ist_err_stack_str = "no_stack_string_found";
 	}
 	
 	static

@@ -64,7 +64,18 @@ Declarations of classes and that implement the neural network.
 #define BRAIN_CK_1(prm)  /**/
 #define BRAIN_CK_2(prm)  /**/
 
-#define BRAIN_REL_CK(prm) if(! (prm)){ throw brain_exception(); }
+#define BRAIN_REL_CK(prm) if(! (prm)){ throw brain_exception(0, #prm); }
+
+#define BRAIN_REL_CK_PRT(prm, comms1) \
+	if(! (prm)){ \
+		bj_ostream& os = bj_dbg; \
+		comms1; \
+		os << bj_eol; \
+		os.flush(); \
+		throw brain_exception(0, #prm); \
+	} \
+	
+//--end_of_def
 
 //=============================================================================
 // MAIN CLASSES
@@ -133,7 +144,7 @@ enum mem_find_t {
 
 class brain_exception : public top_exception {
 public:
-	brain_exception(long the_id = 0) : top_exception(the_id)
+	brain_exception(long the_id = 0, ch_string assrt = "") : top_exception(the_id, assrt)
 	{}
 };
 
@@ -205,6 +216,11 @@ DECLARE_PRINT_FUNCS(cov_entry)
 DECLARE_PRINT_FUNCS(neuromap)
 DECLARE_PRINT_FUNCS(deducer)
 DECLARE_PRINT_FUNCS(leveldat)
+
+//=================================================================
+// NULL_BRN_PT
+
+extern brain* NULL_BRN_PT;
 
 //=================================================================
 // comparison declarations
@@ -3245,6 +3261,8 @@ public:
 	instance_info&	get_my_inst();
 	bj_output_t&	get_out_info();
 
+	bool 		dbg_as_release();
+	
 	// core methods
 
 	long		brn_tunnel_signals(bool only_orig, row_quanton_t& all_impl_cho);
@@ -3268,19 +3286,7 @@ public:
 
 	// psignal methods
 
-	void	put_psignal(quanton& qua, neuron* src, long max_tier){
-		BRAIN_CK(br_first_psignal <= br_last_psignal);
-		if(br_psignals.is_empty()){
-			br_psignals.inc_sz();
-		}
-		br_last_psignal++;
-		if(br_last_psignal == br_psignals.size()){
-			br_psignals.inc_sz();
-		}
-		BRAIN_CK(br_psignals.is_valid_idx(br_last_psignal));
-		prop_signal& sgnl = br_psignals[br_last_psignal];
-		sgnl.init_prop_signal(&qua, src, max_tier);
-	}
+	void	put_psignal(quanton& qua, neuron* src, long max_tier);
 
 	prop_signal&	pick_psignal(){
 		br_first_psignal++;

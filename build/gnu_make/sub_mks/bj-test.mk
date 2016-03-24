@@ -5,8 +5,12 @@ SRC_BASE_DIR := ../../../src
 
 TGT_LDFLAGS := -L${TARGET_DIR}
 
-TGT_LDLIBS  := -lben-jose -lstdc++ -lgmpxx -lgmp 
-TGT_PREREQS := libben-jose.a 
+TGT_CXXFLAGS := $(NORMAL_DBG_FLAGS) 
+
+TGT_LDLIBS  := -ldbg-ben-jose -lstdc++ -lgmpxx -lgmp 
+TGT_PREREQS := libdbg-ben-jose.a 
+
+TGT_POSTMAKE := echo "Finished building DEBUG program bj-test"
 
 SOURCES := \
 	$(SRC_BASE_DIR)/programs/tests/test.cpp \

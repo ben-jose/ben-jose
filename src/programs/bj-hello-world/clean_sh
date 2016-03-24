@@ -1,0 +1,6 @@
+
+rm *~
+rm bj-hello-world.d
+rm bj-hello-world.o
+rm bj-hello-world
+

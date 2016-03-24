@@ -184,6 +184,7 @@ batch_solver::init_batch_solver(){
 
 	gg_file_name = "";
 	
+	bc_as_release = false;
 	bc_slvr_path = "";
 	NOT_DBG(bc_slvr_path = path_to_absolute_path(".");)
 	
@@ -674,7 +675,7 @@ batch_solver::get_args(int argc, char** argv)
 	bool prt_help = false;
 	bool prt_version = false;
 	bool prt_paths = false;
-	bool as_release = false;
+	bc_as_release = false;
 	
 	for(long ii = 1; ii < argc; ii++){
 		ch_string the_arg = argv[ii];
@@ -689,7 +690,7 @@ batch_solver::get_args(int argc, char** argv)
 		} else if(the_arg == "-proof"){
 			op_write_proof = true;
 		} else if(the_arg == "-rr"){
-			DBG(as_release = true);
+			bc_as_release = true;
 			NOT_DBG(os << "running RELEASE exe. ignoring debug op '-rr'" << bj_eol;)
 		} else if((the_arg == "-root") && ((ii + 1) < argc)){
 			int kk_idx = ii + 1;
@@ -714,7 +715,7 @@ batch_solver::get_args(int argc, char** argv)
 		}
 	}
 	
-	if(as_release){
+	if(bc_as_release){
 		DBG(
 			if(bc_slvr_path.empty()){
 				bc_slvr_path = path_to_absolute_path(".");
@@ -820,6 +821,12 @@ void
 batch_solver::do_cnf_file()
 {
 	BATCH_CK(bc_solver != NULL);
+
+	DBG(
+		if(bc_as_release){ 
+			bj_set_param_char(bc_solver, bjp_as_release, 1);
+		}
+	);
 	
 	batch_entry& curr_inst = get_curr_inst();	
 	const char* ff = curr_inst.be_ff_nam.c_str();

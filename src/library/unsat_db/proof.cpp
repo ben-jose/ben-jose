@@ -186,7 +186,8 @@ proof_get_tk_html_file_name(proof_tk& pf_tk){
 
 long
 proof_get_trace_idx_of(deduction& dct, long to_wrt_idx){
-	row<prop_signal>& trace = dct.dt_all_noted;
+	BRAIN_DBG(row<prop_signal>& trace = dct.dt_all_noted);
+	
 	row_neuromap_t& all_to_wrt = dct.dt_all_to_wrt;
 	long nmp_trce_idx = INVALID_IDX;
 	
@@ -288,7 +289,8 @@ proof_append_neu(brain& brn, row<char>& json_str, neuron* neu, ch_string& prv_pf
 	ch_string invalid_pth = SKG_INVALID_PTH;
 	
 	if(neu == NULL_PT){
-		bool has_pf = ! pf_tk.is_ptk_virgin();
+		BRAIN_DBG(bool has_pf = ! pf_tk.is_ptk_virgin());
+		
 		bool has_prv_pth = (prv_pf_pth != invalid_pth);
 		
 		if(! has_prv_pth){
@@ -363,7 +365,8 @@ proof_append_neu(brain& brn, row<char>& json_str, neuron* neu, ch_string& prv_pf
 void
 proof_write_all_json_files_for(deduction& dct){
 	BRAIN_CK(dct.ck_dbg_srcs());
-	brain& brn = dct.get_brn();
+	BRAIN_DBG(brain& brn = dct.get_brn());
+	
 	row_neuromap_t& all_to_wrt = dct.dt_all_to_wrt;
 	
 	DBG_PRT_WITH(115, brn, os << " num_to_WRT=" << all_to_wrt.size() << "\n";
@@ -635,6 +638,7 @@ proof_move_all_to_mv(deduction& dct, ch_string& pf_dir_pth,
 		BRAIN_CK(file_exists(skg.as_full_path(pf_dir_pth)));
 		
 		bool ok1 = rename_file(os_src_pth_mv, os_dst_pth_mv); //OS_OPER
+		MARK_USED(ok1);
 		BRAIN_CK_PRT(ok1, 
 			DBG_PRT_ABORT(brn);
 			os << " RENAME1\n";
@@ -883,6 +887,7 @@ proof_write_json_file_for(deduction& dct, long to_wrt_idx, long prv_wrt_idx)
 		BRAIN_CK(file_exists(os_end_dir_pth));
 		
 		bool ok2 = rename_file(os_src_pth_mv, os_dst_pth_mv); //OS_OPER
+		MARK_USED(ok2);
 		BRAIN_CK_PRT(ok2,
 			DBG_PRT_ABORT(brn);
 			os << " RENAME2\n";

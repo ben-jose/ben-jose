@@ -108,7 +108,7 @@ dimacs_loader::fix_lits(row<long>& lits, bool& add_it)
 		}
 
 		if(ld_dots.is_true(nid)){
-			DBG_PRT(7, os << "lit_already_in_clause." <<
+			DBG_PRT(12, os << "lit_already_in_clause." <<
 				" lits=" << lits <<
 				" nid=" << nid <<
 				" tmp_nids=" << tmp_dens << bj_eol
@@ -119,7 +119,7 @@ dimacs_loader::fix_lits(row<long>& lits, bool& add_it)
 
 		DIMACS_CK(ld_dots.is_true(-nid));
 
-		DBG_PRT(7, os << "clause_has_both_lit." <<
+		DBG_PRT(12, os << "clause_has_both_lit." <<
 			" lits=" << lits <<
 			" nid=" << nid <<
 			" tmp_nids=" << tmp_dens << bj_eol
@@ -138,7 +138,7 @@ dimacs_loader::fix_lits(row<long>& lits, bool& add_it)
 	}
 
 	if(tmp_dens.is_empty()){
-		DBG_PRT(7, os << "empty_clause." <<
+		DBG_PRT(12, os << "empty_clause." <<
 			" lits=" << lits <<
 			" tmp_nids=" << tmp_dens
 		);
@@ -146,7 +146,7 @@ dimacs_loader::fix_lits(row<long>& lits, bool& add_it)
 	}
 
 	if((tmp_dens.size() == 1) && !satisfied){
-		DBG_PRT(7, os << "clause_has_one_lit." <<
+		DBG_PRT(12, os << "clause_has_one_lit." <<
 			" lits=" << lits <<
 			" tmp_lits=" << tmp_dens << bj_eol
 		);
