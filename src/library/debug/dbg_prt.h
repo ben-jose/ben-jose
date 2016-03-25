@@ -49,6 +49,26 @@ bj_ostream&	dbg_get_out_stm(solver* slv);
 
 
 //=================================================================
+// release dbg defs
+
+// use with NULL_BRN_PT when brn is not reachable
+
+#define REL_PRT(pt_brn, comms1) /**/
+
+/*define REL_PRT(pt_brn, comms1) \
+	{ \
+		bj_ostream& os = bj_dbg; \
+		if(pt_brn != NULL_PT){ pt_brn->dbg_prt_margin(os); } \
+		comms1; \
+		os << bj_eol; \
+		os.flush(); \
+	} \
+	
+//--end_of_def
+*/
+
+
+//=================================================================
 // debug defs
 
 #define DBG_ALL_LVS -1
@@ -67,17 +87,29 @@ bj_ostream&	dbg_get_out_stm(solver* slv);
 
 //--end_of_def
 
+#define	DBG_COMM_WITH(lev, obj, comm) \
+	DBG( \
+		if(DBG_BR_COND((obj).get_dbg_slv(), lev, true)){ \
+			comm; \
+		} \
+	) \
+
+//--end_of_def
+
 void	dbg_print_left_margin(solver* pt_slv, bj_ostream& os, long dbg_lv);
+
+//			bool is_htm_1 = (&bj_dbg != &os);
+
 
 #define	DBG_PRT_SLV(pt_slv, o_stm, lev, cond, comm) \
 	DBG( \
 		if(DBG_BR_COND(pt_slv, lev, cond)){ \
 			bj_ostream& os = dbg_get_out_stm(pt_slv); \
-			bool is_htm_1 = (&bj_dbg != &os); \
+			bool is_htm_1 = false; \
 			if(is_htm_1){ os << bj_eol << "<pre>"; } \
 			dbg_print_left_margin(pt_slv, os, lev); \
 			comm; \
-			if(is_htm_1){ os << "</pre><br>" << bj_eol; } \
+			if(is_htm_1){ os << "</pre>" << bj_eol; } \
 			os << bj_eol; \
 			os.flush(); \
 		} \
@@ -100,6 +132,12 @@ void	dbg_print_left_margin(solver* pt_slv, bj_ostream& os, long dbg_lv);
 
 #define DBG_SLOW(prm)
 //define DBG_SLOW(prm)	DBG(prm)
+
+#define DBG_PRT_ABORT(brn) \
+		os << "\n________________\n ABORT_DATA\n"; \
+		brn.dbg_prt_margin(os); \
+	
+//--end_of_def
 
 #ifdef FULL_DEBUG
 	ch_string get_cy_dir(brain& brn);

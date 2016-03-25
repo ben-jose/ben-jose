@@ -40,8 +40,9 @@ dbg_cy_htm.cpp
 #include "ch_string.h"
 #include "brain.h"
 #include "solver.h"
+#include "html_strings.h"
+
 #include "dbg_prt.h"
-#include "dbg_strings_html.h"
 
 
 #ifdef FULL_DEBUG
@@ -104,10 +105,31 @@ brain::dbg_start_html(){
 	of << "\t\t " << HTMi_src << CY_LIB_DIR << "/cytoscape.js" << HTMe_src << bj_eol;
 	of << "\t\t " << HTMi_src << CY_LIB_DIR << "/show_cnf_fn.js" << HTMe_src << bj_eol;
 	
+	of << "\t\t " << HTMi_style << "\n";
+	of << "\t\t " << "pre {\n";
+	of << "\t\t\t " << HTM_word_wrap_css3 << "\n";
+	of << "\t\t\t " << HTM_word_wrap_mozilla << "\n";
+	of << "\t\t\t " << HTM_word_wrap_opera4 << "\n";
+	of << "\t\t\t " << HTM_word_wrap_opera7 << "\n";
+	of << "\t\t\t " << HTM_word_wrap_ie << "\n";
+	of << "\t\t " << "}\n";
+	of << "\t\t " << HTMe_style << "\n";
+	
 	of << "\t" << HTMe_head << bj_eol;
-	
 	of << "\t" << HTMi_body << bj_eol;
+	of << "\t" << HTMi_pre << bj_eol;
+
+	of << HTMi_h1 << "\n";
+	of << htm_tit << "\n";
+	of << HTMe_h1 << "\n";
 	
+	of << "<button onclick='export_all_gphs()'>Freeze for printing</button>\n";
+	of << "<select id='gph_theme' onclick='change_theme()'>\n";
+	of << "\t <option value='white_nodes' selected='selected'>White_nodes_graph_theme\n";
+	of << "\t <option value='black_nodes'>Black_nodes_graph_theme\n";
+	of << "</select>\n";
+	of << "\n\n";
+ 
 	of.flush();
 
 	DBG_PRT(147, os << "Appended to file: '" << pth << "'\n");
@@ -120,6 +142,7 @@ brain::dbg_finish_html(){
 	bj_ofstream& of = br_dbg_htm_os;
 	BRAIN_CK(of.good() && of.is_open());
 
+	of << "\t" << HTMe_pre << bj_eol;
 	of << "\t" << HTMe_body << bj_eol;
 	of << HTMe_html << bj_eol;
 	
@@ -170,6 +193,7 @@ brain::dbg_update_html_cy_graph(ch_string cy_kk, coloring* the_col, ch_string ht
 		}
 		the_col = &br_dbg_full_col;
 	}
+	
 	BRAIN_CK(the_col != NULL_PT);
 	BRAIN_CK(the_col->get_dbg_brn() != NULL_PT);
 	
@@ -181,11 +205,13 @@ brain::dbg_update_html_cy_graph(ch_string cy_kk, coloring* the_col, ch_string ht
 	of_st << "};" << bj_eol;
 	
 	if(is_ic){
+		of_st << "// is_ic\n";
 		of_st << stp_js_plays_var_nm << " = [" << bj_eol;
 		dbg_print_cy_graph_node_plays(of_st);
 		of_st << "];" << bj_eol;
 	} 
 	if(! is_ic){
+		of_st << "// ! is_ic\n";
 		of_st << stp_js_plays_var_nm << " = [" << bj_eol;
 		dbg_print_cy_nmp_node_plays(of_st);
 		of_st << "];" << bj_eol;
@@ -206,12 +232,21 @@ brain::dbg_update_html_cy_graph(ch_string cy_kk, coloring* the_col, ch_string ht
 	}
 	
 	ch_string stp_aa_str = long_to_str(aa);
-	ch_string step_title = "Graph #" + stp_aa_str + HTM_br;
+	ch_string step_title = "Graph #" + stp_aa_str;
 	of << "\t\t " << step_title << bj_eol;
 
 	ch_string div_nm = "cnf_graph_" + stp_aa_str;
 	ch_string div_str = HTM_cy_div(div_nm);
 	of << "\t\t " << div_str << bj_eol;
+
+	of << "\t\t <button onclick=\"no_labels('" + stp_aa_str + "')\">No labels</button>";
+	of << "<button onclick=\"update_png('" + stp_aa_str + "')\">Update PNG</button>";
+	of << "<button onclick=\"switch_theme('" + stp_aa_str + "')\">Switch theme</button>";
+	of << "\n\n";
+	
+	ch_string div_png_nm = "png_" + div_nm;
+	ch_string div_png_str = HTM_cy_hidden_div(div_png_nm);
+	of << "\t\t " << div_png_str << bj_eol;
 	
 	ch_string rel_aa_pth = get_cy_rel_path(brn, cy_kk, aa);
 	of << "\t\t " << HTMi_src << rel_aa_pth << HTMe_src << bj_eol;
@@ -223,7 +258,7 @@ brain::dbg_update_html_cy_graph(ch_string cy_kk, coloring* the_col, ch_string ht
 	of << ", " << js_grph_var_aa_nm << ", " << layo_str;
 	of << ", " << js_plays_var_aa_nm;
 	of << ");" << bj_eol;
-	
+
 	of << "\t\t " << HTMe_script << bj_eol << bj_eol << bj_eol;
 	
 	of.flush();
@@ -311,7 +346,7 @@ brain::dbg_br_print_col_cy_nodes(bj_ostream& os, bool is_ic){
 		bool has_cy_nmp = (! is_ic && (qua.qu_dbg_cy_nmp != NULL_PT));
 		long qti = qua.qu_tier;
 		bool is_cho = qua.is_choice();
-		bool is_lrn = qua.is_learned_choice();
+		bool is_lrn = qua.has_learned_source();
 		//bool is_mon = qua.is_opp_mono();
 		
 		if(has_cy_nmp){
@@ -391,6 +426,7 @@ coloring::dbg_print_col_cy_graph(bj_ostream& os, bool is_ic){
 		return os;
 	}
 	DBG_PRT(46, os << "Printing col=" << (void*)this);
+	
 	
 	brain& brn = *pt_br;
 	//long num_step = 0;
@@ -494,7 +530,7 @@ neuromap::map_dbg_set_cy_maps(){
 		qua->qu_dbg_cy_nmp = nxt_nmp;
 		brn.br_tot_cy_nmps++;
 		
-		dbg_set_cy_sigs(brn, nxt_nmp->na_trail_propag);
+		dbg_set_cy_sigs(brn, nxt_nmp->na_propag);
 		
 		nxt_nmp = nxt_nmp->na_submap;
 	}
@@ -518,7 +554,7 @@ neuromap::map_dbg_reset_cy_maps(){
 		qua->qu_dbg_cy_nmp = NULL_PT;
 		brn.br_tot_cy_nmps--;
 		
-		dbg_reset_cy_sigs(brn, nxt_nmp->na_trail_propag);
+		dbg_reset_cy_sigs(brn, nxt_nmp->na_propag);
 		
 		nxt_nmp = nxt_nmp->na_submap;
 	}
@@ -552,29 +588,38 @@ neuromap::map_dbg_html_data_str(ch_string msg){
 	ch_string htm_msg = "INVALID_HTML";
 #ifdef FULL_DEBUG
 	brain& brn = get_brn();
+	ch_string id_str = map_dbg_get_phi_ids_str();
 	
 	bj_ostr_stream ss_msg;
 	ss_msg << HTMi_h1 << "BRN_recoil=" << brn.recoil() << HTMe_h1 << "\n";
-	ss_msg << HTMi_h2 << msg << HTMe_h2 << "\n";
-	ss_msg << "nmp=" << this << HTM_br << "\n";
-	ss_msg << "#sub=" << na_num_submap;
+	
+	ss_msg << HTMi_h2;
+	brn.dbg_prt_margin(ss_msg);
+	ss_msg << msg;
+	ss_msg << " " << dbg_na_id() << " '" << id_str << "'";
+	ss_msg << HTMe_h2 << "\n";
+	
+	ss_msg << "nmp=" << this << "\n";
+	ss_msg << " is_MONO=" << is_na_mono();
+	ss_msg << " #sub=" << na_num_submap;
 	ss_msg << " has_sub=" << has_submap();
-	ss_msg << HTM_br << "\n";
+	ss_msg << "\n";
 	ss_msg << "all_sub=[";
 	print_all_subnmp(ss_msg, true);
-	ss_msg << "]";
-	ss_msg << HTM_br << "\n";
+	ss_msg << "]\n";
+	ss_msg << "\n";
 	ss_msg << "ALL_MONOS=";
 	brn.dbg_print_htm_all_monos(ss_msg);
-	ss_msg << HTM_br << "\n";
-	ch_string id_str = map_dbg_get_phi_ids_str();
-	ss_msg << "nmp_phi_id='" << id_str << "'" << HTM_br << "\n";
-	ss_msg << "min_sha=" << na_dbg_tauto_min_sha_str << HTM_br << "\n";
-	ss_msg << "sha=" << na_dbg_tauto_sha_str << HTM_br << "\n";
-	ss_msg << "path=" << HTM_br << na_dbg_tauto_pth << HTM_br << "\n";
-	ss_msg << "COL=" << HTM_br;
+	ss_msg << "\n";
+	ss_msg << "nmp_phi_id='" << id_str << "'" << "\n";
+	ss_msg << "min_sha=" << na_dbg_tauto_min_sha_str << "\n";
+	ss_msg << "tauto_sha=" << na_dbg_tauto_sha_str << "\n";
+	ss_msg << "guide_sha=" << na_dbg_guide_sha_str << "\n";
+	ss_msg << "quick_sha=" << na_dbg_quick_sha_str << "\n";
+	ss_msg << "TAUTO_path=\n" << na_tauto_pth << "\n";
+	ss_msg << "COL=\n";
 	na_dbg_tauto_col.dbg_print_qua_ids(ss_msg);
-	ss_msg << HTM_br << "\n";
+	ss_msg << "\n";
 	
 	htm_msg = ss_msg.str();
 #endif
@@ -586,7 +631,7 @@ neuromap::map_dbg_update_html_file(ch_string msg){
 #ifdef FULL_DEBUG
 	brain& brn = get_brn();
 	
-	ch_string htm_msg = map_dbg_html_data_str(msg);;
+	ch_string htm_msg = map_dbg_html_data_str(msg);
 	
 	coloring full_col;
 	map_dbg_get_cy_coloring(full_col);
@@ -659,7 +704,7 @@ coloring::dbg_set_brain_coloring(){
 
 void
 dbg_set_cy_sigs(brain& brn, row<prop_signal>& trace){
-	
+#ifdef FULL_DEBUG
 	for(long ii = 0; ii < trace.size(); ii++){
 		prop_signal& q_sig = trace[ii];
 		BRAIN_CK(q_sig.ps_quanton != NULL_PT);
@@ -670,11 +715,12 @@ dbg_set_cy_sigs(brain& brn, row<prop_signal>& trace){
 		qua->qu_dbg_cy_sig = &q_sig;
 		brn.br_tot_cy_sigs++;
 	}
+#endif
 }
 
 void
 dbg_reset_cy_sigs(brain& brn, row<prop_signal>& trace){
-	
+#ifdef FULL_DEBUG
 	for(long ii = 0; ii < trace.size(); ii++){
 		prop_signal& q_sig = trace[ii];
 		BRAIN_CK(q_sig.ps_quanton != NULL_PT);
@@ -685,7 +731,7 @@ dbg_reset_cy_sigs(brain& brn, row<prop_signal>& trace){
 		qua->qu_dbg_cy_sig = NULL_PT;
 		brn.br_tot_cy_sigs--;
 	}
-	
+#endif
 }
 
 void
@@ -726,7 +772,7 @@ quanton::get_cy_kind(){
 #ifdef FULL_DEBUG
 	kk = cq_reg;
 	bool is_cy_cho = is_choice();
-	bool is_cy_lrn = is_learned_choice();
+	bool is_cy_lrn = has_learned_source();
 	//bool is_mon = is_opp_mono();
 	if(is_cy_cho){ kk = cq_cho; }
 	if(is_cy_lrn){ kk = cq_for; }

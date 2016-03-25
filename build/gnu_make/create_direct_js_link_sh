@@ -1,0 +1,8 @@
+
+cd /home/jose/devel/ben-jose/build/gnu_make/bin/SKELETON/JS
+rm -rf /home/jose/devel/ben-jose/build/gnu_make/bin/SKELETON/JS/show_proof_js_lib
+ln -s /home/jose/devel/ben-jose/src/library/unsat_db/javascript/show_proof_js_lib .
+
+cd /home/jose/devel/ben-jose/build/gnu_make/bin/SKELETON/CNF
+rm -rf /home/jose/devel/ben-jose/build/gnu_make/bin/SKELETON/CNF/show_proof_js_lib
+ln -s /home/jose/devel/ben-jose/src/library/unsat_db/javascript/show_proof_js_lib .

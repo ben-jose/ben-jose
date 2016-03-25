@@ -209,6 +209,10 @@ public:
 		}
 	}
 
+	void 	forced_let_go(){
+		binder::let_go();
+	}
+
 	template<class obj_t1>
 	void		append_all_as(row<obj_t1*>& rr, bool clr = false);
 };

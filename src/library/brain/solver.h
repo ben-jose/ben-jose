@@ -44,6 +44,7 @@ the solver wrapper.
 #include "ben_jose.h"
 
 #define SOLVER_CK(prm) 	DBG_BJ_LIB_CK(prm)
+#define SOLVER_REL_CK(prm) if(! (prm)){ throw solver_exception(); }
 
 class brain;
 
@@ -51,6 +52,15 @@ DBG(
 	class dbg_inst_info;
 	class dbg_slvr_info;
 )
+
+//======================================================================
+// solver_exception
+
+class solver_exception : public top_exception {
+public:
+	solver_exception(long the_id = 0) : top_exception(the_id)
+	{}
+};
 
 //=================================================================
 // dbg_slvr_info
@@ -63,7 +73,12 @@ public:
 	long	dbg_max_wrt_num_subnmp;
 	long	dbg_max_fnd_num_subnmp;
 	
+	avg_stat	dbg_avg_num_filled;
+	avg_stat	dbg_avg_neu_sz;
+	
 	ch_string	dbg_html_out_path;
+
+	bool	dbg_as_release;
 	
 	dbg_slvr_info(){
 		init_dbg_slvr_info();
@@ -74,11 +89,34 @@ public:
 		dbg_max_wrt_num_subnmp = 0;
 		dbg_max_fnd_num_subnmp = 0;
 		
+		dbg_avg_num_filled.vs_nam = "NUM_FILLED";
+		dbg_avg_neu_sz.vs_nam = "NEU_SZ";
+		
 		dbg_html_out_path = ".";
+		
+		dbg_as_release = false;
 	}
 };
 
 #endif
+
+//=================================================================
+// slvr_params
+
+class slvr_params {
+public:
+	bool	sp_as_release;
+	bool	sp_write_proofs;
+	
+	slvr_params(){
+		init_slvr_params();
+	}
+
+	void	init_slvr_params(){
+		sp_as_release = false;
+		sp_write_proofs = false;
+	}
+};
 
 //=================================================================
 // solver
@@ -94,8 +132,18 @@ private:
 	}
 	
 public:
+	static
+	char*	CL_NAME;
+
+	virtual
+	char*	get_cls_name(){
+		return solver::CL_NAME;
+	}
+	
 	brain*			slv_dbg_brn;
 	debug_info		slv_dbg_conf_info;
+	
+	slvr_params		slv_prms;
 	instance_info	slv_inst;
 	skeleton_glb	slv_skl;
 	DBG(dbg_slvr_info 	slv_dbg2;)

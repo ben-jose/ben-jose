@@ -1,4 +1,5 @@
 
+
 /*************************************************************
 
 This file is part of ben-jose.
@@ -28,48 +29,26 @@ Our Resurrected and Living, both in Body and Spirit,
 
 ------------------------------------------------------------
 
-c_test.c
+bj_stream.cpp  
 
-file for test and debugging purposes.
+bj_stream funcs.
 
 --------------------------------------------------------------*/
 
+#include "top_exception.h"
+#include "bj_stream.h"
 
-#include <stdio.h>
-
-#include "ben_jose.h"
-
-#define MARK_USED(X)  ((void)(&(X)))
-
-int main(int argc, char** argv)
-{
-	if(argc < 2){
-		printf("args: <cnf_file_path>\n");
-		return 1;
+void
+bj_ofstream_open(ch_string& path, bj_ofstream& stm, bool append){
+	const char* log_nm = path.c_str();
+	if(append){
+		stm.open(log_nm, std::ios::app);
+	} else {
+		stm.open(log_nm, std::ios::binary);
 	}
-	char* ff = argv[1];
-	
-	bj_solver_t ss = bj_solver_create("");
-	
-	bj_satisf_val_t  vv = bj_solve_file(ss, ff);
-	switch(vv){
-		case bjr_yes_satisf:
-			printf("%s is SAT instance\n", ff);
-			break;
-		case bjr_no_satisf:
-			printf("%s is UNS instance\n", ff);
-			break;
-		case bjr_error:
-			printf("ERROR ! in %s\n", ff);
-			break;
-		default:
-			printf("FATAL ERROR ! in %s\n", ff);
-			break;
+	if(! stm.good() || ! stm.is_open()){
+		ch_string msg = "Could not open file " + path;
+		abort_func(1, msg.c_str());
 	}
-	//bj_output_t 		bj_get_output(bj_solver_t bjs);
-	//const long* 		bj_get_assig(bj_solver_t bjs);
-	
-	bj_solver_release(ss);
-	return 0;
 }
 

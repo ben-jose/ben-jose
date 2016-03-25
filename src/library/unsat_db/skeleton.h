@@ -58,11 +58,11 @@ class instance_info;
 
 class solver;
 class brain;
+class neuron;
 class canon_clause;
 class variant;
 class canon_cnf;
 class skeleton_glb;
-class ref_strs;
 
 
 #define SKELETON_DBG(prm) DBG(prm)
@@ -102,10 +102,13 @@ class ref_strs;
 
 //define SKG_APROX_SHA_PTH_SZ	70
 
+#define SKG_INVALID_PTH		"skg_invalid_pth"
 #define SKG_SKELETON_DIR	"/SKELETON"
 #define SKG_CNF_DIR		"/SKELETON/CNF"
 #define SKG_REF_DIR		"/SKELETON/REF"
 #define SKG_LCK_DIR		"/SKELETON/LCK"
+#define SKG_TMP_PROOF_DIR	"/SKELETON/TMP/PROOF"
+#define SKG_JS_DIR			"/SKELETON/JS"
 #define SKG_COLLISIONS_DIR	"/SKELETON/ERR/COLLISIONS"
 #define SKG_MISSING_DIR		"/SKELETON/ERR/MISSING"
 #define SKG_CORRUPTED_DIR	"/SKELETON/ERR/CORRUPTED"
@@ -118,6 +121,7 @@ class ref_strs;
 #define SKG_CANON_NAME		"canon.skl"
 #define SKG_DIFF_NAME		"diff.skl"
 #define SKG_GUIDE_NAME		"guide.skl"
+#define SKG_GUIDE_SHA_NAME	"guide_sha.skl"
 #define SKG_COMMENT_NAME	"comment.skl"
 #define SKG_ELAPSED_NAME	"elapsed.skl"
 #define SKG_NUM_VNT_NAME	"numvariants.skl"
@@ -130,13 +134,19 @@ class ref_strs;
 #define SKG_DBG_COLLI_DIFF	"/dbg_colli_diff.skl"
 #define SKG_DBG_COLLI_NEW	"/dbg_colli_new.skl"
 
+#define SKG_PROOF_SUBDIR			"proof"
+#define SKG_UNIRONS_SUBDIR			"unirons"
+#define SKG_UNIRONS_REF_FNAM		"unirons_ref.txt"
+#define SKG_SHOW_PROOF_JS_SUBDIR	"show_proof_js_lib"
+#define SKG_SHOW_PROOF_TOP_HTM_NAME	"Show_Proof.htm"
+#define SKG_END_JSN_NAME			"cnf_proof.jsn"
+
 //=================================================================
 // funtion declarations
 
 DECLARE_PRINT_FUNCS(canon_clause)
 DECLARE_PRINT_FUNCS(variant)
 DECLARE_PRINT_FUNCS(canon_cnf)
-DECLARE_PRINT_FUNCS(ref_strs)
 
 //=================================================================
 // path funcs
@@ -149,7 +159,7 @@ ch_string	nam_subset_resp(cmp_is_sub rr);
 void		string_replace_char(ch_string& src_str, char orig, char repl);
 
 bool		path_is_dead_lock(ch_string the_pth);
-bool		path_is_diff_file(ch_string the_pth);
+//bool		path_is_diff_file(ch_string the_pth);
 
 bool 		dims_path_exists(ch_string base_pth, const dima_dims& dims);
 
@@ -186,54 +196,6 @@ class skeleton_exception : public top_exception {
 public:
 	skeleton_exception(long the_id = 0) : top_exception(the_id)
 	{}
-};
-
-//=================================================================
-// ref_strs
-
-class ref_strs {
-public:	
-	ch_string	pd_ref1_nam;
-	ch_string	pd_ref2_nam;
-
-	ref_strs(){
-		init_ref_strs();
-	}
-
-	~ref_strs(){
-	}
-
-	void		init_ref_strs(){
-		pd_ref1_nam = "";
-		pd_ref2_nam = "";
-	}
-
-	bool		has_ref(){
-		bool h1 = (pd_ref1_nam != "");
-		bool h2 = (pd_ref2_nam != "");
-		bool has_r = (h1 || h2);
-		SKELETON_CK(! has_r || (h1 && h2));
-		return has_r;
-	}
-
-	ch_string	vnt_nam(){
-		return pd_ref1_nam;
-	}
-
-	ch_string	lck_nam(){
-		return pd_ref2_nam;
-	}
-
-	bj_ostream&	print_ref_strs(bj_ostream& os, bool from_pt = false){
-		os << "strs=[" << bj_eol;
-		os << " '" << pd_ref1_nam << "'" << bj_eol;
-		os << " '" << pd_ref2_nam << "'" << bj_eol;
-		os << "]";
-	
-		os.flush();
-		return os;
-	}
-
 };
 
 //=================================================================
@@ -290,6 +252,11 @@ public:
 		obj_t1& obj = *((obj_t1*)(cc_me));
 		SKELETON_CK(obj.get_cls_name() == obj_t1::CL_NAME);
 		return obj;
+	}
+
+	bool	cc_is_empty(){
+		SKELETON_CK(! cc_in_free);
+		return is_empty();
 	}
 
 	long	cc_size(){
@@ -405,9 +372,18 @@ cmp_variant(variant const & vnt1, variant const & vnt2);
 //=================================================================
 // canon_cnf
 
+enum cnf_kind_t {
+	fk_invalid = 10,
+	fk_guide,
+	fk_diff,
+	fk_canon
+};
+
 class canon_cnf {
 public:
 	SKELETON_DBG(brain*		cf_pt_brn;)
+	
+	cnf_kind_t		cf_kind;
 	
 	bool			cf_sorted;
 
@@ -429,7 +405,9 @@ public:
 
 	long			cf_num_purged;
 
-	ref_strs		cf_phdat;
+	canon_cnf*		cf_guide_cnf;
+	canon_cnf*		cf_tauto_cnf;
+	ch_string		cf_quick_find_ref;
 	row_str_t		cf_dbg_shas;
 	
 	instance_info* 	cf_inst_inf;
@@ -438,7 +416,10 @@ public:
 	ch_string 		cf_tmp_pth1;
 	ch_string 		cf_tmp_pth2;
 
-	SKELETON_DBG(void* cf_dbg_orig_nmp);
+	SKELETON_DBG(
+		void* 	cf_dbg_orig_nmp;
+		bool	cf_dbg_file_existed;
+	);
 		
 	canon_cnf(){
 		init_canon_cnf();
@@ -462,6 +443,8 @@ public:
 	void init_canon_cnf(bool free_mem = false){
 		SKELETON_DBG(cf_pt_brn = NULL);
 		
+		cf_kind = fk_invalid;
+		
 		cf_sorted = true;
 	
 		cf_dims.init_dima_dims(INVALID_NATURAL);
@@ -483,7 +466,9 @@ public:
 
 		cf_num_purged = 0;
 
-		cf_phdat.init_ref_strs();
+		cf_guide_cnf = NULL_PT;
+		cf_tauto_cnf = NULL_PT;
+		cf_quick_find_ref = "";
 		cf_dbg_shas.clear(free_mem, free_mem);
 		
 		cf_inst_inf = NULL_PT;
@@ -492,12 +477,15 @@ public:
 		cf_tmp_pth1 = "";
 		cf_tmp_pth2 = "";
 		
-		SKELETON_DBG(cf_dbg_orig_nmp = NULL_PT);
+		SKELETON_DBG(
+			cf_dbg_orig_nmp = NULL_PT;
+			cf_dbg_file_existed = false;
+		);
 		
 		SKELETON_CK(cf_unique_path.size() == 0);
 	}
 
-	void	init_with(skeleton_glb& skg, row<canon_clause*>& all_ccls, 
+	void	init_with_ccls(skeleton_glb& skg, row<canon_clause*>& all_ccls, 
 				long tot_vars = INVALID_NATURAL, 
 				long tot_lits = INVALID_NATURAL, 
 				long tot_twolits = INVALID_NATURAL, 
@@ -554,7 +542,102 @@ public:
 	void	release_all_clauses(skeleton_glb& skg, bool free_mem = false);
 
 	bool	has_phase_path(){
-		return cf_phdat.has_ref();
+		return has_cnfs();
+	}
+	
+	bool	has_cnfs(){
+		bool c1 = (cf_guide_cnf != NULL_PT);
+		bool c2 = (cf_tauto_cnf != NULL_PT);
+		bool c_ok = (c1 && c2);
+		SKELETON_CK(is_diff() == c_ok);
+		return c_ok;
+	}
+
+	canon_cnf&	get_guide_cnf(){
+		SKELETON_CK(cf_guide_cnf != NULL_PT);
+		return *cf_guide_cnf;
+	}
+	
+	canon_cnf&	get_tauto_cnf(){
+		SKELETON_CK(cf_tauto_cnf != NULL_PT);
+		return *cf_tauto_cnf;
+	}
+	
+	ch_string	get_ref1_nam(){
+		SKELETON_CK(has_cnfs());
+		SKELETON_CK(is_diff());
+		return cf_guide_cnf->get_ref_path();
+	}
+
+	ch_string	get_ref2_nam(){
+		SKELETON_CK(has_cnfs());
+		SKELETON_CK(is_diff());
+		return cf_guide_cnf->get_lck_path();
+	}
+
+	ch_string	get_ref3_nam(){
+		SKELETON_CK(has_cnfs());
+		SKELETON_CK(is_diff());
+		return cf_quick_find_ref;
+	}
+
+	ch_string	get_vnt_nam(){
+		return get_ref1_nam();
+	}
+
+	ch_string	get_lck_nam(){
+		return get_ref2_nam();
+	}
+
+	bool	is_canon(){
+		return (cf_kind == fk_canon);
+	}
+	
+	bool	is_diff(){
+		return (cf_kind == fk_diff);
+	}
+	
+	bool	is_guide(){
+		return (cf_kind == fk_guide);
+	}
+
+	void	update_diff_refs(skeleton_glb& skg, ch_string sv_vpth);
+	void	update_mng_verif_sys(skeleton_glb& skg, ch_string sv_vpth);
+	
+	void	set_kind_from(ch_string the_pth){
+		SKELETON_CK(cf_kind == fk_invalid);
+		
+		ch_string nm = path_get_name(the_pth);
+		if(nm == SKG_GUIDE_NAME){
+			cf_kind = fk_guide;
+		} else
+		if(nm == SKG_DIFF_NAME){
+			cf_kind = fk_diff;
+		} else
+		if(nm == SKG_CANON_NAME){
+			cf_kind = fk_canon;
+		} 
+		SKELETON_CK(cf_kind != fk_invalid);
+	}
+	
+	ch_string	get_kind_name(){
+		ch_string fnm = "";
+		SKELETON_CK(cf_kind != fk_invalid);
+		switch(cf_kind){
+			case fk_guide: 
+				fnm = SKG_GUIDE_NAME;
+				break;
+			case fk_diff: 
+				fnm = SKG_DIFF_NAME;
+				break;
+			case fk_canon: 
+				fnm = SKG_CANON_NAME;
+				break;
+			default: 
+				break;
+		}
+		SKELETON_CK(fnm != "");
+		return fnm;
 	}
 
 	ch_string	get_all_variant_dir_name();
@@ -565,12 +648,17 @@ public:
 	bool	i_am_super_of(canon_cnf& the_cnf, bool& are_eq);
 	bool	i_sub_of_vnt(skeleton_glb& skg, ch_string& vpth, bool& are_eq);
 	bool	i_super_of_vnt(skeleton_glb& skg, ch_string& vpth);
+	bool	i_equal_to_vnt(skeleton_glb& skg, ch_string& vpth);
+	bool	i_exact_found(skeleton_glb& skg);
 
 	bj_big_int_t	get_num_variants(skeleton_glb& skg);
 	void		set_num_variants(skeleton_glb& skg, bj_big_int_t num_vnts);
 
 	bool	all_nxt_vnt(skeleton_glb& skg, row<variant>& all_next, row<ch_string>& all_del);
-	long	first_vnt_i_super_of(skeleton_glb& skg, instance_info* iinfo = NULL);
+	
+	ch_string	first_vnt_i_super_of(skeleton_glb& skg, row<neuron*>& all_found, 
+									 instance_info* iinfo = NULL);
+	
 	bool	ck_vnts(skeleton_glb& skg);
 
 	ch_string	get_cnf_path();
@@ -589,13 +677,12 @@ public:
 	
 	bool	is_new(skeleton_glb& skg);
 	
-	ch_string prepare_cnf(skeleton_glb& skg, ch_string sv_pth);
+	ch_string prepare_cnf(skeleton_glb& skg, ch_string sv_base_pth);
 
 	bool	save_canon_cnf(ch_string& the_pth, row<char>& cnn, bool write_once = true);
 	bool	save_cnf(skeleton_glb& skg, ch_string pth);
 	void	update_parent_variants(skeleton_glb& skg, ch_string sv_dir);
 
-	void	add_comment_chars_to(skeleton_glb& skg, row<char>& cnn, ch_string sv_ref_pth);
 	void	update_chars_to_write();
 
 	void	load_lits(skeleton_glb& skg, row_long_t& all_lits, long& tot_lits, 
@@ -649,11 +736,13 @@ class skeleton_glb {
 public:
 	SKELETON_DBG(brain* 		kg_pt_brn;)
 	
+	solver*				kg_pt_slv;
+	
 	k_row<canon_clause>	kg_clauses;
 	row<canon_clause*>	kg_free_clauses;
 
 	bool			kg_dbg_only_save;
-	bool			kg_dbg_verifying;
+	bool			kg_dbg_verifying_skeleton_tree;
 	bool			kg_dbg_local_verifying;
 
 	bool			kg_dbg_save_canon;
@@ -669,13 +758,17 @@ public:
 	ch_string		kg_running_path;
 
 	ch_string		kg_instance_file_nam;
+	
+	ch_string		kg_tmp_proof_path;
 
+	ch_string		kg_cnfs_path;
 	ch_string		kg_collisions_path;
 	ch_string		kg_missing_path;
 	ch_string		kg_corrupted_path;
 	ch_string		kg_overlaped_path;
 	ch_string		kg_dead_path;
 	ch_string		kg_broken_path;
+	ch_string		kg_show_proof_js_path;
 
 	ch_string		kg_verify_path;
 	time_t			kg_verify_mtime;
@@ -703,6 +796,8 @@ public:
 
 	solver*	get_dbg_slv();
 	
+	solver&	get_solver();
+	
 	void	set_dbg_brn(brain* pt_brn){
 		SKELETON_DBG(
 			kg_pt_brn = pt_brn;
@@ -719,7 +814,9 @@ public:
 	void	start_local();
 	void	clear_all();
 
-	bool 	in_dbg_verif(){ return (kg_dbg_verifying || kg_dbg_local_verifying); }
+	bool 	in_dbg_verif(){ 
+		return (kg_dbg_verifying_skeleton_tree || kg_dbg_local_verifying); 
+	}
 
 	canon_clause&	get_new_clause();
 	void	release_clause(canon_clause& ccl, bool free_mem);
@@ -727,6 +824,8 @@ public:
 	void	init_skeleton_glb();
 	void	init_paths();
 	void	report_err(ch_string pth, ch_string err_pth);
+	
+	void	reset_proof_path();
 
 	bool	find_skl_path(ch_string the_pth, instance_info* iinfo = NULL);
 
@@ -764,9 +863,15 @@ public:
 		return strset_size(kg_cnf_new_paths);
 	}
 
+	void	add_comment_chars_to(brain& brn, canon_cnf& diff_cnf, 
+								 ch_string sv_ref_pth, row<char>& cnn);
+	
 	int		get_write_lock(ch_string lk_dir);
 	void	drop_write_lock(ch_string lk_dir, int fd_lock);
 
+	ch_string	read_guide_sha_str(ch_string vpth);
+	void		write_guide_sha_str(ch_string vpth, ch_string sha_str);
+	
 	bj_ostream&	print_paths(bj_ostream& os);
 };
 
@@ -777,7 +882,6 @@ public:
 DEFINE_PRINT_FUNCS(canon_clause);
 DEFINE_PRINT_FUNCS(variant);
 DEFINE_PRINT_FUNCS(canon_cnf);
-DEFINE_PRINT_FUNCS(ref_strs);
 
 
 #endif		// SKELETON_H

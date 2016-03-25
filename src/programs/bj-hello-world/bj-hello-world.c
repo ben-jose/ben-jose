@@ -1,5 +1,4 @@
 
-
 /*************************************************************
 
 This file is part of ben-jose.
@@ -29,53 +28,56 @@ Our Resurrected and Living, both in Body and Spirit,
 
 ------------------------------------------------------------
 
-dbg_strings_html.h
+hello_ben_jose.c
 
-some strings for html printing.
+hello world for this library.
 
 --------------------------------------------------------------*/
 
-#ifndef STR_HTML_H
-#define STR_HTML_H
 
-#define HTMi_html "<html>"
-#define HTMe_html "</html>"
-#define HTMi_title "<title>"
-#define HTMe_title "</title>"
-#define HTMi_head "<head>"
-#define HTMe_head "</head>"
-#define HTMi_body "<body>"
-#define HTMe_body "</body>"
-#define HTMi_h1 "<H1>"
-#define HTMe_h1 "</H1>"
-#define HTMi_h2 "<H2>"
-#define HTMe_h2 "</H2>"
-#define HTMi_h3 "<H3>"
-#define HTMe_h3 "</H3>"
-#define HTMi_p "<p>"
-#define HTMe_p "</p>"
-#define HTMi_js "<!-- inject:js -->"
-#define HTMe_js "<!-- endinject:js -->"
+#include <stdio.h>
+#include "ben_jose.h"
 
-#define HTMi_src "<script src='"
-#define HTMe_src "'></script>"
-#define HTMi_script "<script>"
-#define HTMe_script "</script>"
-
-#define HTM_div(nm_dv) "<div id='" + nm_dv + "'></div>" 
+int main(int argc, char** argv)
+{
+	if(argc < 2){
+		printf("args: <cnf_file_path> [<db_dir>]\n");
+		return 1;
+	}
+	char* dd = ".";
+	char* ff = argv[1];
+	if(argc > 2){
+		dd = argv[2];
+	}
 	
-#define HTM_cy_div(nm_dv) "<div id='" + nm_dv + \
-	"' style='height:600px;width:800px;border:1px solid #777;'></div>" \
+	bj_solver_t ss = bj_solver_create(dd);
 	
-// end_of_define
-
-#define JS_inner_htm(div_txt, var_htm_txt) "document.getElementById('" + \
-	div_txt + "').innerHTML = " + var_htm_txt + ";"
+	bj_satisf_val_t  vv = bj_solve_file(ss, ff);
+	switch(vv){
+		case bjr_yes_satisf:
+			printf("%s is SAT instance\n", ff);
+			break;
+		case bjr_no_satisf:
+			printf("%s is UNS instance\n", ff);
+			break;
+		case bjr_error:
+			{
+				printf("ERROR ! in %s\n", ff);
+				bj_output_t oo = bj_get_output(ss);
+				const char* e_str = bj_error_str(oo.bjo_error);
+				printf("%s\n", e_str);
+			}
+			break;
+		default:
+			printf("FATAL ERROR ! in %s\n", ff);
+			break;
+	}
 	
-// end_of_define
-
-#define HTM_br "<br>\n"
-
-#endif		// STR_HTML_H
-
+	// more info with this functions
+	//bj_output_t oo = bj_get_output(ss);
+	//const long* aa = bj_get_assig(ss);
+	
+	bj_solver_release(ss);
+	return 0;
+}
 

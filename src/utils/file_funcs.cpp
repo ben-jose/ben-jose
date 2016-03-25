@@ -567,8 +567,8 @@ delete_dir_entry(const char *fpath, const struct stat *sb,
 		{
 			int rr1 = rmdir(fpath);
 			MARK_USED(rr1);
-			DBG_COND_COMM((rr1 != 0), os << "failed deleting dir " << fpath 
-				<< " errno=" << errno << " " << get_errno_str(errno)
+			DBG_COND_COMM((rr1 != 0), os << "failed deleting dir \n" << fpath << "\n"
+				<< " errno=" << errno << " == '" << get_errno_str(errno) << "'\n"
 				<< " tflag=" << tflag << " " << get_nftw_flag_str(tflag));
 			FILE_FN_CK((rr1 == 0) || (errno == ENOTEMPTY));
 		}
@@ -577,8 +577,8 @@ delete_dir_entry(const char *fpath, const struct stat *sb,
 		{
 			int rr2 = unlink(fpath);
 			MARK_USED(rr2);
-			DBG_COND_COMM((rr2 != 0), os << "failed deleting file " << fpath 
-				<< " errno=" << errno << " " << get_errno_str(errno)
+			DBG_COND_COMM((rr2 != 0), os << "failed deleting file \n" << fpath << "\n" 
+				<< " errno=" << errno << " == '" << get_errno_str(errno) << "'\n"
 				<< " tflag=" << tflag << " " << get_nftw_flag_str(tflag));
 			FILE_FN_CK((rr2 == 0) || (errno == ENOTEMPTY));
 		}
@@ -690,6 +690,10 @@ path_get_running_path(){
 
 ch_string
 path_to_absolute_path(ch_string pth){
+	if(pth.size() >= (BJ_PATH_MAX - 1)){
+		throw file_exception(flx_path_too_long, pth);
+	}
+	
 	char rpath[BJ_PATH_MAX];
 
 	char* rr = realpath(pth.c_str(), rpath);
@@ -805,14 +809,48 @@ path_delete(ch_string full_pth, ch_string up_to){
 }
 
 bool
-path_create_link(ch_string old_pth, ch_string new_pth){
-	int ok = symlink(old_pth.c_str(), new_pth.c_str());
+path_create_link(ch_string old_pth, ch_string nw_pth){
+	int ok = symlink(old_pth.c_str(), nw_pth.c_str());
 	MARK_USED(ok);
 	DBG_COND_COMM((ok != 0), 
-		os << "CANNOT create link old_pth=" << old_pth << " new_pth=" << new_pth << " err=" 
+		os << "CANNOT create link old_pth=" << old_pth << " nw_pth=" << nw_pth << " err=" 
 			<< get_errno_str(errno) << "\n";
 	);
 	return (ok == 0);
 }
 
+bool
+rename_file(ch_string& old_pth, ch_string& nw_pth){
+	int ok = rename(old_pth.c_str(), nw_pth.c_str());
+	return (ok == 0);
+}
+
+ch_string
+get_relative_path(ch_string pth1, ch_string pth2){
+	//ch_string abs1 = path_to_absolute_path(pth1);
+	//ch_string abs2 = path_to_absolute_path(pth2);
+	ch_string abs1 = pth1;
+	ch_string abs2 = pth2;
+	
+	size_t cm_pos = 0;
+	size_t nx_pos = 0;
+	while(abs1.compare(0, nx_pos, abs2, 0, nx_pos) == 0){
+		cm_pos = nx_pos;
+		nx_pos = abs1.find_first_of('/', nx_pos + 1);
+		if(nx_pos == std::string::npos){
+			break;
+		}
+	}
+	
+	ch_string rel = "..";
+	size_t up_pos = cm_pos;
+	while((up_pos = abs1.find_first_of('/', up_pos + 1)) != std::string::npos){
+		rel += "/..";
+	}
+	
+	ch_string rest = abs2.substr(cm_pos);
+	rel += rest;
+	
+	return rel;
+}
 

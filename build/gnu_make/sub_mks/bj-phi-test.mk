@@ -5,11 +5,15 @@ SRC_BASE_DIR := ../../../src
 
 TGT_LDFLAGS := -L${TARGET_DIR}
 
-TGT_LDLIBS  := -lben-jose -lstdc++ -lgmpxx -lgmp 
+TGT_CXXFLAGS := $(NORMAL_DBG_FLAGS) 
 
-TGT_PREREQS := libben-jose.a 
+TGT_LDLIBS  := -ldbg-ben-jose -lstdc++ -lgmpxx -lgmp 
 
-SOURCES := $(SRC_BASE_DIR)/programs/phi_dbg/phi_test.cpp
+TGT_PREREQS := libdbg-ben-jose.a 
+
+TGT_POSTMAKE := echo "Finished building DEBUG program bj-phi"
+
+SOURCES := $(SRC_BASE_DIR)/programs/tests/phi_dbg/phi_test.cpp
 
 SRC_INCDIRS := \
 	$(SRC_BASE_DIR)/library/brain \

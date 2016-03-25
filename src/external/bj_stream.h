@@ -43,6 +43,8 @@ Wrapper for ostream class.
 #include <sstream>
 #include <fstream>	// used for bj_ofstream
 
+#include "ch_string.h"
+
 #define DO_GETCHAR()			getchar()
 
 #define CARRIAGE_RETURN		((char)13)
@@ -59,6 +61,10 @@ typedef std::ostream bj_ostream;
 typedef std::ostringstream bj_ostr_stream;
 
 typedef std::ofstream bj_ofstream;
+
+void
+bj_ofstream_open(ch_string& path, bj_ofstream& stm, bool append);
+
 
 #endif // BJ_STREAM_H
 

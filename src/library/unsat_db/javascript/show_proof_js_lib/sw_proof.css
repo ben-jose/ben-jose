@@ -1,0 +1,25 @@
+
+.collapsibleList li > input + * {
+	display: none;
+}
+
+.collapsibleList li > input:checked + * {
+	display: block;
+}
+
+.collapsibleList li > input {
+	display: none;
+}
+
+.collapsibleList label {
+	cursor: pointer;
+	text-decoration: underline;
+}
+
+textarea {
+	font-size: 20px;
+}
+
+i.biglit {
+	font-size: 20px;
+}

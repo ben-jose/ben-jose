@@ -979,6 +979,7 @@ update_rnd_elap_in_dir(tak_mak& gg, ch_string& dir_nm){
 	}
 }
 
+/*
 void
 gen_phases(tak_mak& gg, ref_strs& the_ph){
 	the_ph.init_ref_strs();
@@ -997,10 +998,10 @@ gen_phases(tak_mak& gg, ref_strs& the_ph){
 	if(num_pha >= 2){
 		the_ph.pd_ref2_nam = rr_pth + "/test_ref2/";
 	}
-	/*if(num_pha >= 3){
-		the_ph.pd_ref3_nam = rr_pth + "/test_ref3/";
-	}*/
-}
+	//if(num_pha >= 3){
+	//	the_ph.pd_ref3_nam = rr_pth + "/test_ref3/";
+	//}
+}*/
 
 void
 test_skl(){
@@ -1023,7 +1024,7 @@ test_skl(){
 	GSKE.print_paths(os);
 
 	GSKE.kg_find_cnn_pth = true;
-	GSKE.kg_dbg_verifying = false;
+	GSKE.kg_dbg_verifying_skeleton_tree = false;
 	GSKE.kg_dbg_only_save = false;
 
 	os << "Type RETURN ..." << bj_eol;
@@ -1072,20 +1073,23 @@ test_skl(){
 	ch_string skl_nt_pth = GSKE.as_full_path(SKG_CNF_DIR);
 
 	os << "1. SAVING TEST ..."  << bj_eol;
-
+	
 	for(long aa = 0; aa < NUM_CNFS; aa++){
 		the_cnf.release_and_init(GSKE, true);
-		gen_phases(rnd_gen, the_cnf.cf_phdat);
+		//gen_phases(rnd_gen, the_cnf.cf_phdat);
 		gen_ccls_cnf(rnd_gen, the_cnf, max_ccl_sz, max_num_ccls_cnf, max_num_vars_cnf);
 
-		ch_string cnn_name = the_cnf.get_cnf_path() + SKG_DIFF_NAME;
-		if(! GSKE.ref_exists(cnn_name)){
+		the_cnf.cf_kind = fk_diff;
+		ch_string cnn_base_name = the_cnf.get_cnf_path();
+		
+		if(! GSKE.ref_exists(cnn_base_name)){
 			os << "num_test=" << aa << bj_eol;
-			the_cnf.save_cnf(GSKE, cnn_name);
+			the_cnf.save_cnf(GSKE, cnn_base_name);
 
-			long f_idx = the_cnf.first_vnt_i_super_of(GSKE);
-			MARK_USED(f_idx);
-			BRAIN_CK(f_idx != INVALID_NATURAL);
+			row<neuron*> all_found;
+			ch_string vpth = the_cnf.first_vnt_i_super_of(GSKE, all_found);
+			MARK_USED(vpth);
+			BRAIN_CK(vpth != SKG_INVALID_PTH);
 
 		} else {
 			os << bj_eol;
@@ -1424,12 +1428,37 @@ void test_str_set(){
 	//bj_out << ss1 << "\n";
 }
 
+void test_rel_pth(int argc, char** argv){
+	bj_ostream& os = bj_out;
+	if(argc < 3){
+		os << "Faltan args" << bj_eol;
+		return;
+	}
+
+	ch_string pth1 = argv[1];
+	ch_string pth2 = argv[2];
+
+	os << "PTH1=" << pth1 << "\n";
+	os << "PTH2=" << pth2 << "\n";
+	
+	ch_string pth3 = "INVALID_PTH";
+	pth3 = get_relative_path(pth1, pth2);
+	
+	os << "REL_PTH=" << pth3 << "\n";
+}
+
 int	tests_main_(int argc, char** argv){
 	MARK_USED(argc);
 	MARK_USED(argv);
 	bj_ostream& os = bj_out;
 	
-	test_str_set();
+	/*
+	os << "SIZEO_OF_row_neuron_t=" << sizeof(row_neuron_t) << "\n";
+	os << "SIZEO_OF_row_row_neuron_t=" << sizeof(row_row_neuron_t) << "\n";
+	os << "SIZEO_OF_prop_signal=" << sizeof(prop_signal) << "\n";
+	os << "SIZEO_OF_void_pt=" << sizeof(void*) << "\n";
+	*/
+	//test_str_set();
 	//test_rf_pt();
 	//test_null_str();
 	//test_realpath(argc, argv);
@@ -1450,6 +1479,8 @@ int	tests_main_(int argc, char** argv){
 	//test_thrw_obj();
 	//pru_hex_as_txt();
 	//test_minisha();
+	
+	test_rel_pth(argc, argv);
 	
 	os.flush();
 

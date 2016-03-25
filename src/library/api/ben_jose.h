@@ -67,6 +67,7 @@ typedef enum {
 	bje_file_cannot_open,
 	bje_file_corrupted,
 	bje_file_too_big,
+	bje_path_too_long,
 	bje_invalid_root_directory,
 	bje_parse_bad_number,
 	bje_dimacs_no_cnf_declaration,
@@ -77,6 +78,12 @@ typedef enum {
 	bje_dimacs_bad_literal,
 	bje_dimacs_clause_too_long
 } bj_error_t;
+
+typedef enum {
+	bjp_invalid,
+	bjp_as_release,
+	bjp_write_proofs
+} bj_param_t;
 
 typedef struct {
 	bj_satisf_val_t 	bjo_result;
@@ -121,6 +128,10 @@ void 		bj_init_output(bj_output_t* the_out);
 bj_solver_t bj_solver_create(const char* bjs_dir_path);
 void 		bj_solver_release(bj_solver_t bjs);
 
+void		bj_set_param_char(bj_solver_t bjs, bj_param_t prm, char val);
+char		bj_get_param_char(bj_solver_t bjs, bj_param_t prm);
+//void		bj_set_param_str(bj_solver_t bjs, bj_param_t prm, char* val);
+
 const char* bj_get_path(bj_solver_t bjs);
 
 bj_satisf_val_t 	bj_solve_file(bj_solver_t bjs, const char* f_path);
@@ -131,12 +142,16 @@ bj_satisf_val_t 	bj_solve_literals(bj_solver_t bjs, long num_vars, long num_cls,
 bj_satisf_val_t 	bj_get_result(bj_solver_t bjs);
 bj_output_t 		bj_get_output(bj_solver_t bjs);
 const long* 		bj_get_assig(bj_solver_t bjs);
+const char* 		bj_get_error_stack_str(bj_solver_t bjs);
+const char* 		bj_get_error_assert_str(bj_solver_t bjs);
 
 void			bj_restart(bj_solver_t bjs);
 
 int 		bj_update(bj_solver_t dest, bj_solver_t src);
 
 void		bj_print_paths(bj_solver_t bjs);
+
+const char* bj_error_str(bj_error_t bje);
 
 #ifdef __cplusplus
 }

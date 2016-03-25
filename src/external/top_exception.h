@@ -40,7 +40,7 @@ Top exception class.
 #define TOP_EXCEPTION_H
 
 #include "platform.h"
-#include "dbg_string.h"
+#include "ch_string.h"
 
 #define as_pt_char(the_str) (const_cast<char *>(the_str))
 
@@ -54,10 +54,11 @@ private:
 	}
 	
 public:
-	long			ex_id;
-	DBG(dbg_string 	ex_stk);
+	long		ex_id;
+	ch_string 	ex_stk;
+	ch_string 	ex_assrt;
 	
-	top_exception(long the_id = 0);
+	top_exception(long the_id = 0, ch_string assrt_str = "");
 	
 	~top_exception(){
 	}

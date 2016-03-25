@@ -180,6 +180,14 @@ cmp_long(long const & n1, long const & n2){
 
 inline 
 comparison 
+cmp_char(char const & c1, char const & c2){ 
+	if(c1 == c2){ return 0; }
+	if(c1 < c2){ return -1; }
+	return 1;
+}
+
+inline 
+comparison 
 cmp_double(double const & n1, double const & n2){ 
 	if(n1 == n2){ return 0; }
 	if(n1 < n2){ return -1; }
@@ -575,6 +583,7 @@ public:
 			row_index first_ii = 0, row_index last_ii = -1,
 			bool inv = false)
 	{ 
+		TOOLS_CK(&dest != this);
 		dest.clear(true, true); 
 		append_to(dest, first_ii, last_ii, inv);
 	}
@@ -703,7 +712,6 @@ public:
 		if(! rw2.is_valid_idx(first_ii)){ return false; }
 		if(! rw2.is_valid_idx(last_ii - 1)){ return false; }
 
-		//for(row_index ii = 0; ii < sz; ii++){
 		for (row_index ii = first_ii; ii < last_ii; ii++){
 			if(pos(ii) != rw2.pos(ii)){
 				return false;
@@ -712,11 +720,12 @@ public:
 		return true;
 	}
 
-	long	equal_to_diff(row_data<obj_t>& rw2, row_data<obj_t>& diff, 
-						  row_index first_ii = 0, row_index last_ii = -1)
+	long	equal_to_diff(cmp_func_t cmp_fn, 
+				row_data<obj_t>& rw2, row_data<obj_t>* diff = NULL_PT, 
+				row_index first_ii = 0, row_index last_ii = -1)
 	{
 		if((sz == 0) && (rw2.size() == 0)){
-			return true;
+			return INVALID_IDX;
 		}
 		if((last_ii < 0) || (last_ii > sz)){
 			last_ii = sz;
@@ -725,19 +734,29 @@ public:
 			first_ii = 0;
 		}
 
-		diff.fill_new(last_ii);
+		if(diff != NULL_PT){
+			diff->fill_new(last_ii);
+		}
 
 		long df_pos = INVALID_IDX;
-		//for(row_index ii = 0; ii < sz; ii++){
-		for (row_index ii = first_ii; ii < last_ii; ii++){
+		row_index ii = INVALID_IDX;
+		for (ii = first_ii; ii < last_ii; ii++){
 			if(! is_valid_idx(ii)){ break; }
 			if(! rw2.is_valid_idx(ii)){ break; }
-			if(pos(ii) != rw2.pos(ii)){
-				diff[ii] = pos(ii);
+			
+			//if(pos(ii) != rw2.pos(ii)){
+			if((*cmp_fn)(pos(ii), rw2.pos(ii)) != 0){
+				if(diff != NULL_PT){
+					//diff[ii] = pos(ii);
+					diff->pos(ii) = pos(ii);
+				}
 				if(df_pos == INVALID_IDX){
 					df_pos = ii;
 				}
 			}
+		}
+		if((ii >= 0) && (ii != last_ii)){
+			df_pos = ii;
 		}
 		return df_pos;
 	}
@@ -1001,6 +1020,7 @@ public:
 
 	virtual
 	bool copy_to_c(long c_arr_sz, obj_t* c_arr){ 
+		TOOLS_CK(c_arr != data);
 		if(c_arr_sz != SZ_ATTRIB){
 			return false;
 		}
@@ -1009,6 +1029,7 @@ public:
 	}
 	
 	void mem_copy_to(row<obj_t>& r_cpy){ 
+		TOOLS_CK(&r_cpy != this);
 		r_cpy.set_cap(SZ_ATTRIB);
 		bj_memcpy(r_cpy.data, data, row_data<obj_t>::sz_in_bytes());
 		r_cpy.sz = SZ_ATTRIB;
