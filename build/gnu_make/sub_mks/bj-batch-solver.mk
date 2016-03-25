@@ -10,9 +10,7 @@ TGT_PREREQS := libben-jose.a
 
 TGT_POSTMAKE := echo "Finished building DEBUG program bj-batch-solver"
 
-SOURCES := \
-	$(SRC_BASE_DIR)/programs/tests/solver/batch_solver.cpp \
-	$(SRC_BASE_DIR)/programs/tests/solver/solver_main.cpp
+SOURCES := $(SRC_BASE_DIR)/programs/tests/solver/batch_solver.cpp 
 
 SRC_INCDIRS := \
 	$(SRC_BASE_DIR)/library/api \

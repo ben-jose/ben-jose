@@ -966,14 +966,7 @@ brain::learn_mots(reason& rsn){
 	if(the_mots.is_empty()){
 		forced_qua.qu_proof_tk = rsn.rs_tk;
 		
-		BRAIN_REL_CK_PRT((! forced_qua.has_charge() || (the_neu != NULL_PT)), 
-			os << "_________________ABORT\n";
-			dbg_prt_margin(os);
-			os << "\n";
-			print_trail(os);
-			os << "lv=" << level() << "\n";
-			os << "in_root=" << in_root_lv();
-		);
+		BRAIN_CK(! forced_qua.has_charge());
 		
 		//long nxt_tir = 0;
 		long nxt_tir = tier() + 1;
@@ -1560,15 +1553,6 @@ brain::put_psignal(quanton& qua, neuron* src, long max_tier){
 	}
 	BRAIN_CK(br_psignals.is_valid_idx(br_last_psignal));
 	
-	/*BRAIN_REL_CK_PRT((! qua.has_charge() || (src != NULL_PT)), 
-		os << "_________________ABORT\n";
-		dbg_prt_margin(os);
-		os << "\n";
-		print_trail(os);
-		os << "lv=" << level() << "\n";
-		os << "in_root=" << in_root_lv();
-	);*/
-	
 	prop_signal& sgnl = br_psignals[br_last_psignal];
 	sgnl.init_prop_signal(&qua, src, max_tier);
 }
@@ -1598,13 +1582,7 @@ brain::receive_psignal(bool only_orig){
 	qua.update_cicle_srcs(brn, neu);
 
 	if(qua.has_charge()){
-		BRAIN_REL_CK_PRT((neu != NULL_PT), 
-			os << "_________________ABORT\n";
-			brn.dbg_prt_margin(os);
-			os << "\n";
-			brn.print_trail(os);
-			os << "lv=" << brn.level() << "\n";
-		);
+		BRAIN_REL_CK(neu != NULL_PT);
 		BRAIN_CK(neu != NULL_PT);
 		if(qua.is_smaller_source(*neu, sg_tier)){
 			qua.update_source(brn, *neu);
@@ -2180,7 +2158,6 @@ brain::deduce_and_reverse_trail(){
 
 	candidates_before_analyse();
 	
-	bool found_top = false;
 	bool in_full_anls = true;
 	DBG_COMMAND(2, // ONLY_DEDUC
 		if(! dbg_as_release()){
@@ -2188,7 +2165,7 @@ brain::deduce_and_reverse_trail(){
 		}
 	); 
 	if(in_full_anls){
-		found_top = analyse_conflicts(br_all_conflicts_found, dct);
+		analyse_conflicts(br_all_conflicts_found, dct);
 	} else {
 		br_wrt_ref.reset_curr_quanton();
 		write_get_tk(br_curr_write_tk);
@@ -2213,27 +2190,13 @@ brain::deduce_and_reverse_trail(){
 		proof_write_all_json_files_for(dct);
 	}
 	
-	DBG_PRT_COND(101, found_top, os << " FOUND_TOP. rsn=" << rsn;
+	DBG_PRT_COND(101, dct.dt_found_top, os << " FOUND_TOP. rsn=" << rsn;
 		os << " br_candidate_rsn_lv=" << br_candidate_rsn_lv;
 	);
-	//bool go_on = ! found_top;
-	bool go_on = ! found_top && ! in_root_lv();
-	/*if(! go_on || (level() == ROOT_LEVEL)){ 
-		write_all_canditates();
-	}*/
+	//bool go_on = ! dct.dt_found_top && ! in_root_lv();
+	bool go_on = dct.can_go_on() && ! in_root_lv();
 	
 	if(go_on){
-		//BRAIN_REL_CK_PRT(((rsn.rs_forced == NULL_PT) || 
-		//			! rsn.rs_forced->has_charge() || ! rsn.rs_motives.is_empty()), 
-		BRAIN_REL_CK_PRT(! in_root_lv(), 
-			os << "_________________ABORT\n";
-			dbg_prt_margin(os);
-			os << "\n";
-			print_trail(os);
-			os << "lv=" << level();
-			os << "in_root=" << in_root_lv();
-		);
-		
 		candidates_before_reverse(rsn);
 		reverse_with(rsn);
 		candidates_after_reverse();
@@ -4340,3 +4303,27 @@ ticket::get_str(){
 	the_str << "rc_" << tk_recoil << "_lv_" << inv_val << lv_val;
 	return the_str.str();
 }
+
+bool
+reason::is_root_confl(){
+	if(! is_dt_singleton()){
+		return false;
+	}
+	if(rs_forced == NULL_PT){
+		return false;
+	}
+	if(! rs_forced->is_neg()){
+		return false;
+	}
+	if(! rs_forced->in_root_qlv()){
+		return false;
+	}
+	return true;
+}
+
+bool
+deduction::can_go_on(){
+	bool gon = (! dt_found_top && ! dt_rsn.is_root_confl());
+	return gon;
+}
+

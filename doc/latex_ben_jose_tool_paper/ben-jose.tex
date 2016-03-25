@@ -35,6 +35,12 @@
 \newcommand{\neuromap}{\textsf{neuromap}}
 \newcommand{\skeleton}{\textsf{skeleton}}
 
+\newcommand{\bjsolvercreate}{bj\_solver\_create}
+\newcommand{\bjsolvefile}{bj\_solve\_file}
+\newcommand{\bjsolverrelease}{bj\_solver\_release}
+\newcommand{\BJLIBPTH}{BJ\_LIB\_PTH}
+
+
 
 %\makeindex
 
@@ -156,7 +162,7 @@ To optionally write proofs for unsatisfiable cases.
 \section{Functionality}
 \label{sect:funtionality}
 
-\subsection{Basic functionality}
+\subsection{Hello World example}
 \label{sect:dimacs}
 
 The basic functionality of the library is best shown by the bj-hello-world.c program:
@@ -200,11 +206,32 @@ int main(int argc, char** argv)
 }
 \end{lstlisting}
 
-This program finds the solution to the SAT instance defined by the file ''ff''. The file must be in the simlified DIMCAS format as described in \url{http://www.satcompetition.org/2009/format-benchmarks2009.html}.
+This program finds the solution to the SAT instance defined by the file ''ff''. The file must be in the simplified DIMACS format as described in \url{http://www.satcompetition.org/2009/format-benchmarks2009.html}.
 
+Three functions are minimally needed to use the library \bjsolvercreate, \bjsolvefile, and \bjsolverrelease.
 
-\subsection{Simplified DIMACS format}
+\subsection{Compiling}
 \label{sect:dimacs}
+
+Once the library has been installed (see Section \ref{sect:installation}), a user program can be compiled using standard c++ compilation.
+
+Assuming that the file libben-jose.a is in the directory {\BJLIBPTH}, the program in Listing \ref{hello-prog} is build and compiled as in Listing \ref{compiling-hello-prog}:
+
+\begin{lstlisting}[
+	label=compiling-hello-prog, 
+	caption=compiling the bj-hello-world.c program,
+]
+BJ_LIB_PTH=../../../build/gnu_make/bin
+
+cc -o bj-hello-world.o -c -MD -Wall -std=c99 -I../../library/api bj-hello-world.c
+cc -o bj-hello-world -rdynamic -L${BJ_LIB_PTH} bj-hello-world.o -lben-jose -lstdc++ -lgmpxx -lgmp
+\end{lstlisting}
+
+
+\subsection{Input format}
+\label{sect:dimacs}
+
+The input format of a file called with \bjsolvefile must be the simplified DIMACS format.
 
 The simplified DIMACS format is just that:
 
@@ -319,17 +346,90 @@ A search of a target CNF sub-formula is conducted in two phases: the search for 
 \section{Installation}
 \label{sect:installation}
 
-(Describe here the installation)
+Since there is no current release version of the library, it has to be installend from source. To do so:
+
+\begin{enumerate}
+\item
+Download the library from \url{https://github.com/joseluisquiroga/ben-jose}.
+
+\item
+Build and install the library following the instructions in the README.txt file.
+\end{enumerate}
+
+The README.txt file refers you to the installation alternatives:
+
+\begin{enumerate}
+\item
+To build and install with autotools follow:
+
+	./build/gnu\_autotools/README.to\_install\_with\_autotools
+
+\item
+To build with gnu\_make follow:
+
+	./build/gnu\_make/README.to\_install\_with\_gnu\_make
+\end{enumerate}
+
+It is very probable that when installing with autotools you will need to first follow the file:
+
+	./build/gnu\_autotools/README.when\_clean\_all\_non\_human\_made
+
+because the source tree is usually cleaned from all non human made files.
 
 %------------------------------------------------------------------------------
 \subsection{Required Packages}
 
+There are minimal requirements for building and compiling ben-jose:
+
+\begin{itemize}
+\item
+A linux system.
+
+\item
+GNU c++ (g++) installed.
+
+\item
+GMP Library (gmpxx) installed.
+\end{itemize}
+
+Almost every linux system comes with the second two in the basic installation, so there is basically one requirement: a linux system.
 
 %------------------------------------------------------------------------------
 \section{Comparison with other tools}
 \label{sect:comparison}
 
-(Describe here the comparison with other tools)
+\subsection{Trainable}
+
+The most important difference of ben-jose with any other solver available today is the fact that it matches sub-formulas to already known to be unsatisfiable formulas (BCFFs) in order to skip the search on sub-formulas that match.
+
+That technique allows this solver to be trainable. It holds a database of BCFFs that can be reused in later instances of SAT.
+
+In order to achive this behavior some important modifications had to be done to the standard way of doing DPLL+BCP+CDCL. Learned clauses ({\neuron}s) are keept only until they are backtracked. That imposes a performance penalty when that clause can actually prune the search after it has been backtracked since it has to be deduced again by RES.
+
+\subsection{Monos}
+
+They are variables ({\quanton}s) that occur either only in positive form, or only in negative form after a BCP step, that is a level has been processed ({\leveldat} hold the data for levels). In the code they are called ''monos''. So:
+
+\begin{itemize}
+\item
+When it is detected that there are only positons of a varible in the current sub-formula, the variable can safely be assumed to be set ''true''. 
+
+\item
+When it is detected that there are only negatons of a varible in the current sub-formula, the variable can safely be assumed to be set ''false''. 
+\end{itemize}
+
+This difference is crucial for to ease the matching of BCFFs.
+
+\subsection{Longest BCP}
+
+The solver uses a kind of ''look up technique'' that always chooses the ''longest'' path for BCP. 
+
+When ever a choice is been made it tries both values in orther to see wich value propagates more variables. 
+
+This difference is also crucial for to ease the matching of BCFFs.
+
+In the code it can bee seen in the function ''start\_propagation'' when it calls ''select\_propag\_side''.
+
 
 %------------------------------------------------------------------------------
 \section{Future Work}

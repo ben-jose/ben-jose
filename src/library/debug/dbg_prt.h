@@ -51,9 +51,9 @@ bj_ostream&	dbg_get_out_stm(solver* slv);
 //=================================================================
 // release dbg defs
 
-//define REL_PRT(dummy, comms1) {bj_eol << "change_all_REL_PRT_for_DBG_PRT_and_recomplie !";}
+// use with NULL_BRN_PT when brn is not reachable
 
-#define REL_PRT(dummy, comms1) /**/
+#define REL_PRT(pt_brn, comms1) /**/
 
 /*define REL_PRT(pt_brn, comms1) \
 	{ \

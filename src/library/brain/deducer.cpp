@@ -410,7 +410,7 @@ deducer::get_first_causes(deduction& dct){
 	causes.copy_to(fst_causes);
 }
 
-bool
+void
 brain::analyse_conflicts(row<prop_signal>& all_confl, deduction& dct){
 	BRAIN_DBG(br_dbg_in_analysis = true);
 	dct.reset_deduction();
@@ -422,7 +422,6 @@ brain::analyse_conflicts(row<prop_signal>& all_confl, deduction& dct){
 	write_get_tk(br_curr_write_tk);
 	
 	BRAIN_CK(! br_dbg_keeping_learned);
-	bool found_top = false;
 	BRAIN_CK(ck_cov_flags());
 	BRAIN_CK(ck_trail());
 	BRAIN_CK(! all_confl.is_empty());
@@ -442,17 +441,15 @@ brain::analyse_conflicts(row<prop_signal>& all_confl, deduction& dct){
 	ddc.get_first_causes(dct);
 	ddc.deduce(dct);
 
-	REL_PRT(this, os << "DCT_1=" << dct);
-	
 	DBG_PRT(40, os << HTMi_h1 << "out_rsn=" << HTMe_h1 << out_rsn);
 	BRAIN_DBG(reason fst_rsn; out_rsn.copy_to_rsn(fst_rsn));
 	BRAIN_CK(br_ne_tot_tag1 == 0);
 	BRAIN_CK(br_qu_tot_note0 == 0);
 	
-	candidate_find_analysis(found_top, ddc, dct);
+	candidate_find_analysis(ddc, dct);
 	
 	BRAIN_CK(br_ne_tot_tag1 == 0);
-	BRAIN_DBG(br_dbg_found_top = found_top);
+	BRAIN_DBG(br_dbg_found_top = dct.dt_found_top);
 	
 	row_neuromap_t& to_wrt = dct.dt_all_to_wrt;
 	DBG_PRT(102, os << "NUM_TO_WRT=" << to_wrt.size());
@@ -478,12 +475,8 @@ brain::analyse_conflicts(row<prop_signal>& all_confl, deduction& dct){
 	DBG_PRT(40, os << "AFT_ana=" << bj_eol; print_trail(os);
 		os << out_rsn << bj_eol
 	);
-	REL_PRT(this, os << "AFT_ana=" << bj_eol; print_trail(os);
-		os << out_rsn << bj_eol
-	);
 	
 	BRAIN_DBG(br_dbg_in_analysis = false);
-	return found_top;
 } // end_of_analyse
 
 bool
@@ -585,7 +578,7 @@ deducer::find_all_to_write(row<neuromap*>& to_wrt, reason& rsn){
 }
 
 void
-brain::candidate_find_analysis(bool& found_top, deducer& dedcer, deduction& dct)
+brain::candidate_find_analysis(deducer& dedcer, deduction& dct)
 {
 	reason& nxt_rsn = dct.dt_rsn;
 	row_neuromap_t& to_wrt = dct.dt_all_to_wrt;
@@ -598,8 +591,6 @@ brain::candidate_find_analysis(bool& found_top, deducer& dedcer, deduction& dct)
 
 	long nxt_lv = nxt_rsn.rs_target_level;
 	MARK_USED(nxt_lv);
-	
-	found_top = false;
 	
 	if(in_root_lv()){
 		DBG_PRT(39, os << "#f=" << ncf << "." << dbg_num_cicl;
@@ -672,7 +663,6 @@ brain::candidate_find_analysis(bool& found_top, deducer& dedcer, deduction& dct)
 			to_find = to_find->na_nxt_no_mono;
 			BRAIN_CK(to_find != NULL_PT);
 		}
-		REL_PRT(this, os << "finding NMP=" << to_find->dbg_na_id() << "\n";);
 		if((to_find != last_found) && ! to_find->map_find()){
 			BRAIN_CK(to_find != NULL_PT);
 			DBG_PRT(39, os << "#f=" << ncf;
@@ -706,10 +696,6 @@ brain::candidate_find_analysis(bool& found_top, deducer& dedcer, deduction& dct)
 			os << ".found_nmp=" << to_find << "\n";
 			os << " out_nmp=" << out_nmp << "\n";
 		);
-		REL_PRT(this, 
-			os << ".found_nmp=" << to_find->dbg_na_id() << "\n";
-			os << " out_nmp=" << out_nmp->dbg_na_id() << "\n";
-		);
 		
 		BRAIN_CK(to_wrt.is_empty());
 		
@@ -740,7 +726,6 @@ brain::candidate_find_analysis(bool& found_top, deducer& dedcer, deduction& dct)
 		BRAIN_CK(nxt_lv < out_nmp->na_orig_lv);
 
 		if(old_lv == ROOT_LEVEL){
-			found_top = true;
 			dct.dt_found_top = true;
 			break;
 		}
@@ -946,7 +931,7 @@ deducer::deduce(deduction& dct, long max_lv)
 	BRAIN_CK(roo || qlr.has_curr_quanton());
 	
 	fill_rsn(rsn);
-
+	
 	// reset all
 	nkpr.clear_all_quantons();
 	BRAIN_CK(nkpr.dk_quas_lyrs.is_ql_empty());

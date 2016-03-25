@@ -163,6 +163,7 @@ public:
 
 	bool			op_debug_clean_code;
 	bool			op_write_proof;
+	bool			op_dbg_as_release;
 
 	mem_size 		dbg_mem_at_start;
 
@@ -215,7 +216,6 @@ public:
 
 	ch_string		gg_file_name;
 
-	bool			bc_as_release;
 	ch_string 		bc_slvr_path;
 	bj_solver_t 	bc_solver;
 

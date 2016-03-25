@@ -52,15 +52,9 @@ neuromap::map_find(){
 	BRAIN_CK(! is_na_mono());
 	if(na_found_in_skl != mf_invalid){
 		if(na_found_in_skl == mf_found){
-			REL_PRT(NULL_BRN_PT, 
-				os << "map_find TRUE (na_found_in_skl == mf_found) NMP=" << dbg_na_id()
-			);
 			return true;
 		}
 		BRAIN_CK(na_found_in_skl == mf_not_found);
-		REL_PRT(NULL_BRN_PT, 
-			os << "map_find FALSE (na_found_in_skl == mf_not_found) NMP=" << dbg_na_id()
-		);
 		return false;
 	}
 	bool op_resp = map_oper(mo_find);
@@ -750,7 +744,6 @@ neuromap::map_oper(mem_op_t mm){
 	brain& brn = get_brn();
 	
 	BRAIN_CK(! is_na_mono());
-	REL_PRT((&brn), os << "Starting map_oper NMP=" << dbg_na_id());
 
 	brn.init_mem_tmps();
 
@@ -758,11 +751,9 @@ neuromap::map_oper(mem_op_t mm){
 
 	if(! prep_ok){
 		DBG_PRT(47, os << "map_oper skip (prepare == false) nmp=" << dbg_na_id());
-		REL_PRT((&brn), os << "map_oper skip (prepare == false) nmp=" << dbg_na_id());
 		return false;
 	}
 	DBG_PRT(47, os << "map_oper_go nmp=" << dbg_na_id());
-	REL_PRT((&brn), os << "map_oper_go nmp=" << dbg_na_id());
 
 	skeleton_glb& skg = brn.get_skeleton();
 

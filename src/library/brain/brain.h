@@ -1661,6 +1661,8 @@ class reason {
 		return rs_motives.is_empty();
 	}
 	
+	bool	is_root_confl();
+	
 	long	calc_target_tier(brain& brn);
 
 	bj_ostream&	print_reason(bj_ostream& os, bool from_pt = false){
@@ -1716,6 +1718,8 @@ class deduction {
 	void	reset_deduction(){
 		init_deduction(dt_brn);
 	}
+	
+	bool	can_go_on();
 	
 	void	update_all_to_wrt_for_proof();
 	
@@ -3643,11 +3647,11 @@ public:
 	long		get_lst_cand_lv();
 	neuromap*	get_last_cand(dbg_call_id dbg_id = dbg_call_1);
 
-	void	 	candidate_find_analysis(bool& found_top, deducer& dedcer, deduction& dct);
+	void	 	candidate_find_analysis(deducer& dedcer, deduction& dct);
 	
 	void		add_top_cands(row_neuromap_t& to_wrt);
 	
-	bool		analyse_conflicts(row<prop_signal>& all_confl, deduction& dct);
+	void		analyse_conflicts(row<prop_signal>& all_confl, deduction& dct);
 
 	void 		write_analysis(row_quanton_t& causes, long deduc_lv, reason& rsn);
 	void		write_update_all_tk(row_quanton_t& causes);

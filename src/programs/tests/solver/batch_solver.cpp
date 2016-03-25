@@ -133,6 +133,7 @@ batch_solver::init_batch_solver(){
 
 	op_debug_clean_code = false;
 	op_write_proof = false;
+	op_dbg_as_release = false;
 
 	MEM_CTRL(using_mem_ctrl = true);
 
@@ -184,7 +185,6 @@ batch_solver::init_batch_solver(){
 
 	gg_file_name = "";
 	
-	bc_as_release = false;
 	bc_slvr_path = "";
 	NOT_DBG(bc_slvr_path = path_to_absolute_path(".");)
 	
@@ -675,7 +675,7 @@ batch_solver::get_args(int argc, char** argv)
 	bool prt_help = false;
 	bool prt_version = false;
 	bool prt_paths = false;
-	bc_as_release = false;
+	op_dbg_as_release = false;
 	
 	for(long ii = 1; ii < argc; ii++){
 		ch_string the_arg = argv[ii];
@@ -690,7 +690,7 @@ batch_solver::get_args(int argc, char** argv)
 		} else if(the_arg == "-proof"){
 			op_write_proof = true;
 		} else if(the_arg == "-rr"){
-			bc_as_release = true;
+			op_dbg_as_release = true;
 			NOT_DBG(os << "running RELEASE exe. ignoring debug op '-rr'" << bj_eol;)
 		} else if((the_arg == "-root") && ((ii + 1) < argc)){
 			int kk_idx = ii + 1;
@@ -715,7 +715,7 @@ batch_solver::get_args(int argc, char** argv)
 		}
 	}
 	
-	if(bc_as_release){
+	if(op_dbg_as_release){
 		DBG(
 			if(bc_slvr_path.empty()){
 				bc_slvr_path = path_to_absolute_path(".");
@@ -775,6 +775,11 @@ int	solver_main(int argc, char** argv){
 		if(top_dat.op_write_proof){
 			bj_set_param_char(top_dat.bc_solver, bjp_write_proofs, 1);
 		}
+		DBG(
+			if(top_dat.op_dbg_as_release){ 
+				bj_set_param_char(top_dat.bc_solver, bjp_as_release, 1);
+			}
+		);
 
 		PRT_OUT_1( os << ".STARTING AT " << run_time() << bj_eol);
 
@@ -822,12 +827,6 @@ batch_solver::do_cnf_file()
 {
 	BATCH_CK(bc_solver != NULL);
 
-	DBG(
-		if(bc_as_release){ 
-			bj_set_param_char(bc_solver, bjp_as_release, 1);
-		}
-	);
-	
 	batch_entry& curr_inst = get_curr_inst();	
 	const char* ff = curr_inst.be_ff_nam.c_str();
 	
@@ -838,4 +837,64 @@ batch_solver::do_cnf_file()
 
 	count_instance(curr_inst);
 }
+
+int	main(int argc, char** argv){
+	MEM_CTRL(mem_start_stats());
+	//row<bool> dbg_arr;
+	//dbg_init_lv_arr(dbg_arr);
+	
+	int rr = solver_main(argc, argv);
+	
+	//dbg_arr.clear(true, true);
+	MEM_CTRL(mem_finish_stats());
+	return rr;
+	//return 0;
+}
+
+/*
+
+==============================================================
+method pointers
+
+DECL example
+char (the_class::*the_method_pt)(int param1);
+
+ASSIG example
+the_method_pt = &the_class::a_method_of_the_class;
+
+CALL Example
+char cc = (an_object_of_the_class.*the_method_pt)(3);
+
+
+Note that "::*", ".*" and "->*" are actually 
+separate C++ operators.  
+
+	reason, reasoning, reasoned, reasoner
+
+		inductive, induce, induced, inducing, inducible
+
+		deductive, deduce, deduced, deducing, deducible
+
+		learn, learned, learning, learnable, learner
+
+		specify, specified, specifying, specifiable, 
+		specifier, specifies, specification
+
+	study, studying, studied, studiable, studies
+
+		analytic, analyze, analysed, analysing, analyzable
+		analyser, analysis
+
+		synthetic, synthesize, synthesized, synthesizing, 
+		synthesizer, synthesis
+
+		memorize, memorized, memorizing, memorizable, memorizer
+
+		simplify, simplified, simplifying, simplificative, 
+		simplifier, simplifies, simplification
+
+
+	specify induce deduce simplify learn analyze synthesize
+
+*/
 
