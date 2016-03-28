@@ -827,10 +827,15 @@ batch_solver::do_cnf_file()
 {
 	BATCH_CK(bc_solver != NULL);
 
-	batch_entry& curr_inst = get_curr_inst();	
+	batch_entry& curr_inst = get_curr_inst();
 	const char* ff = curr_inst.be_ff_nam.c_str();
 	
 	bj_solve_file(bc_solver, ff);
+	
+	if(op_write_proof){
+		const char* pf_pth = bj_get_last_proof_path(bc_solver);
+		PRT_OUT_0(os << "LAST_PROOF_PATH=\n" << pf_pth << "\n");
+	}
 	
 	curr_inst.be_out = bj_get_output(bc_solver);
 	//bj_restart(bc_solver);

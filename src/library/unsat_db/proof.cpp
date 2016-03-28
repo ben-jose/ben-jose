@@ -576,6 +576,8 @@ proof_write_bj_proof_for(neuromap& nmp, proof_tk& pf_tk)
 	
 	write_file(os_bj_nmp_pf_pth, json_str, true); //OS_OPER
 	
+	brn.get_my_inst().ist_last_proof_path = os_bj_nmp_pf_pth;
+	
 	DBG_PRT_WITH(115, brn, os << "Wrote FINAL_PROOF_JSN=\n" << os_bj_nmp_pf_pth << "\n";
 		os << " FOR_TAUTO=\n" << brn.br_tmp_wrt_tauto_cnf << "\n";
 		//os << " FOR_NMP=\n" << nmp << "\n";
@@ -902,7 +904,7 @@ proof_write_json_file_for(deduction& dct, long to_wrt_idx, long prv_wrt_idx)
 		BRAIN_CK(pt_nmp != NULL_PT);
 		neuromap& w_nmp = *pt_nmp;
 		
-		ch_string os_end_jsn_pth = proof_add_paths(os_dst_pth_mv, SKG_END_JSN_NAME);
+		//ch_string os_end_jsn_pth = proof_add_paths(os_dst_pth_mv, SKG_END_JSN_NAME);
 	
 		proof_write_bj_proof_for(w_nmp, pf_tk);
 	}

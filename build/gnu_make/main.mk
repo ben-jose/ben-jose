@@ -25,7 +25,7 @@ SUBMAKEFILES := \
 	sub_mks/bj-solver-debug.mk \
 	sub_mks/bj-batch-solver.mk \
 	sub_mks/bj-test-sortor.mk \
-	sub_mks/bj-phi-test.mk \
+	sub_mks/bj-phi.mk \
 	sub_mks/bj-test.mk \
 	sub_mks/bj-hello-world.mk 
 

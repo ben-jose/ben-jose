@@ -13,7 +13,7 @@ TGT_PREREQS := libdbg-ben-jose.a
 
 TGT_POSTMAKE := echo "Finished building DEBUG program bj-phi"
 
-SOURCES := $(SRC_BASE_DIR)/programs/tests/phi_dbg/phi_test.cpp
+SOURCES := $(SRC_BASE_DIR)/programs/tests/phi/phi_test.cpp
 
 SRC_INCDIRS := \
 	$(SRC_BASE_DIR)/library/brain \

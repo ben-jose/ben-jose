@@ -3,6 +3,7 @@
 
 \usepackage{doc}
 \usepackage{listings}
+\usepackage{float}
 
 \lstset{
 	language=C,
@@ -37,6 +38,8 @@
 
 \newcommand{\bjsolvercreate}{bj\_solver\_create}
 \newcommand{\bjsolvefile}{bj\_solve\_file}
+\newcommand{\bjsolvedata}{bj\_solve\_data}
+\newcommand{\bjsolveliterals}{bj\_solve\_literals}
 \newcommand{\bjsolverrelease}{bj\_solver\_release}
 \newcommand{\BJLIBPTH}{BJ\_LIB\_PTH}
 
@@ -50,7 +53,7 @@
 %
 \title{Ben-Jose SAT Solving Software Library\\
        Tool Paper%
-\thanks{Especial thanks to our heavenly Father, his anointed King, Magda Beltran de Quiroga and Federman Quiroga.}}
+\thanks{Especial thanks to our heavenly Father YHWH, his anointed King, Magda Beltran de Quiroga and Federman Quiroga.}}
 
 % Authors are joined by \and. Their affiliations are given by \inst, which indexes
 % into the list defined using \institute
@@ -263,7 +266,11 @@ Then the clauses follow. Each clause is a sequence of distinct non-null numbers 
 \section{Architecture}
 \label{sect:architecture}
 
-(Describe here the architecture)
+The architecture of the ben-jose library is strongly monolitic in the sense that the basic functionality of the whole library is basically one function with three presentations: {\bjsolvefile}, {\bjsolvedata} and {\bjsolveliterals}.
+
+That means that every piece of code within the ''library'' directory of the source tree is tightly coupled.
+
+Having said that the following description of the library will give a good idea of it's architecture.
 
 %------------------------------------------------------------------------------
 \subsection{The Library}
@@ -333,20 +340,145 @@ The diff. This {\canoncnf} contains all {\canonclause}s in tauto but not in guid
 
 A search of a target CNF sub-formula is conducted in two phases: the search for the guide of the target and the search for the variant that is a sub-formula of the target diff. Once the guide is stabilized the search for it is a simple: ''see if its path exists'' (remember that its path contains the SHA of its content). If the target {\canoncnf} is not equal to a variant (the path does not exist), the second phase is more time consuming because it involves reading each variant and comparing it to the target diff to see if the the variant is a sub-formula of the target diff (which would mean that the target is unsatisfiable and therefore can be backtracked).
 
+\subsection{Goodies}
+
+The library comes with some tools.
+
+\subsection{Proofs}
+
+ben-jose can generate proofs for unsatisfiable formulas. 
+
+Assuming the program ''bj-batch-solver'' is in the path, and from the source tree directory:
+
+\begin{verbatim}
+	cd ben-jose/src/programs/tests/solver
+\end{verbatim}
+
+with the command:
+
+\begin{verbatim}
+	bj-batch-solver ./h4.cnf -proof -rr
+\end{verbatim}
+
+the bj-batch-solver program will use the bjp\_write\_proofs library option to generate the proof of the unsatisfiable instance ''h4.cnf'' in JSON format. 
+
+The proof can be read using the HTML page:
+
+\begin{verbatim}
+	./SKELETON/CNF/Show_Proof.htm
+\end{verbatim}
+
+and copying the (very long) path printed in the standard output under ''LAST\_PROOF\_PATH='' to the text area field in the Show\_Proof.htm HTML page in your favorite firefox navigator, and then clicking ''LOAD\_FILE''. Paths must begin with ''/SKELETON'', so after copying, get  rid of the prefix before it, before clicking ''LOAD\_FILE''.
+
+\subsection{PHP visualizing}
+
+A bj-phi program that generates HTML pages with cytoscape.js (\url{http://js.cytoscape.org/}) graphs to visualize the solving of PHP instances (see Section \ref{sect:use-case}).
+
+\subsection{Debugging}
+
+ben-jose has a configurable built-in debugging system (debug directory) to help in the debugging of the library. The bj-solver-debug program is compiled with the libdbg-ben-jose.a library for that purpose.
 
 
 %------------------------------------------------------------------------------
 \section{Use case}
 \label{sect:use-case}
 
-(Describe here the use case)
+The target case when development of ben-jose started was PHP instances. It is a well studied theoretical case that shows exponential behavior for RES.
 
+ben-jose comes with a program that helped in the development of ben-jose called bj-phi.
+
+\subsection{bj-phi}
+
+Assuming the program ''bj-phi'' is in the path, and from the source tree directory:
+
+\begin{verbatim}
+	cd ben-jose/src/programs/tests/phi
+\end{verbatim}
+
+with the command:
+
+\begin{verbatim}
+	bj-phi 4
+\end{verbatim}
+
+will execute the bj-phi program and it will use the file 
+
+\begin{verbatim}
+	./dbg_ben_jose.conf
+\end{verbatim}
+
+to configure the debugging system to generate an HTML log file of the the solving process. It will be written in:
+
+\begin{verbatim}
+	./phi_hole_4/phi_hole_4_all_steps.htm
+\end{verbatim}
+
+The file, when opened with your favorite firefox navigator, should show you a web page with graphs of the following implicit style:
+
+
+\begin{figure}[H]
+	\begin{centering}
+		\includegraphics[width=0.7\textwidth]{h2_base.png}
+	\end{centering}
+	\caption{bj-phi representation of a PHP instance of size 2}
+	\label{fig:h2-graph}
+\end{figure}
+
+
+The image represents the DIMACS file:
+
+\begin{lstlisting}[label=h2-file, caption=PHP of size 2 DIMACS file,]
+p cnf 6 9
+-1 -2 0
+-1 -3 0
+-2 -3 0
+
+-4 -5 0
+-4 -6 0
+-5 -6 0
+
+1 4 0
+2 5 0
+3 6 0
+\end{lstlisting}
+
+Where dashed lines represent negative literals and solid lines represent positive literals. Circles represent variables and little rectangles represent clauses.
+
+In Figure \ref{fig:h2-graph} the thick little rectangle joining two thick solid lines  represent the clause [2 5 0] of line 11 in Listing \ref{h2-file}.
+
+The graphs shown in the HTML page have more implicit information:
+
+\begin{figure}[H]
+	\begin{centering}
+		\includegraphics[width=0.9\textwidth]{h4_find1.png}
+	\end{centering}
+	\caption{bj-phi graph for the first time PHP-2 is matched within PHP-4 solving}
+	\label{fig:h4-f1}
+\end{figure}
+
+The equivalent consecutive numbering of variables shown in Figure \ref{fig:h2-graph} is assumed in Figure \ref{fig:h4-f1} according to their position from left to right, therefore the numbering shown in Figure \ref{fig:h4-f1} is not that of the literal but the ''tier'' of the ''charged'' {\quanton}. In Figure \ref{fig:h4-f1} variable 17 was charged in tier 8, variable 12 has tier 9, variables 14 and 15 have tier 10, and variables 19 and 20 have tier 11.
+
+The dashed and solid lines in Figure \ref{fig:h4-f1} do not represent the sign of literals as in Figure \ref{fig:h2-graph}. In Figure \ref{fig:h4-f1} the signs of literals are also assumed according to their position in the graph: all above the circles are negative and all below are positive. 
+
+The dashed lines and solid lines in Figure \ref{fig:h4-f1} represent the current assignation of a variable: 
+
+\begin{enumerate}
+\item
+If the lines match the original state (were dashed and still dashed) the variable is positively charged.
+
+\item
+If they do not match the original, the variable is negatively charged.
+\end{enumerate}
+
+In Figure \ref{fig:h4-f1} variables 12, 19 and 20 are positive, and variables 14, 15 and 17 are negative.
+
+The little triangle indicates a choice therefore in Figure \ref{fig:h4-f1} variable 17 is a choice.
 
 %------------------------------------------------------------------------------
 \section{Installation}
 \label{sect:installation}
 
-Since there is no current release version of the library, it has to be installend from source. To do so:
+Since there is no current release version of the library, it has to be installed from source. To do so:
 
 \begin{enumerate}
 \item
@@ -383,7 +515,7 @@ There are minimal requirements for building and compiling ben-jose:
 
 \begin{itemize}
 \item
-A linux system.
+A Linux system.
 
 \item
 GNU c++ (g++) installed.
@@ -392,7 +524,7 @@ GNU c++ (g++) installed.
 GMP Library (gmpxx) installed.
 \end{itemize}
 
-Almost every linux system comes with the second two in the basic installation, so there is basically one requirement: a linux system.
+Almost every Linux system comes with the second two in the basic installation, so there is basically one requirement: a Linux system.
 
 %------------------------------------------------------------------------------
 \section{Comparison with other tools}
@@ -404,7 +536,7 @@ The most important difference of ben-jose with any other solver available today 
 
 That technique allows this solver to be trainable. It holds a database of BCFFs that can be reused in later instances of SAT.
 
-In order to achive this behavior some important modifications had to be done to the standard way of doing DPLL+BCP+CDCL. Learned clauses ({\neuron}s) are keept only until they are backtracked. That imposes a performance penalty when that clause can actually prune the search after it has been backtracked since it has to be deduced again by RES.
+In order to archive this behavior some important modifications had to be done to the standard way of doing DPLL+BCP+CDCL. Learned clauses ({\neuron}s) are kept only until they are backtracked. That imposes a performance penalty when that clause can actually prune the search after it has been backtracked since it has to be deduced again by RES.
 
 \subsection{Monos}
 
@@ -412,10 +544,10 @@ They are variables ({\quanton}s) that occur either only in positive form, or onl
 
 \begin{itemize}
 \item
-When it is detected that there are only positons of a varible in the current sub-formula, the variable can safely be assumed to be set ''true''. 
+When it is detected that there are only positons of a variable in the current sub-formula, the variable can safely be assumed to be set ''true''. 
 
 \item
-When it is detected that there are only negatons of a varible in the current sub-formula, the variable can safely be assumed to be set ''false''. 
+When it is detected that there are only negatons of a variable in the current sub-formula, the variable can safely be assumed to be set ''false''. 
 \end{itemize}
 
 This difference is crucial for to ease the matching of BCFFs.
@@ -424,7 +556,7 @@ This difference is crucial for to ease the matching of BCFFs.
 
 The solver uses a kind of ''look up technique'' that always chooses the ''longest'' path for BCP. 
 
-When ever a choice is been made it tries both values in orther to see wich value propagates more variables. 
+When ever a choice is been made it tries both values in order to see which value propagates more variables. 
 
 This difference is also crucial for to ease the matching of BCFFs.
 
@@ -435,8 +567,22 @@ In the code it can bee seen in the function ''start\_propagation'' when it calls
 \section{Future Work}
 \label{sect:future-work}
 
-(Describe here future work)
-\includegraphics[width=0.5\textwidth]{img01.png}
+Things to do with ben-jose:
+
+\begin{itemize}
+\item
+Test, test and test. And when necessary debug, debug and debug.
+
+\item
+Follow in detail for is-prime instances. It implies writing code to generate cytoscape.js graphs that help visualize the solving process.
+
+\item
+Write a concurrent version of ben-jose. Since a search branch can use the work done by an other search branch (use BCFFs written by the other branch) it is conceptually efficient to do concurrency.
+
+The code has already considered this possibility by using the file system as a database and considering concurrency during file access.
+
+\end{itemize}
+
 
 %------------------------------------------------------------------------------
 \section{Acknowledgments}

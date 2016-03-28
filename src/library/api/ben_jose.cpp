@@ -264,6 +264,19 @@ const long* bj_get_assig(bj_solver_t bjs){
 	return assig_arr;
 }
 
+const char* bj_get_last_proof_path(bj_solver_t bjs){
+	if(bjs == NULL){
+		return NULL;
+	}
+	solver& the_slvr = *((solver*)bjs);
+	ch_string pth = the_slvr.slv_inst.ist_last_proof_path;
+	if(pth == INVALID_PATH){
+		return NULL;
+	}
+	const char* pf_pth = pth.c_str();
+	return pf_pth;
+}
+
 const char* bj_get_error_stack_str(bj_solver_t bjs){
 	if(bjs == NULL){
 		return NULL;

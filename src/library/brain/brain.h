@@ -134,7 +134,6 @@ enum mem_find_t {
 
 #define INVALID_MINSHA "invalid_minsha"
 #define INVALID_SHA "invalid_sha"
-#define INVALID_PATH "invalid_path"
 
 
 #define MAX_LAYERS 1000
