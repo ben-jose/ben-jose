@@ -103,7 +103,7 @@ The software library Ben-Jose (\url{https://github.com/joseluisquiroga/ben-jose}
 %Processing in EasyChair - number of pages.
 %
 
-\pagestyle{empty}
+% \pagestyle{empty}
 
 %------------------------------------------------------------------------------
 \section{Introduction}
@@ -340,11 +340,20 @@ The diff. This {\canoncnf} contains all {\canonclause}s in tauto but not in guid
 
 A search of a target CNF sub-formula is conducted in two phases: the search for the guide of the target and the search for the variant that is a sub-formula of the target diff. Once the guide is stabilized the search for it is a simple: ''see if its path exists'' (remember that its path contains the SHA of its content). If the target {\canoncnf} is not equal to a variant (the path does not exist), the second phase is more time consuming because it involves reading each variant and comparing it to the target diff to see if the the variant is a sub-formula of the target diff (which would mean that the target is unsatisfiable and therefore can be backtracked).
 
+\subsubsection{The solve\_instance function}
+
+To help in the understanding of the functioning of the ben-jose library and to get 
+familiarized with the backbone functions of the library look at the file:
+
+\begin{verbatim}
+	ben-jose/src/library/api/macro_ben_jose.cpp
+\end{verbatim}
+
 \subsection{Goodies}
 
 The library comes with some tools.
 
-\subsection{Proofs}
+\subsubsection{Proofs}
 
 ben-jose can generate proofs for unsatisfiable formulas. 
 
@@ -370,11 +379,11 @@ The proof can be read using the HTML page:
 
 and copying the (very long) path printed in the standard output under ''LAST\_PROOF\_PATH='' to the text area field in the Show\_Proof.htm HTML page in your favorite firefox navigator, and then clicking ''LOAD\_FILE''. Paths must begin with ''/SKELETON'', so after copying, get  rid of the prefix before it, before clicking ''LOAD\_FILE''.
 
-\subsection{PHP visualizing}
+\subsubsection{PHP visualizing}
 
 A bj-phi program that generates HTML pages with cytoscape.js (\url{http://js.cytoscape.org/}) graphs to visualize the solving of PHP instances (see Section \ref{sect:use-case}).
 
-\subsection{Debugging}
+\subsubsection{Debugging}
 
 ben-jose has a configurable built-in debugging system (debug directory) to help in the debugging of the library. The bj-solver-debug program is compiled with the libdbg-ben-jose.a library for that purpose.
 
@@ -401,31 +410,40 @@ with the command:
 	bj-phi 4
 \end{verbatim}
 
-will execute the bj-phi program and it will use the file 
+will execute the bj-phi program for PHP-4 and it will use the file 
 
 \begin{verbatim}
 	./dbg_ben_jose.conf
 \end{verbatim}
 
-to configure the debugging system to generate an HTML log file of the the solving process. It will be written in:
+to configure the debugging system to generate an HTML log file of the the solving process for PHP-4. It will be written in:
 
 \begin{verbatim}
 	./phi_hole_4/phi_hole_4_all_steps.htm
 \end{verbatim}
 
-The file, when opened with your favorite firefox navigator, should show you a web page with graphs of the following implicit style:
+The contents of the file is different for the second time you run the bj-phi program because the second time the ben-jose finds BCFFs that were written in the first run. The second time ben-jose will find the sub-formulas PHP-2, PHP-3, and itself PHP-4 to determine unsatisfiability in the first backtrack. This behavior can be observed in this HTML log file.
+
+In order to restart the original state before the first run: that is to delete the {\skeleton} and the generated files by bj-phi simply run:
+
+\begin{verbatim}
+	sh ./clean_sh
+\end{verbatim}
+
+
+The HTML log file, when opened with your favorite firefox navigator, should show you a web page with graphs of the following style:
 
 
 \begin{figure}[H]
 	\begin{centering}
-		\includegraphics[width=0.7\textwidth]{h2_base.png}
+		\frame{\includegraphics[width=0.7\textwidth]{h2_base.png}}
+		\caption{bj-phi representation of a PHP instance of size 2}
+		\label{fig:h2-graph}
 	\end{centering}
-	\caption{bj-phi representation of a PHP instance of size 2}
-	\label{fig:h2-graph}
 \end{figure}
 
 
-The image represents the DIMACS file:
+The image represents the DIMACS-CNF file:
 
 \begin{lstlisting}[label=h2-file, caption=PHP of size 2 DIMACS file,]
 p cnf 6 9
@@ -450,10 +468,10 @@ The graphs shown in the HTML page have more implicit information:
 
 \begin{figure}[H]
 	\begin{centering}
-		\includegraphics[width=0.9\textwidth]{h4_find1.png}
+		\frame{\includegraphics[width=0.9\textwidth]{h4_find1.png}}
+		\caption{bj-phi graph for the first time PHP-2 is matched within PHP-4 solving}
+		\label{fig:h4-f1}
 	\end{centering}
-	\caption{bj-phi graph for the first time PHP-2 is matched within PHP-4 solving}
-	\label{fig:h4-f1}
 \end{figure}
 
 The equivalent consecutive numbering of variables shown in Figure \ref{fig:h2-graph} is assumed in Figure \ref{fig:h4-f1} according to their position from left to right, therefore the numbering shown in Figure \ref{fig:h4-f1} is not that of the literal but the ''tier'' of the ''charged'' {\quanton}. In Figure \ref{fig:h4-f1} variable 17 was charged in tier 8, variable 12 has tier 9, variables 14 and 15 have tier 10, and variables 19 and 20 have tier 11.

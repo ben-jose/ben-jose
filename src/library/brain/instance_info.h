@@ -133,7 +133,7 @@ public:
 		
 		ist_id = -1;
 	
-		ist_file_path = "";
+		ist_file_path = INVALID_PATH;
 
 		ist_data.clear(free_mem, free_mem);
 		

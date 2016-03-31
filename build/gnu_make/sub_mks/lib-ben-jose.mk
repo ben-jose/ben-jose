@@ -3,17 +3,19 @@ TARGET := libben-jose.a
 
 SRC_BASE_DIR := ../../../src
 
+POSTMK_API_DIR := ../../src/library/api
 POSTMK_JS_DIR := ../../src/library/unsat_db/javascript
 
-define COPY_JS_LIBS
+define COPY_AUX_FILES
 	rm -rf $(TARGET_DIR)/draw_cnf_js_lib
 	rm -rf $(TARGET_DIR)/show_proof_js_lib
 	cp -r $(POSTMK_JS_DIR)/draw_cnf_js_lib $(TARGET_DIR)/draw_cnf_js_lib
 	cp -r $(POSTMK_JS_DIR)/show_proof_js_lib $(TARGET_DIR)/show_proof_js_lib
+	cp $(POSTMK_API_DIR)/ben_jose.h $(TARGET_DIR)/ben_jose.h
 	echo "Finished building library libben-jose.a"
 endef
 
-TGT_POSTMAKE := ${COPY_JS_LIBS}
+TGT_POSTMAKE := ${COPY_AUX_FILES}
 
 SOURCES := \
 	$(SRC_BASE_DIR)/external/bj_mem.cpp \

@@ -21,4 +21,3 @@ SRC_CFLAGS := -Wall -std=c99
 
 SRC_INCDIRS := $(SRC_BASE_DIR)/library/api
 
-

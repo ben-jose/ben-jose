@@ -1,6 +1,6 @@
 
 
-TARGET_DIR := bin
+TARGET_DIR := lib/ben-jose
 
 # CXXFLAGS := -g -O0 -Wall -pipe
 # DBG_FLAGS = -DFULL_DEBUG -rdynamic  
