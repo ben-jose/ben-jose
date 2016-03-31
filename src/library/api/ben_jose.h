@@ -142,6 +142,7 @@ bj_satisf_val_t 	bj_solve_literals(bj_solver_t bjs, long num_vars, long num_cls,
 bj_satisf_val_t 	bj_get_result(bj_solver_t bjs);
 bj_output_t 		bj_get_output(bj_solver_t bjs);
 const long* 		bj_get_assig(bj_solver_t bjs);
+const char* 		bj_get_last_proof_path(bj_solver_t bjs);
 const char* 		bj_get_error_stack_str(bj_solver_t bjs);
 const char* 		bj_get_error_assert_str(bj_solver_t bjs);
 

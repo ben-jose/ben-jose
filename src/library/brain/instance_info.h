@@ -49,6 +49,8 @@ all info to keep or return of an instance cnf to solve.
 
 #define INSTANCE_CK(prm) DBG_CK(prm)
 
+#define INVALID_PATH "invalid_path"
+
 //=================================================================
 // decl
 	
@@ -117,6 +119,8 @@ public:
 	avg_stat		ist_num_variants_stat;
 	row<long> 		ist_assig;
 
+	ch_string 		ist_last_proof_path;
+	
 	ch_string 		ist_err_assrt_str;
 	ch_string 		ist_err_stack_str;
 	
@@ -129,7 +133,7 @@ public:
 		
 		ist_id = -1;
 	
-		ist_file_path = "";
+		ist_file_path = INVALID_PATH;
 
 		ist_data.clear(free_mem, free_mem);
 		
@@ -145,6 +149,8 @@ public:
 		init_output(ist_out);
 
 		ist_assig.clear(free_mem, free_mem);
+		
+		ist_last_proof_path = INVALID_PATH;
 		
 		ist_err_assrt_str = "no_assert_string_found";
 		ist_err_stack_str = "no_stack_string_found";

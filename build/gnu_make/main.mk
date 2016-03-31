@@ -1,6 +1,6 @@
 
 
-TARGET_DIR := bin
+TARGET_DIR := lib/ben-jose
 
 # CXXFLAGS := -g -O0 -Wall -pipe
 # DBG_FLAGS = -DFULL_DEBUG -rdynamic  
@@ -25,7 +25,7 @@ SUBMAKEFILES := \
 	sub_mks/bj-solver-debug.mk \
 	sub_mks/bj-batch-solver.mk \
 	sub_mks/bj-test-sortor.mk \
-	sub_mks/bj-phi-test.mk \
+	sub_mks/bj-phi.mk \
 	sub_mks/bj-test.mk \
 	sub_mks/bj-hello-world.mk 
 

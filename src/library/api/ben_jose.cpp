@@ -213,20 +213,58 @@ bj_satisf_val_t 	bj_solve_file(bj_solver_t bjs, const char* f_path){
 	//DBG(bj_out << bj_eol << "SOLVING_INSTANCE=" << inst.ist_id << bj_eol );
 	
 	brain the_brain(the_slvr);
-	bj_satisf_val_t res = the_brain.solve_instance(true /* load_it */);
+	bj_satisf_val_t res = the_brain.solve_instance(true /* load_into_brn */);
 	
 	return res;
 }
 
 bj_satisf_val_t 	bj_solve_data(bj_solver_t bjs, long dat_sz, char* dat){
-	bj_satisf_val_t res = bjr_error;
+	if(bjs == NULL){ return bjr_error; }
+	//if(f_path == NULL){ return bjr_error; }
+	
+	solver& the_slvr = *((solver*)bjs);
+	instance_info& inst = the_slvr.slv_inst;
+	
+	long nxt_id = inst.ist_id;
+	if(nxt_id >= 0){ nxt_id++; }
+	
+	inst.init_instance_info(false, false);
+	inst.ist_id = nxt_id;
+	
+	s_row<char> orig_dat;
+	orig_dat.init_obj_data(dat, dat_sz);
+	orig_dat.copy_to(inst.ist_data);
+	
+	brain the_brain(the_slvr);
+	bj_satisf_val_t res = the_brain.solve_instance(true /* load_into_brn */);
+	
 	return res;
 }
 
 bj_satisf_val_t 	bj_solve_literals(bj_solver_t bjs, long num_vars, long num_cls, 
 						  long lits_sz, long* lits)
 {
-	bj_satisf_val_t res = bjr_error;
+	if(bjs == NULL){ return bjr_error; }
+	
+	solver& the_slvr = *((solver*)bjs);
+	instance_info& inst = the_slvr.slv_inst;
+	
+	long nxt_id = inst.ist_id;
+	if(nxt_id >= 0){ nxt_id++; }
+	
+	inst.init_instance_info(false, false);
+	inst.ist_id = nxt_id;
+	
+	inst.ist_num_vars = num_vars;
+	inst.ist_num_ccls = num_cls;
+	
+	s_row<long> orig_lits;
+	orig_lits.init_obj_data(lits, lits_sz);
+	orig_lits.copy_to(inst.ist_ccls);
+	
+	brain the_brain(the_slvr);
+	bj_satisf_val_t res = the_brain.solve_instance(true /* load_into_brn */);
+	
 	return res;
 }
 
@@ -262,6 +300,19 @@ const long* bj_get_assig(bj_solver_t bjs){
 	}
 	const long* assig_arr = assig.get_c_array();
 	return assig_arr;
+}
+
+const char* bj_get_last_proof_path(bj_solver_t bjs){
+	if(bjs == NULL){
+		return NULL;
+	}
+	solver& the_slvr = *((solver*)bjs);
+	ch_string pth = the_slvr.slv_inst.ist_last_proof_path;
+	if(pth == INVALID_PATH){
+		return NULL;
+	}
+	const char* pf_pth = pth.c_str();
+	return pf_pth;
 }
 
 const char* bj_get_error_stack_str(bj_solver_t bjs){

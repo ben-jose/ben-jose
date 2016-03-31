@@ -6,10 +6,10 @@
 GNU_AT_DIR=./gnu_autotools
 GNU_MK_DIR=./gnu_make
 
-chmod -R u+w $GNU_MK_DIR/bin
+chmod -R u+w $GNU_MK_DIR/lib
 chmod -R u+w $GNU_MK_DIR/build
 
-rm -r $GNU_MK_DIR/bin
+rm -r $GNU_MK_DIR/lib
 rm -r $GNU_MK_DIR/build
 
 rm -r $GNU_AT_DIR/autom4te.cache

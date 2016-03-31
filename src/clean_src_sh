@@ -2,3 +2,8 @@
 
 find . -name "*~" -type f | xargs rm
 
+rm -rf ./programs/tests/solver/SKELETON
+rm -rf ./programs/tests/solver/*.log
+rm -rf ./programs/tests/phi/SKELETON
+rm -rf ./programs/tests/phi/*.log
+rm -rf ./programs/tests/phi/phi_hole_*
