@@ -110,7 +110,7 @@ The software library Ben-Jose (\url{https://github.com/joseluisquiroga/ben-jose}
 
 The satisfiability problem (SAT) is the canonical decision problem by excellence ~\cite{biere-09} ~\cite{kroening-08} ~\cite{marek-09}. It lays at the heart of the P vs NP question and its importance cannot be overstated ~\cite{cook-09}. People have proved both that ''NP != P'' and that ''NP==P'' ~\cite{woeginger-16} ~\cite{muller-13}, and filed patent applications for optimal SAT solvers based on resolution ~\cite{quiroga-01}. 
 
-The practical limitations of human verification of long and complex proofs, even under the peer-review system, highlights the importance of automated proof checking. This and the practical applications of automated theorem proving highlights the importance of SAT.
+The practical limitations of human verification of long and complex proofs, even under the peer-review system, highlights the importance of automated proof checking. This and the practical applications of automated theorem proving ~\cite{cadar-08} highlights the importance of SAT.
 
 Exponential lower bounds of resolution (RES) proof size for the pigeon hole principle (PHP) have been proven ~\cite{haken-85} ~\cite{buss-88}, and polynomial size proofs for extended resolution (ER) have also been proven for the PHP  ~\cite{cook-76} ~\cite{cook-79} ~\cite{jarvisalo-07} instances of the SAT problem. That work suggests that solvers based on RES ~\cite{silva-95} ~\cite{moskewicz-01} ~\cite{een-04} need ''something else'' in order to be ''faster'' ~\cite{dixon-04} ~\cite{audemard-10}. 
 
@@ -356,7 +356,7 @@ The library comes with some tools.
 
 \subsubsection{Proofs}
 
-ben-jose can generate proofs for unsatisfiable formulas. 
+ben-jose can optionally generate proofs for unsatisfiable formulas in JSON format. They can serve as input to an automated proof checker.
 
 Assuming the program ''bj-batch-solver'' is in the path, and from the source tree directory:
 
@@ -591,6 +591,12 @@ Things to do with ben-jose:
 \begin{itemize}
 \item
 Test, test and test. And when necessary debug, debug and debug.
+
+\item
+Reduce combinatoric redundancy for PHP.
+
+\item
+Make a first release.
 
 \item
 Follow in detail for is-prime instances. It implies writing code to generate cytoscape.js graphs that help visualize the solving process.
