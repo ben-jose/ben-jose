@@ -1,9 +1,9 @@
 # this is example-file: Makefile.am
 
 THE_LIB_NAME := libben-jose.a
-THE_PRG_NAME := ben-jose-solver
+THE_PRG_NAME := bj-batch-solver
 
-GNU_MAKE_OUT_DIR = ../gnu_make/bin
+GNU_MAKE_OUT_DIR = ../gnu_make/lib/ben-jose
 
 bin_installdir = $(prefix)/bin
 bin_install_DATA = $(GNU_MAKE_OUT_DIR)/$(THE_PRG_NAME)

@@ -1,17 +1,11 @@
 
-When 
+When 'clean_all_non_human_made_sh' script has been run.
 
-clean_all_non_human_made_sh
+eate all build files with:
 
-script has been run.
-
-
-
-Recreate all build files with:
-
-aclocal
-autoconf
-automake -a -c
+	aclocal
+	autoconf
+	automake -a -c
  
 then follow README.to_install_with_autotools
 

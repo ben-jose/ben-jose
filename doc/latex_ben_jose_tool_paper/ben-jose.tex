@@ -497,35 +497,34 @@ The little triangle indicates a choice therefore in Figure \ref{fig:h4-f1} varia
 \section{Installation}
 \label{sect:installation}
 
-Since there is no current release version of the library, it has to be installed from source. To do so:
+To install ben-jose:
 
 \begin{enumerate}
 \item
-Download the library from \url{https://github.com/joseluisquiroga/ben-jose}.
+Download and unzip a ZIP file from the library from \url{https://github.com/joseluisquiroga/ben-jose}.
 
 \item
-Build and install the library following the instructions in the README.txt file.
+\begin{verbatim}
+	cd ben-jose-master/build/gnu_make
+\end{verbatim}
+
+\item
+\begin{verbatim}
+	make -s
+\end{verbatim}
+
+\item
+\begin{verbatim}
+	cd lib/ben-jose
+\end{verbatim}
+
+\item
+\begin{verbatim}
+	ls
+\end{verbatim}
 \end{enumerate}
 
-The README.txt file refers you to the installation alternatives:
-
-\begin{enumerate}
-\item
-To build and install with autotools follow:
-
-	./build/gnu\_autotools/README.to\_install\_with\_autotools
-
-\item
-To build with gnu\_make follow:
-
-	./build/gnu\_make/README.to\_install\_with\_gnu\_make
-\end{enumerate}
-
-It is very probable that when installing with autotools you will need to first follow the file:
-
-	./build/gnu\_autotools/README.when\_clean\_all\_non\_human\_made
-
-because the source tree is usually cleaned from all non human made files.
+That will built and list all the files of the library. Put the directory in the path.
 
 %------------------------------------------------------------------------------
 \subsection{Required Packages}
@@ -581,6 +580,9 @@ This difference is also crucial for to ease the matching of BCFFs.
 
 In the code it can bee seen in the function ''start\_propagation'' when it calls ''select\_propag\_side''.
 
+\section{Stage}
+
+ben-jose is in development stage. It is work in progress. It is research work.
 
 %------------------------------------------------------------------------------
 \section{Future Work}

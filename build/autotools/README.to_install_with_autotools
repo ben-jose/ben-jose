@@ -5,9 +5,6 @@ For a normal autotools installs run:
 	make
 	make install
 
-Executable will be in:
-	/the/dir/you/want/the/installation/bin/ben-jose-solver
-
 Library will be in:
 	/the/dir/you/want/the/installation/lib/libben-jose.a
 
@@ -15,5 +12,5 @@ For help run:
 
 	./configure --help 
 
-All documentation in '<base_dir>/doc'.
+See http://joseluisquiroga.github.io/ben-jose/ for more information.
 

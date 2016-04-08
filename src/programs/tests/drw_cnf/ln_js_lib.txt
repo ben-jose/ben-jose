@@ -1,1 +1,0 @@
-../../../../build/gnu_make/draw_cnf_js_lib
