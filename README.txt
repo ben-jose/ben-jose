@@ -22,7 +22,7 @@ along with ben-jose.  If not, see <http://www.gnu.org/licenses/>.
 
 Copyright (C) 2007-2012, 2014-2015. QUIROGA BELTRAN, Jose Luis.
 Id (cedula): 79523732 de Bogota - Colombia.
-email: joseluisquirogabeltran@gmail.com
+email: JoseLuisQuiroga@yahoo.com
 
 ben-jose is free software thanks to The Glory of Our Lord 
 	Yashua Melej Hamashiaj.
@@ -31,16 +31,10 @@ Our Resurrected and Living, both in Body and Spirit,
 
 ------------------------------------------------------------
 
-Sat-solver and static library for dimacs-cnf files.
+Trainable SAT Solver Library for dimacs-cnf files.
 
-To build and install with autotools follow
+INSTALL INSTRUCTIONS in:
 
-	./build/gnu_autotools/README.to_install_with_autotools
+http://joseluisquiroga.github.io/ben-jose/
 
-To build with gnu_make follow
-
-	./build/gnu_make/README.to_install_with_gnu_make
-
-
-
-
+------------------------------------------------------------
