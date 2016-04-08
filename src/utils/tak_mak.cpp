@@ -11,7 +11,7 @@ tak_mak.cpp
 Adapted 2011 to c++ by 
 QUIROGA BELTRAN, Jose Luis.
 Id (cedula): 79523732 de Bogota - Colombia.
-email: joseluisquirogabeltran@gmail.com
+See https://github.com/joseluisquiroga/ben-jose
 
 ------------------------------------------------------------
 

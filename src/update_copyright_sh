@@ -1,0 +1,6 @@
+
+# Only change last year. DO NOT use generic matching '^Copyright' because
+# it will change other people's Copyright.
+
+find . -name "*" -type f | xargs sed -i 's/^Copyright (C) 2011, 2014-2015/Copyright (C) 2011, 2014-2016/'
+

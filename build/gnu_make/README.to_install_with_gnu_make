@@ -3,16 +3,17 @@ For a normal gnu_make install run:
 
 	make
 
-Binaries will be in
+Built library files will be in
 
-	./bin
+	./lib
 
-TO install copy the files in './bin'
-to the desired install directories.
+To install:
+
+	copy the files in './lib' to the desired install directories.
 
 For help run:
 
 	make help
 
-All documentation in '../../doc'.
+See https://github.com/joseluisquiroga/ben-jose for more info.
 

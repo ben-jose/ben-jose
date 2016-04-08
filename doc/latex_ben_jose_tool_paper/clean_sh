@@ -7,4 +7,13 @@ rm *.out
 rm *.log
 rm *.aux
 rm *.blg
+rm ben-jose.4ct
+rm ben-jose.4tc
+rm ben-jose.dvi
+rm ben-jose.idv
+rm ben-jose.lg
+rm ben-jose.tmp
+rm ben-jose.xref
+rm ben-jose.odt
+rm *.4og
 rm $1.pdf

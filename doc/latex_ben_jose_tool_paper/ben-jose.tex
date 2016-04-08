@@ -52,8 +52,7 @@
 % Regular title as in the article class.
 %
 \title{Ben-Jose SAT Solving Software Library\\
-       Tool Paper%
-\thanks{Especial thanks to our heavenly Father YHWH, his anointed King, Magda Beltran de Quiroga and Federman Quiroga.}}
+       Tool Paper}
 
 % Authors are joined by \and. Their affiliations are given by \inst, which indexes
 % into the list defined using \institute
@@ -64,7 +63,7 @@ Jose Luis Quiroga Beltran
 
 % Institutes for affiliations are also joined by \and,
 \institute{
-	Independent Researcher\\
+	Independent Researcher\thanks{Especial thanks to our heavenly Father YHWH, his anointed King, Magda Beltran de Quiroga and Federman Quiroga.}\\
 	\email{joseluisquiroga@yahoo.com}\\
 	March 2016
  }
@@ -87,7 +86,7 @@ Jose Luis Quiroga Beltran
 \maketitle
 
 \begin{abstract}
-The software library Ben-Jose (\url{https://github.com/joseluisquiroga/ben-jose}) for solving instances (formulas) of the satisfiability problem (SAT) in CNF form (DIMACS format) is presented. Ben-Jose implements a trainable strategy that extends the traditional DPLL+BCP+CDCL resolution based approach, first introduced by Joao Marquez da Silva ~\cite{silva-95} and latter refined by others ~\cite{moskewicz-01} ~\cite{een-04}. Ben-Jose has an original technique (BDUST) to check during search if, for a given partial assignation of the solving formula variables, the resulting current sub-formula has been previously found unsatisfiable. It does that by finding the current sub-formula permutation to its ''BDUST canonical form formula'' (BCFF) and checking the BCFF existence in a database of unsatisfiable BCFFs. That in order to entirely skip the search on the current sub-formula. The calculation of a BCFF introduces an original stabilization procedure (as in ~\cite{bastert-02}) for the structure of CNF formulas. The calculation has linear complexity and is tightly coupled with the work done by BCP.
+The software library Ben-Jose (\url{https://github.com/joseluisquiroga/ben-jose}) for solving instances (formulas) of the satisfiability problem (SAT) in CNF form (DIMACS format) is presented. Ben-Jose implements a trainable strategy that extends the traditional DPLL+BCP+CDCL resolution based approach, first introduced by Joao Marquez da Silva ~\cite{silva-95} and latter refined by others ~\cite{moskewicz-01} ~\cite{een-04}. Ben-Jose has an original technique (BDUST) to check during search if, for a given partial assignation of the solving formula variables, the resulting current sub-formula has been previously found unsatisfiable. It does that by finding the current sub-formula permutation to its ''BDUST canonical form formula'' (BCFF) and checking the BCFF existence in a database of unsatisfiable BCFFs. If the BCFF of the current sub-formula exists in the database, ben-jose entirely skips the search on the current sub-formula. The calculation of a BCFF introduces an original stabilization procedure (as in ~\cite{bastert-02}) for the structure of CNF formulas. The calculation has linear complexity and is tightly coupled with the work done by BCP.
 \end{abstract}
 
 % The table of contents below is added for your convenience. Please do not use
@@ -111,13 +110,13 @@ The software library Ben-Jose (\url{https://github.com/joseluisquiroga/ben-jose}
 
 The satisfiability problem (SAT) is the canonical decision problem by excellence ~\cite{biere-09} ~\cite{kroening-08} ~\cite{marek-09}. It lays at the heart of the P vs NP question and its importance cannot be overstated ~\cite{cook-09}. People have proved both that ''NP != P'' and that ''NP==P'' ~\cite{woeginger-16} ~\cite{muller-13}, and filed patent applications for optimal SAT solvers based on resolution ~\cite{quiroga-01}. 
 
-The practical limitations of human verification of long and complex proofs, even under the peer-review system, highlights the importance of automated proof checking. This and the practical applications of automated theorem proving highlights the importance of SAT.
+The practical limitations of human verification of long and complex proofs, even under the peer-review system, highlights the importance of automated proof checking. This and the practical applications of automated theorem proving ~\cite{cadar-08} highlights the importance of SAT.
 
 Exponential lower bounds of resolution (RES) proof size for the pigeon hole principle (PHP) have been proven ~\cite{haken-85} ~\cite{buss-88}, and polynomial size proofs for extended resolution (ER) have also been proven for the PHP  ~\cite{cook-76} ~\cite{cook-79} ~\cite{jarvisalo-07} instances of the SAT problem. That work suggests that solvers based on RES ~\cite{silva-95} ~\cite{moskewicz-01} ~\cite{een-04} need ''something else'' in order to be ''faster'' ~\cite{dixon-04} ~\cite{audemard-10}. 
 
-Based on the notion that theorems are proved with lemmas and the observation that the structure of PHP(n+1, n) can be matched with several substructures of PHP(n+2, n+1), the software library presented in this work (Ben-Jose) extends RES by learning the structure of unsatisfiable sub-formulas (proved unsatisfiable during its execution) and matching them against future structures of sub-formulas found during its execution, in order to skip the search, and directly backtrack on them, when ever a match (subsumed isomorphism) is found. 
+Based on the notion that theorems are proved with lemmas and the observation that the structure of PHP(n+1, n) can be matched with several substructures of PHP(n+2, n+1), the software library presented in this work (Ben-Jose) extends RES by learning the structure of unsatisfiable sub-formulas (proved unsatisfiable during its execution) and matching them against future structures of sub-formulas found during its execution, in order to skip the search, and directly backtrack on them, when ever a match is found. 
 
-This technique is here after called Backtrack Driven by Unsatisfiable Sub-formula Training (BDUST). BDUST introduces an original stabilization procedure (as in ~\cite{bastert-02}) for the unsatisfiable sub-formulas found, uses the work done by BCP (each BCP step groups some variables), and has linear complexity with respect to the size of the sub-formulas. The structures learned with BDUST have the advantage that can be used also with different instances than the one they were found on. That is why BDUST is ''training'' and not ''learning''.
+This technique is here after called Backtrack Driven by Unsatisfiable Sub-formula Training (BDUST). BDUST introduces an original stabilization procedure (as in ~\cite{bastert-02}) for the unsatisfiable sub-formulas found, uses the work done by BCP (each BCP step groups some variables). The stabilization procedure finds the current sub-formula permutation to its ''BDUST canonical form formula'' (BCFF). BDUST checks for the BCFF existence in a persistent database of unsatisfiable BCFFs. The stabilization procedure has linear complexity with respect to the size of the sub-formula. The BCFFs have the advantage that can be used also with different instances than the one they were found on. That is why BDUST is ''training'' and not ''learning''. It also means that it is possible that a run on a permutation of an already ran (trained) unsatisfiable instance may be done in a single backtrack (see Section \ref{sect:use-case}).
 
 This form of extending RES is not ER, as the system presented by Tseitin ~\cite{tseitin-83}, because the subsumed isomorphism detection technique is not RES based, and the power and complexity of the resulting proof system has not been formally studied. The empirical results on the classical theoretical problem of PHP are presented here. 
 
@@ -130,11 +129,11 @@ Ben-jose is designed to be used as a support library for applications or librari
 User objectives:
 \begin{enumerate}
 \item
-To be easy to use for the C/C++ programmer.
+To be easy to use for the C/C++ programmer/developer.
 \item
 To isolate the user from all difficulties of SAT solving.
 \item
-To do be the world most used trainable SAT solving programming library. ;)
+To be the world most used trainable SAT solving programming library. ;)
 \end{enumerate}
 
 Formal objectives:
@@ -142,13 +141,15 @@ Formal objectives:
 \item
 To present an original, general, and practical alternative strategy to SAT solving.
 \item
-To use other known SAT solving techniques as much as possible.
-\item
 To have a solid empirically checked algorithmic soundness and correctness.
 \end{enumerate}
 
 Technical objectives:
 \begin{enumerate}
+\item
+To develop a software library that serves as solid ''proof of concept'' for the presented strategy.
+\item
+To use other known SAT solving techniques as much as possible.
 \item
 To do the less possible number of steps assuming unsatisfiability.
 \item
@@ -355,7 +356,7 @@ The library comes with some tools.
 
 \subsubsection{Proofs}
 
-ben-jose can generate proofs for unsatisfiable formulas. 
+ben-jose can optionally generate proofs for unsatisfiable formulas in JSON format. They can serve as input to an automated proof checker.
 
 Assuming the program ''bj-batch-solver'' is in the path, and from the source tree directory:
 
@@ -422,7 +423,7 @@ to configure the debugging system to generate an HTML log file of the the solvin
 	./phi_hole_4/phi_hole_4_all_steps.htm
 \end{verbatim}
 
-The contents of the file is different for the second time you run the bj-phi program because the second time the ben-jose finds BCFFs that were written in the first run. The second time ben-jose will find the sub-formulas PHP-2, PHP-3, and itself PHP-4 to determine unsatisfiability in the first backtrack. This behavior can be observed in this HTML log file.
+It is very important to observe that the contents of \textbf{the file is different for the second time you run the bj-phi program} because the second time the ben-jose finds BCFFs that were written in the first run. The second time ben-jose will find the sub-formulas PHP-2, PHP-3, and itself PHP-4 to determine unsatisfiability in the first backtrack. This behavior can be observed in this HTML log file.
 
 In order to restart the original state before the first run: that is to delete the {\skeleton} and the generated files by bj-phi simply run:
 
@@ -496,35 +497,34 @@ The little triangle indicates a choice therefore in Figure \ref{fig:h4-f1} varia
 \section{Installation}
 \label{sect:installation}
 
-Since there is no current release version of the library, it has to be installed from source. To do so:
+To install ben-jose:
 
 \begin{enumerate}
 \item
-Download the library from \url{https://github.com/joseluisquiroga/ben-jose}.
+Download and unzip a ZIP file from the library from \url{https://github.com/joseluisquiroga/ben-jose}.
 
 \item
-Build and install the library following the instructions in the README.txt file.
+\begin{verbatim}
+	cd ben-jose-master/build/gnu_make
+\end{verbatim}
+
+\item
+\begin{verbatim}
+	make -s
+\end{verbatim}
+
+\item
+\begin{verbatim}
+	cd lib/ben-jose
+\end{verbatim}
+
+\item
+\begin{verbatim}
+	ls
+\end{verbatim}
 \end{enumerate}
 
-The README.txt file refers you to the installation alternatives:
-
-\begin{enumerate}
-\item
-To build and install with autotools follow:
-
-	./build/gnu\_autotools/README.to\_install\_with\_autotools
-
-\item
-To build with gnu\_make follow:
-
-	./build/gnu\_make/README.to\_install\_with\_gnu\_make
-\end{enumerate}
-
-It is very probable that when installing with autotools you will need to first follow the file:
-
-	./build/gnu\_autotools/README.when\_clean\_all\_non\_human\_made
-
-because the source tree is usually cleaned from all non human made files.
+That will built and list all the files of the library. Put the directory in the path.
 
 %------------------------------------------------------------------------------
 \subsection{Required Packages}
@@ -580,6 +580,9 @@ This difference is also crucial for to ease the matching of BCFFs.
 
 In the code it can bee seen in the function ''start\_propagation'' when it calls ''select\_propag\_side''.
 
+\section{Stage}
+
+ben-jose is in development stage. It is work in progress. It is research work.
 
 %------------------------------------------------------------------------------
 \section{Future Work}
@@ -590,6 +593,12 @@ Things to do with ben-jose:
 \begin{itemize}
 \item
 Test, test and test. And when necessary debug, debug and debug.
+
+\item
+Reduce combinatoric redundancy for PHP.
+
+\item
+Make a first release.
 
 \item
 Follow in detail for is-prime instances. It implies writing code to generate cytoscape.js graphs that help visualize the solving process.
