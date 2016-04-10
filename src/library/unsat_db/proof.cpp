@@ -18,7 +18,7 @@ along with ben-jose.  If not, see <http://www.gnu.org/licenses/>.
 
 ------------------------------------------------------------
 
-Copyright (C) 2011, 2014-2016. QUIROGA BELTRAN, Jose Luis.
+Copyright (C) 2007-2012, 2014-2016. QUIROGA BELTRAN, Jose Luis.
 Id (cedula): 79523732 de Bogota - Colombia.
 See https://github.com/joseluisquiroga/ben-jose
 
@@ -48,7 +48,7 @@ ch_string top_show_proof_html_code =
 "	</head> \n"
 "	<body> \n"
 "		<h1>Show proof</h1> \n"
-"		<textarea id='main_jsn_file' rows='3' \n"
+"		<textarea class='show_proof_path' id='main_jsn_file' rows='3' \n"
 "		cols='70'>/SKELETON/CNF/replace/this/with/a/path/to/a/file/cnf_proof.jsn \n"
 "		</textarea><br> \n"
 "		(the path must start with '/SKELETON/CNF/' and end with 'cnf_proof.jsn').<br> \n"

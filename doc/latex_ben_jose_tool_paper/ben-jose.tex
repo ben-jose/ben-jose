@@ -43,6 +43,8 @@
 \newcommand{\bjsolverrelease}{bj\_solver\_release}
 \newcommand{\BJLIBPTH}{BJ\_LIB\_PTH}
 
+\newcommand{\bjphi}{\texttt{bj-phi}}
+\newcommand{\bjbatchsolver}{\texttt{bj-batch-solver}}
 
 
 %\makeindex
@@ -161,6 +163,11 @@ To use visualization techniques to debug target theoretical cases.
 \item
 To optionally write proofs for unsatisfiable cases.
 \end{enumerate}
+
+%------------------------------------------------------------------------------
+\section{Stage}
+
+ben-jose is in development stage. It is work in progress. It is research work. If compared to building a house it would be in ''finishing construction'' stages.
 
 %------------------------------------------------------------------------------
 \section{Functionality}
@@ -358,19 +365,16 @@ The library comes with some tools.
 
 ben-jose can optionally generate proofs for unsatisfiable formulas in JSON format. They can serve as input to an automated proof checker.
 
-Assuming the program ''bj-batch-solver'' is in the path, and from the source tree directory:
+Assuming the program ''{\bjbatchsolver}'' is in the path, and from the source tree directory:
 
 \begin{verbatim}
 	cd ben-jose/src/programs/tests/solver
-\end{verbatim}
-
-with the command:
-
-\begin{verbatim}
+	sh clean_sh
 	bj-batch-solver ./h4.cnf -proof -rr
+	firefox ./SKELETON/CNF/Show_Proof.htm &
 \end{verbatim}
 
-the bj-batch-solver program will use the bjp\_write\_proofs library option to generate the proof of the unsatisfiable instance ''h4.cnf'' in JSON format. 
+the {\bjbatchsolver} program will use the \texttt{bjp\_write\_proofs} library option to generate the proof of the unsatisfiable instance ''\texttt{h4.cnf}'' in JSON format. 
 
 The proof can be read using the HTML page:
 
@@ -378,15 +382,23 @@ The proof can be read using the HTML page:
 	./SKELETON/CNF/Show_Proof.htm
 \end{verbatim}
 
-and copying the (very long) path printed in the standard output under ''LAST\_PROOF\_PATH='' to the text area field in the Show\_Proof.htm HTML page in your favorite firefox navigator, and then clicking ''LOAD\_FILE''. Paths must begin with ''/SKELETON'', so after copying, get  rid of the prefix before it, before clicking ''LOAD\_FILE''.
+and copying the (very long) path printed in the standard output under ''\texttt{LAST\_PROOF\_PATH=}'' to the text area field in the \texttt{Show\_Proof.htm} HTML page in your favorite \texttt{firefox} navigator, and then clicking ''\texttt{LOAD\_FILE}''. Paths must begin with ''\texttt{/SKELETON}'', so after copying, get  rid of the prefix before it, before clicking ''\texttt{LOAD\_FILE}''.
+
+\textbf{Remember} to run
+
+\begin{verbatim}
+	sh clean_sh
+\end{verbatim}
+
+before \textbf{each} time you run the {\bjbatchsolver} program in order to see the \textbf{whole} proof.
 
 \subsubsection{PHP visualizing}
 
-A bj-phi program that generates HTML pages with cytoscape.js (\url{http://js.cytoscape.org/}) graphs to visualize the solving of PHP instances (see Section \ref{sect:use-case}).
+A {\bjphi} program that generates HTML pages with \texttt{cytoscape.js} (\url{http://js.cytoscape.org/}) graphs to visualize the solving of PHP instances (see Section \ref{sect:use-case}).
 
 \subsubsection{Debugging}
 
-ben-jose has a configurable built-in debugging system (debug directory) to help in the debugging of the library. The bj-solver-debug program is compiled with the libdbg-ben-jose.a library for that purpose.
+ben-jose has a configurable built-in debugging system (debug directory) to help in the debugging of the library. The \texttt{bj-solver-debug} program is compiled with the \texttt{libdbg-ben-jose.a} library for that purpose.
 
 
 %------------------------------------------------------------------------------
@@ -395,23 +407,20 @@ ben-jose has a configurable built-in debugging system (debug directory) to help 
 
 The target case when development of ben-jose started was PHP instances. It is a well studied theoretical case that shows exponential behavior for RES.
 
-ben-jose comes with a program that helped in the development of ben-jose called bj-phi.
+ben-jose comes with a program that helped in the development of ben-jose called {\bjphi}.
 
-\subsection{bj-phi}
+\subsection{\bjphi}
 
-Assuming the program ''bj-phi'' is in the path, and from the source tree directory:
+Assuming the program ''{\bjphi}'' is in the path, and from the source tree directory:
 
 \begin{verbatim}
 	cd ben-jose/src/programs/tests/phi
-\end{verbatim}
-
-with the command:
-
-\begin{verbatim}
+	sh clean_sh
 	bj-phi 4
+	firefox ./phi_hole_4/phi_hole_4_all_steps.htm &
 \end{verbatim}
 
-will execute the bj-phi program for PHP-4 and it will use the file 
+will execute the {\bjphi} program for PHP-4 and it will use the file 
 
 \begin{verbatim}
 	./dbg_ben_jose.conf
@@ -423,9 +432,9 @@ to configure the debugging system to generate an HTML log file of the the solvin
 	./phi_hole_4/phi_hole_4_all_steps.htm
 \end{verbatim}
 
-It is very important to observe that the contents of \textbf{the file is different for the second time you run the bj-phi program} because the second time the ben-jose finds BCFFs that were written in the first run. The second time ben-jose will find the sub-formulas PHP-2, PHP-3, and itself PHP-4 to determine unsatisfiability in the first backtrack. This behavior can be observed in this HTML log file.
+It is very important to observe that the contents of \textbf{the file is different for the second time you run the {\bjphi} program} because the second time the ben-jose finds BCFFs that were written in the first run. The second time ben-jose will find the sub-formulas PHP-2, PHP-3, and itself PHP-4 to determine unsatisfiability in the first backtrack. This behavior can be observed in this HTML log file.
 
-In order to restart the original state before the first run: that is to delete the {\skeleton} and the generated files by bj-phi simply run:
+In order to restart the original state before the first run: that is to delete the {\skeleton} and the generated files by {\bjphi} simply run:
 
 \begin{verbatim}
 	sh ./clean_sh
@@ -579,10 +588,6 @@ When ever a choice is been made it tries both values in order to see which value
 This difference is also crucial for to ease the matching of BCFFs.
 
 In the code it can bee seen in the function ''start\_propagation'' when it calls ''select\_propag\_side''.
-
-\section{Stage}
-
-ben-jose is in development stage. It is work in progress. It is research work.
 
 %------------------------------------------------------------------------------
 \section{Future Work}
