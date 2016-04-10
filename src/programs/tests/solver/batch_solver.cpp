@@ -18,7 +18,7 @@ along with ben-jose.  If not, see <http://www.gnu.org/licenses/>.
 
 ------------------------------------------------------------
 
-Copyright (C) 2011, 2014-2016. QUIROGA BELTRAN, Jose Luis.
+Copyright (C) 2007-2012, 2014-2016. QUIROGA BELTRAN, Jose Luis.
 Id (cedula): 79523732 de Bogota - Colombia.
 See https://github.com/joseluisquiroga/ben-jose
 
@@ -761,6 +761,9 @@ int	solver_main(int argc, char** argv){
 	BATCH_CK(sizeof(long) == sizeof(void*));
 
 	int resp = 0;
+	
+	bool with_proof = false;
+	ch_string last_proof_pth = "INVALID_PROOF_PTH";
 
 	MEM_CTRL(mem_size mem_in_u = mem_get_num_by_in_use());
 	MEM_CTRL(MARK_USED(mem_in_u));
@@ -796,20 +799,32 @@ int	solver_main(int argc, char** argv){
 		top_dat.do_all_instances();
 
 		PRT_OUT_1( os << ".ENDING AT " << run_time() << bj_eol);
-		
+
+		if(top_dat.op_write_proof){
+			with_proof = true;
+			const char* pf_pth = bj_get_last_proof_path(top_dat.bc_solver);
+			if(pf_pth != NULL_PT){
+				last_proof_pth = pf_pth;
+			}
+		}
+			
 		bj_solver_release(top_dat.bc_solver);
 	}
 	
 	MEM_CTRL(BATCH_CK(mem_in_u == mem_get_num_by_in_use()));
-
+	
 	if(args_ok){
 		PRT_OUT_0( 
 			top_dat.print_totals(os);
 			top_dat.print_final_totals(os);
 			os << "ROOT_DIR=" << top_dat.bc_slvr_path << bj_eol;
 		);
+		
+		if(with_proof){
+			PRT_OUT_0(os << "\n\nLAST_PROOF_PATH=\n" << last_proof_pth << "\n\n\n");
+		}
 	}
-	
+
 	MEM_CTRL(bj_out << "MEM_CONTROL is defined" << bj_eol);
 	DBG(bj_out << "FULL_DEBUG is defined" << bj_eol);
 
@@ -834,7 +849,9 @@ batch_solver::do_cnf_file()
 	
 	if(op_write_proof){
 		const char* pf_pth = bj_get_last_proof_path(bc_solver);
-		PRT_OUT_0(os << "LAST_PROOF_PATH=\n" << pf_pth << "\n");
+		if(pf_pth != NULL_PT){
+			PRT_OUT_0(os << "LAST_PROOF_PATH=\n" << pf_pth << "\n");
+		}
 	}
 	
 	curr_inst.be_out = bj_get_output(bc_solver);

@@ -18,7 +18,7 @@ along with ben-jose.  If not, see <http://www.gnu.org/licenses/>.
 
 ------------------------------------------------------------
 
-Copyright (C) 2011, 2014-2016. QUIROGA BELTRAN, Jose Luis.
+Copyright (C) 2007-2012, 2014-2016. QUIROGA BELTRAN, Jose Luis.
 Id (cedula): 79523732 de Bogota - Colombia.
 See https://github.com/joseluisquiroga/ben-jose
 
