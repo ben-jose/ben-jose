@@ -92,6 +92,11 @@ phi_main(long num_h, bool wrt_proof){
 	}
 	bj_satisf_val_t res = the_brain.solve_instance(false);
 	
+	bj_output_t& o_info = the_brain.get_out_info();
+	
+	bj_out << "SAVED=" << o_info.bjo_saved_targets << "\n";
+	bj_out << "NUM_FINDS=" << o_info.bjo_sub_cnf_hits << "\n";
+	
 	bj_out << "res=" << res;
 
 	return nw_slv;

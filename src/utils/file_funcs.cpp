@@ -643,10 +643,16 @@ drop_file_write_lock(int fd_lock){
 
 bool
 file_exists(ch_string th_pth){
+	/*
 	std::ifstream istm;
 	//SKELETON_CK(not_skl_path(th_pth));
 	istm.open(th_pth.c_str(), std::ios_base::in);
 	return istm.good();
+	*/
+	const char* fname = th_pth.c_str();
+	
+	bool ff_exists = (access(fname, F_OK) != -1);
+	return ff_exists;
 }
 
 bool

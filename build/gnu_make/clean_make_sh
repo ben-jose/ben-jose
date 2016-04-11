@@ -3,10 +3,10 @@
 # This script deletes any file under the 'gnu_make' directory that 
 # was not created or written by a human being.
 
-chmod -R u+w ./bin/*
+chmod -R u+w ./lib/*
 chmod -R u+w ./build/*
 
-rm -r ./bin
+rm -r ./lib
 rm -r ./build
 
 find . -name "*~" -type f | xargs rm
