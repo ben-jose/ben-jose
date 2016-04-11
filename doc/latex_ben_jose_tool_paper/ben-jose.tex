@@ -363,7 +363,7 @@ The library comes with some tools.
 
 \subsubsection{Proofs}
 
-ben-jose can optionally generate proofs for unsatisfiable formulas in JSON format. They can serve as input to an automated proof checker.
+ben-jose can optionally generate proofs for unsatisfiable formulas in JSON format. They can serve as input to an automated proof checker. It is not fully functional for the already trained case but works fine (pre-alpha) for untrained cases.
 
 Assuming the program ''{\bjbatchsolver}'' is in the path, and from the source tree directory:
 
@@ -390,7 +390,7 @@ and copying the (very long) path printed in the standard output under ''\texttt{
 	sh clean_sh
 \end{verbatim}
 
-before \textbf{each} time you run the {\bjbatchsolver} program in order to see the \textbf{whole} proof.
+before \textbf{each} time you run the {\bjbatchsolver} program with \texttt{-proof}, in order to see the \textbf{whole} proof.
 
 \subsubsection{PHP visualizing}
 
@@ -398,7 +398,7 @@ A {\bjphi} program that generates HTML pages with \texttt{cytoscape.js} (\url{ht
 
 \subsubsection{Debugging}
 
-ben-jose has a configurable built-in debugging system (debug directory) to help in the debugging of the library. The \texttt{bj-solver-debug} program is compiled with the \texttt{libdbg-ben-jose.a} library for that purpose.
+ben-jose has a configurable built-in debugging system (debug directory) to help in the debugging of the library. The \texttt{bj-solver-debug} program is compiled with the \texttt{libdbg-ben-jose.a} library for that purpose. The code is crowded with assertions in the form of macros like \texttt{BRAIN\_CK} and \texttt{SORTER\_CK} that only get compiled into the debug version of the library \texttt{libdbg-ben-jose.a}.
 
 
 %------------------------------------------------------------------------------
@@ -597,16 +597,22 @@ Things to do with ben-jose:
 
 \begin{itemize}
 \item
-Test, test and test. And when necessary debug, debug and debug.
-
-\item
 Reduce combinatoric redundancy for PHP.
 
 \item
-Make a first release.
+Automate testing. Then: test, test and test. And when necessary: debug, debug and debug.
+
+\item
+Make an alpha release.
+
+\item
+Finish \texttt{-proof} option.
 
 \item
 Follow in detail for is-prime instances. It implies writing code to generate cytoscape.js graphs that help visualize the solving process.
+
+\item
+Simplify code that comes from research stages and works but now can be simpler.
 
 \item
 Write a concurrent version of ben-jose. Since a search branch can use the work done by an other search branch (use BCFFs written by the other branch) it is conceptually efficient to do concurrency.
