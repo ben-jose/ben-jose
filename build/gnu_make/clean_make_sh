@@ -6,9 +6,9 @@
 chmod -R u+w ./lib/*
 chmod -R u+w ./build/*
 
-rm -r ./bin
-rm -r ./lib
-rm -r ./build
+rm -rf ./bin
+rm -rf ./lib
+rm -rf ./build
 
 find . -name "*~" -type f | xargs rm
 
