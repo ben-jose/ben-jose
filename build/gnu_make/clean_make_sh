@@ -6,6 +6,7 @@
 chmod -R u+w ./lib/*
 chmod -R u+w ./build/*
 
+rm -r ./bin
 rm -r ./lib
 rm -r ./build
 
