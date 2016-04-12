@@ -4130,12 +4130,12 @@ brain::select_propag_side(bool cnfl1, long sz1, row_long_t& all_sz1,
 	if(! cnfl1 && cnfl2){
 		return 1;
 	}
-	/*if(sz1 > sz2){
+	if(sz1 > sz2){ // needed when using min_trainable
 		return -1;
 	}
-	if(sz1 < sz2){
+	if(sz1 < sz2){ // needed when using min_trainable
 		return 1;
-	}*/
+	}
 	long resp = 0;
 	long ii = 0;
 	while(true){
