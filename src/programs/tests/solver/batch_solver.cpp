@@ -857,6 +857,11 @@ batch_solver::do_cnf_file()
 	curr_inst.be_out = bj_get_output(bc_solver);
 	//bj_restart(bc_solver);
 
+	if(op_write_proof){
+		bj_out << "SAVED_IST=" << curr_inst.be_out.bjo_saved_targets << "\n";
+		bj_out << "NUM_FINDS_IST=" << curr_inst.be_out.bjo_sub_cnf_hits << "\n";
+	}
+
 	count_instance(curr_inst);
 }
 

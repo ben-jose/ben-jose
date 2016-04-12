@@ -769,7 +769,11 @@ skeleton_glb::init_paths(){
 	if(! file_exists(os_sw_pf_js_skl_pth)){
 		bool lk_ok = path_create_link(os_sw_pf_js_bin_pth, os_sw_pf_js_skl_pth);
 		MARK_USED(lk_ok);
-		SKELETON_CK(lk_ok);
+		SKELETON_CK_PRT(lk_ok, 
+			os << " kg_root_path=\n" << kg_root_path << "\n";
+			os << " os_sw_pf_js_bin_pth=\n" << os_sw_pf_js_bin_pth << "\n";
+			os << " os_sw_pf_js_skl_pth=\n" << os_sw_pf_js_skl_pth << "\n";
+		);
 	}
 
 	ch_string os_cnfs_pth = as_full_path(kg_cnfs_path);
@@ -777,7 +781,11 @@ skeleton_glb::init_paths(){
 	if(! file_exists(os_sw_pf_js_cnfs_pth)){
 		bool lk_ok = path_create_link(os_sw_pf_js_bin_pth, os_sw_pf_js_cnfs_pth);
 		MARK_USED(lk_ok);
-		SKELETON_CK(lk_ok);
+		SKELETON_CK_PRT(lk_ok, 
+			os << " kg_root_path=\n" << kg_root_path << "\n";
+			os << " os_sw_pf_js_bin_pth=\n" << os_sw_pf_js_bin_pth << "\n";
+			os << " os_sw_pf_js_cnfs_pth=\n" << os_sw_pf_js_cnfs_pth << "\n";
+		);
 	}
 	
 	ch_string os_top_htm_pth = os_cnfs_pth + "/" + SKG_SHOW_PROOF_TOP_HTM_NAME;
