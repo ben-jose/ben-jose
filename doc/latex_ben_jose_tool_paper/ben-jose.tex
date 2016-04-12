@@ -44,7 +44,7 @@
 \newcommand{\BJLIBPTH}{BJ\_LIB\_PTH}
 
 \newcommand{\bjphi}{\texttt{bj-phi}}
-\newcommand{\bjbatchsolver}{\texttt{bj-batch-solver}}
+\newcommand{\bjbatchsolver}{\texttt{bj-solver-debug}}
 
 
 %\makeindex
@@ -370,7 +370,7 @@ Assuming the program ''{\bjbatchsolver}'' is in the path, and from the source tr
 \begin{verbatim}
 	cd ben-jose/src/programs/tests/solver
 	sh clean_sh
-	bj-batch-solver ./h4.cnf -proof -rr
+	bj-solver-debug ./h4.cnf -proof -root .
 	firefox ./SKELETON/CNF/Show_Proof.htm &
 \end{verbatim}
 
