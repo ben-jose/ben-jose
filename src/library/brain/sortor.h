@@ -796,8 +796,6 @@ public:
 	canon_cnf&	get_final_cnf(skeleton_glb& skg, bool sorted_cnf, 
 					long precalc_tot_vars = 0);
 
-	bool		base_path_exists(skeleton_glb& skg);
-
 	bool		ck_all_tees_related();
 
 	void		release_all();

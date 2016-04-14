@@ -640,52 +640,6 @@ sort_glb::stab_release_all_sorsets(){
 	SORTER_CK(srg.sg_curr_stab_consec >= srg.sg_dbg_last_id);
 }
 
-/*
-void
-sort_glb::stab_recover_it(){
-	
-	stab_release_all_sorsets();
-
-	sort_glb& srg = *this;
-	SORTER_CK(! has_head());
-	sorset& hd_nsr = get_head_ss();
-	SORTER_CK(has_head());
-
-	SORTER_CK(! hd_nsr.has_subsets());
-	SORTER_CK(! hd_nsr.has_items());
-
-	row<sortee*>& tees = sg_step_sortees;
-	SORTER_CK(tees.is_empty());
-	for(long aa = 0; aa < tees.size(); aa++){
-		SORTER_CK(false);
-		sortee& tee = *(tees[aa]);
-		SORTER_CK(tee.is_alone());
-
-		long consec = tee.recover_consec(srg);
-		if(consec != sg_curr_stab_consec){
-			SORTER_CK((sg_curr_stab_consec + 1) == consec);
-			sg_curr_stab_consec = consec;
-		}
-		tee.sort_from(srg, sg_curr_stab_consec);
-	}
-	
-	SORTER_CK(sg_step_sorsets.is_empty());
-	sg_step_sorsets.push(&hd_nsr);
-
-	SORTER_CK(sg_dbg_num_saved_consec == 0);
-}*/
-
-bool
-sort_glb::base_path_exists(skeleton_glb& skg){
-	ch_string base_pth = skg.as_full_path(SKG_REF_DIR);
-
-	dima_dims dims;
-	dims = sg_cnf_dims;
-
-	bool dim_exis = dims_path_exists(base_pth, dims);
-	return dim_exis;
-}
-
 void
 sortee::update_totals(sort_glb& srg, long tgt_sz){
 	if(so_ccl.cc_size() == tgt_sz){

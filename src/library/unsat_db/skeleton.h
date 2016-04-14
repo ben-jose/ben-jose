@@ -161,8 +161,6 @@ void		string_replace_char(ch_string& src_str, char orig, char repl);
 bool		path_is_dead_lock(ch_string the_pth);
 //bool		path_is_diff_file(ch_string the_pth);
 
-bool 		dims_path_exists(ch_string base_pth, const dima_dims& dims);
-
 ch_string&	slice_str_to_path(ch_string& sha_txt);
 ch_string	long_to_path(long nn, long d_per_dir);
 bool		all_digits(ch_string& the_str);

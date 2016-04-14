@@ -159,6 +159,9 @@ path_create_link(ch_string old_pth, ch_string new_pth);
 ch_string
 get_relative_path(ch_string pth1, ch_string pth2);
 
+ch_string
+path_slice(ch_string nam, row_long_t& sections);
+
 #endif		// FILE_FUNCS_H
 
 
