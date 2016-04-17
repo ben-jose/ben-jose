@@ -455,6 +455,9 @@ brain::init_brain(solver& ss){
 		br_dbg_in_analysis = false;
 	);
 	br_pt_slvr = &ss;
+	
+	br_dbg_only_deduc = ss.slv_prms.sp_only_deduc;
+	
 	if(ss.slv_prms.sp_write_proofs){
 		ss.slv_skl.reset_proof_path();
 	}
@@ -2115,8 +2118,12 @@ brain::solve_instance(bool load_it){
 		o_info.bjo_error = bje_internal;
 	}
 	
-	recoil_counter_t num_laps = recoil();
-	o_info.bjo_num_laps = num_laps.get_d();
+	recoil_counter_t b_num_recoils = recoil();
+	double d_num_laps = br_round.get_d();
+	double d_num_recoils = b_num_recoils.get_d();
+	
+	o_info.bjo_num_laps = d_num_laps;
+	o_info.bjo_num_recoils = d_num_recoils;
 
 	double end_solve_tm = run_time();
 	double slv_tm = (end_solve_tm - br_start_solve_tm);	
@@ -2164,6 +2171,10 @@ brain::deduce_and_reverse_trail(){
 			in_full_anls = false;
 		}
 	); 
+	if(br_dbg_only_deduc){
+		in_full_anls = false;
+	}
+	
 	if(in_full_anls){
 		analyse_conflicts(br_all_conflicts_found, dct);
 	} else {

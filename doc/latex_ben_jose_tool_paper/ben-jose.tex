@@ -120,7 +120,7 @@ Based on the notion that theorems are proved with lemmas and the observation tha
 
 This technique is here after called Backtrack Driven by Unsatisfiable Sub-formula Training (BDUST). BDUST introduces an original stabilization procedure (as in ~\cite{bastert-02}) for the unsatisfiable sub-formulas found, uses the work done by BCP (each BCP step groups some variables). The stabilization procedure finds the current sub-formula permutation to its ''BDUST canonical form formula'' (BCFF). BDUST checks for the BCFF existence in a persistent database of unsatisfiable BCFFs. The stabilization procedure has linear complexity with respect to the size of the sub-formula. The BCFFs have the advantage that can be used also with different instances than the one they were found on. That is why BDUST is ''training'' and not ''learning''. It also means that it is possible that a run on a permutation of an already ran (trained) unsatisfiable instance may be done in a single backtrack (see Section \ref{sect:use-case}).
 
-This form of extending RES is not ER, as the system presented by Tseitin ~\cite{tseitin-83}, because the subsumed isomorphism detection technique is not RES based, and the power and complexity of the resulting proof system has not been formally studied. The empirical results on the classical theoretical problem of PHP are presented here. 
+This form of extending RES is not ER, as the system presented by Tseitin ~\cite{tseitin-83}, because the subsumed isomorphism detection technique is not RES based, and the power and complexity of the resulting proof system has not been formally studied. The empirical results on the classical theoretical problem of PHP are presented (see Sub-section \ref{subsect:results}). 
 
 %------------------------------------------------------------------------------
 \section{Objectives}
@@ -501,6 +501,30 @@ If they do not match the original, the variable is negatively charged.
 In Figure \ref{fig:h4-f1} variables 12, 19 and 20 are positive, and variables 14, 15 and 17 are negative.
 
 The little triangle indicates a choice therefore in Figure \ref{fig:h4-f1} variable 17 is a choice.
+
+\subsection{Results}
+\label{subsect:results}
+
+The following graph show the great difference between CDCL solvers and trainable solvers like ben-jose when solving PHP instances.
+
+\begin{figure}[H]
+	\begin{centering}
+		\frame{\includegraphics[width=0.7\textwidth]{results_01.png}}
+		\caption{PHP SAT solving}
+		\label{fig:results-1}
+	\end{centering}
+\end{figure}
+
+The following graph show the big difference between trained and untrained solving with ben-jose when solving PHP instances.
+
+\begin{figure}[H]
+	\begin{centering}
+		\frame{\includegraphics[width=0.7\textwidth]{results_02.png}}
+		\caption{BJ PHP SAT solving}
+		\label{fig:results-2}
+	\end{centering}
+\end{figure}
+
 
 %------------------------------------------------------------------------------
 \section{Installation}

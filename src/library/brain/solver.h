@@ -106,6 +106,7 @@ public:
 class slvr_params {
 public:
 	bool	sp_as_release;
+	bool	sp_only_deduc;
 	bool	sp_write_proofs;
 	
 	slvr_params(){
@@ -114,6 +115,7 @@ public:
 
 	void	init_slvr_params(){
 		sp_as_release = false;
+		sp_only_deduc = false;
 		sp_write_proofs = false;
 	}
 };

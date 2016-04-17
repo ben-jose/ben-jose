@@ -153,6 +153,13 @@ bj_set_param_char(bj_solver_t bjs, bj_param_t prm, char val){
 				the_slvr.slv_prms.sp_as_release = true;
 			}
 			break;
+		case bjp_only_deduc:
+			if(val == 0){
+				the_slvr.slv_prms.sp_only_deduc = false;
+			} else {
+				the_slvr.slv_prms.sp_only_deduc = true;
+			}
+			break;
 		case bjp_write_proofs:
 			if(val == 0){
 				the_slvr.slv_prms.sp_write_proofs = false;

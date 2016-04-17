@@ -3042,6 +3042,8 @@ public:
 
 	row<leveldat*>		br_data_levels;
 	
+	bool			br_dbg_only_deduc;
+	
 	// temporal attributes
 	
 	reason 		br_tmp_find_rsn;

@@ -132,6 +132,7 @@ batch_solver::init_batch_solver(){
 		;
 
 	op_debug_clean_code = false;
+	op_only_deduc = false;
 	op_write_proof = false;
 	op_dbg_as_release = false;
 
@@ -162,14 +163,15 @@ batch_solver::init_batch_solver(){
 	batch_num_memout = 0;
 	batch_num_error = 0;
 
+	batch_stat_lits.vs_nam = "LITS";
 	batch_stat_laps.vs_nam = "LAPS";
 	batch_stat_solve_tm.vs_nam = "SOLVE SEGs";
 	batch_stat_mem_used.vs_nam = "BYTES USED";
 
 	batch_stat_load_tm.vs_nam = "LOAD SEGs";
 	batch_stat_saved_targets.vs_nam = "SAVED";
-	batch_stat_variants.vs_nam = "VARIANTS";
 	batch_stat_num_finds.vs_nam = "NUM_FINDS";
+	batch_stat_variants.vs_nam = "VARIANTS";
 	batch_stat_quick_discards.vs_nam = "QUICK_DISCARDS";
 	batch_stat_old_pth_hits.vs_nam = "OLD_PATH_HITS";
 	batch_stat_new_pth_hits.vs_nam = "NEW_PATH_HITS";
@@ -242,14 +244,18 @@ batch_solver::print_final_totals(bj_ostream& os){
 	//os << bj_fixed;
 	//os.precision(2);
 
+	os << batch_stat_lits;
 	os << batch_stat_laps;
+	os << batch_stat_saved_targets;
+	os << batch_stat_num_finds;
+	
 	os << batch_stat_load_tm;
 	os << batch_stat_solve_tm;
-	os << batch_stat_mem_used;
-
-	os << batch_stat_saved_targets;
+	MEM_CTRL(
+		os << batch_stat_mem_used;
+	);
+	/*
 	os << batch_stat_variants;
-	os << batch_stat_num_finds;
 	os << batch_stat_quick_discards;
 	os << batch_stat_old_pth_hits;
 	os << batch_stat_new_pth_hits;
@@ -258,6 +264,7 @@ batch_solver::print_final_totals(bj_ostream& os){
 	os << batch_stat_eq_old_hits;
 	os << batch_stat_sb_new_hits;
 	os << batch_stat_sb_old_hits;
+	*/
 
 	double tot_tm = batch_end_time - batch_start_time;
 	os << "TOTAL TIME = " << tot_tm << bj_eol;
@@ -317,14 +324,15 @@ void
 batch_solver::count_instance(batch_entry& inst_info){
 	bj_output_t& o_info = inst_info.be_out;
 	
+	batch_stat_lits.add_val(o_info.bjo_num_lits);
 	batch_stat_laps.add_val(o_info.bjo_num_laps);
 	batch_stat_load_tm.add_val(o_info.bjo_load_time);
 	batch_stat_solve_tm.add_val(o_info.bjo_solve_time);
 
 	batch_stat_saved_targets.add_val(o_info.bjo_saved_targets);
+	batch_stat_num_finds.add_val(o_info.bjo_num_finds);
 	batch_stat_variants.add_val(o_info.bjo_max_variants);
 	batch_stat_variants.add_val(o_info.bjo_avg_variants);
-	batch_stat_num_finds.add_val(o_info.bjo_num_finds);
 	batch_stat_quick_discards.add_val(o_info.bjo_quick_discards);
 	batch_stat_old_pth_hits.add_val(o_info.bjo_old_pth_hits);
 	batch_stat_new_pth_hits.add_val(o_info.bjo_new_pth_hits);
@@ -687,6 +695,8 @@ batch_solver::get_args(int argc, char** argv)
 			prt_paths = true;
 		} else if(the_arg == "-debug"){
 			op_debug_clean_code = true;
+		} else if(the_arg == "-only_deduc"){
+			op_only_deduc = true;
 		} else if(the_arg == "-proof"){
 			op_write_proof = true;
 		} else if(the_arg == "-rr"){
@@ -775,6 +785,9 @@ int	solver_main(int argc, char** argv){
 		const char* pth = top_dat.bc_slvr_path.c_str();
 		top_dat.bc_solver = bj_solver_create(pth);
 		
+		if(top_dat.op_only_deduc){
+			bj_set_param_char(top_dat.bc_solver, bjp_only_deduc, 1);
+		}
 		if(top_dat.op_write_proof){
 			bj_set_param_char(top_dat.bc_solver, bjp_write_proofs, 1);
 		}
