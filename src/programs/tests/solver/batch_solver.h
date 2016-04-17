@@ -162,6 +162,7 @@ public:
 	ch_string		version_str;
 
 	bool			op_debug_clean_code;
+	bool			op_only_deduc;
 	bool			op_write_proof;
 	bool			op_dbg_as_release;
 
@@ -190,6 +191,7 @@ public:
 	integer			batch_num_memout;
 	integer			batch_num_error;
 
+	avg_stat		batch_stat_lits;
 	avg_stat		batch_stat_laps;
 	avg_stat		batch_stat_solve_tm;
 	avg_stat		batch_stat_mem_used;

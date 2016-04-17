@@ -832,8 +832,6 @@ neuromap::map_oper(mem_op_t mm){
 				o_info.bjo_saved_targets++;
 			}
 			
-			//BRAIN_CK(! oper_ok || srg_forced.base_path_exists(skg));
-			
 			skg.drop_write_lock(lk_dir, fd_lk);
 
 			ch_string pth1 = tmp_diff_cnf.get_ref1_nam();

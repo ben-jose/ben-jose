@@ -860,3 +860,38 @@ get_relative_path(ch_string pth1, ch_string pth2){
 	return rel;
 }
 
+ch_string
+path_slice(ch_string nam, row_long_t& sections){
+	char sep = '/';
+	std::stringstream frm;
+	long min_sec_sz = 1;
+	long pos1 = 0;
+	long pos2 = 0;
+
+	long nm_sz = nam.size();
+	for(long aa = 0; aa < sections.size(); aa++){
+		long vv = sections[aa];
+		if(vv < min_sec_sz){
+			vv = min_sec_sz;
+		}
+		if(pos1 >= nm_sz){
+			break;
+		}
+		pos2 = pos1 + vv;
+		if(pos2 > nm_sz){
+			pos2 = nm_sz;
+		}
+
+		ch_string sec1 = nam.substr(pos1, vv);
+		pos1 = pos2;
+
+		frm << sec1 << sep;
+	}
+	if(pos2 < nm_sz){
+		ch_string sec2 = nam.substr(pos2, nm_sz);
+		frm << sec2 << sep;
+	}
+	frm.flush();
+	return frm.str();
+}
+

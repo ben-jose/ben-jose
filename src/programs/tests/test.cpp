@@ -1447,6 +1447,28 @@ void test_rel_pth(int argc, char** argv){
 	os << "REL_PTH=" << pth3 << "\n";
 }
 
+void test_slice_pth(int argc, char** argv){
+	bj_ostream& os = bj_out;
+	if(argc < 2){
+		os << "Faltan args" << bj_eol;
+		return;
+	}
+
+	ch_string pth1 = argv[1];
+
+	os << "PTH=" << pth1 << "\n";
+	
+	long prts[4] = {3, 4, 2, 20};
+	s_row<long> rr;
+	rr.init_obj_data(prts, 4);
+	
+	os << "PARTS=" << rr << "\n";
+	
+	ch_string sl_pth = path_slice(pth1, rr);
+	
+	os << "SLICED_PTH=" << sl_pth << "\n";
+}
+
 int	tests_main_(int argc, char** argv){
 	MARK_USED(argc);
 	MARK_USED(argv);
@@ -1480,7 +1502,8 @@ int	tests_main_(int argc, char** argv){
 	//pru_hex_as_txt();
 	//test_minisha();
 	
-	test_rel_pth(argc, argv);
+	//test_rel_pth(argc, argv);
+	test_slice_pth(argc, argv);;
 	
 	os.flush();
 

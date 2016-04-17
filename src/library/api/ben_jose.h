@@ -82,6 +82,7 @@ typedef enum {
 typedef enum {
 	bjp_invalid,
 	bjp_as_release,
+	bjp_only_deduc,
 	bjp_write_proofs
 } bj_param_t;
 
@@ -94,6 +95,7 @@ typedef struct {
 	long		bjo_num_lits;
 	
 	double		bjo_num_laps;
+	double		bjo_num_recoils;
 	
 	double		bjo_load_time;
 	double		bjo_saved_targets;

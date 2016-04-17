@@ -166,6 +166,7 @@ public:
 		out.bjo_num_lits = 0;
 		
 		out.bjo_num_laps = 0.0;
+		out.bjo_num_recoils = 0.0;
 		
 		out.bjo_load_time = 0.0;
 		out.bjo_saved_targets = 0.0;

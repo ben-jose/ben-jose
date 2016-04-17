@@ -89,22 +89,6 @@ nam_subset_resp(cmp_is_sub rr){
 	return rr_str;
 }
 
-bool
-dims_path_exists(ch_string base_pth, const dima_dims& dims){
-	SKELETON_CK(! base_pth.empty());
-
-	ch_string dim_pth = cnf_dims_to_path(dims);
-
-	SKELETON_CK(! dim_pth.empty());
-	SKELETON_CK(dim_pth[0] == '/');
-
-	ch_string full_dim_pth = base_pth + dim_pth;
-
-	bool pth_ok = file_exists(full_dim_pth);
-	SKELETON_CK(! pth_ok || (full_dim_pth == path_to_absolute_path(full_dim_pth)));
-	return pth_ok;
-}
-
 void
 canon_print(bj_ostream& os, row<char>& cnn){
 	// this function should never be modified because the 
@@ -1007,8 +991,9 @@ string_replace_char(ch_string& src_str, char orig, char repl){
 	}
 }
 
+/*
 void
-canon_cnf::init_skl_paths(skeleton_glb& skg){
+canon_cnf::old_init_skl_paths(skeleton_glb& skg){
 	row<canon_clause*>& all_ccl = cf_clauses;
 	MARK_USED(all_ccl);
 
@@ -1021,19 +1006,19 @@ canon_cnf::init_skl_paths(skeleton_glb& skg){
 	dima_dims dims2 = cf_dims;
 	dima_dims dims3 = cf_dims;
 
-	//cf_lock_nm = canon_lock_name(dims2, cf_sha_str);
 	ch_string upth = canon_hash_path(dims3, cf_sha_str);
 	ch_string id_str = get_id_str();
 
 	cf_unique_path = upth + id_str + '/' + SKG_CANON_PATH_ENDING + '/';
 
 	DBG_PRT(75, print_attrs_canon_cnf(os));
-}
+}*/
 
 ch_string
 canon_cnf::get_cnf_path(){
 	SKELETON_CK(cf_diff_minisha_str.size() > 0);
 	SKELETON_CK(cf_unique_path.size() > 0);
+	SKELETON_CK(*(cf_unique_path.begin()) == '/');
 	SKELETON_CK(*(cf_unique_path.rbegin()) == '/');
 	//ch_string cnf_pth = SKG_CNF_DIR + cf_unique_path;
 	ch_string cnf_pth = SKG_CNF_DIR + cf_unique_path + cf_diff_minisha_str + '/';
@@ -2504,5 +2489,27 @@ canon_cnf::update_mng_verif_sys(skeleton_glb& skg, ch_string sv_vpth){
 		skg.ref_touch(pth2);
 		skg.ref_touch(sv_vpth);
 	}
+}
+
+void
+canon_cnf::init_skl_paths(skeleton_glb& skg){
+	row<canon_clause*>& all_ccl = cf_clauses;
+	MARK_USED(all_ccl);
+
+	SKELETON_CK(cf_dims.dd_tot_vars >= 0);
+	SKELETON_CK(cf_dims.dd_tot_lits >= 0);
+	SKELETON_CK(cf_dims.dd_tot_twolits >= 0);
+	SKELETON_CK(cf_dims.dd_tot_ccls == all_ccl.size());
+	SKELETON_CK(! cf_sha_str.empty());
+
+	long prts[4] = {7, 4, 4, 200};
+	s_row<long> parts;
+	parts.init_obj_data(prts, 4);
+	
+	ch_string unq_str = "cnf+" + cf_sha_str + '+' + SKG_CANON_PATH_ENDING;
+
+	cf_unique_path = '/' + path_slice(unq_str, parts);
+		
+	DBG_PRT(75, print_attrs_canon_cnf(os));
 }
 
