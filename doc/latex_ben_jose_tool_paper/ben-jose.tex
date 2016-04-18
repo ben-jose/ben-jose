@@ -36,12 +36,13 @@
 \newcommand{\neuromap}{\textsf{neuromap}}
 \newcommand{\skeleton}{\textsf{skeleton}}
 
-\newcommand{\bjsolvercreate}{bj\_solver\_create}
-\newcommand{\bjsolvefile}{bj\_solve\_file}
-\newcommand{\bjsolvedata}{bj\_solve\_data}
-\newcommand{\bjsolveliterals}{bj\_solve\_literals}
-\newcommand{\bjsolverrelease}{bj\_solver\_release}
-\newcommand{\BJLIBPTH}{BJ\_LIB\_PTH}
+\newcommand{\bjsolvercreate}{\texttt{bj\_solver\_create}}
+\newcommand{\bjsolvefile}{\texttt{bj\_solve\_file}}
+\newcommand{\bjsolvedata}{\texttt{bj\_solve\_data}}
+\newcommand{\bjsolveliterals}{\texttt{bj\_solve\_literals}}
+\newcommand{\bjsolverrelease}{\texttt{bj\_solver\_release}}
+\newcommand{\mintrainable}{\texttt{get\_min\_trainable\_num\_sub}}
+\newcommand{\BJLIBPTH}{\texttt{BJ\_LIB\_PTH}}
 
 \newcommand{\bjphi}{\texttt{bj-phi}}
 \newcommand{\bjbatchsolver}{\texttt{bj-solver-debug}}
@@ -53,7 +54,7 @@
 %%
 % Regular title as in the article class.
 %
-\title{Ben-Jose SAT Solving Software Library\\
+\title{Ben-Jose Trainable SAT Solver Library\\
        Tool Paper}
 
 % Authors are joined by \and. Their affiliations are given by \inst, which indexes
@@ -81,14 +82,14 @@ Jose Luis Quiroga Beltran
 % version for the running heads. When processed by
 % EasyChair, this command is mandatory: a document without \titlerunning
 % will be rejected by EasyChair
-\titlerunning{Ben-Jose SAT Solving Software Library}
+\titlerunning{Ben-Jose Trainable SAT Solver Library}
 
 \begin{document}
 
 \maketitle
 
 \begin{abstract}
-The software library Ben-Jose (\url{https://github.com/joseluisquiroga/ben-jose}) for solving instances (formulas) of the satisfiability problem (SAT) in CNF form (DIMACS format) is presented. Ben-Jose implements a trainable strategy that extends the traditional DPLL+BCP+CDCL resolution based approach, first introduced by Joao Marquez da Silva ~\cite{silva-95} and latter refined by others ~\cite{moskewicz-01} ~\cite{een-04}. Ben-Jose has an original technique (BDUST) to check during search if, for a given partial assignation of the solving formula variables, the resulting current sub-formula has been previously found unsatisfiable. It does that by finding the current sub-formula permutation to its ''BDUST canonical form formula'' (BCFF) and checking the BCFF existence in a database of unsatisfiable BCFFs. If the BCFF of the current sub-formula exists in the database, ben-jose entirely skips the search on the current sub-formula. The calculation of a BCFF introduces an original stabilization procedure (as in ~\cite{bastert-02}) for the structure of CNF formulas. The calculation has linear complexity and is tightly coupled with the work done by BCP.
+The trainable software library Ben-Jose (\url{https://github.com/joseluisquiroga/ben-jose}) for solving instances (formulas) of the satisfiability problem (SAT) in CNF form (DIMACS format) is presented. Ben-Jose implements a trainable strategy that extends the traditional DPLL+BCP+CDCL resolution based approach, first introduced by Joao Marquez da Silva ~\cite{silva-95} and latter refined by others ~\cite{moskewicz-01} ~\cite{een-04}. Ben-Jose has an original technique (BDUST) to check during search if, for a given partial assignation of the solving formula variables, the resulting current sub-formula has been previously found unsatisfiable. It does that by finding the current sub-formula permutation to its ''BDUST canonical form formula'' (BCFF) and checking the BCFF existence in a database of unsatisfiable BCFFs. If the BCFF of the current sub-formula exists in the database, ben-jose entirely skips the search on the current sub-formula. The calculation of a BCFF introduces an original stabilization procedure (as in ~\cite{bastert-02}) for the structure of CNF formulas. The calculation has linear complexity and is tightly coupled with the work done by BCP.
 \end{abstract}
 
 % The table of contents below is added for your convenience. Please do not use
@@ -96,8 +97,9 @@ The software library Ben-Jose (\url{https://github.com/joseluisquiroga/ben-jose}
 % EPiC series
 
 \setcounter{tocdepth}{2}
-{\small
-\tableofcontents}
+
+% {\small
+% \tableofcontents}
 
 %\section{To mention}
 %
@@ -217,7 +219,7 @@ int main(int argc, char** argv)
 }
 \end{lstlisting}
 
-This program finds the solution to the SAT instance defined by the file ''ff''. The file must be in the simplified DIMACS format as described in \url{http://www.satcompetition.org/2009/format-benchmarks2009.html}.
+This program finds the solution to the SAT instance defined by the file ''\texttt{ff}''. The file must be in the simplified DIMACS format as described in \url{http://www.satcompetition.org/2009/format-benchmarks2009.html}.
 
 Three functions are minimally needed to use the library \bjsolvercreate, \bjsolvefile, and \bjsolverrelease.
 
@@ -226,7 +228,7 @@ Three functions are minimally needed to use the library \bjsolvercreate, \bjsolv
 
 Once the library has been installed (see Section \ref{sect:installation}), a user program can be compiled using standard c++ compilation.
 
-Assuming that the file libben-jose.a is in the directory {\BJLIBPTH}, the program in Listing \ref{hello-prog} is build and compiled as in Listing \ref{compiling-hello-prog}:
+Assuming that the file libben-jose.a is in the directory {\BJLIBPTH} (see Section \ref{sect:installation}), the program in Listing \ref{hello-prog} is build and compiled as in Listing \ref{compiling-hello-prog}:
 
 \begin{lstlisting}[
 	label=compiling-hello-prog, 
@@ -321,13 +323,13 @@ Matching consists basically of two steps. Stabilization and finding the resultin
 
 {\coloring}: The initial and final state for an stabilization is a {\coloring}. A color is just an integer. A {\coloring} of a sub-formula is an assignation of an integer ({\neuron}-color) to each {\neuron} and an integer ({\quanton}-color) to each {\quanton} of the sub-formula. An stabilization may start with all {\neuron}s having the same {\neuron}-color and all {\quanton}s having the same {\quanton}-color and finalize with each {\neuron} having a unique {\neuron}-color and each {\quanton} having a unique {\quanton}-color, called a complete {\coloring}. 
 
-{\coloring}s are ''loaded'' into the {\sortglb} class in order to start stabilization. After stabilization the final {\coloring} may be ''saved''. Each color in a coloring will correspond to one {\sorset} during stabilization.
+{\coloring}s are ''loaded'' into the {\sortglb} class in order to start stabilization. After stabilization the final {\coloring} may be ''saved''. Each color in a coloring will correspond to one {\sorset} during stabilization. These ''loading'' and ''saving'' words are used in the software only in relation to the {\sortglb} class and have nothing to do with file operations.
 
 This class is used to specify only the input to the stabilization process (the initial state). The class {\canoncnf} is used for the output (it is the result of applying the output {\coloring} (stabilized {\coloring}) to the sub-formula it defines: {\neuron}s and {\quanton}s in the {\coloring}. To initialize the sortor, it ''loads'' the initial {\coloring} into the {\sortglb} instance that will stabilize the CNF sub-formula.
 
 {\canoncnf}: It is a BCFF. It represents the output of an stabilization process: the stabilized CNF sub-formula. It is the interface class to the database class that handles all disk operations (the {\skeleton} class). This class contains some disk handling related information (paths and sha info). A {\canoncnf} basically is a set of {\canonclause}s (which are basically arrays of numbers).
 
-{\neuromap}: This class represents a CNF sub-formula. It is the pivot class to do all stabilization. It is maintained during BCP and used during backtracking in order to know what CNF sub-formulas are to be stabilized and searched for in the database ({\skeleton} class). There is one {\neuromap} per {\leveldat} and they are either active or inactive. Active when they are candidates for stabilization, matching and search in database (or saving), at backtrack time. When a CNF  sub-formula, during search, is found to be unsatisfiable, is not trivial (BCP could not figure it out), and both search branches had the same variables (so that it can latter be searched only with one of them), it is saved, stored in the database ({\skeleton} class). Every time an still active {\neuromap} has done its first branch of BCP, it is stabilized and searched for in the database ({\skeleton} class). Trivial sub-formulas are called anchors in the code because they serve as a start point for stabilizing not trivial ones. 
+{\neuromap}: This class represents a CNF sub-formula. It is the pivot class to do all stabilization. It is maintained during BCP and used during backtracking in order to know what CNF sub-formulas are to be stabilized and searched for in the database ({\skeleton} class). There is one {\neuromap} per {\leveldat} and they are either active or inactive. Active when they are candidates for stabilizing, matching, searching and/or storing in the database, at backtrack time. During search, if a CNF sub-formula is found to be unsatisfiable, it is not trivial (too small), and both it's search branches had the same variables and clauses (so that it can latter be searched only with one of them), then the CNF sub-formula is stored in the database ({\skeleton} class). Every time an still active {\neuromap} has done its first branch of BCP, it is stabilized and searched for in the database ({\skeleton} class). Trivial sub-formulas are basically ignored (see the use of {\brain}::{\mintrainable} method in the code). They are not searcned nor stored in {\skeleton} (except for debugging purposes). 
 
 \subsubsection{Database classes}
 
@@ -357,7 +359,9 @@ familiarized with the backbone functions of the library look at the file:
 	ben-jose/src/library/api/macro_ben_jose.cpp
 \end{verbatim}
 
-\subsection{Goodies}
+It explains, in a macro view, the main function of the library: \texttt{solve\_instance}.
+
+\subsection{Features}
 
 The library comes with some tools.
 
@@ -365,10 +369,10 @@ The library comes with some tools.
 
 ben-jose can optionally generate proofs for unsatisfiable formulas in JSON format. They can serve as input to an automated proof checker. It is not fully functional for the already trained case but works fine (pre-alpha) for untrained cases.
 
-Assuming the program ''{\bjbatchsolver}'' is in the path, and from the source tree directory:
+Assuming the program ''{\bjbatchsolver}'' is in the path (see Section \ref{sect:installation}), and from the source tree directory:
 
 \begin{verbatim}
-	cd ben-jose/src/programs/tests/solver
+	cd ben-jose-master/src/programs/tests/solver
 	sh clean_sh
 	bj-solver-debug ./h4.cnf -proof -root .
 	firefox ./SKELETON/CNF/Show_Proof.htm &
@@ -411,10 +415,10 @@ ben-jose comes with a program that helped in the development of ben-jose called 
 
 \subsection{\bjphi}
 
-Assuming the program ''{\bjphi}'' is in the path, and from the source tree directory:
+Assuming the program ''{\bjphi}'' is in the path (see Section \ref{sect:installation}), and from the source tree directory:
 
 \begin{verbatim}
-	cd ben-jose/src/programs/tests/phi
+	cd ben-jose-master/src/programs/tests/phi
 	sh clean_sh
 	bj-phi 4
 	firefox ./phi_hole_4/phi_hole_4_all_steps.htm &
@@ -515,9 +519,9 @@ The following graph show the great difference between CDCL solvers and trainable
 	\end{centering}
 \end{figure}
 
-The size of the CNF corresponds to the number of literals of CNFs for PHP-2, PHP-3, PHP-4, etc. 
+The size of the CNF corresponds to the number of literals of CNFs for PHP-2, PHP-3, PHP-4, etc. The number of literals is the output ''LITS'' of \texttt{bj-batch-solver}.
 
-The number of backtracks corresponds to number of laps (LAPS) in the output of \texttt{bj-batch-solver}
+The number of backtracks is the output ''LAPS'' of \texttt{bj-batch-solver}.
 
 The only-deduc results were obtained with commands like:
 
