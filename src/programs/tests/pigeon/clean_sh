@@ -1,0 +1,5 @@
+rm *~
+rm *.log
+rm -rf SKELETON
+rm -rf phi_hole_*
+rm -rf no_file

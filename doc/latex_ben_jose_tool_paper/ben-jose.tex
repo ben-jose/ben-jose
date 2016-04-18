@@ -515,6 +515,38 @@ The following graph show the great difference between CDCL solvers and trainable
 	\end{centering}
 \end{figure}
 
+The size of the CNF corresponds to the number of literals of CNFs for PHP-2, PHP-3, PHP-4, etc. 
+
+The number of backtracks corresponds to number of laps (LAPS) in the output of \texttt{bj-batch-solver}
+
+The only-deduc results were obtained with commands like:
+
+\begin{verbatim}
+	cd ben-jose-master/src/programs/tests/pigeon/
+	bj-batch-solver h02.cnf -only_deduc
+	bj-batch-solver h03.cnf -only_deduc
+	bj-batch-solver h04.cnf -only_deduc
+	...
+\end{verbatim}
+
+The only deduct has the same big \texttt{O} complexity than CDCL but is slower mainly to the modifications needed in ben-jose to be trainable (see Section \ref{sect:comparison}).
+
+For the output of CDCL use your favorite solver.
+
+The untrained (clean before each run) results were obtained with commands like:
+
+\begin{verbatim}
+	cd ben-jose-master/src/programs/tests/pigeon/
+	sh clean_sh
+	bj-batch-solver h02.cnf
+	sh clean_sh
+	bj-batch-solver h03.cnf
+	sh clean_sh
+	bj-batch-solver h04.cnf
+	...
+\end{verbatim}
+
+
 The following graph show the big difference between trained and untrained solving with ben-jose when solving PHP instances.
 
 \begin{figure}[H]
@@ -524,6 +556,21 @@ The following graph show the big difference between trained and untrained solvin
 		\label{fig:results-2}
 	\end{centering}
 \end{figure}
+
+
+
+The under-trained (clean once) results were obtained with commands like:
+
+\begin{verbatim}
+	cd ben-jose-master/src/programs/tests/pigeon/
+	sh clean_sh
+	bj-batch-solver h02.cnf
+	bj-batch-solver h03.cnf
+	bj-batch-solver h04.cnf
+	...
+\end{verbatim}
+
+The trained results (do not clean) were obtained repeating the under-trained commands without cleaning (deleting SKELETON).
 
 
 %------------------------------------------------------------------------------
@@ -621,13 +668,16 @@ Things to do with ben-jose:
 
 \begin{itemize}
 \item
-Reduce combinatoric redundancy for PHP.
+Reduce combinatoric redundancy for dirty PHP instances (PHP with added redundant or side-effect clauses).
 
 \item
 Automate testing. Then: test, test and test. And when necessary: debug, debug and debug.
 
 \item
 Make an alpha release.
+
+\item
+Write more documentation for the software.
 
 \item
 Finish \texttt{-proof} option.
