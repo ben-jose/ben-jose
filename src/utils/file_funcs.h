@@ -40,6 +40,7 @@ file funcs.
 
 #include "top_exception.h"
 #include "tools.h"
+#include <unistd.h>
 //include <limits.h>
 
 #define FILE_FN_CK(prm)		DBG_CK(prm)

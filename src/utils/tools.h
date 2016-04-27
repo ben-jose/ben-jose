@@ -1892,7 +1892,7 @@ template<class obj_t>
 void
 row<obj_t>::mix_sort(cmp_func_t cmp_fn){
 	if(SZ_ATTRIB < SELEC_SORT_LIM){
-		selec_sort(cmp_fn);
+		row_data<obj_t>::selec_sort(cmp_fn);
 	} else {
 		heap<obj_t> he1(*this, cmp_fn);
 		he1.hsort();
