@@ -585,35 +585,23 @@ To install ben-jose:
 
 \begin{enumerate}
 \item
-Download and unzip a ZIP file from the library from \url{https://github.com/joseluisquiroga/ben-jose}.
+Download and unzip a ZIP file of the ben-jose library from \url{https://github.com/joseluisquiroga/ben-jose}.
 
 \item
+In the command line:
 \begin{verbatim}
 	cd ben-jose-master/build/gnu_make
-\end{verbatim}
-
-\item
-\begin{verbatim}
-	make -s
-\end{verbatim}
-
-\item
-\begin{verbatim}
+	make 
 	cd lib/ben-jose
-\end{verbatim}
-
-\item
-\begin{verbatim}
+	echo $'\nPATH=$PATH:'`pwd`$'\n' >> ~/.bashrc
 	ls
 \end{verbatim}
 \end{enumerate}
 
-That will built and list all the files of the library. Put the directory in the path.
-
 %------------------------------------------------------------------------------
 \subsection{Required Packages}
 
-There are minimal requirements for building and compiling ben-jose:
+The minimal requirements for building and compiling ben-jose:
 
 \begin{itemize}
 \item
@@ -623,10 +611,20 @@ A Linux system.
 GNU c++ (g++) installed.
 
 \item
-GMP Library (gmpxx) installed.
+GMP Library for c++ development installed (\texttt{libgmp}, \texttt{libgmp-dev} and \texttt{libgmpxx}).
 \end{itemize}
 
-Almost every Linux system comes with the second two in the basic installation, so there is basically one requirement: a Linux system.
+For Mint and in the command line (probably the same for other debian based distros):
+
+\begin{verbatim}
+	sudo apt-get install gcc
+	sudo apt-get install g++
+	sudo apt-get install libgmp10
+	sudo apt-get install libgmp-dev
+	sudo apt-get install libgmpxx4ldbl
+\end{verbatim}
+
+These commands are safe to be run even if they are already installed because it will just tell you so.
 
 %------------------------------------------------------------------------------
 \section{Comparison with other tools}
@@ -675,7 +673,7 @@ Things to do with ben-jose:
 Reduce combinatoric redundancy for dirty PHP instances (PHP with added redundant or side-effect clauses).
 
 \item
-Automate testing. Then: test, test and test. And when necessary: debug, debug and debug.
+Automate testing.
 
 \item
 Make an alpha release.
@@ -687,15 +685,16 @@ Write more documentation for the software.
 Finish \texttt{-proof} option.
 
 \item
-Follow in detail for is-prime instances. It implies writing code to generate cytoscape.js graphs that help visualize the solving process.
+Optimize for is-prime instances. Use cytoscape.js graphs to visualize the solving process.
 
 \item
 Simplify code that comes from research stages and works but now can be simpler.
 
 \item
-Write a concurrent version of ben-jose. Since a search branch can use the work done by an other search branch (use BCFFs written by the other branch) it is conceptually efficient to do concurrency.
+Write a concurrent version of ben-jose. Since a later search branch can use BCFFs written by a previos branch, it is conceptually efficient to do concurrency. ben-jose is already using the file system as a concurrent database during file access.
 
-The code has already considered this possibility by using the file system as a database and considering concurrency during file access.
+\item
+Write functionality to handle mixed ram disk (short term mem) and disk (long term mem) {\skeleton}s.
 
 \end{itemize}
 
