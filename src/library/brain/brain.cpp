@@ -118,6 +118,91 @@ DEFINE_NA_FLAG_ALL_FUNCS(na1);
 #define SOLVING_TIMEOUT			0.0		// 0.0 if no timeout
 
 //============================================================
+/*! \mainpage <h1>Introduction</h1>
+
+<p>
+<a href="https://github.com/joseluisquiroga/ben-jose" target="blank">
+Ben-Jose</a> is:
+
+<ol>
+<li>
+A sotware library.
+<li>
+A <a href="https://en.wikipedia.org/wiki/Boolean_satisfiability_problem" target="blank">
+SAT problem</a> solver.
+<li>
+Free Software and Open Source Software.
+<li>
+Trainable.
+</ol>
+
+<p>
+Ben-jose is designed to be used as a support library for applications or libraries that need to solve both theoretical and practical instances of SAT. The expected user is a C/C++ programmer. 
+
+<p>
+The initial motivation for this software was to do better than existant solvers for
+Pigeon Hole Principle (PHP) instances of the SAT problem, and still be competitive for other instances.
+
+<p>
+The architecture of the ben-jose library is strongly monolitic in the sense that the basic functionality of the whole library is basically one function with three presentations: \ref bj_solve_file, \ref bj_solve_data and \ref bj_solve_literals .
+
+That means that every piece of code within the 'library' directory of the source tree is tightly coupled.
+
+Having said that, this documentations should a good idea of it's architecture.
+
+<p>
+The most relevant classes of the library can be grouped as:
+
+<ul>
+<li> \ref docgrp_CDCL_classes
+<li> \ref docgrp_stab_classes
+<li> \ref docgrp_matching_classes
+<li> \ref docgrp_database_classes
+</ul>
+
+*/
+
+//============================================================
+/*! \defgroup docgrp_CDCL_classes DPLL+BCP+CDCL classes
+
+This group corresponds to all classes relating to DPLL+BCP+CDCL processing.
+*/
+
+//============================================================
+/*! \defgroup docgrp_stab_classes Stabilization classes
+
+This group corresponds to all classes relating to the stabilization processes. The process of calculating a BDUST canonical form formula (BCFF) is called stabilization.
+*/
+
+//============================================================
+/*! \defgroup docgrp_matching_classes Matching classes
+
+This group corresponds to all classes relating to the CNF matching processes. Matching consists basically of two steps. Stabilization and finding the resulting BCFF in the database of BCFFs.
+*/
+
+//============================================================
+/*! \defgroup docgrp_database_classes Database classes
+
+The \ref skeleton_glb class handles all disk related functions and management. The database is basically a directory and all its sub-directories in disk. The directory (\ref skeleton_glb) is seen as a group of (''key'',''value'') pairs. Just like a common database ''index'', a ''dictionary'' class, or a ''map'' class. A path within the \ref skeleton_glb is a ''key'' and the files in the path are the ''value''. To see if a ''key'' exists is to see if a path exists within the \ref skeleton_glb. Unsatisfiable \ref canon_cnf s are saved and searched by the SHA function of their content. They are saved in a path (''key'') that is constructed with the SHA and other relevant search info. 
+
+Since an unsatisfiable sub-formula might not be minimal (have some unnecessary clauses for unsatisfiability), each unsatisfiable CNF sub-formula has three relevant \ref canon_cnf: 
+
+<ul>
+<li>
+The guide. It is the \ref canon_cnf resulting of stabilizing the CNF sub-formula covered by first search branch variables. So it is a satisfiable part of the unsatisfiable CNF sub-formula that is a ''guide'' for the search.
+
+<li>
+The tauto. It is the full unsatisfiable CNF sub-formula. It is the \ref canon_cnf resulting of stabilizing the CNF sub-formula covered by both search branches charged \ref quanton s (used variables). 
+
+<li>
+The diff. This \ref canon_cnf contains all \ref canon_clause s in tauto but not in guide. Each diff is saved in a path called 'variant' in the \ref skeleton_glb. So one guide can have several variants. 
+</ul>
+
+A search of a target CNF sub-formula is conducted in two phases: the search for the guide of the target and the search for the variant that is a sub-formula of the target diff. Once the guide is stabilized the search for it is a simple: ''see if its path exists'' (remember that its path contains the SHA of its content). If the target \ref canon_cnf is not equal to a variant (the path does not exist), the second phase is more time consuming because it involves reading each variant and comparing it to the target diff to see if the the variant is a sub-formula of the target diff (which would mean that the target is unsatisfiable and therefore can be backtracked).
+
+*/
+
+//============================================================
 // static vars
 
 char*	alert_rel::CL_NAME = as_pt_char("{alert_rel}");
@@ -1112,7 +1197,7 @@ brain::set_result(bj_satisf_val_t re){
 
 	the_result = re;
 
-	DBG_PRT(27, os << "RESULT " << as_ist_satisf_str(the_result));
+	DBG_PRT(27, os << "RESULT " << as_satisf_str(the_result));
 	DBG_PRT(28, os << "HIT ENTER TO CONTINUE...");
 	DBG_COMMAND(28, getchar());
 }
@@ -2058,6 +2143,20 @@ brain::solve_instance(bool load_it){
 	
 	instance_info& inst_info = get_my_inst();
 	bj_output_t& o_info = get_out_info();
+	
+	DBG(o_info.bjo_dbg_enabled = 1);
+	DBG_COMMAND(4, o_info.bjo_dbg_never_find = 1); // NEVER_FIND
+	DBG_COMMAND(5, o_info.bjo_dbg_never_write = 1); // NEVER_WRITE
+	DBG_COMMAND(7, o_info.bjo_dbg_min_trainable = 1); // MIN_TRAINABLE
+	DBG(
+		if(dbg_as_release()){ 
+			o_info.bjo_dbg_as_release = 1; 
+			o_info.bjo_dbg_never_find = 0;
+			o_info.bjo_dbg_never_write = 0;
+			o_info.bjo_dbg_min_trainable = 0;
+		}
+	);
+
 	try{
 		if(load_it){
 			bool all_ok = load_instance();
@@ -2129,10 +2228,6 @@ brain::solve_instance(bool load_it){
 	double slv_tm = (end_solve_tm - br_start_solve_tm);	
 	o_info.bjo_solve_time = slv_tm;
 	
-	instance_info& iinfo = get_my_inst();
-	o_info.bjo_max_variants = iinfo.ist_num_variants_stat.vs_max_val.get_d();
-	o_info.bjo_avg_variants = iinfo.ist_num_variants_stat.avg.get_d();
-
 	DBG_PRT(105, os << " LOC_CHOS=" << br_dbg.dbg_num_loc_cho << "/";
 		os << (br_dbg.dbg_num_loc_cho + br_dbg.dbg_num_glb_cho);
 	);
@@ -3907,7 +4002,7 @@ brain::ck_write_quas(reason& rsn){
 long
 brain::get_min_trainable_num_sub(){
 	long min_sub = MIN_TRAINABLE_NUM_SUB;
-	DBG_COMMAND(7, 
+	DBG_COMMAND(7, // MIN_TRAINABLE
 		if(! dbg_as_release()){
 			min_sub = br_dbg_min_trainable_num_sub;
 		}
@@ -4336,5 +4431,66 @@ bool
 deduction::can_go_on(){
 	bool gon = (! dt_found_top && ! dt_rsn.is_root_confl());
 	return gon;
+}
+
+void
+instance_info::set_result_str(){
+	bj_ostr_stream os;
+	
+	ch_string sep = RESULT_FIELD_SEP;
+	os << ist_file_path << sep;
+	
+	bj_output_t& out_dat = ist_out;
+	os << as_satisf_str(out_dat.bjo_result) << sep;
+	os << out_dat.bjo_num_laps << sep;
+	os << out_dat.bjo_num_recoils << sep;
+	os << out_dat.bjo_num_cnf_saved << sep;
+	os << out_dat.bjo_num_cnf_finds << sep;
+	os << out_dat.bjo_solve_time << sep;
+	os << out_dat.bjo_num_lits << sep;
+	os << out_dat.bjo_num_vars << sep;
+	os << out_dat.bjo_num_ccls << sep;
+	
+	// 10 fields
+
+	ist_result_str = os.str();
+}
+
+void
+instance_info::parse_result_str(ch_string& in_str){
+	init_instance_info(true);
+	
+	char sep = RESULT_FIELD_SEP_CHAR;
+	long str_sz = in_str.length();
+	long pos = 0;
+	row<ch_string> all_str;
+	all_str.set_cap(11);
+	while(pos < str_sz){
+		long nxt_pos = in_str.find(sep, pos);
+		
+		long fld_len = nxt_pos - pos;
+		ch_string fld_str = in_str.substr(pos, fld_len);
+		all_str.push(fld_str);
+		
+		pos = nxt_pos + 1;
+	}
+	
+	if(all_str.size() < 10){
+		return;
+	}
+
+	ist_file_path = all_str[0];
+	
+	bj_output_t& out_dat = ist_out;
+	out_dat.bjo_result = as_satisf_val(all_str[1]);
+	out_dat.bjo_num_laps = parse_long_str(all_str[2]);
+	out_dat.bjo_num_recoils = parse_long_str(all_str[3]);
+	out_dat.bjo_num_cnf_saved = parse_long_str(all_str[4]);
+	out_dat.bjo_num_cnf_finds = parse_long_str(all_str[5]);
+	//os << out_dat.bjo_solve_time << sep; // index 6
+	out_dat.bjo_num_lits = parse_long_str(all_str[7]);
+	out_dat.bjo_num_vars = parse_long_str(all_str[8]);
+	out_dat.bjo_num_ccls = parse_long_str(all_str[9]);
+	
 }
 

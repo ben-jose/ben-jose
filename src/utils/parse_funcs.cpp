@@ -106,8 +106,8 @@ read_text_line(const char*& pt_in, long& line){
 	return the_ln;
 }
 
-integer parse_int(const char*& pt_in, long line) {
-	integer	val = 0;
+long parse_long(const char*& pt_in, long line) {
+	long	val = 0;
 	bool	neg = false;
 
 	if(*pt_in == '-'){ neg = true; pt_in++; }
@@ -123,3 +123,9 @@ integer parse_int(const char*& pt_in, long line) {
 	return (neg)?(-val):(val);
 }
 
+long parse_long_str(ch_string& in_str){
+	long line = 0;
+	const char* pt_in = in_str.c_str();
+	long vv = parse_long(pt_in, line);
+	return vv;
+}

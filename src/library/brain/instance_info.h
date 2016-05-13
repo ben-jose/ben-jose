@@ -50,6 +50,7 @@ all info to keep or return of an instance cnf to solve.
 #define INSTANCE_CK(prm) DBG_CK(prm)
 
 #define INVALID_PATH "invalid_path"
+#define INVALID_RESULT_STR "invalid_result_str"
 
 //=================================================================
 // decl
@@ -121,6 +122,8 @@ public:
 
 	ch_string 		ist_last_proof_path;
 	
+	ch_string		ist_result_str;
+	
 	ch_string 		ist_err_assrt_str;
 	ch_string 		ist_err_stack_str;
 	
@@ -152,6 +155,8 @@ public:
 		
 		ist_last_proof_path = INVALID_PATH;
 		
+		ist_result_str = INVALID_RESULT_STR;
+		
 		ist_err_assrt_str = "no_assert_string_found";
 		ist_err_stack_str = "no_stack_string_found";
 	}
@@ -169,18 +174,9 @@ public:
 		out.bjo_num_recoils = 0.0;
 		
 		out.bjo_load_time = 0.0;
-		out.bjo_saved_targets = 0.0;
-		out.bjo_max_variants = 0.0;
-		out.bjo_avg_variants = 0.0;
-		out.bjo_num_finds = 0.0;
+		out.bjo_num_cnf_saved = 0.0;
+		out.bjo_num_cnf_finds = 0.0;
 		out.bjo_quick_discards = 0.0;
-		out.bjo_old_pth_hits = 0.0;
-		out.bjo_new_pth_hits = 0.0;
-		out.bjo_sub_cnf_hits = 0.0;
-		out.bjo_eq_new_hits = 0.0;
-		out.bjo_eq_old_hits = 0.0;
-		out.bjo_sb_new_hits = 0.0;
-		out.bjo_sb_old_hits = 0.0;
 		
 		out.bjo_error = bje_no_error;
 		out.bjo_err_char = 0;
@@ -190,6 +186,12 @@ public:
 		out.bjo_err_num_decl_vars = -1;
 		out.bjo_err_num_read_cls = -1;
 		out.bjo_err_bad_lit = -1;
+		
+		out.bjo_dbg_enabled = 0;
+		out.bjo_dbg_never_write = 0;
+		out.bjo_dbg_never_find = 0;
+		out.bjo_dbg_min_trainable = 0;
+		out.bjo_dbg_as_release = 0;
 	}
 
 	ch_string&	get_f_nam(){
@@ -212,6 +214,9 @@ public:
 		return ist_out;
 	}
 
+	void	set_result_str();
+	void	parse_result_str(ch_string& rslt_str);
+	
 	static
 	bj_ostream& 	print_headers(bj_ostream& os);
 
@@ -239,7 +244,7 @@ instance_info::print_headers(bj_ostream& os){
 
 inline
 ch_string
-as_ist_satisf_str(bj_satisf_val_t vv){
+as_satisf_str(bj_satisf_val_t vv){
 	ch_string sf_str = RES_UNKNOWN_STR;
 	switch(vv){
 		case bjr_unknown_satisf:
@@ -259,16 +264,26 @@ as_ist_satisf_str(bj_satisf_val_t vv){
 }
 
 inline
+bj_satisf_val_t
+as_satisf_val(ch_string str_ln){
+	bj_satisf_val_t the_val = bjr_unknown_satisf;
+	if(str_ln == RES_UNKNOWN_STR){
+		the_val = bjr_unknown_satisf;
+	} else if(str_ln == RES_YES_SATISF_STR){
+		the_val = bjr_yes_satisf;
+	} else if(str_ln == RES_NO_SATISF_STR){
+		the_val = bjr_no_satisf;
+	} else if(str_ln == RES_ERROR_STR){
+		the_val = bjr_error;
+	}
+	return the_val;
+}
+
+inline
 bj_ostream& 	
 instance_info::print_instance_info(bj_ostream& os, bool from_pt){
-	ch_string sep = RESULT_FIELD_SEP;
-	os << ist_file_path << sep;
-	os << as_ist_satisf_str(ist_out.bjo_result) << sep;
-	os << ist_out.bjo_solve_time << sep;
-	os << ist_out.bjo_num_vars << sep;
-	os << ist_out.bjo_num_ccls << sep;
-	os << ist_out.bjo_num_lits << sep;
-	os << ist_out.bjo_num_laps << sep;
+	set_result_str();
+	os << ist_result_str;
 	return os;
 }
 

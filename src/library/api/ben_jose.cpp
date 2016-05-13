@@ -167,6 +167,13 @@ bj_set_param_char(bj_solver_t bjs, bj_param_t prm, char val){
 				the_slvr.slv_prms.sp_write_proofs = true;
 			}
 			break;
+		case bjp_test_result:
+			if(val == 0){
+				the_slvr.slv_prms.sp_test_result = false;
+			} else {
+				the_slvr.slv_prms.sp_test_result = true;
+			}
+			break;
 		default:
 			break;
 	}
@@ -181,8 +188,29 @@ bj_get_param_char(bj_solver_t bjs, bj_param_t prm){
 	solver& the_slvr = *((solver*)bjs);
 	char rr = 0;
 	switch(prm){
+		case bjp_as_release:
+			if(the_slvr.slv_prms.sp_as_release){
+				rr = 1;
+			} else {
+				rr = 0;
+			}
+			break;
+		case bjp_only_deduc:
+			if(the_slvr.slv_prms.sp_only_deduc){
+				rr = 1;
+			} else {
+				rr = 0;
+			}
+			break;
 		case bjp_write_proofs:
 			if(the_slvr.slv_prms.sp_write_proofs){
+				rr = 1;
+			} else {
+				rr = 0;
+			}
+			break;
+		case bjp_test_result:
+			if(the_slvr.slv_prms.sp_test_result){
 				rr = 1;
 			} else {
 				rr = 0;
@@ -194,7 +222,7 @@ bj_get_param_char(bj_solver_t bjs, bj_param_t prm){
 	return rr;
 }
 
-const char* bj_get_path(bj_solver_t bjs){
+const char* bj_get_database_path(bj_solver_t bjs){
 	if(bjs == NULL){
 		return NULL;
 	}
@@ -225,7 +253,7 @@ bj_satisf_val_t 	bj_solve_file(bj_solver_t bjs, const char* f_path){
 	return res;
 }
 
-bj_satisf_val_t 	bj_solve_data(bj_solver_t bjs, long dat_sz, char* dat){
+bj_satisf_val_t 	bj_solve_data(bj_solver_t bjs, long dat_sz, const char* dat){
 	if(bjs == NULL){ return bjr_error; }
 	//if(f_path == NULL){ return bjr_error; }
 	
@@ -291,6 +319,15 @@ bj_output_t 		bj_get_output(bj_solver_t bjs){
 	}
 	solver& the_slvr = *((solver*)bjs);
 	return the_slvr.slv_inst.ist_out;
+}
+
+const char* bj_get_solve_file_path(bj_solver_t bjs){
+	if(bjs == NULL){
+		return NULL;
+	}
+	solver& the_slvr = *((solver*)bjs);
+	const char* pth = the_slvr.slv_inst.ist_file_path.c_str();
+	return pth;
 }
 
 const long* bj_get_assig(bj_solver_t bjs){
@@ -424,3 +461,27 @@ const char* bj_error_str(bj_error_t bje){
 	}
 	return e_str;
 }
+
+const char*
+bj_get_result_string(bj_solver_t bjs){
+	if(bjs == NULL){
+		return NULL_PT;
+	}
+	solver& the_slvr = *((solver*)bjs);
+	instance_info& inst = the_slvr.slv_inst;
+
+	inst.set_result_str();
+	return inst.ist_result_str.c_str();
+}
+
+void
+bj_parse_result_string(bj_solver_t bjs, const char* rslt_str){
+	if(bjs == NULL){
+		return;
+	}
+	solver& the_slvr = *((solver*)bjs);
+	instance_info& inst = the_slvr.slv_inst;
+	ch_string r_str = rslt_str;
+	inst.parse_result_str(r_str);
+}
+

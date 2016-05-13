@@ -100,6 +100,7 @@ find_nth_dir(long nn, ch_string& pth, ch_string& sub_pth){
 	os << "SUB=" << sub_pth << bj_eol;
 }
 
+/*
 void	test_long_to_pth(int argc, char** argv){
 	bj_ostream& os = bj_out;
 	if(argc < 2){
@@ -142,7 +143,7 @@ void	test_dims_to_path(int argc, char** argv){
 
 	os << " tl=" << tl << " nc=" << nc << " nv=" << nv << " tt=" << tt << bj_eol;
 	os << " pth='" << pth << "'" << bj_eol;
-}
+}*/
 
 struct ltstr {
 	bool operator()(const char* s1, const char* s2) const {
@@ -1469,6 +1470,25 @@ void test_slice_pth(int argc, char** argv){
 	os << "SLICED_PTH=" << sl_pth << "\n";
 }
 
+void test_parse_result(int argc, char** argv){
+	bj_ostream& os = bj_out;
+	if(argc < 2){
+		os << "Faltan args" << bj_eol;
+		return;
+	}
+
+	ch_string str1 = argv[1];
+
+	os << "STR=" << str1 << "\n";
+	
+	instance_info ii;
+	
+	ii.parse_result_str(str1);
+	
+	os << "inst=" << ii << "\n";
+}
+
+
 int	tests_main_(int argc, char** argv){
 	MARK_USED(argc);
 	MARK_USED(argv);
@@ -1503,7 +1523,8 @@ int	tests_main_(int argc, char** argv){
 	//test_minisha();
 	
 	//test_rel_pth(argc, argv);
-	test_slice_pth(argc, argv);;
+	//test_slice_pth(argc, argv);
+	test_parse_result(argc, argv);
 	
 	os.flush();
 

@@ -43,6 +43,54 @@ Global classes and functions that batch_solver and assist the system.
 
 #include "batch_solver.h"
 
+/*
+
+==============================================================
+method pointers
+
+DECL example
+char (the_class::*the_method_pt)(int param1);
+
+ASSIG example
+the_method_pt = &the_class::a_method_of_the_class;
+
+CALL Example
+char cc = (an_object_of_the_class.*the_method_pt)(3);
+
+
+Note that "::*", ".*" and "->*" are actually 
+separate C++ operators.  
+
+	reason, reasoning, reasoned, reasoner
+
+		inductive, induce, induced, inducing, inducible
+
+		deductive, deduce, deduced, deducing, deducible
+
+		learn, learned, learning, learnable, learner
+
+		specify, specified, specifying, specifiable, 
+		specifier, specifies, specification
+
+	study, studying, studied, studiable, studies
+
+		analytic, analyze, analysed, analysing, analyzable
+		analyser, analysis
+
+		synthetic, synthesize, synthesized, synthesizing, 
+		synthesizer, synthesis
+
+		memorize, memorized, memorizing, memorizable, memorizer
+
+		simplify, simplified, simplifying, simplificative, 
+		simplifier, simplifies, simplification
+
+
+	specify induce deduce simplify learn analyze synthesize
+
+*/
+
+
 long
 find_first_digit(ch_string& the_str, bool dig = true){
 	unsigned long aa = 0;
@@ -122,6 +170,9 @@ batch_solver::init_batch_solver(){
 		"-v : print version.\n"
 		"-paths : print the paths to be used.\n"
 		"-root : set the root path to <root_path>.\n"
+		"-only_deduc : only do deduction do not use training at all.\n"
+		"-write_proof : if unsat write the proof.\n"
+		"-test_result : compare and test the result against DB of results.\n"
 		"-max_mem : set max number of RAM Kbytes to use while running.\n"
 		"\n"
 		;
@@ -131,11 +182,12 @@ batch_solver::init_batch_solver(){
 		"(c) 2015. QUIROGA BELTRAN, Jose Luis. c.c. 79523732. Bogota - Colombia.\n"
 		;
 
-	op_debug_clean_code = false;
 	op_only_deduc = false;
 	op_write_proof = false;
-	op_dbg_as_release = false;
+	op_test_result = false;
 
+	op_dbg_as_release = false;
+	
 	MEM_CTRL(using_mem_ctrl = true);
 
 	dbg_skip_print_info = false;
@@ -147,7 +199,6 @@ batch_solver::init_batch_solver(){
 	input_file_nm = "";
 	//output_file_nm = "";
 
-	batch_log_on = true;
 	batch_name = "";
 	batch_log_name = "";
 	batch_end_log_name = "";
@@ -169,17 +220,9 @@ batch_solver::init_batch_solver(){
 	batch_stat_mem_used.vs_nam = "BYTES USED";
 
 	batch_stat_load_tm.vs_nam = "LOAD SEGs";
-	batch_stat_saved_targets.vs_nam = "SAVED";
-	batch_stat_num_finds.vs_nam = "NUM_FINDS";
-	batch_stat_variants.vs_nam = "VARIANTS";
+	batch_stat_num_cnf_saved.vs_nam = "NUM_SAVED";
+	batch_stat_num_cnf_finds.vs_nam = "NUM_FINDS";
 	batch_stat_quick_discards.vs_nam = "QUICK_DISCARDS";
-	batch_stat_old_pth_hits.vs_nam = "OLD_PATH_HITS";
-	batch_stat_new_pth_hits.vs_nam = "NEW_PATH_HITS";
-	batch_stat_sub_cnf_hits.vs_nam = "SUB_CNF_HITS";
-	batch_stat_eq_new_hits.vs_nam = "EQ_NEW_HITS";
-	batch_stat_eq_old_hits.vs_nam = "EQ_OLD_HITS";
-	batch_stat_sb_new_hits.vs_nam = "SB_NEW_HITS";
-	batch_stat_sb_old_hits.vs_nam = "SB_OLD_HITS";
 	
 
 	batch_start_time = 0.0;
@@ -246,25 +289,14 @@ batch_solver::print_final_totals(bj_ostream& os){
 
 	os << batch_stat_lits;
 	os << batch_stat_laps;
-	os << batch_stat_saved_targets;
-	os << batch_stat_num_finds;
+	os << batch_stat_num_cnf_saved;
+	os << batch_stat_num_cnf_finds;
 	
 	os << batch_stat_load_tm;
 	os << batch_stat_solve_tm;
 	MEM_CTRL(
 		os << batch_stat_mem_used;
 	);
-	/*
-	os << batch_stat_variants;
-	os << batch_stat_quick_discards;
-	os << batch_stat_old_pth_hits;
-	os << batch_stat_new_pth_hits;
-	os << batch_stat_sub_cnf_hits;
-	os << batch_stat_eq_new_hits;
-	os << batch_stat_eq_old_hits;
-	os << batch_stat_sb_new_hits;
-	os << batch_stat_sb_old_hits;
-	*/
 
 	double tot_tm = batch_end_time - batch_start_time;
 	os << "TOTAL TIME = " << tot_tm << bj_eol;
@@ -329,18 +361,9 @@ batch_solver::count_instance(batch_entry& inst_info){
 	batch_stat_load_tm.add_val(o_info.bjo_load_time);
 	batch_stat_solve_tm.add_val(o_info.bjo_solve_time);
 
-	batch_stat_saved_targets.add_val(o_info.bjo_saved_targets);
-	batch_stat_num_finds.add_val(o_info.bjo_num_finds);
-	batch_stat_variants.add_val(o_info.bjo_max_variants);
-	batch_stat_variants.add_val(o_info.bjo_avg_variants);
+	batch_stat_num_cnf_saved.add_val(o_info.bjo_num_cnf_saved);
+	batch_stat_num_cnf_finds.add_val(o_info.bjo_num_cnf_finds);
 	batch_stat_quick_discards.add_val(o_info.bjo_quick_discards);
-	batch_stat_old_pth_hits.add_val(o_info.bjo_old_pth_hits);
-	batch_stat_new_pth_hits.add_val(o_info.bjo_new_pth_hits);
-	batch_stat_sub_cnf_hits.add_val(o_info.bjo_sub_cnf_hits);
-	batch_stat_eq_new_hits.add_val(o_info.bjo_eq_new_hits);
-	batch_stat_eq_old_hits.add_val(o_info.bjo_eq_old_hits);
-	batch_stat_sb_new_hits.add_val(o_info.bjo_sb_new_hits);
-	batch_stat_sb_old_hits.add_val(o_info.bjo_sb_old_hits);
 	
 	MEM_CTRL(
 		if(using_mem_ctrl){
@@ -420,11 +443,6 @@ batch_solver::print_stats(bj_ostream& os, double current_secs){
 
 void	
 batch_solver::log_message(const ch_string& msg_log){
-
-	if(! batch_log_on){
-		return;
-	}
-
 	if(batch_log_name.size() == 0){
 		return;
 	}
@@ -439,23 +457,19 @@ batch_solver::log_message(const ch_string& msg_log){
 }
 
 void
-batch_solver::log_batch_info(){
-	if(! batch_log_on){
+batch_solver::log_batch_info(ch_string& the_log_nm){
+	if(the_log_nm.size() == 0){
 		return;
 	}
 
-	if(batch_end_log_name.size() == 0){
-		return;
-	}
-
-	bj_ostr_stream msg_log;
-
-	const char* log_nm = batch_end_log_name.c_str();
+	const char* log_nm = the_log_nm.c_str();
 	std::ofstream log_stm;
 	log_stm.open(log_nm, std::ios::app);
 	if(! log_stm.good() || ! log_stm.is_open()){
 		reset_err_msg();
 		error_stm << "Could not open file " << log_nm << ".";
+		
+		bj_ostr_stream msg_log;
 		msg_log << error_stm.str();
 		bj_err << msg_log.str() << bj_eol;
 		log_message(msg_log.str());
@@ -465,7 +479,10 @@ batch_solver::log_batch_info(){
 	batch_instances.print_row_data(log_stm, false, "\n");
 	log_stm << bj_eol; 
 	log_stm.close();
+}
 
+void
+batch_solver::print_end_msg(){
 	if(batch_end_msg_name.size() == 0){
 		return;
 	}
@@ -476,6 +493,8 @@ batch_solver::log_batch_info(){
 	if(! msg_stm.good() || ! msg_stm.is_open()){
 		reset_err_msg();
 		error_stm << "Could not open file " << msg_nm << ".";
+		
+		bj_ostr_stream msg_log;
 		msg_log << error_stm.str();
 		bj_err << msg_log.str() << bj_eol;
 		log_message(msg_log.str());
@@ -484,7 +503,6 @@ batch_solver::log_batch_info(){
 
 	print_totals(msg_stm);
 	print_final_totals(msg_stm);
-
 }
 
 void	
@@ -643,9 +661,12 @@ batch_solver::work_all_instances(){
 
 	batch_end_time = run_time();
 
-	PRT_OUT_0( log_batch_info());
+	log_batch_info(batch_end_log_name);
+	PRT_OUT_0(print_end_msg());
+	
+	do_test();
+	
 	all_insts.clear(true, true);
-
 }
 
 void
@@ -683,6 +704,7 @@ batch_solver::get_args(int argc, char** argv)
 	bool prt_help = false;
 	bool prt_version = false;
 	bool prt_paths = false;
+	
 	op_dbg_as_release = false;
 	
 	for(long ii = 1; ii < argc; ii++){
@@ -693,12 +715,12 @@ batch_solver::get_args(int argc, char** argv)
 			prt_version = true;
 		} else if(the_arg == "-paths"){
 			prt_paths = true;
-		} else if(the_arg == "-debug"){
-			op_debug_clean_code = true;
 		} else if(the_arg == "-only_deduc"){
 			op_only_deduc = true;
 		} else if(the_arg == "-proof"){
 			op_write_proof = true;
+		} else if(the_arg == "-test"){
+			op_test_result = true;
 		} else if(the_arg == "-rr"){
 			op_dbg_as_release = true;
 			NOT_DBG(os << "running RELEASE exe. ignoring debug op '-rr'" << bj_eol;)
@@ -725,13 +747,11 @@ batch_solver::get_args(int argc, char** argv)
 		}
 	}
 	
-	if(op_dbg_as_release){
-		DBG(
-			if(bc_slvr_path.empty()){
-				bc_slvr_path = path_to_absolute_path(".");
-			}
-		)
-	}
+	DBG(
+		if(op_dbg_as_release && bc_slvr_path.empty()){
+			bc_slvr_path = path_to_absolute_path(".");
+		}
+	)
 
 	if(prt_help){
 		os << argv[0] << " " << help_str << bj_eol;
@@ -868,11 +888,12 @@ batch_solver::do_cnf_file()
 	}
 	
 	curr_inst.be_out = bj_get_output(bc_solver);
+	curr_inst.be_result_str = bj_get_result_string(bc_solver);
 	//bj_restart(bc_solver);
 
 	if(op_write_proof){
-		bj_out << "SAVED_IST=" << curr_inst.be_out.bjo_saved_targets << "\n";
-		bj_out << "NUM_FINDS_IST=" << curr_inst.be_out.bjo_sub_cnf_hits << "\n";
+		bj_out << "SAVED_IST=" << curr_inst.be_out.bjo_num_cnf_saved << "\n";
+		bj_out << "NUM_FINDS_IST=" << curr_inst.be_out.bjo_num_cnf_finds << "\n";
 	}
 
 	count_instance(curr_inst);
@@ -891,50 +912,113 @@ int	main(int argc, char** argv){
 	//return 0;
 }
 
-/*
+void
+batch_solver::do_test(){
+	if(! op_test_result){
+		return;
+	}
+	
+	bool is_batch = false;
+	ch_string f_nam = get_file_name(is_batch);
+	
+	row<batch_entry>& all_insts = batch_instances;
+	if(all_insts.is_empty()){
+		return;
+	}
+	
+	batch_entry& fst_ee = all_insts.first();
+	bj_output_t& out = fst_ee.be_out;
+	ch_string ee = "";
+	ch_string conf_ss = ee +
+		cbool_to_str(out.bjo_dbg_enabled) +
+		cbool_to_str(out.bjo_dbg_never_write) +
+		cbool_to_str(out.bjo_dbg_never_find) +
+		cbool_to_str(out.bjo_dbg_min_trainable) +
+		cbool_to_str(out.bjo_dbg_as_release);
+		
+	ch_string sufix = LOG_NM_TEST + conf_ss + LOG_NM_SUF;
+	
+	ch_string log_nm = get_log_name(f_nam, sufix);
+	
+	if(file_exists(log_nm)){
+		read_test_file(batch_test_entries, log_nm);
+	} else {
+		bj_out << "WARNING!!. Running with test flag BUT FILE=\n" << log_nm << "\nNOT FOUND.\n";
+	}
+}
 
-==============================================================
-method pointers
+void
+batch_solver::read_test_file(row<batch_entry>& test_entries, ch_string& file_nm_str){
+	test_entries.clear(true, true);
+	
+	const char* file_nm = file_nm_str.c_str();
+	bj_ostream& os = bj_out;
+	BATCH_CK(file_nm != NULL_PT);
 
-DECL example
-char (the_class::*the_method_pt)(int param1);
+	std::ifstream in_stm;
 
-ASSIG example
-the_method_pt = &the_class::a_method_of_the_class;
+	in_stm.open(file_nm, std::ios::binary);
+	if(!in_stm.good() || !in_stm.is_open()){
+		os << "TEST_FAILED. CANNOT READ FILE '" << file_nm << "'.\n";
+		return;
+	}
 
-CALL Example
-char cc = (an_object_of_the_class.*the_method_pt)(3);
+	ch_string str_ln;
+	while(! in_stm.eof()){
+		std::getline(in_stm, str_ln);
+		
+		const char* the_line = str_ln.c_str();
+		bj_parse_result_string(bc_solver, the_line);
+		
+		batch_entry& ee = test_entries.inc_sz();
+		ee.be_ff_nam = bj_get_solve_file_path(bc_solver);
+		ee.be_out = bj_get_output(bc_solver);
+		//ee.be_result_str = bj_get_result_string(bc_solver);
+	}
+	in_stm.close();
 
+}
 
-Note that "::*", ".*" and "->*" are actually 
-separate C++ operators.  
+void
+batch_solver::test_result_entries(){
+	row<batch_entry>& result_entries = batch_instances;
+	row<batch_entry>& test_entries = batch_test_entries;
+	
+	for(long aa = 0; result_entries.size(); aa++){
+		batch_entry& rr = result_entries[aa];
+		if(! test_entries.is_valid_idx(aa)){
+			bj_out << "TEST_FAILED. More results than test entries\n";
+			break;
+		}
+		batch_entry& tt = test_entries[aa];
+		bool ee_ok = test_entry(rr, tt);
+		if(! ee_ok){
+			bj_out << "TEST_FAILED. Entries differ\n";
+			bj_out << "rr=" << rr << "\n";
+			bj_out << "tt=" << tt << "\n";
+			break;
+		}
+	}
+}
 
-	reason, reasoning, reasoned, reasoner
-
-		inductive, induce, induced, inducing, inducible
-
-		deductive, deduce, deduced, deducing, deducible
-
-		learn, learned, learning, learnable, learner
-
-		specify, specified, specifying, specifiable, 
-		specifier, specifies, specification
-
-	study, studying, studied, studiable, studies
-
-		analytic, analyze, analysed, analysing, analyzable
-		analyser, analysis
-
-		synthetic, synthesize, synthesized, synthesizing, 
-		synthesizer, synthesis
-
-		memorize, memorized, memorizing, memorizable, memorizer
-
-		simplify, simplified, simplifying, simplificative, 
-		simplifier, simplifies, simplification
-
-
-	specify induce deduce simplify learn analyze synthesize
-
-*/
+bool
+batch_solver::test_entry(batch_entry& rr, batch_entry& tt){
+	bool c1 = (rr.be_ff_nam == tt.be_ff_nam);
+	
+	bj_output_t& rrd = rr.be_out;
+	bj_output_t& ttd = tt.be_out;
+	
+	bool c2 = (rrd.bjo_result == ttd.bjo_result);
+	bool c3 = (rrd.bjo_num_laps == ttd.bjo_num_laps);
+	bool c4 = (rrd.bjo_num_recoils == ttd.bjo_num_recoils);
+	bool c5 = (rrd.bjo_num_cnf_saved == ttd.bjo_num_cnf_saved);
+	bool c6 = (rrd.bjo_num_cnf_finds == ttd.bjo_num_cnf_finds);
+	bool c7 = (rrd.bjo_num_lits == ttd.bjo_num_lits);
+	bool c8 = (rrd.bjo_num_vars == ttd.bjo_num_vars);
+	bool c9 = (rrd.bjo_num_ccls == ttd.bjo_num_ccls);
+	
+	bool all_ok = (c1 && c2 && c3 && c4 && c5 && c6 && c7 && c8 && c9);
+	
+	return all_ok;
+}
 

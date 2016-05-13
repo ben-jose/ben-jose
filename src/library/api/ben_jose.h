@@ -27,11 +27,11 @@ ben-jose is free software thanks to The Glory of Our Lord
 Our Resurrected and Living, both in Body and Spirit, 
 	Prince of Peace.
 
-------------------------------------------------------------
+*/
 
-ben_jose.h
-
-ben_jose interfase.
+/*! -----------------------------------------------------------
+\file ben_jose.h
+\brief ben_jose API declaration.
 
 --------------------------------------------------------------*/
 
@@ -42,6 +42,7 @@ ben_jose interfase.
 extern "C" {
 #endif
 
+//! The result of the solving is "unknown"
 #define RES_UNKNOWN_STR "unknown"
 #define RES_YES_SATISF_STR "yes_satisf"
 #define RES_NO_SATISF_STR "no_satisf"
@@ -83,7 +84,8 @@ typedef enum {
 	bjp_invalid,
 	bjp_as_release,
 	bjp_only_deduc,
-	bjp_write_proofs
+	bjp_write_proofs,
+	bjp_test_result
 } bj_param_t;
 
 typedef struct {
@@ -98,18 +100,9 @@ typedef struct {
 	double		bjo_num_recoils;
 	
 	double		bjo_load_time;
-	double		bjo_saved_targets;
-	double		bjo_max_variants;
-	double		bjo_avg_variants;
-	double		bjo_num_finds;
+	double		bjo_num_cnf_saved;
+	double		bjo_num_cnf_finds;
 	double		bjo_quick_discards;
-	double		bjo_old_pth_hits;
-	double		bjo_new_pth_hits;
-	double		bjo_sub_cnf_hits;
-	double		bjo_eq_new_hits;
-	double		bjo_eq_old_hits;
-	double		bjo_sb_new_hits;
-	double		bjo_sb_old_hits;
 	
 	bj_error_t  bjo_error;
 	char		bjo_err_char;
@@ -119,11 +112,19 @@ typedef struct {
 	long 		bjo_err_num_decl_vars;
 	long 		bjo_err_num_read_cls;
 	long 		bjo_err_bad_lit;
+	
+	char		bjo_dbg_enabled;
+	char		bjo_dbg_never_write;
+	char		bjo_dbg_never_find;
+	char		bjo_dbg_min_trainable;
+	char		bjo_dbg_as_release;
 } bj_output_t;
 
 typedef void*	bj_solver_t;
 
 #define bj_solver_is_null(bjs) (bjs == NULL)
+
+// TO USER: DO NOT FREE OUTPUT POINTERS when calling these functions
 
 void 		bj_init_output(bj_output_t* the_out);
 
@@ -134,19 +135,24 @@ void		bj_set_param_char(bj_solver_t bjs, bj_param_t prm, char val);
 char		bj_get_param_char(bj_solver_t bjs, bj_param_t prm);
 //void		bj_set_param_str(bj_solver_t bjs, bj_param_t prm, char* val);
 
-const char* bj_get_path(bj_solver_t bjs);
+const char* bj_get_database_path(bj_solver_t bjs);
 
 bj_satisf_val_t 	bj_solve_file(bj_solver_t bjs, const char* f_path);
-bj_satisf_val_t 	bj_solve_data(bj_solver_t bjs, long dat_sz, char* dat);
+bj_satisf_val_t 	bj_solve_data(bj_solver_t bjs, long dat_sz, const char* dat);
 bj_satisf_val_t 	bj_solve_literals(bj_solver_t bjs, long num_vars, long num_cls, 
 						  long lits_sz, long* lits);
 
 bj_satisf_val_t 	bj_get_result(bj_solver_t bjs);
 bj_output_t 		bj_get_output(bj_solver_t bjs);
+const char* 		bj_get_solve_file_path(bj_solver_t bjs);
+
 const long* 		bj_get_assig(bj_solver_t bjs);
 const char* 		bj_get_last_proof_path(bj_solver_t bjs);
 const char* 		bj_get_error_stack_str(bj_solver_t bjs);
 const char* 		bj_get_error_assert_str(bj_solver_t bjs);
+
+const char*			bj_get_result_string(bj_solver_t bjs);
+void				bj_parse_result_string(bj_solver_t bjs, const char* rslt_str);
 
 void			bj_restart(bj_solver_t bjs);
 
@@ -155,6 +161,8 @@ int 		bj_update(bj_solver_t dest, bj_solver_t src);
 void		bj_print_paths(bj_solver_t bjs);
 
 const char* bj_error_str(bj_error_t bje);
+
+// TO USER: DO NOT FREE OUTPUT POINTERS when calling these functions
 
 #ifdef __cplusplus
 }

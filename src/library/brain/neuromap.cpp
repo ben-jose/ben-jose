@@ -799,7 +799,7 @@ neuromap::map_oper(mem_op_t mm){
 		oper_ok = (fst_vpth != SKG_INVALID_PTH);
 		if(oper_ok){
 			na_found_in_skl = mf_found;
-			o_info.bjo_sub_cnf_hits++;
+			o_info.bjo_num_cnf_finds++;
 		}
 	} else {
 		BRAIN_CK(mm == mo_save);
@@ -829,7 +829,7 @@ neuromap::map_oper(mem_op_t mm){
 			tmp_guide_cnf.save_cnf(skg, tau_pth);
 
 			if(oper_ok){
-				o_info.bjo_saved_targets++;
+				o_info.bjo_num_cnf_saved++;
 			}
 			
 			skg.drop_write_lock(lk_dir, fd_lk);
@@ -2171,7 +2171,6 @@ neuromap::map_prepare_mem_oper(mem_op_t mm){
 			DBG_PRT(39, os << "quick_find failed nmp=" << (void*)this);
 			return false; 
 		}
-		o_info.bjo_num_finds++;
 	}
 	
 	// stab tauto
