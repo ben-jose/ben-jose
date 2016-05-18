@@ -122,6 +122,7 @@ public:
 
 	ch_string 		ist_last_proof_path;
 	
+	ch_string		ist_result_titles_str;
 	ch_string		ist_result_str;
 	
 	ch_string 		ist_err_assrt_str;
@@ -155,6 +156,7 @@ public:
 		
 		ist_last_proof_path = INVALID_PATH;
 		
+		ist_result_titles_str = INVALID_RESULT_STR;
 		ist_result_str = INVALID_RESULT_STR;
 		
 		ist_err_assrt_str = "no_assert_string_found";
@@ -214,6 +216,7 @@ public:
 		return ist_out;
 	}
 
+	void	set_result_titles_str();
 	void	set_result_str();
 	void	parse_result_str(ch_string& rslt_str);
 	

@@ -151,6 +151,7 @@ const char* 		bj_get_last_proof_path(bj_solver_t bjs);
 const char* 		bj_get_error_stack_str(bj_solver_t bjs);
 const char* 		bj_get_error_assert_str(bj_solver_t bjs);
 
+const char*			bj_get_result_titles_string(bj_solver_t bjs);
 const char*			bj_get_result_string(bj_solver_t bjs);
 void				bj_parse_result_string(bj_solver_t bjs, const char* rslt_str);
 

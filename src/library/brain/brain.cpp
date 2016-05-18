@@ -4434,6 +4434,27 @@ deduction::can_go_on(){
 }
 
 void
+instance_info::set_result_titles_str(){
+	bj_ostr_stream os;
+	
+	ch_string sep = RESULT_FIELD_SEP;
+	os << "file_path" << sep;
+	os << "result" << sep;
+	os << "num_laps" << sep;
+	os << "num_recoils" << sep;
+	os << "num_cnf_saved" << sep;
+	os << "num_cnf_finds" << sep;
+	os << "solve_time" << sep;
+	os << "num_lits" << sep;
+	os << "num_vars" << sep;
+	os << "num_ccls" << sep;
+	
+	// 10 fields
+
+	ist_result_titles_str = os.str();
+}
+
+void
 instance_info::set_result_str(){
 	bj_ostr_stream os;
 	

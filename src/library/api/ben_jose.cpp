@@ -463,6 +463,18 @@ const char* bj_error_str(bj_error_t bje){
 }
 
 const char*
+bj_get_result_titles_string(bj_solver_t bjs){
+	if(bjs == NULL){
+		return NULL_PT;
+	}
+	solver& the_slvr = *((solver*)bjs);
+	instance_info& inst = the_slvr.slv_inst;
+
+	inst.set_result_titles_str();
+	return inst.ist_result_titles_str.c_str();
+}
+
+const char*
 bj_get_result_string(bj_solver_t bjs){
 	if(bjs == NULL){
 		return NULL_PT;

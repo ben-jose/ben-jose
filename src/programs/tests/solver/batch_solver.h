@@ -57,8 +57,9 @@ Declaration of classes that batch solving.
 #define LOG_NM_RESULTS	"results.log"
 #define LOG_NM_STATS	"stats.log"
 #define LOG_NM_ASSIGS	"assigs.log"
-#define LOG_NM_TEST		"test_"
-#define LOG_NM_SUF		".log"
+#define TEST_SUF		".test"
+
+#define INVALID_TEST_FILE	"invalid_test_file"
 
 //=================================================================
 // pre-configuration decl
@@ -130,9 +131,12 @@ public:
 	ch_string		help_str;
 	ch_string		version_str;
 
+	ch_string		result_titles_str;
+	
 	bool			op_only_deduc;
 	bool			op_write_proof;
 	bool			op_test_result;
+	bool			op_test_save;
 
 	bool			op_dbg_as_release;
 	
@@ -147,10 +151,10 @@ public:
 
 	bool			batch_log_on;
 	ch_string		batch_name;
-	ch_string		batch_log_name;
-	ch_string		batch_end_log_name;
-	ch_string		batch_end_msg_name;
-	ch_string		batch_answer_name;
+	ch_string		batch_log_errors_pth;
+	ch_string		batch_log_results_pth;
+	ch_string		batch_log_stats_pth;
+	ch_string		batch_log_assigs_pth;
 
 	integer			batch_num_files;
 	integer			batch_consec;
@@ -177,6 +181,8 @@ public:
 
 	row<batch_entry>	batch_instances;
 	row<batch_entry>	batch_test_entries;
+	
+	bool			batch_test_has_errors;
 
 	ch_string		gg_file_name;
 
@@ -240,7 +246,7 @@ public:
 	bj_ostream&	print_final_totals(bj_ostream& os);
 	void		print_batch_consec();
 
-	void	log_message(const ch_string& msg_log);
+	void	log_error_message(const ch_string& msg_log);
 	void	log_batch_info(ch_string& log_nm);
 	void	print_end_msg();
 	void	read_batch_file(row<batch_entry>& names);
@@ -248,7 +254,7 @@ public:
 	void	do_all_instances();
 	void	do_cnf_file();
 
-	void	do_test();
+	ch_string	get_test_file_path();
 	void	read_test_file(row<batch_entry>& test_entries, ch_string& file_nm_str);
 	void	test_result_entries();
 	bool	test_entry(batch_entry& rr, batch_entry& tt);

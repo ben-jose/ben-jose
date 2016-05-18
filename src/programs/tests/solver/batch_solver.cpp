@@ -181,10 +181,13 @@ batch_solver::init_batch_solver(){
 		"v_alpha_0.1\n"
 		"(c) 2015. QUIROGA BELTRAN, Jose Luis. c.c. 79523732. Bogota - Colombia.\n"
 		;
+		
+	result_titles_str = "invalid_result_titles_str";
 
 	op_only_deduc = false;
 	op_write_proof = false;
 	op_test_result = false;
+	op_test_save = false;
 
 	op_dbg_as_release = false;
 	
@@ -200,10 +203,10 @@ batch_solver::init_batch_solver(){
 	//output_file_nm = "";
 
 	batch_name = "";
-	batch_log_name = "";
-	batch_end_log_name = "";
-	batch_end_msg_name = "";
-	batch_answer_name = "";
+	batch_log_errors_pth = "";
+	batch_log_results_pth = "";
+	batch_log_stats_pth = "";
+	batch_log_assigs_pth = "";
 	batch_num_files = 0;
 	batch_consec = 0;
 
@@ -228,6 +231,11 @@ batch_solver::init_batch_solver(){
 	batch_start_time = 0.0;
 	batch_end_time = 0.0;
 
+	batch_instances.clear(true, true);
+	batch_test_entries.clear(true, true);
+	
+	batch_test_has_errors = false;
+	
 	gg_file_name = "";
 	
 	bc_slvr_path = "";
@@ -323,7 +331,7 @@ batch_solver::print_batch_consec(){
 
 void
 batch_solver::print_final_assig(){
-	if(batch_answer_name.size() == 0){
+	if(batch_log_assigs_pth.size() == 0){
 		return;
 	}
 
@@ -331,7 +339,7 @@ batch_solver::print_final_assig(){
 	ch_string f_nam = inst_info.be_ff_nam;
 	//row_long_t& ff_assg = inst_info.ist_out.bjo_final_assig;
 
-	const char* f_nm = batch_answer_name.c_str();
+	const char* f_nm = batch_log_assigs_pth.c_str();
 	std::ofstream log_stm;
 	log_stm.open(f_nm, std::ios::app);
 	if(log_stm.good() && log_stm.is_open()){
@@ -442,12 +450,12 @@ batch_solver::print_stats(bj_ostream& os, double current_secs){
 }
 
 void	
-batch_solver::log_message(const ch_string& msg_log){
-	if(batch_log_name.size() == 0){
+batch_solver::log_error_message(const ch_string& msg_log){
+	if(batch_log_errors_pth.size() == 0){
 		return;
 	}
 
-	const char* log_nm = batch_log_name.c_str();
+	const char* log_nm = batch_log_errors_pth.c_str();
 	std::ofstream log_stm;
 	log_stm.open(log_nm, std::ios::app);
 	if(log_stm.good() && log_stm.is_open()){
@@ -472,7 +480,7 @@ batch_solver::log_batch_info(ch_string& the_log_nm){
 		bj_ostr_stream msg_log;
 		msg_log << error_stm.str();
 		bj_err << msg_log.str() << bj_eol;
-		log_message(msg_log.str());
+		log_error_message(msg_log.str());
 		return;
 	}
 
@@ -483,11 +491,11 @@ batch_solver::log_batch_info(ch_string& the_log_nm){
 
 void
 batch_solver::print_end_msg(){
-	if(batch_end_msg_name.size() == 0){
+	if(batch_log_stats_pth.size() == 0){
 		return;
 	}
 
-	const char* msg_nm = batch_end_msg_name.c_str();
+	const char* msg_nm = batch_log_stats_pth.c_str();
 	std::ofstream msg_stm;
 	msg_stm.open(msg_nm, std::ios::app);
 	if(! msg_stm.good() || ! msg_stm.is_open()){
@@ -497,7 +505,7 @@ batch_solver::print_end_msg(){
 		bj_ostr_stream msg_log;
 		msg_log << error_stm.str();
 		bj_err << msg_log.str() << bj_eol;
-		log_message(msg_log.str());
+		log_error_message(msg_log.str());
 		return;
 	}
 
@@ -519,7 +527,7 @@ batch_solver::do_all_instances(){
 		)
 		
 		bj_err << ex_msg << bj_eol;
-		log_message(ex_msg);
+		log_error_message(ex_msg);
 		abort_func(0);
 	}
 	catch (...) {
@@ -613,10 +621,10 @@ batch_solver::work_all_instances(){
 	bool is_batch = false;
 	ch_string f_nam = get_file_name(is_batch);
 
-	batch_log_name = init_log_name(LOG_NM_ERROR);
-	batch_end_log_name = init_log_name(LOG_NM_RESULTS);
-	batch_end_msg_name = init_log_name(LOG_NM_STATS);
-	batch_answer_name = init_log_name(LOG_NM_ASSIGS);
+	batch_log_errors_pth = init_log_name(LOG_NM_ERROR);
+	batch_log_results_pth = init_log_name(LOG_NM_RESULTS);
+	batch_log_stats_pth = init_log_name(LOG_NM_STATS);
+	batch_log_assigs_pth = init_log_name(LOG_NM_ASSIGS);
 
 	row<batch_entry>& all_insts = batch_instances;
 	BATCH_CK(all_insts.is_empty());
@@ -660,11 +668,26 @@ batch_solver::work_all_instances(){
 	}
 
 	batch_end_time = run_time();
+	
+	ch_string t_pth = INVALID_TEST_FILE;
+	bool do_test = false;
+	if(op_test_result){
+		t_pth = get_test_file_path();
+		do_test = file_exists(t_pth);
+		if(! do_test){
+			bj_out << "\n\nWARNING!!. Running with test flag.\nBUT FILE=\n\t";
+			bj_out << t_pth << "\nNOT FOUND.\nCREATING ONE\n";
+			log_batch_info(t_pth);
+		}
+	}
 
-	log_batch_info(batch_end_log_name);
+	log_batch_info(batch_log_results_pth);
 	PRT_OUT_0(print_end_msg());
 	
-	do_test();
+	if(do_test){
+		read_test_file(batch_test_entries, t_pth);
+		test_result_entries();
+	}
 	
 	all_insts.clear(true, true);
 }
@@ -721,6 +744,8 @@ batch_solver::get_args(int argc, char** argv)
 			op_write_proof = true;
 		} else if(the_arg == "-test"){
 			op_test_result = true;
+		} else if(the_arg == "-test-save"){
+			op_test_save = true;
 		} else if(the_arg == "-rr"){
 			op_dbg_as_release = true;
 			NOT_DBG(os << "running RELEASE exe. ignoring debug op '-rr'" << bj_eol;)
@@ -840,7 +865,7 @@ int	solver_main(int argc, char** argv){
 				last_proof_pth = pf_pth;
 			}
 		}
-			
+		
 		bj_solver_release(top_dat.bc_solver);
 	}
 	
@@ -856,6 +881,12 @@ int	solver_main(int argc, char** argv){
 		if(with_proof){
 			PRT_OUT_0(os << "\n\nLAST_PROOF_PATH=\n" << last_proof_pth << "\n\n\n");
 		}
+	}
+	
+	if(top_dat.batch_test_has_errors){
+		PRT_OUT_0(
+			os << "\n\nTEST_HAS_ERRORS !!!!\nTEST_HAS_ERRORS !!!!\nTEST_HAS_ERRORS !!!!\n";
+		);
 	}
 
 	MEM_CTRL(bj_out << "MEM_CONTROL is defined" << bj_eol);
@@ -912,10 +943,11 @@ int	main(int argc, char** argv){
 	//return 0;
 }
 
-void
-batch_solver::do_test(){
+ch_string
+batch_solver::get_test_file_path(){
+	ch_string inv_pth = INVALID_TEST_FILE;
 	if(! op_test_result){
-		return;
+		return inv_pth;
 	}
 	
 	bool is_batch = false;
@@ -923,7 +955,7 @@ batch_solver::do_test(){
 	
 	row<batch_entry>& all_insts = batch_instances;
 	if(all_insts.is_empty()){
-		return;
+		return inv_pth;
 	}
 	
 	batch_entry& fst_ee = all_insts.first();
@@ -936,15 +968,11 @@ batch_solver::do_test(){
 		cbool_to_str(out.bjo_dbg_min_trainable) +
 		cbool_to_str(out.bjo_dbg_as_release);
 		
-	ch_string sufix = LOG_NM_TEST + conf_ss + LOG_NM_SUF;
+	ch_string sufix = conf_ss + TEST_SUF;
 	
-	ch_string log_nm = get_log_name(f_nam, sufix);
+	ch_string t_pth = get_log_name(f_nam, sufix);
 	
-	if(file_exists(log_nm)){
-		read_test_file(batch_test_entries, log_nm);
-	} else {
-		bj_out << "WARNING!!. Running with test flag BUT FILE=\n" << log_nm << "\nNOT FOUND.\n";
-	}
+	return t_pth;
 }
 
 void
@@ -962,6 +990,8 @@ batch_solver::read_test_file(row<batch_entry>& test_entries, ch_string& file_nm_
 		os << "TEST_FAILED. CANNOT READ FILE '" << file_nm << "'.\n";
 		return;
 	}
+	
+	result_titles_str = bj_get_result_titles_string(bc_solver);
 
 	ch_string str_ln;
 	while(! in_stm.eof()){
@@ -973,7 +1003,7 @@ batch_solver::read_test_file(row<batch_entry>& test_entries, ch_string& file_nm_
 		batch_entry& ee = test_entries.inc_sz();
 		ee.be_ff_nam = bj_get_solve_file_path(bc_solver);
 		ee.be_out = bj_get_output(bc_solver);
-		//ee.be_result_str = bj_get_result_string(bc_solver);
+		ee.be_result_str = bj_get_result_string(bc_solver);
 	}
 	in_stm.close();
 
@@ -984,19 +1014,35 @@ batch_solver::test_result_entries(){
 	row<batch_entry>& result_entries = batch_instances;
 	row<batch_entry>& test_entries = batch_test_entries;
 	
-	for(long aa = 0; result_entries.size(); aa++){
+	for(long aa = 0; aa < result_entries.size(); aa++){
 		batch_entry& rr = result_entries[aa];
 		if(! test_entries.is_valid_idx(aa)){
-			bj_out << "TEST_FAILED. More results than test entries\n";
+			reset_err_msg();
+			error_stm << "TEST_FAILED. More results than test entries\n";
+			
+			bj_ostr_stream msg_log;
+			msg_log << error_stm.str();
+			bj_err << msg_log.str() << bj_eol;
+			log_error_message(msg_log.str());
+			
+			batch_test_has_errors = true;
 			break;
 		}
 		batch_entry& tt = test_entries[aa];
 		bool ee_ok = test_entry(rr, tt);
 		if(! ee_ok){
-			bj_out << "TEST_FAILED. Entries differ\n";
-			bj_out << "rr=" << rr << "\n";
-			bj_out << "tt=" << tt << "\n";
-			break;
+			reset_err_msg();
+			error_stm << "TEST_FAILED. Entries differ\n";
+			error_stm << "fi=" << result_titles_str << "\n";
+			error_stm << "rr=" << rr << "\n";
+			error_stm << "tt=" << tt << "\n";
+			
+			bj_ostr_stream msg_log;
+			msg_log << error_stm.str();
+			bj_err << msg_log.str() << bj_eol;
+			log_error_message(msg_log.str());
+
+			batch_test_has_errors = true;
 		}
 	}
 }
