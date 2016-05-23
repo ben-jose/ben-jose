@@ -121,43 +121,42 @@ DEFINE_NA_FLAG_ALL_FUNCS(na1);
 /*! \mainpage <h1>Introduction</h1>
 
 <p>
-<a href="https://github.com/joseluisquiroga/ben-jose" target="blank">
-Ben-Jose</a> is:
+This is the doxy generated documentation of the <a href="https://github.com/joseluisquiroga/ben-jose" target="blank">
+Ben-Jose</a> Trainable SAT Solver Library. It is not a complete reference of all the classes and functions. It is a selection of the most releveant classes and functions that help in the understanding of the innerworkig of the library.
 
-<ol>
-<li>
-A sotware library.
-<li>
-A <a href="https://en.wikipedia.org/wiki/Boolean_satisfiability_problem" target="blank">
-SAT problem</a> solver.
-<li>
-Free Software and Open Source Software.
-<li>
-Trainable.
-</ol>
+<p> The \ref docgrp_API of the library is implemented in the files ben_jose.cpp and ben_jose.h, and documented in:
+
+<ul>
+<li> \ref docgrp_API
+</ul>
 
 <p>
-Ben-jose is designed to be used as a support library for applications or libraries that need to solve both theoretical and practical instances of SAT. The expected user is a C/C++ programmer. 
+The architecture of the ben-jose library is strongly monolitic in the sense that the basic functionality of the whole library is basically one function (brain::solve_instance) with three presentations: 
+
+<ul>
+<li> \ref bj_solve_file
+<li> \ref bj_solve_data 
+<li> \ref bj_solve_literals
+</ul>
 
 <p>
-The initial motivation for this software was to do better than existant solvers for
-Pigeon Hole Principle (PHP) instances of the SAT problem, and still be competitive for other instances.
+That means that every piece of code within the 'library' directory of the source tree is tightly coupled. Having said that, this documentations should give a good idea of it's architecture.
 
 <p>
-The architecture of the ben-jose library is strongly monolitic in the sense that the basic functionality of the whole library is basically one function with three presentations: \ref bj_solve_file, \ref bj_solve_data and \ref bj_solve_literals .
-
-That means that every piece of code within the 'library' directory of the source tree is tightly coupled.
-
-Having said that, this documentations should a good idea of it's architecture.
-
-<p>
-The most relevant classes of the library can be grouped as:
+The most relevant classes of the library implementation can be grouped as:
 
 <ul>
 <li> \ref docgrp_CDCL_classes
 <li> \ref docgrp_stab_classes
 <li> \ref docgrp_matching_classes
 <li> \ref docgrp_database_classes
+</ul>
+
+<p>
+The macro behavior of the innerwork of the library is described in:
+
+<ul>
+<li> macro_algorithm_ben_jose.cpp
 </ul>
 
 */
@@ -1341,6 +1340,13 @@ brain::fill_with_origs(row_neuron_t& neus){
 	}
 }
 
+/*! 
+\brief This is the main processing function to solve an instance. It get called by solve_instance.
+
+\see macro_algorithm_ben_jose.cpp
+\callgraph
+\callergraph
+*/
 void 
 brain::think(){
 	DBG_PRT(147, dbg_print_all_qua_rels(os));
@@ -1746,6 +1752,13 @@ brain::ck_mono_propag(){
 	return true;
 }
 
+/*! 
+\brief This is function does BCP and most of the maintaining of the \ref neuromap s (candidates) to be written and found.
+\details It also does all maintaining of monos and choices.
+\see macro_algorithm_ben_jose.cpp
+\callgraph
+\callergraph
+*/
 long
 brain::propagate_signals(){
 	if(found_conflict() || ! has_psignals()){
@@ -1891,6 +1904,13 @@ brain::get_last_lv_charges(row_quanton_t& all_lv_pos){
 	}
 }
 
+/*! 
+\brief This is the basic step function while solving an instance. It does one full backtrack.
+\details Observe that this function might ddo more than one retract while selecting the best \ref quanton choice, but it does only one deduction and one backtrack.
+\see macro_algorithm_ben_jose.cpp
+\callgraph
+\callergraph
+*/
 void
 brain::pulsate(){
 	propagate_signals();
@@ -2120,6 +2140,15 @@ brain::dbg_init_html(){
 #endif
 }
 
+/*!
+\brief This is the starting point to solve any instance. It is the main function of the implementation.
+\param load_it Set this parameter to true if this \ref brain must be loaded or not (all \ref quanton s and \ref neuron s get initialized).
+
+\details To better understand the implementation have a look at \ref macro_algorithm_ben_jose.cpp.
+\see macro_algorithm_ben_jose.cpp
+\callgraph
+\callergraph
+*/
 bj_satisf_val_t
 brain::solve_instance(bool load_it){
 	brain& brn = *this;
@@ -2237,6 +2266,12 @@ brain::solve_instance(bool load_it){
 	return o_info.bjo_result;
 }
 
+/*! 
+\brief Does all analysis and one backtrack.
+\see macro_algorithm_ben_jose.cpp
+\callgraph
+\callergraph
+*/
 bool
 brain::deduce_and_reverse_trail(){
 	BRAIN_CK(! br_dbg.dbg_old_deduc);

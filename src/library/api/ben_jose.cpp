@@ -27,11 +27,12 @@ ben-jose is free software thanks to The Glory of Our Lord
 Our Resurrected and Living, both in Body and Spirit, 
 	Prince of Peace.
 
-------------------------------------------------------------
+*/
 
-ben_jose.cpp  
+/*! ------------------------------------------------------------
+\file ben_jose.cpp  
 
-ben_jose interface impl.
+\brief File containing the implementation code for the users API of ben_jose.
 
 --------------------------------------------------------------*/
 
@@ -51,6 +52,8 @@ void 		bj_init_output(bj_output_t* the_out){
 	}
 	instance_info::init_output(*the_out);
 }
+
+//TODO: get rid of NOT_DBG macro
 
 bj_solver_t bj_solver_create(const char* bjs_dir_path){
 	if(bjs_dir_path == NULL){
@@ -364,8 +367,8 @@ const char* bj_get_error_stack_str(bj_solver_t bjs){
 		return NULL;
 	}
 	solver& the_slvr = *((solver*)bjs);
-	const char* assrt_str = the_slvr.slv_inst.ist_err_assrt_str.c_str();
-	return assrt_str;
+	const char* stck_str = the_slvr.slv_inst.ist_err_stack_str.c_str();
+	return stck_str;
 }
 
 const char* bj_get_error_assert_str(bj_solver_t bjs){
@@ -373,8 +376,8 @@ const char* bj_get_error_assert_str(bj_solver_t bjs){
 		return NULL;
 	}
 	solver& the_slvr = *((solver*)bjs);
-	const char* stck_str = the_slvr.slv_inst.ist_err_stack_str.c_str();
-	return stck_str;
+	const char* assrt_str = the_slvr.slv_inst.ist_err_assrt_str.c_str();
+	return assrt_str;
 }
 
 void				bj_restart(bj_solver_t bjs){
@@ -386,10 +389,6 @@ void				bj_restart(bj_solver_t bjs){
 	
 	inst.init_instance_info(true, true);
 	inst.ist_id = 0;
-}
-
-int 	bj_update(bj_solver_t dest, bj_solver_t src){
-	return 0;
 }
 
 void		bj_print_paths(bj_solver_t bjs){

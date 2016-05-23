@@ -88,6 +88,10 @@ public:
 
 //=================================================================
 // instance_info
+/*! \class instance_info
+\brief Class that holds an instance data.
+
+*/
 
 class instance_info {
 private:
@@ -163,6 +167,7 @@ public:
 		ist_err_stack_str = "no_stack_string_found";
 	}
 	
+	//! init and output
 	static
 	void	init_output(bj_output_t& out){	
 		out.bjo_result = bjr_unknown_satisf;

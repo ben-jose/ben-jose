@@ -26,16 +26,16 @@ ben-jose is free software thanks to The Glory of Our Lord
 	Yashua Melej Hamashiaj.
 Our Resurrected and Living, both in Body and Spirit, 
 	Prince of Peace.
-*/
-
-/*! ------------------------------------------------------------
+------------------------------------------------------------*/
+/*! 
 
 \file brain.h
 
 \brief Declarations of classes and that implement the solver's core 
 functionality.
 
---------------------------------------------------------------*/
+*/
+//--------------------------------------------------------------
 
 #ifndef BRAIN_H
 #define BRAIN_H
@@ -3366,6 +3366,7 @@ public:
 	bool		ck_mono_propag();
 	long		propagate_signals();
 	void		pulsate();
+	
 	void		start_propagation(quanton& qua);
 	comparison	select_propag_side(bool cnfl1, long sz1, row_long_t& all_sz1, 
 								bool cnfl2, long sz2, row_long_t& all_sz2);
@@ -3825,6 +3826,7 @@ public:
 	bool		load_brain(long num_neu, long num_var, row_long_t& load_ccls);
 	
 	bool		load_instance();
+
 	void		think();
 	
 	bj_satisf_val_t 	solve_instance(bool load_it);

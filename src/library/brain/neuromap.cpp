@@ -42,6 +42,12 @@ neuromap class.
 
 char* neuromap::CL_NAME = as_pt_char("{neuromap}");
 
+/*! 
+\brief It tries to find a \ref neuromap.
+\see macro_algorithm_ben_jose.cpp
+\callgraph
+\callergraph
+*/
 bool
 neuromap::map_find(){
 	DBG_COMMAND(4, // NEVER_FIND
@@ -60,7 +66,6 @@ neuromap::map_find(){
 	bool op_resp = map_oper(mo_find);
 	return op_resp;
 }
-//TODO: get rid of NOT_DBG macro
 
 void
 dbg_aux_prt_neus(bj_ostream& os, ch_string tit, row_neuron_t& all_neus, ticket& nmp_tk){
@@ -78,6 +83,12 @@ dbg_aux_prt_neus(bj_ostream& os, ch_string tit, row_neuron_t& all_neus, ticket& 
 #endif
 }
 
+/*! 
+\brief It tries to write a \ref neuromap.
+\see macro_algorithm_ben_jose.cpp
+\callgraph
+\callergraph
+*/
 bool
 neuromap::map_write(bool force_full){
 	DBG_COMMAND(5, // NEVER_WRITE
@@ -739,6 +750,12 @@ coloring::copy_co_to(coloring& col2){
 
 // MAP_OPER_CODE
 
+/*! 
+\brief It stabilizes a \ref neuromap to a BCFF and then finds or writes the BCFF.
+\see macro_algorithm_ben_jose.cpp
+\callgraph
+\callergraph
+*/
 bool
 neuromap::map_oper(mem_op_t mm){
 	brain& brn = get_brn();
@@ -2066,6 +2083,12 @@ cov_entry::print_cov_entry(bj_ostream& os, bool from_pt){
 	return os;
 }
 
+/*! 
+\brief It stabilizes a \ref neuromap to a BCFF.
+\see macro_algorithm_ben_jose.cpp
+\callgraph
+\callergraph
+*/
 bool
 neuromap::map_prepare_mem_oper(mem_op_t mm){
 	brain& brn = get_brn();
