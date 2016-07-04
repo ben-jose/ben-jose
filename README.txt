@@ -1,7 +1,7 @@
 
 README.txt
 ------------------------------------------------------------
-WEB-SITE: http://joseluisquiroga.github.io/ben-jose/
+WEB-SITE: https://ben-jose.github.io/
 ------------------------------------------------------------
 
 This file is part of ben-jose.
@@ -35,6 +35,6 @@ Trainable SAT Solver Library for dimacs-cnf files.
 
 INSTALL INSTRUCTIONS in:
 
-http://joseluisquiroga.github.io/ben-jose/
+https://ben-jose.github.io/
 
 ------------------------------------------------------------
