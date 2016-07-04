@@ -27,11 +27,12 @@ ben-jose is free software thanks to The Glory of Our Lord
 Our Resurrected and Living, both in Body and Spirit, 
 	Prince of Peace.
 
-------------------------------------------------------------
+*/
 
-ben_jose.cpp  
+/*! ------------------------------------------------------------
+\file ben_jose.cpp  
 
-ben_jose interface impl.
+\brief File containing the implementation code for the users API of ben_jose.
 
 --------------------------------------------------------------*/
 
@@ -51,6 +52,8 @@ void 		bj_init_output(bj_output_t* the_out){
 	}
 	instance_info::init_output(*the_out);
 }
+
+//TODO: get rid of NOT_DBG macro
 
 bj_solver_t bj_solver_create(const char* bjs_dir_path){
 	if(bjs_dir_path == NULL){
@@ -167,6 +170,13 @@ bj_set_param_char(bj_solver_t bjs, bj_param_t prm, char val){
 				the_slvr.slv_prms.sp_write_proofs = true;
 			}
 			break;
+		case bjp_test_result:
+			if(val == 0){
+				the_slvr.slv_prms.sp_test_result = false;
+			} else {
+				the_slvr.slv_prms.sp_test_result = true;
+			}
+			break;
 		default:
 			break;
 	}
@@ -181,8 +191,29 @@ bj_get_param_char(bj_solver_t bjs, bj_param_t prm){
 	solver& the_slvr = *((solver*)bjs);
 	char rr = 0;
 	switch(prm){
+		case bjp_as_release:
+			if(the_slvr.slv_prms.sp_as_release){
+				rr = 1;
+			} else {
+				rr = 0;
+			}
+			break;
+		case bjp_only_deduc:
+			if(the_slvr.slv_prms.sp_only_deduc){
+				rr = 1;
+			} else {
+				rr = 0;
+			}
+			break;
 		case bjp_write_proofs:
 			if(the_slvr.slv_prms.sp_write_proofs){
+				rr = 1;
+			} else {
+				rr = 0;
+			}
+			break;
+		case bjp_test_result:
+			if(the_slvr.slv_prms.sp_test_result){
 				rr = 1;
 			} else {
 				rr = 0;
@@ -194,7 +225,7 @@ bj_get_param_char(bj_solver_t bjs, bj_param_t prm){
 	return rr;
 }
 
-const char* bj_get_path(bj_solver_t bjs){
+const char* bj_get_database_path(bj_solver_t bjs){
 	if(bjs == NULL){
 		return NULL;
 	}
@@ -225,7 +256,7 @@ bj_satisf_val_t 	bj_solve_file(bj_solver_t bjs, const char* f_path){
 	return res;
 }
 
-bj_satisf_val_t 	bj_solve_data(bj_solver_t bjs, long dat_sz, char* dat){
+bj_satisf_val_t 	bj_solve_data(bj_solver_t bjs, long dat_sz, const char* dat){
 	if(bjs == NULL){ return bjr_error; }
 	//if(f_path == NULL){ return bjr_error; }
 	
@@ -293,6 +324,15 @@ bj_output_t 		bj_get_output(bj_solver_t bjs){
 	return the_slvr.slv_inst.ist_out;
 }
 
+const char* bj_get_solve_file_path(bj_solver_t bjs){
+	if(bjs == NULL){
+		return NULL;
+	}
+	solver& the_slvr = *((solver*)bjs);
+	const char* pth = the_slvr.slv_inst.ist_file_path.c_str();
+	return pth;
+}
+
 const long* bj_get_assig(bj_solver_t bjs){
 	if(bjs == NULL){
 		return NULL;
@@ -327,8 +367,8 @@ const char* bj_get_error_stack_str(bj_solver_t bjs){
 		return NULL;
 	}
 	solver& the_slvr = *((solver*)bjs);
-	const char* assrt_str = the_slvr.slv_inst.ist_err_assrt_str.c_str();
-	return assrt_str;
+	const char* stck_str = the_slvr.slv_inst.ist_err_stack_str.c_str();
+	return stck_str;
 }
 
 const char* bj_get_error_assert_str(bj_solver_t bjs){
@@ -336,8 +376,8 @@ const char* bj_get_error_assert_str(bj_solver_t bjs){
 		return NULL;
 	}
 	solver& the_slvr = *((solver*)bjs);
-	const char* stck_str = the_slvr.slv_inst.ist_err_stack_str.c_str();
-	return stck_str;
+	const char* assrt_str = the_slvr.slv_inst.ist_err_assrt_str.c_str();
+	return assrt_str;
 }
 
 void				bj_restart(bj_solver_t bjs){
@@ -349,10 +389,6 @@ void				bj_restart(bj_solver_t bjs){
 	
 	inst.init_instance_info(true, true);
 	inst.ist_id = 0;
-}
-
-int 	bj_update(bj_solver_t dest, bj_solver_t src){
-	return 0;
 }
 
 void		bj_print_paths(bj_solver_t bjs){
@@ -424,3 +460,39 @@ const char* bj_error_str(bj_error_t bje){
 	}
 	return e_str;
 }
+
+const char*
+bj_get_result_titles_string(bj_solver_t bjs){
+	if(bjs == NULL){
+		return NULL_PT;
+	}
+	solver& the_slvr = *((solver*)bjs);
+	instance_info& inst = the_slvr.slv_inst;
+
+	inst.set_result_titles_str();
+	return inst.ist_result_titles_str.c_str();
+}
+
+const char*
+bj_get_result_string(bj_solver_t bjs){
+	if(bjs == NULL){
+		return NULL_PT;
+	}
+	solver& the_slvr = *((solver*)bjs);
+	instance_info& inst = the_slvr.slv_inst;
+
+	inst.set_result_str();
+	return inst.ist_result_str.c_str();
+}
+
+void
+bj_parse_result_string(bj_solver_t bjs, const char* rslt_str){
+	if(bjs == NULL){
+		return;
+	}
+	solver& the_slvr = *((solver*)bjs);
+	instance_info& inst = the_slvr.slv_inst;
+	ch_string r_str = rslt_str;
+	inst.parse_result_str(r_str);
+}
+

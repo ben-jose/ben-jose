@@ -365,6 +365,12 @@ brain::ck_cov_flags(){
 	return true;
 }
 
+/*! 
+\brief Writes all \ref neuromap s (candidates) that need writing.
+\see macro_algorithm_ben_jose.cpp
+\callgraph
+\callergraph
+*/
 void
 write_all_nmps(row<neuromap*>& to_wrt){
 	for(int aa = 0; aa < to_wrt.size(); aa++){
@@ -410,6 +416,12 @@ deducer::get_first_causes(deduction& dct){
 	causes.copy_to(fst_causes);
 }
 
+/*! 
+\brief Does conflict analysis, BCFFs finding and BCFFs writing.
+\see macro_algorithm_ben_jose.cpp
+\callgraph
+\callergraph
+*/
 void
 brain::analyse_conflicts(row<prop_signal>& all_confl, deduction& dct){
 	BRAIN_DBG(br_dbg_in_analysis = true);
@@ -577,6 +589,12 @@ deducer::find_all_to_write(row<neuromap*>& to_wrt, reason& rsn){
 	BRAIN_CK(brn.br_na_tot_na0 == 0);
 }
 
+/*! 
+\brief Does full BCFF finding with active write candidates.
+\see macro_algorithm_ben_jose.cpp
+\callgraph
+\callergraph
+*/
 void
 brain::candidate_find_analysis(deducer& dedcer, deduction& dct)
 {
@@ -900,6 +918,11 @@ deducer::is_end_of_rsn(bool in_roo){
 	return is_end;
 }
 
+/*! 
+\brief It does normal resolution analysis (CDCL).
+\callgraph
+\callergraph
+*/
 void
 deducer::deduce(deduction& dct, long max_lv)
 {

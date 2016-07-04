@@ -108,6 +108,7 @@ public:
 	bool	sp_as_release;
 	bool	sp_only_deduc;
 	bool	sp_write_proofs;
+	bool	sp_test_result;
 	
 	slvr_params(){
 		init_slvr_params();
@@ -117,6 +118,7 @@ public:
 		sp_as_release = false;
 		sp_only_deduc = false;
 		sp_write_proofs = false;
+		sp_test_result = false;
 	}
 };
 

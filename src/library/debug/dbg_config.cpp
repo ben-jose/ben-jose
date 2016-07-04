@@ -62,7 +62,7 @@ config_reader::parse_debug_line(row<long>& dbg_line, ch_string& str_ln){
 			}
 			//os << pt_in << "$\n";
 			
-			long val = parse_int(pt_in, num_ln); 
+			long val = parse_long(pt_in, num_ln); 
 			//skip_whitespace(pt_in, num_ln);
 	
 			dbg_line.push(val);

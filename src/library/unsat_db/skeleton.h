@@ -162,9 +162,9 @@ bool		path_is_dead_lock(ch_string the_pth);
 //bool		path_is_diff_file(ch_string the_pth);
 
 ch_string&	slice_str_to_path(ch_string& sha_txt);
-ch_string	long_to_path(long nn, long d_per_dir);
+//ch_string	long_to_path(long nn, long d_per_dir);
 bool		all_digits(ch_string& the_str);
-ch_string	cnf_dims_to_path(const dima_dims& dims);
+//ch_string	cnf_dims_to_path(const dima_dims& dims);
 
 void		delete_sha_skeleton(ch_string& sha_pth);
 
@@ -173,7 +173,7 @@ bool		canon_save(skeleton_glb& skg, ch_string& the_pth, row<char>& cnn,
 bool		canon_load(skeleton_glb& skg, ch_string& the_pth, row<char>& cnn);
 bool		canon_equal(skeleton_glb& skg, ch_string& the_pth, row<char>& cnn);
 
-ch_string	canon_hash_path(const dima_dims& dims, ch_string sha_str);
+//ch_string	canon_hash_path(const dima_dims& dims, ch_string sha_str);
 //ch_string	canon_lock_name(const dima_dims& dims, ch_string sha_str);
 
 void		canon_print(bj_ostream& os, row<char>& cnn);
@@ -368,7 +368,13 @@ comparison
 cmp_variant(variant const & vnt1, variant const & vnt2);
 
 //=================================================================
-// canon_cnf
+/*! \class canon_cnf
+\brief A canon_cnf is a BCFF. An stabilized sub-formula. 
+\ingroup docgrp_matching_classes
+
+\details
+It represents the output of an stabilization process: the stabilized CNF sub-formula. It is the interface class to the database class that handles all disk operations (the \ref skeleton_glb class). This class contains some disk handling related information (paths and sha info). A \ref canon_cnf basically is a set of \ref canon_clause s (which are basically arrays of numbers).
+*/
 
 enum cnf_kind_t {
 	fk_invalid = 10,
@@ -729,6 +735,28 @@ public:
 
 //=================================================================
 // skeleton_glb
+/*! \class skeleton_glb
+\brief A skeleton_glb is a directory holding a database.
+\ingroup docgrp_database_classes
+
+\details
+The skeleton class handles all disk related functions and management. The database is basically a directory and all its sub-directories in disk. The directory (skeleton) is seen as a group of (''key'',''value'') pairs. Just like a common database ''index'', a ''dictionary'' class, or a ''map'' class. A path within the skeleton is a ''key'' and the files in the path are the ''value''. To see if a ''key'' exists is to see if a path exists within the skeleton. Unsatisfiable \ref canoncnf s are saved and searched by the SHA function of their content. They are saved in a path (''key'') that is constructed with the SHA and other relevant search info. 
+
+Since an unsatisfiable sub-formula might not be minimal (have some unnecessary clauses for unsatisfiability), each unsatisfiable CNF sub-formula has three relevant \ref canoncnf : 
+
+<ul>
+<li>
+The guide. It is the \ref canoncnf resulting of stabilizing the CNF sub-formula covered by first search branch variables. So it is a satisfiable part of the unsatisfiable CNF sub-formula that is a ''guide'' for the search.
+
+<li>
+The tauto. It is the full unsatisfiable CNF sub-formula. It is the \ref canoncnf resulting of stabilizing the CNF sub-formula covered by both search branches charged \ref quanton s (used variables). 
+
+<li>
+The diff. This \ref canoncnf contains all \ref canon_clause s in tauto but not in guide. Each diff is saved in a path called 'variant' in the skeleton. So one guide can have several variants. 
+</ul>
+
+A search of a target CNF sub-formula is conducted in two phases: the search for the guide of the target and the search for the variant that is a sub-formula of the target diff. Once the guide is stabilized the search for it is a simple: ''see if its path exists'' (remember that its path contains the SHA of its content). If the target \ref canoncnf is not equal to a variant (the path does not exist), the second phase is more time consuming because it involves reading each variant and comparing it to the target diff to see if the the variant is a sub-formula of the target diff (which would mean that the target is unsatisfiable and therefore can be backtracked).
+*/
 
 class skeleton_glb {
 public:

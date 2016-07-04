@@ -302,6 +302,7 @@ canon_string_append(row<char>& cnn, ch_string ss){
 //============================================================
 // skeleton path funcs
 
+/*
 ch_string
 canon_hash_path(const dima_dims& dims, ch_string sha_str){
 	SKELETON_CK(dims.dd_tot_lits >= 0);
@@ -324,6 +325,7 @@ canon_hash_path(const dima_dims& dims, ch_string sha_str){
 	SKELETON_CK(*(unique_str.rbegin()) == '/');
 	return unique_str;
 }
+*/
 
 ch_string&
 slice_str_to_path(ch_string& sha_txt){
@@ -348,6 +350,7 @@ slice_str_to_path(ch_string& sha_txt){
 	return sha_txt;
 }
 
+/*
 ch_string
 long_to_path(long nn, long d_per_dir){
 	bj_ostr_stream ss_path;
@@ -368,6 +371,7 @@ long_to_path(long nn, long d_per_dir){
 	SKELETON_CK((ss_path.str())[0] == '/');
 	return ss_path.str();
 }
+*/
 
 bool
 all_digits(ch_string& the_str){
@@ -379,6 +383,7 @@ all_digits(ch_string& the_str){
 	return true;
 }
 
+/*
 ch_string
 cnf_dims_to_path(const dima_dims& dims){
 	long n_digs = SKG_NUM_DIGITS_IN_DIRNAM_OF_NUMBER_PATH;
@@ -409,7 +414,6 @@ cnf_dims_to_path(const dima_dims& dims){
 	return pth;
 }
 
-/*
 ch_string
 canon_lock_name(const dima_dims& dims, ch_string sha_str){
 	long tot_lits = dims.dd_tot_lits;
@@ -1461,7 +1465,7 @@ canon_cnf::i_super_of_vnt(skeleton_glb& skg, ch_string& vpth){
 	bool are_eq = false;
 	bool is_sub = i_am_super_of(the_cnf, are_eq);
 
-	if(is_sub && has_instance_info()){
+	/*if(is_sub && has_instance_info()){
 		bj_output_t& o_info = get_info().ist_out;
 		bool is_nw = is_new(skg);
 		if(are_eq){
@@ -1477,7 +1481,7 @@ canon_cnf::i_super_of_vnt(skeleton_glb& skg, ch_string& vpth){
 				o_info.bjo_sb_old_hits++;
 			}
 		}
-	}
+	}*/
 	
 	return is_sub;
 }
@@ -1545,7 +1549,7 @@ skeleton_glb::find_skl_path(ch_string pth_to_find, instance_info* iinfo){
 		strset_add_path(all_found, pth_to_find);
 	}
 
-	if(found_it && (iinfo != NULL)){
+	/*if(found_it && (iinfo != NULL)){
 		bj_output_t& o_info = iinfo->ist_out;
 		bool is_nw = strset_find_path(kg_cnf_new_paths, pth_to_find);
 		if(is_nw){
@@ -1553,7 +1557,7 @@ skeleton_glb::find_skl_path(ch_string pth_to_find, instance_info* iinfo){
 		} else {
 			o_info.bjo_old_pth_hits++;
 		}
-	}
+	}*/
 	
 	return found_it;
 }

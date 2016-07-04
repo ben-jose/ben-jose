@@ -313,6 +313,12 @@ sortee::unsort_me(sort_glb& srg){
 	SORTER_CK(is_alone());
 }
 
+/*! 
+\brief The basic stabilization step finds the next \ref sorset and puts this \ref sortee in it.
+\see macro_algorithm_ben_jose.cpp
+\callgraph
+\callergraph
+*/
 void
 sortee::sort_from(sort_glb& srg, sort_id_t curr_id, void* id_src){
 	DBG_SORTOR_PRT(58, os << "sort from srt=" << this << " ID=" << curr_id);
@@ -654,6 +660,18 @@ sortee::update_totals(sort_glb& srg, long tgt_sz){
 	}
 }
 
+/*! 
+\brief It calls sortee::sort_from operations for all \ref sortee s in tees.
+\param tees The \ref sortee s to call sortee::sort_from:
+\param curr_id Current consecutive sorting id for this \ref sort_glb.
+\param add_ccl_id If true it appends ccl_id to the so_ccl field (a \ref canon_cnf) of each \ref sortee in tees.
+\param ccl_id The literal to be added to the BCFF if add_ccl_id is true.
+\param sort_opps If true it uses de opposite of each \ref sortee s in tees.
+\param tgt If (tgt != tc_none) sg_cnf_dims for this \ref sort_glb is updated.
+\param dbg_srg Auxsiliary param for debugging pourposes.
+\param dbg_srt Auxsiliary param for debugging pourposes.
+\see macro_algorithm_ben_jose.cpp
+*/
 void
 sort_glb::sort_all_from(row<sortee*>& tees, sort_id_t curr_id, 
 						bool add_ccl_id, long ccl_id, bool sort_opps, 
@@ -796,6 +814,18 @@ sort_glb::dbg_prt_margin(bj_ostream& os, bool is_ck){
 	return ret;
 }
 
+/*! 
+\brief It does sortee::sort_from operations on this \ref sorset 's \ref sortee s.
+\param srg1 The base \ref sort_glb:
+- A \ref neuron s \ref sort_glb if stabilizing \ref neuron \ref sortee s
+- A \ref quanton s \ref sort_glb if stabilizing \ref quanton \ref sortee s
+\param srg2 The complement of srg1:
+- A \ref quanton s \ref sort_glb if srg1 is a \ref neuron s \ref sort_glb
+- A \ref neuron s \ref sort_glb if srg1 is a \ref quanton s \ref sort_glb
+\see macro_algorithm_ben_jose.cpp
+\callgraph
+\callergraph
+*/
 void
 sorset::step_mutual_stabilize_rec(sort_glb& srg1, sort_glb& srg2)
 {
@@ -1103,12 +1133,24 @@ sort_glb::stab_mutual_walk(){
 	SORTER_CK(sg_curr_stab_consec >= sg_dbg_last_id);
 }
 
+/*! 
+\brief It stabilizes two 'loaded' (initialized) \ref sort_glb with a \ref neuromap (no further refinement is possible).
+\see macro_algorithm_ben_jose.cpp
+\callgraph
+\callergraph
+*/
 void
 sort_glb::stab_mutual(sort_glb& srg2, bool one_ccl_per_ss){
 	stab_mutual_core(srg2);
 	stab_mutual_end(srg2, one_ccl_per_ss);
 }
 
+/*! 
+\brief It stabilizes \ref neuron \ref sortee s and \ref quanton \ref sortee s until no further refinement is possible.
+\see macro_algorithm_ben_jose.cpp
+\callgraph
+\callergraph
+*/
 void
 sort_glb::stab_mutual_core(sort_glb& srg2){
 	SORTER_CK(&srg2 != this);
@@ -1250,6 +1292,12 @@ sort_glb::stab_mutual_choose_one(sort_glb& srg2){
 	SORTER_CK(srg2.sg_curr_stab_consec >= srg2.sg_dbg_last_id);
 }
 
+/*! 
+\brief It stabilizes two 'loaded' (initialized) \ref sort_glb with a \ref neuromap to a BCFF.
+\see macro_algorithm_ben_jose.cpp
+\callgraph
+\callergraph
+*/
 void
 sort_glb::stab_mutual_unique(sort_glb& srg2, neuromap* dbg_nmp){
 	SORTER_CK(&srg2 != this);
@@ -1315,17 +1363,32 @@ sort_glb::get_final_cnf(skeleton_glb& skg, bool sorted_cnf, long precalc_tot_var
 	return sg_cnf_step;
 }
 
+/*! 
+\brief It does sort_from operations on this \ref sort_glb \ref neuron \ref sortee s.
+\callgraph
+\callergraph
+*/
 void
 sort_glb::step_neus(sort_glb& mates_srg){
 	step_mutual_stabilize(mates_srg, sm_with_neus);
 }
 
+/*! 
+\brief It does sort_from operations on this \ref sort_glb opposite \ref quanton \ref sortee s.
+\callgraph
+\callergraph
+*/
 void
 sort_glb::step_opps(sort_glb& mates_srg){
 	step_mutual_stabilize(mates_srg, sm_with_opps);
 	SORTER_CK(sg_cnf_clauses.is_empty());
 }
 
+/*! 
+\brief It does sort_from operations on this \ref sort_glb \ref quanton \ref sortee s.
+\callgraph
+\callergraph
+*/
 void
 sort_glb::step_quas(sort_glb& mates_srg){
 	step_mutual_stabilize(mates_srg, sm_with_quas);

@@ -118,6 +118,90 @@ DEFINE_NA_FLAG_ALL_FUNCS(na1);
 #define SOLVING_TIMEOUT			0.0		// 0.0 if no timeout
 
 //============================================================
+/*! \mainpage <h1>Introduction</h1>
+
+<p>
+This is the doxy generated documentation of the <a href="https://github.com/joseluisquiroga/ben-jose" target="blank">
+Ben-Jose</a> Trainable SAT Solver Library. It is not a complete reference of all the classes and functions. It is a selection of the most releveant classes and functions that help in the understanding of the innerworkig of the library.
+
+<p> The \ref docgrp_API of the library is implemented in the files ben_jose.cpp and ben_jose.h, and documented in:
+
+<ul>
+<li> \ref docgrp_API
+</ul>
+
+<p>
+The architecture of the ben-jose library is strongly monolitic in the sense that the basic functionality of the whole library is basically one function (brain::solve_instance) with three presentations: 
+
+<ul>
+<li> \ref bj_solve_file
+<li> \ref bj_solve_data 
+<li> \ref bj_solve_literals
+</ul>
+
+<p>
+That means that every piece of code within the 'library' directory of the source tree is tightly coupled. Having said that, this documentations should give a good idea of it's architecture.
+
+<p>
+The most relevant classes of the library implementation can be grouped as:
+
+<ul>
+<li> \ref docgrp_CDCL_classes
+<li> \ref docgrp_stab_classes
+<li> \ref docgrp_matching_classes
+<li> \ref docgrp_database_classes
+</ul>
+
+<p>
+The macro behavior of the innerwork of the library is described in:
+
+<ul>
+<li> macro_algorithm_ben_jose.cpp
+</ul>
+
+*/
+
+//============================================================
+/*! \defgroup docgrp_CDCL_classes DPLL+BCP+CDCL classes
+
+This group corresponds to all classes relating to DPLL+BCP+CDCL processing.
+*/
+
+//============================================================
+/*! \defgroup docgrp_stab_classes Stabilization classes
+
+This group corresponds to all classes relating to the stabilization processes. The process of calculating a BDUST canonical form formula (BCFF) is called stabilization.
+*/
+
+//============================================================
+/*! \defgroup docgrp_matching_classes Matching classes
+
+This group corresponds to all classes relating to the CNF matching processes. Matching consists basically of two steps. Stabilization and finding the resulting BCFF in the database of BCFFs.
+*/
+
+//============================================================
+/*! \defgroup docgrp_database_classes Database classes
+
+The \ref skeleton_glb class handles all disk related functions and management. The database is basically a directory and all its sub-directories in disk. The directory (\ref skeleton_glb) is seen as a group of (''key'',''value'') pairs. Just like a common database ''index'', a ''dictionary'' class, or a ''map'' class. A path within the \ref skeleton_glb is a ''key'' and the files in the path are the ''value''. To see if a ''key'' exists is to see if a path exists within the \ref skeleton_glb. Unsatisfiable \ref canon_cnf s are saved and searched by the SHA function of their content. They are saved in a path (''key'') that is constructed with the SHA and other relevant search info. 
+
+Since an unsatisfiable sub-formula might not be minimal (have some unnecessary clauses for unsatisfiability), each unsatisfiable CNF sub-formula has three relevant \ref canon_cnf: 
+
+<ul>
+<li>
+The guide. It is the \ref canon_cnf resulting of stabilizing the CNF sub-formula covered by first search branch variables. So it is a satisfiable part of the unsatisfiable CNF sub-formula that is a ''guide'' for the search.
+
+<li>
+The tauto. It is the full unsatisfiable CNF sub-formula. It is the \ref canon_cnf resulting of stabilizing the CNF sub-formula covered by both search branches charged \ref quanton s (used variables). 
+
+<li>
+The diff. This \ref canon_cnf contains all \ref canon_clause s in tauto but not in guide. Each diff is saved in a path called 'variant' in the \ref skeleton_glb. So one guide can have several variants. 
+</ul>
+
+A search of a target CNF sub-formula is conducted in two phases: the search for the guide of the target and the search for the variant that is a sub-formula of the target diff. Once the guide is stabilized the search for it is a simple: ''see if its path exists'' (remember that its path contains the SHA of its content). If the target \ref canon_cnf is not equal to a variant (the path does not exist), the second phase is more time consuming because it involves reading each variant and comparing it to the target diff to see if the the variant is a sub-formula of the target diff (which would mean that the target is unsatisfiable and therefore can be backtracked).
+
+*/
+
+//============================================================
 // static vars
 
 char*	alert_rel::CL_NAME = as_pt_char("{alert_rel}");
@@ -1112,7 +1196,7 @@ brain::set_result(bj_satisf_val_t re){
 
 	the_result = re;
 
-	DBG_PRT(27, os << "RESULT " << as_ist_satisf_str(the_result));
+	DBG_PRT(27, os << "RESULT " << as_satisf_str(the_result));
 	DBG_PRT(28, os << "HIT ENTER TO CONTINUE...");
 	DBG_COMMAND(28, getchar());
 }
@@ -1256,6 +1340,13 @@ brain::fill_with_origs(row_neuron_t& neus){
 	}
 }
 
+/*! 
+\brief This is the main processing function to solve an instance. It get called by solve_instance.
+
+\see macro_algorithm_ben_jose.cpp
+\callgraph
+\callergraph
+*/
 void 
 brain::think(){
 	DBG_PRT(147, dbg_print_all_qua_rels(os));
@@ -1661,6 +1752,13 @@ brain::ck_mono_propag(){
 	return true;
 }
 
+/*! 
+\brief This is function does BCP and most of the maintaining of the \ref neuromap s (candidates) to be written and found.
+\details It also does all maintaining of monos and choices.
+\see macro_algorithm_ben_jose.cpp
+\callgraph
+\callergraph
+*/
 long
 brain::propagate_signals(){
 	if(found_conflict() || ! has_psignals()){
@@ -1806,6 +1904,13 @@ brain::get_last_lv_charges(row_quanton_t& all_lv_pos){
 	}
 }
 
+/*! 
+\brief This is the basic step function while solving an instance. It does one full backtrack.
+\details Observe that this function might ddo more than one retract while selecting the best \ref quanton choice, but it does only one deduction and one backtrack.
+\see macro_algorithm_ben_jose.cpp
+\callgraph
+\callergraph
+*/
 void
 brain::pulsate(){
 	propagate_signals();
@@ -2035,6 +2140,15 @@ brain::dbg_init_html(){
 #endif
 }
 
+/*!
+\brief This is the starting point to solve any instance. It is the main function of the implementation.
+\param load_it Set this parameter to true if this \ref brain must be loaded or not (all \ref quanton s and \ref neuron s get initialized).
+
+\details To better understand the implementation have a look at \ref macro_algorithm_ben_jose.cpp.
+\see macro_algorithm_ben_jose.cpp
+\callgraph
+\callergraph
+*/
 bj_satisf_val_t
 brain::solve_instance(bool load_it){
 	brain& brn = *this;
@@ -2058,6 +2172,20 @@ brain::solve_instance(bool load_it){
 	
 	instance_info& inst_info = get_my_inst();
 	bj_output_t& o_info = get_out_info();
+	
+	DBG(o_info.bjo_dbg_enabled = 1);
+	DBG_COMMAND(4, o_info.bjo_dbg_never_find = 1); // NEVER_FIND
+	DBG_COMMAND(5, o_info.bjo_dbg_never_write = 1); // NEVER_WRITE
+	DBG_COMMAND(7, o_info.bjo_dbg_min_trainable = 1); // MIN_TRAINABLE
+	DBG(
+		if(dbg_as_release()){ 
+			o_info.bjo_dbg_as_release = 1; 
+			o_info.bjo_dbg_never_find = 0;
+			o_info.bjo_dbg_never_write = 0;
+			o_info.bjo_dbg_min_trainable = 0;
+		}
+	);
+
 	try{
 		if(load_it){
 			bool all_ok = load_instance();
@@ -2129,10 +2257,6 @@ brain::solve_instance(bool load_it){
 	double slv_tm = (end_solve_tm - br_start_solve_tm);	
 	o_info.bjo_solve_time = slv_tm;
 	
-	instance_info& iinfo = get_my_inst();
-	o_info.bjo_max_variants = iinfo.ist_num_variants_stat.vs_max_val.get_d();
-	o_info.bjo_avg_variants = iinfo.ist_num_variants_stat.avg.get_d();
-
 	DBG_PRT(105, os << " LOC_CHOS=" << br_dbg.dbg_num_loc_cho << "/";
 		os << (br_dbg.dbg_num_loc_cho + br_dbg.dbg_num_glb_cho);
 	);
@@ -2142,6 +2266,12 @@ brain::solve_instance(bool load_it){
 	return o_info.bjo_result;
 }
 
+/*! 
+\brief Does all analysis and one backtrack.
+\see macro_algorithm_ben_jose.cpp
+\callgraph
+\callergraph
+*/
 bool
 brain::deduce_and_reverse_trail(){
 	BRAIN_CK(! br_dbg.dbg_old_deduc);
@@ -3907,7 +4037,7 @@ brain::ck_write_quas(reason& rsn){
 long
 brain::get_min_trainable_num_sub(){
 	long min_sub = MIN_TRAINABLE_NUM_SUB;
-	DBG_COMMAND(7, 
+	DBG_COMMAND(7, // MIN_TRAINABLE
 		if(! dbg_as_release()){
 			min_sub = br_dbg_min_trainable_num_sub;
 		}
@@ -4336,5 +4466,87 @@ bool
 deduction::can_go_on(){
 	bool gon = (! dt_found_top && ! dt_rsn.is_root_confl());
 	return gon;
+}
+
+void
+instance_info::set_result_titles_str(){
+	bj_ostr_stream os;
+	
+	ch_string sep = RESULT_FIELD_SEP;
+	os << "file_path" << sep;
+	os << "result" << sep;
+	os << "num_laps" << sep;
+	os << "num_recoils" << sep;
+	os << "num_cnf_saved" << sep;
+	os << "num_cnf_finds" << sep;
+	os << "solve_time" << sep;
+	os << "num_lits" << sep;
+	os << "num_vars" << sep;
+	os << "num_ccls" << sep;
+	
+	// 10 fields
+
+	ist_result_titles_str = os.str();
+}
+
+void
+instance_info::set_result_str(){
+	bj_ostr_stream os;
+	
+	ch_string sep = RESULT_FIELD_SEP;
+	os << ist_file_path << sep;
+	
+	bj_output_t& out_dat = ist_out;
+	os << as_satisf_str(out_dat.bjo_result) << sep;
+	os << out_dat.bjo_num_laps << sep;
+	os << out_dat.bjo_num_recoils << sep;
+	os << out_dat.bjo_num_cnf_saved << sep;
+	os << out_dat.bjo_num_cnf_finds << sep;
+	os << out_dat.bjo_solve_time << sep;
+	os << out_dat.bjo_num_lits << sep;
+	os << out_dat.bjo_num_vars << sep;
+	os << out_dat.bjo_num_ccls << sep;
+	
+	// 10 fields
+
+	ist_result_str = os.str();
+}
+
+void
+instance_info::parse_result_str(ch_string& in_str){
+	init_instance_info(true);
+	
+	char sep = RESULT_FIELD_SEP_CHAR;
+	long str_sz = in_str.length();
+	long pos = 0;
+	row<ch_string> all_str;
+	all_str.set_cap(11);
+	while(pos < str_sz){
+		long nxt_pos = in_str.find(sep, pos);
+		
+		long fld_len = nxt_pos - pos;
+		ch_string fld_str = in_str.substr(pos, fld_len);
+		all_str.push(fld_str);
+		
+		pos = nxt_pos + 1;
+	}
+	
+	if(all_str.size() < 10){
+		return;
+	}
+
+	ist_file_path = all_str[0];
+	
+	bj_output_t& out_dat = ist_out;
+	out_dat.bjo_result = as_satisf_val(all_str[1]);
+	out_dat.bjo_num_laps = parse_long_str(all_str[2]);
+	out_dat.bjo_num_recoils = parse_long_str(all_str[3]);
+	out_dat.bjo_num_cnf_saved = parse_long_str(all_str[4]);
+	out_dat.bjo_num_cnf_finds = parse_long_str(all_str[5]);
+	//os << out_dat.bjo_solve_time << sep; // index 6
+	out_dat.bjo_num_lits = parse_long_str(all_str[7]);
+	out_dat.bjo_num_vars = parse_long_str(all_str[8]);
+	out_dat.bjo_num_ccls = parse_long_str(all_str[9]);
+	
 }
 

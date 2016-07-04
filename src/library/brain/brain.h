@@ -26,14 +26,16 @@ ben-jose is free software thanks to The Glory of Our Lord
 	Yashua Melej Hamashiaj.
 Our Resurrected and Living, both in Body and Spirit, 
 	Prince of Peace.
+------------------------------------------------------------*/
+/*! 
 
-------------------------------------------------------------
+\file brain.h
 
-brain.h
+\brief Declarations of classes and that implement the solver's core 
+functionality.
 
-Declarations of classes and that implement the neural network.
-
---------------------------------------------------------------*/
+*/
+//--------------------------------------------------------------
 
 #ifndef BRAIN_H
 #define BRAIN_H
@@ -371,7 +373,13 @@ class alert_rel {
 };
 
 //=============================================================================
-// quanton
+/*! \class quanton
+\brief Class for CNF variables (each variable has a positon and a negaton).
+\ingroup docgrp_CDCL_classes
+
+\details
+There are two \ref quanton s per variable. \ref neuron s hold references to \ref quanton s called fibres. They are used for BCP.
+*/
 
 #define DECLARE_NI_FLAG_FUNCS(flag_attr, flag_nam) \
 	bool	has_pos_##flag_nam(){ \
@@ -911,7 +919,17 @@ void
 set_all_qu_nemap(row_quanton_t& all_quas, neuromap* nmp, long first_idx = 0);
 
 //=============================================================================
-// coloring
+/*! \class coloring
+\brief The initial and final state for an stabilization is a coloring. 
+\ingroup docgrp_matching_classes
+
+\details
+A color is just an integer. A coloring of a sub-formula is an assignation of an integer (\ref neuron - color) to each \ref neuron and an integer (\ref quanton -color) to each \ref quanton of the sub-formula. An stabilization may start with all \ref neurons having the same \ref neuron-color and all \ref quanton s having the same \ref quanton -color and finalize with each \ref neuron having a unique \ref neuron - color and each \ref quanton having a unique \ref quanton -color, called a complete coloring. 
+
+colorings are ''loaded'' into the \ref sortglb class in order to start stabilization. After stabilization the final coloring may be ''saved''. Each color in a coloring will correspond to one \ref sorset during stabilization. These ''loading'' and ''saving'' words are used in the software only in relation to the \ref sortglb class and have nothing to do with file operations.
+
+This class is used to specify only the input to the stabilization process (the initial state). The class \ref canon_cnf is used for the output (it is the result of applying the output coloring (stabilized coloring) to the sub-formula it defines: \ref neuron s and \ref quanton s in the coloring. To initialize the sortor, it ''loads'' the initial coloring into the \ref sortglb instance that will stabilize the CNF sub-formula.
+*/
 
 class coloring {
 	public:
@@ -1013,7 +1031,11 @@ class coloring {
 };
 
 //=============================================================================
-// neuron
+/*! \class neuron
+\brief Class for CNF clause behavior. So there is one neuron per clause.
+\ingroup docgrp_CDCL_classes
+
+*/
 
 #define DECLARE_NE_FLAG_FUNCS(flag_attr, flag_nam) \
 	bool		has_##flag_nam(){ \
@@ -1440,7 +1462,13 @@ class neuron {
 };
 
 //=============================================================================
-// prop_signal
+/*! \class prop_signal
+\brief Class for representing BCP propagation data.
+\ingroup docgrp_CDCL_classes
+
+\details
+Which \ref quanton fired by which \ref neuron (which clause forced a given variable). BCP is done with the two watched literals technique (two watched fibres in the library's terminology).
+*/
 
 #define DECLARE_PS_FLAG_ALL_FUNCS(flag_num) \
  	void		reset_ps_all_note##flag_num##_n_tag##flag_num(brain& brn, \
@@ -1676,7 +1704,13 @@ class reason {
 };
 
 //=============================================================================
-// deduction
+/*! \class deduction
+\brief Class that holds the result of analyzing (doing resolution) of a conflict.
+\ingroup docgrp_CDCL_classes
+
+\details
+It has the data for learning new \ref neuron s (clauses).
+*/
 
 class deduction {
 	public:
@@ -1997,7 +2031,13 @@ class qulayers {
 };
 
 //=============================================================================
-// neuromap
+/*! \class neuromap
+\brief A neuromap is a CNF sub-formula.
+\ingroup docgrp_matching_classes
+
+\details
+It is the pivot class to do all stabilization. It is maintained during BCP and used during backtracking in order to know what CNF sub-formulas are to be stabilized and searched for in the database (\ref skeleton_glb class). There is one neuromap per \ref leveldat and they are either active or inactive. Active when they are candidates for stabilizing, matching, searching and/or storing in the database, at backtrack time. During search, if a CNF sub-formula is found to be unsatisfiable, it is not trivial (too small), and both it's search branches had the same variables and clauses (so that it can latter be searched only with one of them), then the CNF sub-formula is stored in the database (\ref skeleton_glb class). Every time an still active neuromap has done its first branch of BCP, it is stabilized and searched for in the database (\ref skeleton_glb class). Trivial sub-formulas are basically ignored (see the use of 'brain::get_min_trainable_num_sub' method in the code). They are not searcned nor stored in \ref skeleton_glb (except for debugging purposes). 
+*/
 
 #define DECLARE_NA_FLAG_FUNCS(flag_attr, flag_nam) \
 	bool		has_##flag_nam(){ \
@@ -2774,7 +2814,11 @@ class qlayers_ref {
 };
 
 //=============================================================================
-// deducer
+/*! \class deducer
+\brief Class that holds the data used to analyze a conflict.
+\ingroup docgrp_CDCL_classes
+
+*/
 
 class deducer {
 	public:
@@ -2854,7 +2898,13 @@ class deducer {
 };
 
 //=============================================================================
-// leveldat
+/*! \class leveldat
+\brief Class that holds the data of a level.
+\ingroup docgrp_CDCL_classes
+
+\details
+A level is all that happens between choices during BCP. So there is one level per choice. This class holds level relevant data.
+*/
 
 class leveldat {
 	public:
@@ -2939,6 +2989,36 @@ class leveldat {
 };
 
 //=================================================================
+// test_info
+
+class test_info {
+public:
+	bool	ti_never_find;
+	bool	ti_never_write;
+	bool	ti_min_trainable;
+	bool	ti_as_release;
+	bool	ti_release;
+	
+	test_info() {
+		init_test_info();
+	}
+
+	~test_info(){
+		init_test_info();
+	}
+
+	void	init_test_info(){
+		ti_never_find = false;
+		ti_never_write = false;
+		ti_min_trainable = false;
+		ti_as_release = false;
+		ti_release = false;
+	}
+	
+};
+
+
+//=================================================================
 // dbg_inst_info
 
 #ifdef FULL_DEBUG
@@ -2956,8 +3036,6 @@ public:
 	row<canon_clause*> 	dbg_ccls;
 	canon_cnf		dbg_cnf;
 
-	bool	dbg_do_finds;
-	
 	bj_big_int_t	dbg_find_id;
 	bj_big_int_t	dbg_save_id;
 	//bj_big_int_t	dbg_canon_find_id;
@@ -2965,7 +3043,6 @@ public:
 
 	row_quanton_t		dbg_all_chosen;
 	
-	bool	dbg_just_read;
 	bool	dbg_clean_code;
 	bool	dbg_old_deduc;
 	
@@ -2995,7 +3072,13 @@ public:
 #endif
 
 //=============================================================================
-// brain
+/*! \class brain
+\brief Class that holds all data used to solve a particular CNF instance. 
+\ingroup docgrp_CDCL_classes
+
+\details
+There is one brain per CNF instance. It is created to solve an instance, and destroyed after solving that particular instance.
+*/
 
 void		due_periodic_prt(void* pm, double curr_secs);
 
@@ -3283,6 +3366,7 @@ public:
 	bool		ck_mono_propag();
 	long		propagate_signals();
 	void		pulsate();
+	
 	void		start_propagation(quanton& qua);
 	comparison	select_propag_side(bool cnfl1, long sz1, row_long_t& all_sz1, 
 								bool cnfl2, long sz2, row_long_t& all_sz2);
@@ -3742,6 +3826,7 @@ public:
 	bool		load_brain(long num_neu, long num_var, row_long_t& load_ccls);
 	
 	bool		load_instance();
+
 	void		think();
 	
 	bj_satisf_val_t 	solve_instance(bool load_it);
