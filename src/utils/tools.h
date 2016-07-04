@@ -1146,7 +1146,7 @@ public:
 		return (num_bytes / sizeof(obj_t));
 	}
 
-	void init_obj_data(obj_t* dat, long num_obj){
+	void init_obj_data(const obj_t* dat, long num_obj){
 		SZ_ATTRIB = num_obj;
 		CAP_ATTRIB = num_obj;
 		if(CAP_ATTRIB > 0){

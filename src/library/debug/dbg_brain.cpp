@@ -252,14 +252,11 @@ dbg_inst_info::init_dbg_inst_info(){
 	dbg_ccls.clear();
 	dbg_cnf.clear_cnf();
 	
-	dbg_do_finds = false;
-	
 	dbg_find_id = 0;
 	dbg_save_id = 0;
 	
 	dbg_all_chosen.clear();
 	
-	dbg_just_read = false;
 	dbg_clean_code = false;
 	dbg_old_deduc = false;
 	

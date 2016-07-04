@@ -57,6 +57,9 @@ Declaration of classes that batch solving.
 #define LOG_NM_RESULTS	"results.log"
 #define LOG_NM_STATS	"stats.log"
 #define LOG_NM_ASSIGS	"assigs.log"
+#define TEST_SUF		".test"
+
+#define INVALID_TEST_FILE	"invalid_test_file"
 
 //=================================================================
 // pre-configuration decl
@@ -86,43 +89,6 @@ get_log_name(ch_string f_nam, ch_string sufix){
 	return lg_nm;
 }
 
-inline
-bj_satisf_val_t
-as_satisf(ch_string str_ln){
-	bj_satisf_val_t the_val = bjr_unknown_satisf;
-	if(str_ln == RES_UNKNOWN_STR){
-		the_val = bjr_unknown_satisf;
-	} else if(str_ln == RES_YES_SATISF_STR){
-		the_val = bjr_yes_satisf;
-	} else if(str_ln == RES_NO_SATISF_STR){
-		the_val = bjr_no_satisf;
-	} else if(str_ln == RES_ERROR_STR){
-		the_val = bjr_error;
-	}
-	return the_val;
-}
-
-inline
-ch_string
-as_satisf_str(bj_satisf_val_t vv){
-	ch_string sf_str = RES_UNKNOWN_STR;
-	switch(vv){
-		case bjr_unknown_satisf:
-			sf_str = RES_UNKNOWN_STR;
-			break;
-		case bjr_yes_satisf:
-			sf_str = RES_YES_SATISF_STR;
-			break;
-		case bjr_no_satisf:
-			sf_str = RES_NO_SATISF_STR;
-			break;
-		case bjr_error:
-			sf_str = RES_ERROR_STR;
-			break;
-	}
-	return sf_str;
-}
-
 //=================================================================
 // decl
 	
@@ -133,14 +99,18 @@ DECLARE_PRINT_FUNCS(batch_entry)
 //=================================================================
 // batch_entry
 
+#define cbool_to_str(vv) ((vv == 0)?("0"):("1"))
+
 class batch_entry {
 public:
 	ch_string	be_ff_nam;
 	bj_output_t	be_out;
+	ch_string	be_result_str;
 	
 	batch_entry(){
 		be_ff_nam = "";
 		bj_init_output(&be_out);
+		be_result_str = "invalud_result_str";
 	}
 	
 	~batch_entry(){
@@ -161,11 +131,15 @@ public:
 	ch_string		help_str;
 	ch_string		version_str;
 
-	bool			op_debug_clean_code;
+	ch_string		result_titles_str;
+	
 	bool			op_only_deduc;
 	bool			op_write_proof;
-	bool			op_dbg_as_release;
+	bool			op_test_result;
+	bool			op_test_save;
 
+	bool			op_dbg_as_release;
+	
 	mem_size 		dbg_mem_at_start;
 
 	bool			dbg_skip_print_info;
@@ -177,10 +151,10 @@ public:
 
 	bool			batch_log_on;
 	ch_string		batch_name;
-	ch_string		batch_log_name;
-	ch_string		batch_end_log_name;
-	ch_string		batch_end_msg_name;
-	ch_string		batch_answer_name;
+	ch_string		batch_log_errors_pth;
+	ch_string		batch_log_results_pth;
+	ch_string		batch_log_stats_pth;
+	ch_string		batch_log_assigs_pth;
 
 	integer			batch_num_files;
 	integer			batch_consec;
@@ -197,24 +171,18 @@ public:
 	avg_stat		batch_stat_mem_used;
 
 	avg_stat		batch_stat_load_tm;
-	avg_stat		batch_stat_saved_targets;
-	avg_stat		batch_stat_variants;
-	avg_stat		batch_stat_num_finds;
+	avg_stat		batch_stat_num_cnf_saved;
+	avg_stat		batch_stat_num_cnf_finds;
 	avg_stat		batch_stat_quick_discards;
-	avg_stat		batch_stat_old_pth_hits;
-	avg_stat		batch_stat_new_pth_hits;
-	avg_stat		batch_stat_sub_cnf_hits;
-	avg_stat		batch_stat_eq_new_hits;
-	avg_stat		batch_stat_eq_old_hits;
-	avg_stat		batch_stat_sb_new_hits;
-	avg_stat		batch_stat_sb_old_hits;
-	
 
 	double			batch_start_time;
 	double			batch_end_time;
 	timer			batch_prt_totals_timer;
 
 	row<batch_entry>	batch_instances;
+	row<batch_entry>	batch_test_entries;
+	
+	bool			batch_test_has_errors;
 
 	ch_string		gg_file_name;
 
@@ -278,13 +246,18 @@ public:
 	bj_ostream&	print_final_totals(bj_ostream& os);
 	void		print_batch_consec();
 
-	void	log_message(const ch_string& msg_log);
-	void	log_batch_info();
+	void	log_error_message(const ch_string& msg_log);
+	void	log_batch_info(ch_string& log_nm);
+	void	print_end_msg();
 	void	read_batch_file(row<batch_entry>& names);
 	void	work_all_instances();
 	void	do_all_instances();
 	void	do_cnf_file();
-	
+
+	ch_string	get_test_file_path();
+	void	read_test_file(row<batch_entry>& test_entries, ch_string& file_nm_str);
+	void	test_result_entries();
+	bool	test_entry(batch_entry& rr, batch_entry& tt);
 };
 
 //=================================================================
@@ -293,14 +266,7 @@ public:
 inline
 bj_ostream& 	
 batch_entry::print_batch_entry(bj_ostream& os, bool from_pt){
-	ch_string sep = RESULT_FIELD_SEP;
-	os << be_ff_nam << sep;
-	os << as_satisf_str(be_out.bjo_result) << sep;
-	os << be_out.bjo_solve_time << sep;
-	os << be_out.bjo_num_vars << sep;
-	os << be_out.bjo_num_ccls << sep;
-	os << be_out.bjo_num_lits << sep;
-	os << be_out.bjo_num_laps << sep;
+	os << be_result_str;
 	return os;
 }
 

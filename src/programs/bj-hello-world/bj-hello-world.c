@@ -26,14 +26,15 @@ ben-jose is free software thanks to The Glory of Our Lord
 Our Resurrected and Living, both in Body and Spirit, 
 	Prince of Peace.
 
-------------------------------------------------------------
+------------------------------------------------------------ */
 
-hello_ben_jose.c
+/* \file bj-hello-world.c
 
-hello world for this library.
+\brief File of the hello world example to use ben-jose.
 
---------------------------------------------------------------*/
+*/
 
+//! [hello_id]
 
 #include <stdio.h>
 #include "ben_jose.h"
@@ -81,3 +82,4 @@ int main(int argc, char** argv)
 	return 0;
 }
 
+//! [hello_id]

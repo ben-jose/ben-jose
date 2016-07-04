@@ -95,7 +95,13 @@ obj_t1&		as_srt_of(binder* bdr);
 
 
 //=================================================================
-// sortrel
+/*! \class sortrel
+\brief A sortrel is a relation between two \ref sortee s.
+\ingroup docgrp_stab_classes
+
+\details
+It represents a relation between two \ref sortee s. In our case every \ref sortee representing a \ref neuron holds one \ref sortrel per fiber (literal), and each \ref sortee representing a \ref quanton holds one \ref sortrel per \ref neuron in wick the \ref quanton is found. They must be properly initiated before each stabilization. They define the stabilizing sub-formula's relations between it's \ref neuron s and \ref quanton s by relating their respective \ref sortee s. They represent relations between a particular sub group (sub-formula) of \ref neuron 's \ref sortee s and \ref quanton 's \ref sortee s.
+*/
 
 enum tgt_ccl_t {
 	tc_none = 0,
@@ -125,7 +131,13 @@ public:
 
 
 //=================================================================
-// sortee
+/*! \class sortee
+\brief Class that is an item to be stabilized.
+\ingroup docgrp_stab_classes
+
+\details
+Each \ref neuron contains one \ref sortee and each \ref quanton contains one \ref sortee. Each \ref sortee 'knows' (void pointer) which \ref neuron or \ref quanton contains it. It is a one-to-one relation that is used to stabilize CNF sub-formulas. During stabilization, the \ref sort_glb handles the \ref sortee s not the \ref neuron s and \ref quanton s. containing them.
+*/
 
 comparison	cmp_sortees(sortee* const & srt1, sortee* const & srt2);
 	
@@ -294,7 +306,13 @@ srt_row_as_colors(sort_glb& srg, row<sortee*>& rr1, row<obj_t1*>& rr2, row<long>
 
 
 //=================================================================
-// sorset
+/*! \class sorset
+\brief A sorset is a group of \ref sortee s.
+\ingroup docgrp_stab_classes
+
+\details
+In  order to stabilize a group of \ref sortee s the \ref sort_glb class (or sortor) groups \ref sortee s (representing \ref neuron s and \ref quanton s in our case) into \ref sorset s. A sub-formula is represented within stabilization by a group of \ref sorset s. Each step of stabilization refines the group of \ref sorset s that represent the stabilizing sub-formula, so that every step there are more \ref sorset s, each one having less \ref sortee s, until the process cannot refine each \ref sorset anymore. The ideal stabilization ends with each \ref sorset containing only one \ref sortee. Since stabilization handles only \ref sortee s. This class is used for such iterated sub-grouping.
+*/
 
 typedef bool (sorset::*cond_mth)();
 
@@ -536,7 +554,13 @@ srs_row_get_first_tees(row<sorset*>& rr1, row<sortee*>& rr2){
 }
 
 //=================================================================
-// sort_glb
+/*! \class sort_glb
+\brief Class that holds all global data used to stabilize a group of items.
+\ingroup docgrp_stab_classes
+
+\details
+Items are basically \ref neuron s and \ref quanton s representing a sub-formula of a CNF. This class does not handle \ref neuron s and \ref quanton s directly. Instead it handles their respective \ref sortee s.
+*/
 
 enum step_op_t {
 	po_full = 0,

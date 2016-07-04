@@ -80,9 +80,9 @@ dimacs_loader::read_problem_decl(const char*& pt_in, long& num_var, long& num_cc
 	skip_whitespace(pt_in, line);
 	skip_cnf_decl(pt_in, line);
 	skip_whitespace(pt_in, line);
-	num_var = parse_int(pt_in, line);
+	num_var = parse_long(pt_in, line);
 	skip_whitespace(pt_in, line);
-	num_ccl = parse_int(pt_in, line);
+	num_ccl = parse_long(pt_in, line);
 	skip_line(pt_in, line);
 }
 
@@ -436,7 +436,7 @@ dimacs_loader::parse_clause(row<integer>& lits){
 	integer	parsed_lit;
 	while(*pt_in != END_OF_SEC){
 		skip_whitespace(pt_in, ld_num_line);
-		parsed_lit = parse_int(pt_in, ld_num_line);
+		parsed_lit = parse_long(pt_in, ld_num_line);
 		if(parsed_lit == 0){ break; }
 		if(get_var(parsed_lit) > ld_decl_vars){
 			dimacs_exception ex1(dix_bad_lit, *pt_in, ld_num_line, get_cursor_pos());
