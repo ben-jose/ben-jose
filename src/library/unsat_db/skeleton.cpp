@@ -1595,7 +1595,8 @@ canon_cnf::set_num_variants(skeleton_glb& skg, bj_big_int_t num_vnts){
 
 bool
 canon_cnf::all_nxt_vnt(skeleton_glb& skg, row<variant>& all_next, row<ch_string>& all_del){
-	bool num_i_sub = 0;
+	//bool num_i_sub = 0;
+	long num_i_sub = 0;  // JLQ_2025_05_12
 	long num_eq = 0;
 	average avg_szs;
 

@@ -360,7 +360,8 @@ dimacs_loader::load_file(ch_string& f_nam){
 	read_file(ld_file_name, ld_content);
 	ld_content.push(END_OF_SEC); // it already has room for it
 
-	DBG_PRT(9, os << " ld_content=" << ld_content.print_row_data(os, true, ""));
+	//DBG_PRT(9, os << " ld_content=" << ld_content.print_row_data(os, true, ""));
+	DBG_PRT(9, os << " ld_content="; ld_content.print_row_data(os, true, ""));  // JLQ_2025_05_12
 }
 
 long
